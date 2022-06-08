@@ -1,0 +1,72 @@
+version: "3.3"
+
+services:
+
+
+  greeter:
+    build:
+      context: .
+    image: crawl-system
+    env_file: docker-compose.env
+    environment:
+      SERVICES: greeterService/greeter
+    depends_on:
+      - redis
+    networks:
+      - internal
+
+  guard:
+      build:
+        context: .
+      image: crawl-system
+      env_file: docker-compose.env
+      environment:
+        SERVICES: guard
+      depends_on:
+        - redis
+      networks:
+        - internal
+
+  products:
+    build:
+      context: .
+    image: crawl-system
+    env_file: docker-compose.env
+    environment:
+      SERVICES: productService/products
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - internal
+
+  user:
+      build:
+        context: .
+      image: crawl-system
+      env_file: docker-compose.env
+      environment:
+        SERVICES: userService/user
+      depends_on:
+        - redis
+      networks:
+        - internal
+
+  mongo:
+    image: mongo:4
+    volumes:
+      - data:/data/db
+    networks:
+      - internal
+
+  redis:
+    image: redis:alpine
+    networks:
+      - internal
+
+
+networks:
+  internal:
+
+volumes:
+  data:

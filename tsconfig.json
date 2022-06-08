@@ -1,0 +1,97 @@
+{
+	"compilerOptions": {
+		"skipLibCheck": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"esModuleInterop": true,
+		"noImplicitAny": false,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"strict": true,
+		"module": "commonjs",
+		"resolveJsonModule": true,
+		"removeComments": true,
+		"preserveConstEnums": true,
+		"sourceMap": true,
+		"pretty": true,
+		"types": [
+			"jest",
+			"node"
+		],
+		"target": "es6",
+		"outDir": "dist",
+		"allowJs": true,
+		"baseUrl": ".",
+		"paths": {
+			"@MicroServices/*": [
+				"services/*"
+			],
+			"@MicroServices": [
+				"services"
+			],
+			"@Entities/*": [
+				"Entities/*"
+			],
+			"@Entities": [
+				"Entities"
+			],
+			"@Hooks/*": [
+				"Hooks/*"
+			],
+			"@Hooks": [
+				"Hooks"
+			],
+			"@ServiceHelpers/*": [
+				"helpers/*"
+			],
+			"@ServiceHelpers": [
+				"helpers"
+			],
+			"@Middlewares/*": [
+				"middlewares/*"
+			],
+			"@Middlewares": [
+				"middlewares"
+			],
+			"@Mixins/*": [
+				"mixins/*"
+			],
+			"@Mixins": [
+				"mixins"
+			],
+			"@Test/*": [
+				"test/*"
+			],
+			"@Test": [
+				"test"
+			],
+			"@Interfaces/*": [
+				"interfaces/*"
+			],
+			"@Interfaces": [
+				"interfaces"
+			],
+			"@Repositories/*": [
+				"repositories/*"
+			],
+			"@Repositories": [
+				"repositories"
+			],
+			"@Meta/*": [
+				"meta/*"
+			],
+			"@Meta": [
+				"meta"
+			]
+		}
+	},
+	"include": [
+		"./**/*",
+		".eslintrc.js"
+	],
+	"exclude": [
+		"node_modules/**/*",
+		"test",
+		"frontend/**/*"
+	]
+}
