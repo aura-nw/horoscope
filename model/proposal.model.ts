@@ -53,6 +53,9 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 export const proposalMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	const schema = new Schema<IProposal>(definition(collection), { autoIndex: true });
+	const schema = new Schema<IProposal>(definition(collection), {
+		autoIndex: true,
+		collection: collection,
+	});
 	return models[collection] || model(collection, schema);
 };

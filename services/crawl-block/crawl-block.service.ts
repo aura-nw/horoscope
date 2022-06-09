@@ -13,7 +13,7 @@ export default class CrawlBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 
 	private currentBlock = 0;
-	private LIST_RPC_URL = JSON.parse(Config.LIST_RPC_URL);
+	private redisClient;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -24,12 +24,12 @@ export default class CrawlBlockService extends Service {
 				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}`,
 					{
-						prefix: 'crawl.proposal',
-						limiter: {
-							max: 1,
-							duration: 1000,
-							bounceBack: true,
-						},
+						prefix: 'crawl.block',
+						// limiter: {
+						// 	max: 10,
+						// 	// duration: 1000,
+						// 	// bounceBack: true,
+						// },
 					},
 				),
 				this.callApiMixin,
@@ -40,12 +40,12 @@ export default class CrawlBlockService extends Service {
 					concurrency: 1,
 					async process(job) {
 						job.progress(10);
-						// @ts-ignore
-						this.logger.info('New job received! tuan-test', job.data);
+						// // @ts-ignore
+						// this.logger.info('New job received! tuan-test', job.data);
 						// @ts-ignore
 						await this.initEnv();
 						// @ts-ignore
-						await this.handleJob(job.data.url);
+						await this.handleJob(job.data.param);
 						job.progress(100);
 						return true;
 					},
@@ -58,8 +58,8 @@ export default class CrawlBlockService extends Service {
 		//get handled block
 		this.logger.info('initEnv');
 
-		let redisClient: RedisClientType = await this.getRedisClient();
-		let handledBlockRedis = await redisClient.get(Config.REDIS_KEY_CURRENT_BLOCK);
+		// let redisClient: RedisClientType = await this.getRedisClient();
+		let handledBlockRedis = await this.redisClient.get(Config.REDIS_KEY_CURRENT_BLOCK);
 		this.currentBlock = 0;
 		let START_BLOCK = Config.START_BLOCK;
 
@@ -75,8 +75,8 @@ export default class CrawlBlockService extends Service {
 		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : 0;
 		this.logger.info(`currentBlock: ${this.currentBlock}`);
 	}
-	async handleJob(url) {
-		this.logger.info(url);
+	async handleJob(param) {
+		this.logger.info(param);
 		const responseGetLatestBlock = await this.callApi(`${Config.GET_LATEST_BLOCK_API}`);
 		const latestBlockNetwork = parseInt(responseGetLatestBlock.result.block.header.height);
 		this.logger.info(`latestBlockNetwork: ${latestBlockNetwork}`);
@@ -88,8 +88,7 @@ export default class CrawlBlockService extends Service {
 		if (endBlock > latestBlockNetwork) {
 			endBlock = latestBlockNetwork;
 		}
-		console.log('startBlock: ' + startBlock + ' endBlock: ' + endBlock);
-		// const query = `${Config.RPC_URL}${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`;
+		this.logger.info('startBlock: ' + startBlock + ' endBlock: ' + endBlock);
 		let data = await this.callApi(
 			`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
 		);
@@ -100,13 +99,11 @@ export default class CrawlBlockService extends Service {
 	}
 	async handleListBlock(data) {
 		const listBlock = data.result.blocks;
-		// console.log(JSON.stringify(listBlock));
-		let redisClient: RedisClientType = await this.getRedisClient();
 		listBlock.map((block) => {
 			//pust block to redis stream
-			console.log('xadd block: ' + block.block.header.height);
+			this.logger.info('xadd block: ' + block.block.header.height);
 
-			redisClient.sendCommand([
+			this.redisClient.sendCommand([
 				'XADD',
 				Config.REDIS_STREAM_BLOCK_NAME,
 				'*',
@@ -116,10 +113,11 @@ export default class CrawlBlockService extends Service {
 		});
 	}
 	async _start() {
+		this.redisClient = await this.getRedisClient();
 		this.createJob(
 			'crawl.block',
 			{
-				url: `123`,
+				param: `param`,
 			},
 			{
 				removeOnComplete: false,
@@ -130,13 +128,13 @@ export default class CrawlBlockService extends Service {
 				},
 			},
 		);
-		this.getQueue('crawl.block').on('global:progress', (jobID, progress) => {
-			this.logger.info(`Job #${jobID} progress is ${progress}%`);
-		});
+		// this.getQueue('crawl.block').on('global:progress', (jobID, progress) => {
+		// 	this.logger.info(`Job #${jobID} progress is ${progress}%`);
+		// });
 
-		this.getQueue('crawl.block').on('global:completed', (job, res) => {
-			this.logger.info(`Job #${job} completed!. Result:`, res);
-		});
+		// this.getQueue('crawl.block').on('global:completed', (job, res) => {
+		// 	this.logger.info(`Job #${job} completed!. Result:`, res);
+		// });
 		return super._start();
 	}
 }

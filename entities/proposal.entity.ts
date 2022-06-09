@@ -1,6 +1,7 @@
 import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
+import { Coin } from './coin.entity';
 
 export interface IProposal {
 	_id: Types.ObjectId | string | null;
@@ -15,7 +16,7 @@ export interface IProposal {
 	voting_end_time: String;
 }
 
-@JsonObject('changes')
+@JsonObject('Changes')
 export class Changes {
 	@JsonProperty('subspace', String)
 	subspace: String = '';
@@ -25,7 +26,7 @@ export class Changes {
 	value: String = '';
 }
 
-@JsonObject('final_tally_result')
+@JsonObject('Final_tally_result')
 export class Final_tally_result {
 	@JsonProperty('yes', String)
 	yes: String = '';
@@ -43,14 +44,6 @@ export class Deposit {
 	denom: String = '';
 	@JsonProperty('amount', String)
 	amount: String = '';
-}
-
-@JsonObject('coin')
-export class Coin {
-	@JsonProperty('amount', String)
-	amount: String = '';
-	@JsonProperty('denom', String)
-	denom: String = '';
 }
 
 @JsonObject('content')

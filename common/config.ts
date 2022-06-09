@@ -74,6 +74,8 @@ export default class ConfigClass {
 	// public static JWT_SECRET = process.env.JWT_SECRET || 'dummy-secret';
 	public static DB_USER: any;
 	public static DB_PRODUCT: any;
+	public static DB_TRANSACTION: any;
+	public static DB_BLOCK: any;
 
 	public constructor() {
 		Object.keys(configObj).forEach((key: string) => {
@@ -90,5 +92,6 @@ export default class ConfigClass {
 		this.DB_USER = genericDbInfo('USER');
 		this.DB_PRODUCT = genericDbInfo('PRODUCT');
 		this.DB_PROPOSAL = genericDbInfo('PROPOSAL');
+		this.DB_TRANSACTION = genericDbInfo('TRANSACTION');
 	}
 }

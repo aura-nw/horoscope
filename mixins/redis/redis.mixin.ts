@@ -10,11 +10,6 @@ export default class RedisMixin implements Partial<ServiceSchema>, ThisType<Serv
 
 	public constructor() {
 		this.schema = {
-			settings: {
-				rpcUrl: Config.RPC_URL,
-				enableLoadBalancer: Config.ENABLE_LOADBALANCER,
-				listRpcUrl: JSON.parse(Config.LIST_RPC_URL),
-			},
 			methods: {
 				async getRedisClient() {
 					if (this.redisClient === undefined) {
