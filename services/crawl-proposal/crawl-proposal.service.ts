@@ -115,10 +115,8 @@ export default class CrawlProposalService extends Service {
 				// url: 'https://osmosistest-lcd.quickapi.com/cosmos/gov/v1beta1/proposals?pagination.limit=100&',
 			},
 			{
-				removeOnComplete: false,
+				removeOnComplete: true,
 				repeat: {
-					limit: 50,
-					count: 0,
 					every: 5000,
 				},
 			},

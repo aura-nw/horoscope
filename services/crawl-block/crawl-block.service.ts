@@ -120,10 +120,8 @@ export default class CrawlBlockService extends Service {
 				param: `param`,
 			},
 			{
-				removeOnComplete: false,
+				removeOnComplete: true,
 				repeat: {
-					limit: 50,
-					count: 0,
 					every: 5000,
 				},
 			},
