@@ -67,8 +67,8 @@ export class AuthInfo {
 	granter: string = '';
 }
 
-@JsonObject('Proposal')
-export class ProposalEntity {
+@JsonObject('Transaction')
+export class TransactionEntity {
 	@JsonProperty('_id', String, true)
 	public _id = Config.DB_TRANSACTION.dialect === 'local' ? Types.ObjectId() : null;
 
