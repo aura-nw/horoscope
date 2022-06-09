@@ -120,7 +120,7 @@ export default class CrawlProposalService extends Service {
 				repeat: {
 					limit: 50,
 					count: 0,
-					every: 50,
+					every: 5000,
 				},
 			},
 		);

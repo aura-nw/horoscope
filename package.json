@@ -71,6 +71,7 @@
     "moleculer-db-adapter-mongoose": "^0.8.12",
     "mongodb": "^4.5.0",
     "mongoose": "^5.13.6",
+    "redis": "^4.1.0",
     "redlock": "^4.2.0",
     "reflect-metadata": "^0.1.13",
     "resilient": "^0.4.0",
