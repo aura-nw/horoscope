@@ -30,11 +30,15 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 						let enableLoadBalancer = this.settings.enableLoadBalancer;
 						let listRpcUrl = this.settings.listRpcUrl;
 
-						if (this.enableLoadBalancer === 'false') {
-							this.callApiClient = axios;
+						if (enableLoadBalancer === 'false') {
+							axios.baseURL = rpcUrl;
+							let axiosClient = axios.create({
+								baseURL: rpcUrl,
+							});
+							this.callApiClient = axiosClient;
 						} else {
 							let resilientClient = Resilient({ service: { basePath: '/' } });
-							resilientClient.setServers(this.listRpcUrl);
+							resilientClient.setServers(listRpcUrl);
 							this.callApiClient = resilientClient;
 						}
 					}

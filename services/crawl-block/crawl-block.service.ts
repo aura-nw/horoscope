@@ -13,6 +13,8 @@ export default class CrawlBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 
 	private currentBlock = 0;
+	private LIST_RPC_URL = JSON.parse(Config.LIST_RPC_URL);
+
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -51,6 +53,7 @@ export default class CrawlBlockService extends Service {
 			},
 		});
 	}
+
 	async initEnv() {
 		//get handled block
 		this.logger.info('initEnv');
@@ -74,21 +77,23 @@ export default class CrawlBlockService extends Service {
 	}
 	async handleJob(url) {
 		this.logger.info(url);
-		const responseGetLatestBlock = await this.callApi(
-			`${Config.RPC_URL}${Config.GET_LATEST_BLOCK_API}`,
-		);
+		const responseGetLatestBlock = await this.callApi(`${Config.GET_LATEST_BLOCK_API}`);
 		const latestBlockNetwork = parseInt(responseGetLatestBlock.result.block.header.height);
 		this.logger.info(`latestBlockNetwork: ${latestBlockNetwork}`);
 
 		const startBlock = this.currentBlock + 1;
-		let endBlock = startBlock + Config.NUMBER_OF_BLOCK_PER_CALL - 1;
+		const NUMBER_OF_BLOCK_PER_CALL = Config.NUMBER_OF_BLOCK_PER_CALL;
+
+		let endBlock = startBlock + parseInt(Config.NUMBER_OF_BLOCK_PER_CALL) - 1;
 		if (endBlock > latestBlockNetwork) {
 			endBlock = latestBlockNetwork;
 		}
 		console.log('startBlock: ' + startBlock + ' endBlock: ' + endBlock);
-		const query = `${Config.RPC_URL}${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`;
-		let data = await this.callApi(query);
-		this.handleListBlock(data.data);
+		// const query = `${Config.RPC_URL}${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`;
+		let data = await this.callApi(
+			`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
+		);
+		this.handleListBlock(data);
 		this.currentBlock = endBlock;
 		let redisClient: RedisClientType = await this.getRedisClient();
 		redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
