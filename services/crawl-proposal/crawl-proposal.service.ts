@@ -8,6 +8,7 @@ import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 import { ProposalEntity } from '../../entities/proposal.entity';
 import { Config } from '../../common';
+import { URL_TYPE_CONSTANTS } from '../../common/constant';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -18,23 +19,9 @@ export default class CrawlProposalService extends Service {
 		this.parseServiceSchema({
 			name: 'crawlProposal',
 			version: 1,
-			settings: {
-				fields: [
-					'_id',
-					'proposal_id',
-					'content',
-					'status',
-					'final_tally_result',
-					'submit_time',
-					'deposit_end_time',
-					'voting_deposit',
-					'voting_start_time',
-					'voting_end_time',
-				],
-			},
 			mixins: [
 				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}`,
+					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.proposal',
 						limiter: {
@@ -62,25 +49,22 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async sleep(ms) {
-		return new Promise((resolve) => {
-			setTimeout(resolve, ms);
-		});
-	}
-
 	async handleJob(url) {
 		let result: any[] = [];
 
 		let urlToCall = url;
-		while (true) {
-			let resultCallApi = await this.callApi(urlToCall);
+		let resultCallApi = null;
+
+		do {
+			resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlToCall);
 			result.push(resultCallApi);
-			if (resultCallApi.pagination.next_key === null) {
+			if (resultCallApi == null) break;
+			if (resultCallApi['pagination'] === null) {
 				break;
 			}
-			urlToCall = `${url}pagination.key=${resultCallApi.pagination.next_key}`;
-			this.sleep(1000);
-		}
+			urlToCall = `${url}&pagination.key=${resultCallApi['pagination']['next_key']}`;
+		} while (resultCallApi['pagination']['next_key'] != null);
+
 		this.logger.info(`result: ${JSON.stringify(result)}`);
 		result.map((element) => {
 			element.proposals.map(async (proposal) => {
@@ -89,8 +73,6 @@ export default class CrawlProposalService extends Service {
 				});
 				try {
 					if (foundProposal) {
-						// this.logger.info(proposal);
-						// const item: any = new JsonConvert().deserializeObject(proposal, ProposalEntity);
 						let result = await this.adapter.updateById(foundProposal.id, proposal);
 						this.logger.info(result);
 					} else {
@@ -111,8 +93,7 @@ export default class CrawlProposalService extends Service {
 		this.createJob(
 			'crawl.proposal',
 			{
-				url: 'https://lcd.serenity.aura.network/cosmos/gov/v1beta1/proposals?pagination.limit=100&',
-				// url: 'https://osmosistest-lcd.quickapi.com/cosmos/gov/v1beta1/proposals?pagination.limit=100&',
+				url: `${Config.GET_ALL_PROPOSAL}?pagination.limit=${Config.NUMBER_OF_PROPOSAL_PER_CALL}&pagination.countTotal=true`,
 			},
 			{
 				removeOnComplete: true,
@@ -121,13 +102,15 @@ export default class CrawlProposalService extends Service {
 				},
 			},
 		);
-		// this.getQueue('crawl.proposal').on('global:progress', (jobID, progress) => {
-		// 	this.logger.info(`Job #${jobID} progress is ${progress}%`);
-		// });
-
-		// this.getQueue('crawl.proposal').on('global:completed', (job, res) => {
-		// 	this.logger.info(`Job #${job} completed!. Result:`, res);
-		// });
+		this.getQueue('crawl.proposal').on('completed', (job, res) => {
+			this.logger.info(`Job #${JSON.stringify(job)} completed!. Result:`, res);
+		});
+		this.getQueue('crawl.proposal').on('failed', (job, err) => {
+			this.logger.error(`Job #${JSON.stringify(job)} failed!. Result:`, err);
+		});
+		this.getQueue('crawl.proposal').on('progress', (job, progress) => {
+			this.logger.info(`Job #${JSON.stringify(job)} progress is ${progress}%`);
+		});
 		return super._start();
 	}
 }

@@ -22,14 +22,9 @@ export default class HandleTransactionService extends Service {
 			version: 1,
 			mixins: [
 				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}`,
+					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'handle.transaction',
-						limiter: {
-							max: 10,
-							duration: 1000,
-							// bounceBack: true,
-						},
 					},
 				),
 				this.redisMixin,
@@ -122,10 +117,8 @@ export default class HandleTransactionService extends Service {
 				param: `param`,
 			},
 			{
-				removeOnComplete: false,
+				removeOnComplete: true,
 				repeat: {
-					limit: 50,
-					count: 0,
 					every: 1000,
 				},
 			},
@@ -133,13 +126,15 @@ export default class HandleTransactionService extends Service {
 
 		await this.initEnv();
 
-		// this.getQueue('handle.transaction').on('global:progress', (jobID, progress) => {
-		// 	this.logger.info(`Job #${jobID} progress is ${progress}%`);
-		// });
-
-		// this.getQueue('handle.transaction').on('global:completed', (job, res) => {
-		// 	this.logger.info(`Job #${job} completed!. Result:`, res);
-		// });
+		this.getQueue('handle.transaction').on('completed', (job, res) => {
+			this.logger.info(`Job #${JSON.stringify(job)} completed!. Result:`, res);
+		});
+		this.getQueue('handle.transaction').on('failed', (job, err) => {
+			this.logger.error(`Job #${JSON.stringify(job)} failed!. Result:`, err);
+		});
+		this.getQueue('handle.transaction').on('progress', (job, progress) => {
+			this.logger.info(`Job #${JSON.stringify(job)} progress is ${progress}%`);
+		});
 		return super._start();
 	}
 }
