@@ -92,7 +92,7 @@ export default class CrawlProposalService extends Service {
 			{
 				removeOnComplete: true,
 				repeat: {
-					every: 5000,
+					every: parseInt(Config.MILISECOND_CRAWL_PROPOSAL, 10),
 				},
 			},
 		);

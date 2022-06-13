@@ -172,7 +172,7 @@ export default class CrawlParamService extends Service {
 			{
 				removeOnComplete: true,
 				repeat: {
-					every: 5000,
+					every: parseInt(Config.MILISECOND_CRAWL_PARAM, 10),
 				},
 			},
 		);

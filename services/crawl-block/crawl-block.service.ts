@@ -139,7 +139,7 @@ export default class CrawlBlockService extends Service {
 			{
 				removeOnComplete: true,
 				repeat: {
-					every: 5000,
+					every: parseInt(Config.MILISECOND_CRAWL_BLOCK, 10),
 				},
 			},
 		);
