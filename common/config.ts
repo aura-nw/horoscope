@@ -76,6 +76,7 @@ export default class ConfigClass {
 	public static DB_PRODUCT: any;
 	public static DB_TRANSACTION: any;
 	public static DB_BLOCK: any;
+	public static DB_PARAM: any;
 
 	public constructor() {
 		Object.keys(configObj).forEach((key: string) => {
@@ -93,5 +94,6 @@ export default class ConfigClass {
 		this.DB_PRODUCT = genericDbInfo('PRODUCT');
 		this.DB_PROPOSAL = genericDbInfo('PROPOSAL');
 		this.DB_TRANSACTION = genericDbInfo('TRANSACTION');
+		this.DB_PARAM = genericDbInfo('PARAM');
 	}
 }

@@ -36,8 +36,6 @@ export default class CrawlBlockService extends Service {
 					async process(job) {
 						job.progress(10);
 						// @ts-ignore
-						this.logger.info('New job received! tuan-test', job.data);
-						// @ts-ignore
 						await this.initEnv();
 						// @ts-ignore
 						await this.handleJob(job.data.param);
