@@ -110,28 +110,50 @@ export default class CrawlParamService extends Service {
 			module: ['bank', 'distribution', 'gov', 'slashing', 'staking', 'ibc-transfer', 'mint'],
 		});
 
-		listParamInDb.map((item) => {});
+		// listParamInDb.map((item) => {});
 
-		this.logger.info(`listParamInDb: ${JSON.stringify(listParamInDb)}`);
+		this.logger.info(`listParamInDb: ${listParamInDb}`);
 
 		this.logger.info(`paramGov: ${JSON.stringify(paramGov)}`);
 
-		await this.adapter.insert({ module: 'bank', params: paramBank.params });
+		// await this.adapter.insert({ module: 'bank', params: paramBank.params });
 
-		await this.adapter.insertMany([
-			{ module: 'bank', params: paramBank.params },
-			{ module: 'distribution', params: paramDistribution.params },
-			{ module: 'gov', params: paramGov },
-			{ module: 'slashing', params: paramSlashing.params },
-			{ module: 'staking', params: paramStaking.params },
-			{ module: 'ibc-transfer', params: paramIBCTransfer.params },
-			{ module: 'mint', params: paramMint.params },
+		let id = await Promise.all([
+			this.findAndUpdate(listParamInDb, 'bank', paramBank.params),
+			this.findAndUpdate(listParamInDb, 'distribution', paramDistribution.params),
+			this.findAndUpdate(listParamInDb, 'gov', paramGov.params),
+			this.findAndUpdate(listParamInDb, 'slashing', paramSlashing.params),
+			this.findAndUpdate(listParamInDb, 'staking', paramStaking.params),
+			this.findAndUpdate(listParamInDb, 'ibc-transfer', paramIBCTransfer.params),
+			this.findAndUpdate(listParamInDb, 'mint', paramMint.params),
 		]);
+		this.logger.info(`id: ${JSON.stringify(id)}`);
+		// await this.adapter.insertMany([
+		// 	{ module: 'bank', params: paramBank.params },
+		// 	{ module: 'distribution', params: paramDistribution.params },
+		// 	{ module: 'gov', params: paramGov },
+		// 	{ module: 'slashing', params: paramSlashing.params },
+		// 	{ module: 'staking', params: paramStaking.params },
+		// 	{ module: 'ibc-transfer', params: paramIBCTransfer.params },
+		// 	{ module: 'mint', params: paramMint.params },
+		// ]);
 
 		// let modelBank = {
 		// 	type: 'bank',
 		// 	param: paramBank.params,
 		// };
+	}
+
+	async findAndUpdate(listParamInDb, module, params) {
+		if (listParamInDb.length > 0) {
+			let item = listParamInDb.find((item) => item._doc.module == module);
+			this.logger.info(`item: ${item}`);
+			if (item) {
+				await this.adapter.updateById(item._id, { params: params });
+			}
+		} else {
+			await this.adapter.insert({ module: module, params: params });
+		}
 	}
 
 	async createParamFromApi(type: String, url: String) {
