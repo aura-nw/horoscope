@@ -9,6 +9,7 @@ import { JsonConvert } from 'json2typescript';
 import { ProposalEntity } from '../../entities/proposal.entity';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { ProposalResponseFromApi } from 'types';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -24,11 +25,6 @@ export default class CrawlProposalService extends Service {
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.proposal',
-						limiter: {
-							max: 1,
-							duration: 1000,
-							bounceBack: true,
-						},
 					},
 				),
 				this.callApiMixin,
@@ -50,44 +46,42 @@ export default class CrawlProposalService extends Service {
 	}
 
 	async handleJob(url) {
-		let result: any[] = [];
+		let listProposal: ProposalEntity[] = [];
 
 		let urlToCall = url;
-		let resultCallApi = null;
+		let resultCallApi: ProposalResponseFromApi;
 
-		do {
+		let done = false;
+
+		while (!done) {
 			resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlToCall);
-			result.push(resultCallApi);
-			if (resultCallApi == null) break;
-			if (resultCallApi['pagination'] === null) {
-				break;
-			}
-			urlToCall = `${url}&pagination.key=${resultCallApi['pagination']['next_key']}`;
-		} while (resultCallApi['pagination']['next_key'] != null);
 
-		this.logger.info(`result: ${JSON.stringify(result)}`);
-		result.map((element) => {
-			element.proposals.map(async (proposal) => {
-				let foundProposal = await this.adapter.findOne({
-					proposal_id: `${proposal.proposal_id}`,
-				});
-				try {
-					if (foundProposal) {
-						let result = await this.adapter.updateById(foundProposal.id, proposal);
-						this.logger.info(result);
-					} else {
-						const item: any = new JsonConvert().deserializeObject(
-							proposal,
-							ProposalEntity,
-						);
-						let id = await this.adapter.insert(item);
-					}
-				} catch (error) {
-					this.logger.error(error);
-				}
+			listProposal.push(...resultCallApi.proposals);
+			if (resultCallApi.pagination.next_key === null) {
+				done = true;
+			} else {
+				urlToCall = `${url}&pagination.key=${resultCallApi.pagination.next_key}`;
+			}
+		}
+
+		this.logger.info(`result: ${JSON.stringify(listProposal)}`);
+
+		listProposal.map(async (proposal) => {
+			let foundProposal = await this.adapter.findOne({
+				proposal_id: `${proposal.proposal_id}`,
 			});
+			try {
+				if (foundProposal) {
+					let result = await this.adapter.updateById(foundProposal.id, proposal);
+					this.logger.info(result);
+				} else {
+					const item: any = new JsonConvert().deserializeObject(proposal, ProposalEntity);
+					let id = await this.adapter.insert(item);
+				}
+			} catch (error) {
+				this.logger.error(error);
+			}
 		});
-		return result;
 	}
 	async _start() {
 		this.createJob(
