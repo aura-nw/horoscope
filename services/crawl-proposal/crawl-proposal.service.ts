@@ -8,7 +8,7 @@ import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 import { ProposalEntity } from '../../entities/proposal.entity';
 import { Config } from '../../common';
-import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { PROPOSAL_STATUS, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { ProposalResponseFromApi } from 'types';
 
 export default class CrawlProposalService extends Service {
@@ -46,7 +46,6 @@ export default class CrawlProposalService extends Service {
 	}
 
 	async handleJob(url) {
-		this.broker.call('v1.crawlTallyProposal.crawlTally', { id: '1' });
 		let listProposal: ProposalEntity[] = [];
 
 		let urlToCall = url;
@@ -65,17 +64,17 @@ export default class CrawlProposalService extends Service {
 			}
 		}
 
-		this.logger.info(`result: ${JSON.stringify(listProposal)}`);
+		this.logger.debug(`result: ${JSON.stringify(listProposal)}`);
 
 		listProposal.map(async (proposal) => {
 			let foundProposal = await this.adapter.findOne({
 				proposal_id: `${proposal.proposal_id}`,
 			});
-			// this.broker.call('v1.crawlTallyProposal.crawlTally', { id: proposal.proposal_id });
+			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD)
+				this.broker.call('v1.crawlTallyProposal.crawlTally', { id: proposal.proposal_id });
 			try {
 				if (foundProposal) {
 					let result = await this.adapter.updateById(foundProposal.id, proposal);
-					this.logger.info(result);
 				} else {
 					const item: any = new JsonConvert().deserializeObject(proposal, ProposalEntity);
 					let id = await this.adapter.insert(item);
@@ -91,12 +90,12 @@ export default class CrawlProposalService extends Service {
 			{
 				url: `${Config.GET_ALL_PROPOSAL}?pagination.limit=${Config.NUMBER_OF_PROPOSAL_PER_CALL}&pagination.countTotal=true`,
 			},
-			// {
-			// 	removeOnComplete: true,
-			// 	repeat: {
-			// 		every: parseInt(Config.MILISECOND_CRAWL_PROPOSAL, 10),
-			// 	},
-			// },
+			{
+				removeOnComplete: true,
+				repeat: {
+					every: parseInt(Config.MILISECOND_CRAWL_PROPOSAL, 10),
+				},
+			},
 		);
 
 		this.getQueue('crawl.proposal').on('completed', (job, res) => {

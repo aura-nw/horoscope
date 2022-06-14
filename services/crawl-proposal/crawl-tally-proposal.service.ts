@@ -45,12 +45,8 @@ export default class CrawlProposalService extends Service {
 			},
 			actions: {
 				crawlTally: {
-					params: {
-						// @ts-ignore
-						id: 'string',
-					},
 					async handler(ctx: Context<{ id: string }>) {
-						this.logger.info(`Crawl tally by proposal: ${ctx.params.id}`);
+						this.logger.debug(`Crawl tally by proposal: ${ctx.params.id}`);
 						// @ts-ignore
 						this.handleJob(ctx.params.id);
 						return;
@@ -60,14 +56,26 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async handleJob(id) {
-		this.logger.info(`List not finish proposal:`);
-		let url = `${Config.GET_ALL_PROPOSAL}/${id}`;
-		try {
-			let result = await this.callApi(URL_TYPE_CONSTANTS.LCD, url);
-			this.logger.info(result);
-		} catch (error) {
-			this.logger.error(error);
+	async handleJob(proposalId) {
+		let url = `${Config.GET_ALL_PROPOSAL}/${proposalId}/tally`;
+
+		let result = await this.callApi(URL_TYPE_CONSTANTS.LCD, url);
+		this.logger.debug(result);
+
+		let foundProposal = await this.adapter.findOne({
+			proposal_id: `${proposalId}`,
+		});
+		if (foundProposal) {
+			try {
+				let res = await this.adapter.updateById(foundProposal.id, {
+					$set: { tally: result.tally },
+				});
+				this.logger.debug(res);
+			} catch (error) {
+				this.logger.error(error);
+			}
+		} else {
+			let proposal = new ProposalEntity();
 		}
 	}
 	async _start() {

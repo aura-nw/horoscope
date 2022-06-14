@@ -32,6 +32,12 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 		],
 	},
 	status: String,
+	tally: {
+		yes: String,
+		no: String,
+		abstain: String,
+		no_with_veto: String,
+	},
 	final_tally_result: {
 		yes: String,
 		no: String,
