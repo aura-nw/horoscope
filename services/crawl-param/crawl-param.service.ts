@@ -54,16 +54,6 @@ export default class CrawlParamService extends Service {
 			paramIBCTransfer,
 			paramMint,
 		] = await Promise.all([
-			// this.createParamFromApi('bank', Config.GET_PARAMS_BANK),
-			// this.createParamFromApi('distribution', Config.GET_PARAMS_DISTRIBUTION),
-			// this.createParamFromApi('gov1', Config.GET_PARAMS_GOV_VOTING),
-			// this.createParamFromApi('gov2', Config.GET_PARAMS_GOV_TALLYING),
-			// this.createParamFromApi('gov3', Config.GET_PARAMS_GOV_DEPOSIT),
-			// this.createParamFromApi('slashing', Config.GET_PARAMS_SLASHING),
-			// this.createParamFromApi('staking', Config.GET_PARAMS_STAKING),
-			// this.createParamFromApi('ibc-transfer', Config.GET_PARAMS_IBC_TRANSFER),
-			// this.createParamFromApi('mint', Config.GET_PARAMS_MINT),
-
 			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_BANK),
 			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_DISTRIBUTION),
 			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_GOV_VOTING),
@@ -74,19 +64,7 @@ export default class CrawlParamService extends Service {
 			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_IBC_TRANSFER),
 			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_MINT),
 		]);
-		// let item = {
-		// 	paramBank: paramBank,
-		// 	paramDistribution: paramDistribution,
-		// 	paramGovVoting: paramGovVoting,
-		// 	paramGovTallying: paramGovTallying,
-		// 	paramGovDeposit: paramGovDeposit,
-		// 	paramSlashing: paramSlashing,
-		// 	paramStaking: paramStaking,
-		// 	paramIBCTransfer: paramIBCTransfer,
-		// 	paramMint: paramMint,
-		// };
-		// this.logger.info(`param: ${JSON.stringify(item)}`);
-		// await this.dbParamMixin.save(item);
+
 		this.logger.info(`paramBank: ${JSON.stringify(paramBank)}`);
 		this.logger.info(`paramDistribution: ${JSON.stringify(paramDistribution)}`);
 		// this.logger.info(`paramGovVoting: ${JSON.stringify(paramGovVoting)}`);
@@ -105,19 +83,13 @@ export default class CrawlParamService extends Service {
 				deposit_param: paramGovDeposit.deposit_params,
 			},
 		};
+		this.logger.info(`paramGov: ${JSON.stringify(paramGov)}`);
 
 		let listParamInDb = await this.adapter.find({
 			module: ['bank', 'distribution', 'gov', 'slashing', 'staking', 'ibc-transfer', 'mint'],
 		});
 
-		// listParamInDb.map((item) => {});
-
 		this.logger.info(`listParamInDb: ${listParamInDb}`);
-
-		this.logger.info(`paramGov: ${JSON.stringify(paramGov)}`);
-
-		// await this.adapter.insert({ module: 'bank', params: paramBank.params });
-
 		let id = await Promise.all([
 			this.findAndUpdate(listParamInDb, 'bank', paramBank.params),
 			this.findAndUpdate(listParamInDb, 'distribution', paramDistribution.params),
@@ -128,20 +100,6 @@ export default class CrawlParamService extends Service {
 			this.findAndUpdate(listParamInDb, 'mint', paramMint.params),
 		]);
 		this.logger.info(`id: ${JSON.stringify(id)}`);
-		// await this.adapter.insertMany([
-		// 	{ module: 'bank', params: paramBank.params },
-		// 	{ module: 'distribution', params: paramDistribution.params },
-		// 	{ module: 'gov', params: paramGov },
-		// 	{ module: 'slashing', params: paramSlashing.params },
-		// 	{ module: 'staking', params: paramStaking.params },
-		// 	{ module: 'ibc-transfer', params: paramIBCTransfer.params },
-		// 	{ module: 'mint', params: paramMint.params },
-		// ]);
-
-		// let modelBank = {
-		// 	type: 'bank',
-		// 	param: paramBank.params,
-		// };
 	}
 
 	async findAndUpdate(listParamInDb, module, params) {

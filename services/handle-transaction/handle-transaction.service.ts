@@ -123,7 +123,7 @@ export default class HandleTransactionService extends Service {
 			{
 				removeOnComplete: true,
 				repeat: {
-					every: 1000,
+					every: parseInt(Config.MILISECOND_HANDLE_TRANSACTION, 10),
 				},
 			},
 		);
