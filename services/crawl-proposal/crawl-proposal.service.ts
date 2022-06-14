@@ -84,6 +84,7 @@ export default class CrawlProposalService extends Service {
 			}
 		});
 	}
+
 	async _start() {
 		this.createJob(
 			'crawl.proposal',

@@ -95,5 +95,6 @@ export default class ConfigClass {
 		this.DB_PROPOSAL = genericDbInfo('PROPOSAL');
 		this.DB_TRANSACTION = genericDbInfo('TRANSACTION');
 		this.DB_PARAM = genericDbInfo('PARAM');
+		this.DB_BLOCK = genericDbInfo('BLOCK');
 	}
 }
