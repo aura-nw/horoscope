@@ -46,6 +46,7 @@ export default class CrawlProposalService extends Service {
 	}
 
 	async handleJob(url) {
+		this.broker.call('v1.crawlTallyProposal.crawlTally', { id: '1' });
 		let listProposal: ProposalEntity[] = [];
 
 		let urlToCall = url;
@@ -70,6 +71,7 @@ export default class CrawlProposalService extends Service {
 			let foundProposal = await this.adapter.findOne({
 				proposal_id: `${proposal.proposal_id}`,
 			});
+			// this.broker.call('v1.crawlTallyProposal.crawlTally', { id: proposal.proposal_id });
 			try {
 				if (foundProposal) {
 					let result = await this.adapter.updateById(foundProposal.id, proposal);
@@ -89,13 +91,14 @@ export default class CrawlProposalService extends Service {
 			{
 				url: `${Config.GET_ALL_PROPOSAL}?pagination.limit=${Config.NUMBER_OF_PROPOSAL_PER_CALL}&pagination.countTotal=true`,
 			},
-			{
-				removeOnComplete: true,
-				repeat: {
-					every: parseInt(Config.MILISECOND_CRAWL_PROPOSAL, 10),
-				},
-			},
+			// {
+			// 	removeOnComplete: true,
+			// 	repeat: {
+			// 		every: parseInt(Config.MILISECOND_CRAWL_PROPOSAL, 10),
+			// 	},
+			// },
 		);
+
 		this.getQueue('crawl.proposal').on('completed', (job, res) => {
 			this.logger.info(`Job #${JSON.stringify(job)} completed!. Result:`, res);
 		});
