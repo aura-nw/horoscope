@@ -87,26 +87,32 @@ export default class HandleTransactionService extends Service {
 			this.consumer,
 			[{ key: Config.REDIS_STREAM_TRANSACTION_NAME, id: idXReadGroup }],
 		);
-		let listMessageNeedAck: String[] = [];
+
 		if (result)
-			result.forEach((element) => {
+			result.forEach(async (element) => {
+				let listTransactionNeedSaveToDb: any[] = [];
+				let listMessageNeedAck: any[] = [];
 				element.messages.forEach(async (item) => {
 					this.logger.info(`Handling message ${item.id}`);
-					await this.handleTransaction(JSON.parse(item.message.element));
-					this.redisClient.xAck(
-						Config.REDIS_STREAM_TRANSACTION_NAME,
-						Config.REDIS_STREAM_TRANSACTION_GROUP,
-						item.id,
-					);
+					listTransactionNeedSaveToDb.push(JSON.parse(item.message.element));
 					listMessageNeedAck.push(item.id);
 					lastId = item.id;
 				});
+
+				await this.handleListTransaction(listTransactionNeedSaveToDb);
+				await this.redisClient.xAck(
+					Config.REDIS_STREAM_TRANSACTION_NAME,
+					Config.REDIS_STREAM_TRANSACTION_GROUP,
+					listMessageNeedAck,
+				);
 			});
 	}
-	async handleTransaction(transaction) {
-		let id = await this.adapter.insert(transaction);
-		return id;
+
+	async handleListTransaction(listTransaction) {
+		let listId = await this.adapter.insertMany(listTransaction);
+		return listId;
 	}
+
 	async _start() {
 		this.redisClient = await this.getRedisClient();
 		this.createJob(
