@@ -71,6 +71,9 @@ export default class CrawlTransactionService extends Service {
 		listTx.map(async (tx) => {
 			const txHash = sha256(Buffer.from(tx, 'base64')).toUpperCase();
 			this.logger.debug(`txhash: ${txHash}`);
+			if (txHash === '4783A37DDC4B1A03259AF142B402611770C75CB7E0CF11D61D2990E068EDF0B6') {
+				this.logger.info(1);
+			}
 			let result = await this.callApi(
 				URL_TYPE_CONSTANTS.RPC,
 				`${Config.GET_TX_API}0x${txHash}`,

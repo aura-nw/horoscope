@@ -97,6 +97,9 @@ export default class HandleBlockService extends Service {
 				element.messages.forEach(async (item) => {
 					this.logger.info(`Handling message ${item.id}`);
 					let block = JSON.parse(item.message.element);
+					if (block.block.header.height == '2062') {
+						this.logger.info(2);
+					}
 					listBlockNeedSaveToDb.push(block);
 					listTx.push(...block.block.data.txs);
 					listMessageNeedAck.push(item.id);
@@ -106,7 +109,7 @@ export default class HandleBlockService extends Service {
 					await this.handleListBlock(listBlockNeedSaveToDb);
 				}
 				if (listTx.length > 0) {
-					this.broker.call('v1.crawltransaction.crawlListTransaction', {
+					await this.broker.call('v1.crawltransaction.crawlListTransaction', {
 						listTx: listTx,
 					});
 				}
