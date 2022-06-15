@@ -143,8 +143,6 @@ export default class CrawlBlockService extends Service {
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_BLOCK, 10),
 				},
-				attempts: 5,
-				backoff: 5000,
 			},
 		);
 		this.getQueue('crawl.block').on('completed', (job, res) => {
