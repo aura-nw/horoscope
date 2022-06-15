@@ -6,7 +6,8 @@ import { Service, ServiceBroker } from 'moleculer';
 import QueueService from 'moleculer-bull';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
-
+import { JsonConvert, OperationMode } from 'json2typescript';
+import { BlockEntity } from '../../entities';
 export default class HandleBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbBlockMixin = dbBlockMixin;
@@ -92,24 +93,38 @@ export default class HandleBlockService extends Service {
 			result.forEach(async (element) => {
 				let listBlockNeedSaveToDb: any[] = [];
 				let listMessageNeedAck: any[] = [];
+				let listTx: any[] = [];
 				element.messages.forEach(async (item) => {
 					this.logger.info(`Handling message ${item.id}`);
-					listBlockNeedSaveToDb.push(JSON.parse(item.message.element));
+					let block = JSON.parse(item.message.element);
+					listBlockNeedSaveToDb.push(block);
+					listTx.push(...block.block.data.txs);
 					listMessageNeedAck.push(item.id);
 					lastId = item.id;
 				});
-
-				await this.handleListTransaction(listBlockNeedSaveToDb);
-				await this.redisClient.xAck(
-					Config.REDIS_STREAM_TRANSACTION_NAME,
-					Config.REDIS_STREAM_TRANSACTION_GROUP,
-					listMessageNeedAck,
-				);
+				if (listBlockNeedSaveToDb.length > 0) {
+					await this.handleListBlock(listBlockNeedSaveToDb);
+				}
+				if (listTx.length > 0) {
+					this.broker.call('v1.crawltransaction.crawlListTransaction', {
+						listTx: listTx,
+					});
+				}
+				if (listMessageNeedAck.length > 0) {
+					await this.redisClient.xAck(
+						Config.REDIS_STREAM_BLOCK_NAME,
+						Config.REDIS_STREAM_BLOCK_GROUP,
+						listMessageNeedAck,
+					);
+				}
 			});
 	}
 
-	async handleListTransaction(listBlock) {
-		let listId = await this.adapter.insertMany(listBlock);
+	async handleListBlock(listBlock) {
+		let jsonConvert: JsonConvert = new JsonConvert();
+		// jsonConvert.operationMode = OperationMode.LOGGING;
+		const item: any = jsonConvert.deserializeArray(listBlock, BlockEntity);
+		let listId = await this.adapter.insertMany(item);
 		return listId;
 	}
 
@@ -132,13 +147,13 @@ export default class HandleBlockService extends Service {
 		);
 
 		this.getQueue('handle.block').on('completed', (job, res) => {
-			this.logger.info(`Job #${JSON.stringify(job)} completed!. Result:`, res);
+			this.logger.info(`Job #${job.id} completed!. Result:`, res);
 		});
 		this.getQueue('handle.block').on('failed', (job, err) => {
-			this.logger.error(`Job #${JSON.stringify(job)} failed!. Result:`, err);
+			this.logger.error(`Job #${job.id} failed!. Result:`, err);
 		});
 		this.getQueue('handle.block').on('progress', (job, progress) => {
-			this.logger.info(`Job #${JSON.stringify(job)} progress is ${progress}%`);
+			this.logger.info(`Job #${job.id} progress is ${progress}%`);
 		});
 		return super._start();
 	}

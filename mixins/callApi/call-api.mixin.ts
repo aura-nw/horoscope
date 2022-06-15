@@ -32,14 +32,22 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 							});
 							this.callRpcClient = axiosClient;
 						} else {
-							let resilientClient = Resilient({ service: { basePath: '/' } });
+							let resilientClient = Resilient({
+								service: { basePath: '/', retry: 3 },
+							});
 							resilientClient.setServers(this.settings.listRpcUrl);
 							this.callRpcClient = resilientClient;
 						}
 					}
-					// @ts-ignore
-					let result = await this.callRpcClient.get(url);
-					return result.data;
+					try {
+						// @ts-ignore
+						let result = await this.callRpcClient.get(url);
+						return result.data;
+					} catch (error) {
+						this.logger.error(error);
+						this.logger.error(url);
+						return null;
+					}
 				},
 				async callApiLcd(url: string) {
 					if (this.callLcdClient === undefined) {
@@ -54,9 +62,14 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 							this.callLcdClient = resilientClient;
 						}
 					}
-					// @ts-ignore
-					let result = await this.callLcdClient.get(url);
-					return result.data;
+					try {
+						// @ts-ignore
+						let result = await this.callLcdClient.get(url);
+						return result.data;
+					} catch (error) {
+						this.logger.error(error);
+						return null;
+					}
 				},
 			},
 		};

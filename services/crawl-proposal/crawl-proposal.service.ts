@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import { Service, Context, ServiceBroker } from 'moleculer';
+import { Service, ServiceBroker } from 'moleculer';
 import QueueService from 'moleculer-bull';
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
@@ -100,13 +100,13 @@ export default class CrawlProposalService extends Service {
 		);
 
 		this.getQueue('crawl.proposal').on('completed', (job, res) => {
-			this.logger.info(`Job #${JSON.stringify(job)} completed!. Result:`, res);
+			this.logger.info(`Job #${job.id} completed!. Result:`, res);
 		});
 		this.getQueue('crawl.proposal').on('failed', (job, err) => {
-			this.logger.error(`Job #${JSON.stringify(job)} failed!. Result:`, err);
+			this.logger.error(`Job #${job.id} failed!. Result:`, err);
 		});
 		this.getQueue('crawl.proposal').on('progress', (job, progress) => {
-			this.logger.info(`Job #${JSON.stringify(job)} progress is ${progress}%`);
+			this.logger.info(`Job #${job.id} progress is ${progress}%`);
 		});
 		return super._start();
 	}

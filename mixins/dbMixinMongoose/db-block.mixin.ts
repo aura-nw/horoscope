@@ -8,7 +8,7 @@ const dbInfo = Config.DB_BLOCK;
 
 const dbBaseMixin = new DbBaseMixin({
 	dbInfo,
-	name: 'dbTransactionMixin',
+	name: 'dbBlockMixin',
 	collection: dbInfo.collection,
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore

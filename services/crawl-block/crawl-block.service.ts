@@ -86,6 +86,9 @@ export default class CrawlBlockService extends Service {
 			URL_TYPE_CONSTANTS.RPC,
 			`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
 		);
+		if (data == null) {
+			throw new Error('cannot crawl block');
+		}
 		this.handleListBlock(data);
 		this.currentBlock = endBlock;
 		let redisClient: RedisClientType = await this.getRedisClient();
@@ -130,7 +133,6 @@ export default class CrawlBlockService extends Service {
 	}
 	async _start() {
 		this.redisClient = await this.getRedisClient();
-		// this.getQueue('crawl.block').removeRepeatable('crawl.block', {});
 		this.createJob(
 			'crawl.block',
 			{
@@ -141,20 +143,18 @@ export default class CrawlBlockService extends Service {
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_BLOCK, 10),
 				},
+				attempts: 5,
+				backoff: 5000,
 			},
 		);
 		this.getQueue('crawl.block').on('completed', (job, res) => {
-			this.logger.info(`Job #${JSON.stringify(job)} completed!. Result:`, res);
-			// this.getStatistic();
-			// job.remove();
+			this.logger.info(`Job #${job.id} completed!. Result:`, res);
 		});
 		this.getQueue('crawl.block').on('failed', (job, err) => {
-			this.logger.error(`Job #${JSON.stringify(job)} failed!. Result:`, err);
-			// this.getStatistic();
-			// job.remove();
+			this.logger.error(`Job #${job.id} failed!. Result:`, err);
 		});
 		this.getQueue('crawl.block').on('progress', (job, progress) => {
-			this.logger.info(`Job #${JSON.stringify(job)} progress is ${progress}%`);
+			this.logger.info(`Job #${job.id} progress is ${progress}%`);
 		});
 		return super._start();
 	}

@@ -135,17 +135,13 @@ export default class CrawlParamService extends Service {
 			},
 		);
 		this.getQueue('crawl.param').on('completed', (job, res) => {
-			this.logger.info(`Job #${JSON.stringify(job)} completed!. Result:`, res);
-			// this.getStatistic();
-			// job.remove();
+			this.logger.info(`Job #${job.id} completed!. Result:`, res);
 		});
 		this.getQueue('crawl.param').on('failed', (job, err) => {
-			this.logger.error(`Job #${JSON.stringify(job)} failed!. Result:`, err);
-			// this.getStatistic();
-			// job.remove();
+			this.logger.error(`Job #${job.id} failed!. Result:`, err);
 		});
 		this.getQueue('crawl.param').on('progress', (job, progress) => {
-			this.logger.info(`Job #${JSON.stringify(job)} progress is ${progress}%`);
+			this.logger.info(`Job #${job.id} progress is ${progress}%`);
 		});
 		return super._start();
 	}

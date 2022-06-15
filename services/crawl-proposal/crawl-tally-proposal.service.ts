@@ -74,19 +74,17 @@ export default class CrawlProposalService extends Service {
 			} catch (error) {
 				this.logger.error(error);
 			}
-		} else {
-			let proposal = new ProposalEntity();
 		}
 	}
 	async _start() {
 		this.getQueue('crawl.tally.proposal').on('completed', (job, res) => {
-			this.logger.info(`Job #${JSON.stringify(job)} completed!. Result:`, res);
+			this.logger.info(`Job #${job.id} completed!. Result:`, res);
 		});
 		this.getQueue('crawl.tally.proposal').on('failed', (job, err) => {
-			this.logger.error(`Job #${JSON.stringify(job)} failed!. Result:`, err);
+			this.logger.error(`Job #${job.id} failed!. Result:`, err);
 		});
 		this.getQueue('crawl.tally.proposal').on('progress', (job, progress) => {
-			this.logger.info(`Job #${JSON.stringify(job)} progress is ${progress}%`);
+			this.logger.info(`Job #${job.id} progress is ${progress}%`);
 		});
 		return super._start();
 	}
