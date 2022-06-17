@@ -108,7 +108,7 @@ export default class HandleBlockService extends Service {
 					}
 					listBlockNeedSaveToDb.push(block);
 					listTx.push(...block.block.data.txs);
-					// listMessageNeedAck.push(item.id);
+					listMessageNeedAck.push(item.id);
 					this.lastId = item.id;
 				});
 				if (listBlockNeedSaveToDb.length > 0) {
@@ -160,13 +160,13 @@ export default class HandleBlockService extends Service {
 			},
 		);
 
-		this.getQueue('crawl.block').on('completed', (job: Job) => {
+		this.getQueue('handle.block').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.block').on('failed', (job: Job ) => {
+		this.getQueue('handle.block').on('failed', (job: Job ) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('crawl.block').on('progress', (job: Job) => {
+		this.getQueue('handle.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();

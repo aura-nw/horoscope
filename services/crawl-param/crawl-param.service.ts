@@ -3,10 +3,11 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-import QueueService from 'moleculer-bull';
+const QueueService = require ('moleculer-bull');
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { dbParamMixin } from '../../mixins/dbMixinMongoose';
+import { Job } from 'bull';
 export default class CrawlParamService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbParamMixin = dbParamMixin;
@@ -24,12 +25,12 @@ export default class CrawlParamService extends Service {
 					},
 				),
 				this.callApiMixin,
-				dbParamMixin,
+				this.dbParamMixin,
 			],
 			queues: {
 				'crawl.param': {
 					concurrency: 1,
-					async process(job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(job.data.param);
@@ -42,7 +43,7 @@ export default class CrawlParamService extends Service {
 	}
 
 	async initEnv() {}
-	async handleJob(param) {
+	async handleJob() {
 		let [
 			paramBank,
 			paramDistribution,
@@ -102,9 +103,9 @@ export default class CrawlParamService extends Service {
 		this.logger.info(`id: ${JSON.stringify(id)}`);
 	}
 
-	async findAndUpdate(listParamInDb, module, params) {
+	async findAndUpdate(listParamInDb: any, module: String, params: any) {
 		if (listParamInDb.length > 0) {
-			let item = listParamInDb.find((item) => item._doc.module == module);
+			let item = listParamInDb.find((item: any) => item._doc.module == module);
 			this.logger.info(`item: ${item}`);
 			if (item) {
 				await this.adapter.updateById(item._id, { params: params });
@@ -134,14 +135,14 @@ export default class CrawlParamService extends Service {
 				},
 			},
 		);
-		this.getQueue('crawl.param').on('completed', (job, res) => {
-			this.logger.info(`Job #${job.id} completed!. Result:`, res);
+		this.getQueue('crawl.param').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.param').on('failed', (job, err) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, err);
+		this.getQueue('crawl.param').on('failed', (job: Job ) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('crawl.param').on('progress', (job, progress) => {
-			this.logger.info(`Job #${job.id} progress is ${progress}%`);
+		this.getQueue('crawl.param').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
 	}

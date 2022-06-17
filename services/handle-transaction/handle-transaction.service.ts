@@ -62,9 +62,9 @@ export default class HandleTransactionService extends Service {
 			this.logger.error(error);
 		}
 	}
+	private hasRemainingMessage = true;
+	private lastId = '0-0';
 	async handleJob() {
-		let hasRemainingMessage = true;
-		let lastId = '0-0';
 
 		let xAutoClaimResult = await this.redisClient.xAutoClaim(
 			Config.REDIS_STREAM_TRANSACTION_NAME,
@@ -74,12 +74,12 @@ export default class HandleTransactionService extends Service {
 			'0-0',
 		);
 		if (xAutoClaimResult.messages.length == 0) {
-			hasRemainingMessage = false;
+			this.hasRemainingMessage = false;
 		}
 
 		let idXReadGroup = '';
-		if (hasRemainingMessage) {
-			idXReadGroup = lastId;
+		if (this.hasRemainingMessage) {
+			idXReadGroup = this.lastId;
 		} else {
 			idXReadGroup = '>';
 		}
@@ -90,14 +90,14 @@ export default class HandleTransactionService extends Service {
 		);
 
 		if (result)
-			result.forEach(async (element: any) => {
+			await result.forEach(async (element: any) => {
 				let listTransactionNeedSaveToDb: any[] = [];
 				let listMessageNeedAck: any[] = [];
 				element.messages.forEach(async (item:any) => {
 					this.logger.info(`Handling message ${item.id}`);
 					listTransactionNeedSaveToDb.push(JSON.parse(item.message.element));
 					listMessageNeedAck.push(item.id);
-					lastId = item.id;
+					this.lastId = item.id;
 				});
 
 				await this.handleListTransaction(listTransactionNeedSaveToDb);
@@ -133,13 +133,13 @@ export default class HandleTransactionService extends Service {
 
 		
 
-		this.getQueue('crawl.block').on('completed', (job: Job) => {
+		this.getQueue('handle.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.block').on('failed', (job: Job ) => {
+		this.getQueue('handle.transaction').on('failed', (job: Job ) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('crawl.block').on('progress', (job: Job) => {
+		this.getQueue('handle.transaction').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();

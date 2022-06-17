@@ -47,18 +47,17 @@ export default class CrawlTransactionService extends Service {
 					},
 					async handler(ctx) {
 						const listTx = ctx.params.listTx;
-						listTx.map((tx: any) => {
-							this.createJob(
-								'crawl.transaction',
-								{
-									listTx: listTx,
-								},
-								{
-									removeOnComplete: true,
-								},
-							);
-						});
-						return listTx;
+						this.logger.info(`Crawl list transaction: ${JSON.stringify(listTx)}`);
+						this.createJob(
+							'crawl.transaction',
+							{
+								listTx: listTx,
+							},
+							{
+								removeOnComplete: true,
+							},
+						);
+						return true;
 					},
 				},
 			},
@@ -70,10 +69,7 @@ export default class CrawlTransactionService extends Service {
 		// this.logger.info(`Handle job: ${JSON.stringify(listTx)}`);
 		listTx.map(async (tx: any) => {
 			const txHash = sha256(Buffer.from(tx, 'base64')).toUpperCase();
-			this.logger.debug(`txhash: ${txHash}`);
-			if (txHash === '4783A37DDC4B1A03259AF142B402611770C75CB7E0CF11D61D2990E068EDF0B6') {
-				this.logger.info(1);
-			}
+			this.logger.info(`txhash: ${txHash}`);
 			let result = await this.callApi(
 				URL_TYPE_CONSTANTS.RPC,
 				`${Config.GET_TX_API}0x${txHash}`,
@@ -94,13 +90,13 @@ export default class CrawlTransactionService extends Service {
 	async _start() {
 		this.redisClient = await this.getRedisClient();
 
-		this.getQueue('crawl.block').on('completed', (job: Job) => {
+		this.getQueue('crawl.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.block').on('failed', (job: Job ) => {
+		this.getQueue('crawl.transaction').on('failed', (job: Job ) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('crawl.block').on('progress', (job: Job) => {
+		this.getQueue('crawl.transaction').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();

@@ -3,7 +3,7 @@
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, Context, ServiceBroker } from 'moleculer';
-import QueueService from 'moleculer-bull';
+const QueueService = require ('moleculer-bull');
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 import { ProposalEntity } from '../../entities/proposal.entity';
@@ -11,6 +11,7 @@ import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { ProposalResponseFromApi } from 'types';
 import { Action, Method } from '@ourparentcenter/moleculer-decorators-extended';
+import { Job } from 'bull';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -34,7 +35,7 @@ export default class CrawlProposalService extends Service {
 			queues: {
 				'crawl.tally.proposal': {
 					concurrency: 1,
-					async process(job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(job.data.url);
@@ -56,7 +57,7 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async handleJob(proposalId) {
+	async handleJob(proposalId: String) {
 		let url = `${Config.GET_ALL_PROPOSAL}/${proposalId}/tally`;
 
 		let result = await this.callApi(URL_TYPE_CONSTANTS.LCD, url);
@@ -77,14 +78,14 @@ export default class CrawlProposalService extends Service {
 		}
 	}
 	async _start() {
-		this.getQueue('crawl.tally.proposal').on('completed', (job, res) => {
-			this.logger.info(`Job #${job.id} completed!. Result:`, res);
+		this.getQueue('crawl.tally.proposal').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
-		this.getQueue('crawl.tally.proposal').on('failed', (job, err) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, err);
+		this.getQueue('crawl.tally.proposal').on('failed', (job: Job) => {
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
 		});
-		this.getQueue('crawl.tally.proposal').on('progress', (job, progress) => {
-			this.logger.info(`Job #${job.id} progress is ${progress}%`);
+		this.getQueue('crawl.tally.proposal').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
 		return super._start();
 	}

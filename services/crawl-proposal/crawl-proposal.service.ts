@@ -3,13 +3,14 @@
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-import QueueService from 'moleculer-bull';
+const QueueService = require ('moleculer-bull');
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 import { ProposalEntity } from '../../entities/proposal.entity';
 import { Config } from '../../common';
 import { PROPOSAL_STATUS, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { ProposalResponseFromApi } from 'types';
+import { Job } from 'bull';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -33,7 +34,7 @@ export default class CrawlProposalService extends Service {
 			queues: {
 				'crawl.proposal': {
 					concurrency: 1,
-					async process(job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(job.data.url);
@@ -45,7 +46,7 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async handleJob(url) {
+	async handleJob(url: String) {
 		let listProposal: ProposalEntity[] = [];
 
 		let urlToCall = url;
@@ -99,14 +100,14 @@ export default class CrawlProposalService extends Service {
 			},
 		);
 
-		this.getQueue('crawl.proposal').on('completed', (job, res) => {
-			this.logger.info(`Job #${job.id} completed!. Result:`, res);
+		this.getQueue('crawl.proposal').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.proposal').on('failed', (job, err) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, err);
+		this.getQueue('crawl.proposal').on('failed', (job: Job ) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('crawl.proposal').on('progress', (job, progress) => {
-			this.logger.info(`Job #${job.id} progress is ${progress}%`);
+		this.getQueue('crawl.proposal').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
 	}
