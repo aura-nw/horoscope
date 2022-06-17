@@ -3,14 +3,14 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-import QueueService from 'moleculer-bull';
+const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
+import { Job } from 'bull';
 
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbTransactionMixin = dbTransactionMixin;
-	private redisClient;
 	private consumer = Date.now().toString();
 
 	public constructor(public broker: ServiceBroker) {
@@ -31,7 +31,7 @@ export default class HandleTransactionService extends Service {
 			queues: {
 				'handle.transaction': {
 					concurrency: 1,
-					async process(job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(job.data.param);
@@ -45,6 +45,7 @@ export default class HandleTransactionService extends Service {
 
 	async initEnv() {
 		this.logger.info('initEnv');
+		this.redisClient = await this.getRedisClient();
 		try {
 			await this.redisClient.xGroupCreate(
 				Config.REDIS_STREAM_TRANSACTION_NAME,
@@ -61,7 +62,7 @@ export default class HandleTransactionService extends Service {
 			this.logger.error(error);
 		}
 	}
-	async handleJob(param) {
+	async handleJob() {
 		let hasRemainingMessage = true;
 		let lastId = '0-0';
 
@@ -89,10 +90,10 @@ export default class HandleTransactionService extends Service {
 		);
 
 		if (result)
-			result.forEach(async (element) => {
+			result.forEach(async (element: any) => {
 				let listTransactionNeedSaveToDb: any[] = [];
 				let listMessageNeedAck: any[] = [];
-				element.messages.forEach(async (item) => {
+				element.messages.forEach(async (item:any) => {
 					this.logger.info(`Handling message ${item.id}`);
 					listTransactionNeedSaveToDb.push(JSON.parse(item.message.element));
 					listMessageNeedAck.push(item.id);
@@ -108,7 +109,7 @@ export default class HandleTransactionService extends Service {
 			});
 	}
 
-	async handleListTransaction(listTransaction) {
+	async handleListTransaction(listTransaction: any) {
 		let listId = await this.adapter.insertMany(listTransaction);
 		return listId;
 	}
@@ -130,14 +131,16 @@ export default class HandleTransactionService extends Service {
 
 		await this.initEnv();
 
-		this.getQueue('handle.transaction').on('completed', (job, res) => {
-			this.logger.info(`Job #${JSON.stringify(job)} completed!. Result:`, res);
+		
+
+		this.getQueue('crawl.block').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('handle.transaction').on('failed', (job, err) => {
-			this.logger.error(`Job #${JSON.stringify(job)} failed!. Result:`, err);
+		this.getQueue('crawl.block').on('failed', (job: Job ) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('handle.transaction').on('progress', (job, progress) => {
-			this.logger.info(`Job #${JSON.stringify(job)} progress is ${progress}%`);
+		this.getQueue('crawl.block').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
 	}

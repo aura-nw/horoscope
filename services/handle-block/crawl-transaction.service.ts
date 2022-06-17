@@ -3,14 +3,14 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-import QueueService from 'moleculer-bull';
+const QueueService = require ('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { sha256 } from 'js-sha256';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { Job } from 'bull';
 export default class CrawlTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
-	private redisClient;
 	private callApiMixin = new CallApiMixin().start();
 
 	public constructor(public broker: ServiceBroker) {
@@ -31,7 +31,7 @@ export default class CrawlTransactionService extends Service {
 			queues: {
 				'crawl.transaction': {
 					concurrency: 1,
-					async process(job) {
+					async process(job : Job) {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(job.data.listTx);
@@ -47,7 +47,7 @@ export default class CrawlTransactionService extends Service {
 					},
 					async handler(ctx) {
 						const listTx = ctx.params.listTx;
-						listTx.map((tx) => {
+						listTx.map((tx: any) => {
 							this.createJob(
 								'crawl.transaction',
 								{
@@ -66,9 +66,9 @@ export default class CrawlTransactionService extends Service {
 	}
 
 	async initEnv() {}
-	async handleJob(listTx) {
+	async handleJob(listTx: any) {
 		// this.logger.info(`Handle job: ${JSON.stringify(listTx)}`);
-		listTx.map(async (tx) => {
+		listTx.map(async (tx: any) => {
 			const txHash = sha256(Buffer.from(tx, 'base64')).toUpperCase();
 			this.logger.debug(`txhash: ${txHash}`);
 			if (txHash === '4783A37DDC4B1A03259AF142B402611770C75CB7E0CF11D61D2990E068EDF0B6') {
@@ -94,14 +94,14 @@ export default class CrawlTransactionService extends Service {
 	async _start() {
 		this.redisClient = await this.getRedisClient();
 
-		this.getQueue('crawl.transaction').on('completed', (job, res) => {
-			this.logger.info(`Job #${job.id} completed!. Result:`, res);
+		this.getQueue('crawl.block').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.transaction').on('failed', (job, err) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, err);
+		this.getQueue('crawl.block').on('failed', (job: Job ) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('crawl.transaction').on('progress', (job, progress) => {
-			this.logger.info(`Job #${job.id} progress is ${progress}%`);
+		this.getQueue('crawl.block').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
 	}

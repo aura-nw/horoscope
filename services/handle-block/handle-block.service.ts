@@ -3,15 +3,15 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-import QueueService from 'moleculer-bull';
+const QueueService = require ('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { BlockEntity } from '../../entities';
+import { Job } from 'bull';
 export default class HandleBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbBlockMixin = dbBlockMixin;
-	private redisClient;
 	private consumer = Date.now().toString();
 
 	public constructor(public broker: ServiceBroker) {
@@ -32,7 +32,7 @@ export default class HandleBlockService extends Service {
 			queues: {
 				'handle.block': {
 					concurrency: 1,
-					async process(job) {
+					async process(job : Job) {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(job.data.param);
@@ -62,9 +62,13 @@ export default class HandleBlockService extends Service {
 			this.logger.error(error);
 		}
 	}
-	async handleJob(param) {
-		let hasRemainingMessage = true;
-		let lastId = '0-0';
+
+	private hasRemainingMessage = true;
+	private lastId = '0-0';
+
+	async handleJob() {
+		this.logger.info("handleJob");
+		
 
 		let xAutoClaimResult = await this.redisClient.xAutoClaim(
 			Config.REDIS_STREAM_BLOCK_NAME,
@@ -72,14 +76,16 @@ export default class HandleBlockService extends Service {
 			this.consumer,
 			1000,
 			'0-0',
+			'COUNT',
+			'100'
 		);
 		if (xAutoClaimResult.messages.length == 0) {
-			hasRemainingMessage = false;
+			this.hasRemainingMessage = false;
 		}
 
 		let idXReadGroup = '';
-		if (hasRemainingMessage) {
-			idXReadGroup = lastId;
+		if (this.hasRemainingMessage) {
+			idXReadGroup = this.lastId;
 		} else {
 			idXReadGroup = '>';
 		}
@@ -88,13 +94,13 @@ export default class HandleBlockService extends Service {
 			this.consumer,
 			[{ key: Config.REDIS_STREAM_BLOCK_NAME, id: idXReadGroup }],
 		);
-
-		if (result)
-			result.forEach(async (element) => {
+		try {
+			if (result)
+			await result.forEach(async (element: any) => {
 				let listBlockNeedSaveToDb: any[] = [];
 				let listMessageNeedAck: any[] = [];
 				let listTx: any[] = [];
-				element.messages.forEach(async (item) => {
+				element.messages.forEach(async (item: any) => {
 					this.logger.info(`Handling message ${item.id}`);
 					let block = JSON.parse(item.message.element);
 					if (block.block.header.height == '2062') {
@@ -102,8 +108,8 @@ export default class HandleBlockService extends Service {
 					}
 					listBlockNeedSaveToDb.push(block);
 					listTx.push(...block.block.data.txs);
-					listMessageNeedAck.push(item.id);
-					lastId = item.id;
+					// listMessageNeedAck.push(item.id);
+					this.lastId = item.id;
 				});
 				if (listBlockNeedSaveToDb.length > 0) {
 					await this.handleListBlock(listBlockNeedSaveToDb);
@@ -121,9 +127,14 @@ export default class HandleBlockService extends Service {
 					);
 				}
 			});
+		} catch (error) {
+			this.logger.error(error);
+		}
+		
+		this.logger.info(`handleJob done`);
 	}
 
-	async handleListBlock(listBlock) {
+	async handleListBlock(listBlock: any) {
 		let jsonConvert: JsonConvert = new JsonConvert();
 		// jsonConvert.operationMode = OperationMode.LOGGING;
 		const item: any = jsonConvert.deserializeArray(listBlock, BlockEntity);
@@ -149,14 +160,14 @@ export default class HandleBlockService extends Service {
 			},
 		);
 
-		this.getQueue('handle.block').on('completed', (job, res) => {
-			this.logger.info(`Job #${job.id} completed!. Result:`, res);
+		this.getQueue('crawl.block').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('handle.block').on('failed', (job, err) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, err);
+		this.getQueue('crawl.block').on('failed', (job: Job ) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('handle.block').on('progress', (job, progress) => {
-			this.logger.info(`Job #${job.id} progress is ${progress}%`);
+		this.getQueue('crawl.block').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
 	}

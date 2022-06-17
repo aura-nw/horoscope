@@ -3,17 +3,20 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
-import QueueService from 'moleculer-bull';
+
+const QueueService = require ('moleculer-bull');
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from '@redis/client';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { Job  } from 'bull'
+
 export default class CrawlBlockService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private redisMixin = new RedisMixin().start();
-
+	
 	private currentBlock = 0;
-	private redisClient;
+	// private redisClient = this.getRedisClient();
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -33,7 +36,7 @@ export default class CrawlBlockService extends Service {
 			queues: {
 				'crawl.block': {
 					concurrency: 1,
-					async process(job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
 						await this.initEnv();
@@ -66,7 +69,7 @@ export default class CrawlBlockService extends Service {
 		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : 0;
 		this.logger.info(`currentBlock: ${this.currentBlock}`);
 	}
-	async handleJob(param) {
+	async handleJob(param: String) {
 		const responseGetLatestBlock = await this.callApi(
 			URL_TYPE_CONSTANTS.RPC,
 			`${Config.GET_LATEST_BLOCK_API}`,
@@ -94,9 +97,9 @@ export default class CrawlBlockService extends Service {
 		let redisClient: RedisClientType = await this.getRedisClient();
 		redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
 	}
-	async handleListBlock(data) {
+	async handleListBlock(data: any) {
 		const listBlock = data.result.blocks;
-		listBlock.map((block) => {
+		listBlock.map((block: any) => {
 			//pust block to redis stream
 			this.logger.info('xadd block: ' + block.block.header.height);
 
@@ -112,22 +115,22 @@ export default class CrawlBlockService extends Service {
 	getStatistic() {
 		this.getQueue('crawl.block')
 			.getCompletedCount()
-			.then((count) => {
+			.then((count: String) => {
 				this.logger.info(`Completed jobs: ${count}`);
 			});
 		this.getQueue('crawl.block')
 			.getFailedCount()
-			.then((count) => {
+			.then((count: String) => {
 				this.logger.info(`Failed jobs: ${count}`);
 			});
 		this.getQueue('crawl.block')
 			.getActiveCount()
-			.then((count) => {
+			.then((count: String) => {
 				this.logger.info(`Active jobs: ${count}`);
 			});
 		this.getQueue('crawl.block')
 			.getWaitingCount()
-			.then((count) => {
+			.then((count: String) => {
 				this.logger.info(`Waiting jobs: ${count}`);
 			});
 	}
@@ -145,14 +148,14 @@ export default class CrawlBlockService extends Service {
 				},
 			},
 		);
-		this.getQueue('crawl.block').on('completed', (job, res) => {
-			this.logger.info(`Job #${job.id} completed!. Result:`, res);
+		this.getQueue('crawl.block').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.block').on('failed', (job, err) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, err);
+		this.getQueue('crawl.block').on('failed', (job: Job ) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('crawl.block').on('progress', (job, progress) => {
-			this.logger.info(`Job #${job.id} progress is ${progress}%`);
+		this.getQueue('crawl.block').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
 	}
