@@ -119,7 +119,11 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 					block_id_flag: Number,
 					validator_address: String,
 					timestamp: String,
-					signature: String || null,
+					signature: {
+						type: String,
+						require: false,
+						default: null,
+					},
 				},
 			],
 		},
