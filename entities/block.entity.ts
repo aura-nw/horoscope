@@ -75,8 +75,8 @@ export class Signature {
 	validator_address: String = '';
 	@JsonProperty('timestamp', String)
 	timestamp: String = '';
-	@JsonProperty('signature', String)
-	signature: String = '';
+	@JsonProperty('signature', String, true)
+	signature: String | null = null;
 }
 
 @JsonObject('BlockLastCommit')
