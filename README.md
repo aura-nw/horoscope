@@ -1,14 +1,6 @@
 # Aura Indexer
 
-## Usage
-
-Copy .env file by `cp .env.example .env`
-Start the project with `npm install` and `npm run dev` command.
-In the terminal, try the following commands:
-
--   `nodes` - List all connected nodes.
--   `actions` - List all registered service actions.
--   ...
+Aura Indexer is an indexing service for Cosmos-based blockchain. It crawl data from the blockchain and index it into mongoDB.
 
 ## Main flow crawl
 
@@ -18,7 +10,7 @@ In the terminal, try the following commands:
 
 ![image](docs/images/architect-backend-api.png)
 
-## Services
+## List services
 
 -   **api**: API Gateway services
 -   **crawl-block**: get block from network and store it in redis stream
@@ -26,6 +18,16 @@ In the terminal, try the following commands:
 -   **crawl-param**: get all param from network and store it in mongodb
 -   **crawl-proposal**: get all proposal from network and store it in mongodb
 -   **handle-transaction**: get transaction from redis stream and store it in mongodb
+
+## How to run
+
+```bash
+# create file env
+cp .env.example .env
+
+# run with moleculer cli
+npm run dev
+```
 
 ## NPM scripts
 
