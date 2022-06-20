@@ -2,6 +2,7 @@
 
 ## Usage
 
+Copy .env file by `cp .env.example .env`
 Start the project with `npm install` and `npm run dev` command.
 In the terminal, try the following commands:
 
