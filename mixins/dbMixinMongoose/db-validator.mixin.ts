@@ -1,18 +1,18 @@
 'use strict';
 
-import { proposalMongoModel } from '../../model';
+import { validatorMongoModel } from '../../model';
 import { Config } from '../../common';
 import { DbBaseMixin } from './db-base.mixin';
 
-const dbInfo = Config.DB_PROPOSAL;
+const dbInfo = Config.DB_VALIDATOR;
 
 const dbBaseMixin = new DbBaseMixin({
 	dbInfo,
-	name: 'dbProposalMixin',
+	name: 'dbValidatorMixin',
 	collection: dbInfo.collection,
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	model: proposalMongoModel(dbInfo.collection),
+	model: validatorMongoModel(dbInfo.collection),
 });
 
-export const dbProposalMixin = dbBaseMixin.getMixin();
+export const dbValidatorMixin = dbBaseMixin.getMixin();
