@@ -98,5 +98,7 @@ export default class ConfigClass {
 		this.DB_PARAM = genericDbInfo('PARAM');
 		this.DB_BLOCK = genericDbInfo('BLOCK');
 		this.DB_VALIDATOR = genericDbInfo('VALIDATOR');
+		this.DB_POOL = genericDbInfo('POOL');
+		this.DB_COMMUNITY_POOL = genericDbInfo('COMMUNITY_POOL');
 	}
 }

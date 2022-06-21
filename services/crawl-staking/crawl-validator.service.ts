@@ -22,9 +22,12 @@ export default class CrawlValidatorService extends Service {
 			name: 'crawlValidator',
 			version: 1,
 			mixins: [
-				QueueService(`${Config.REDIS_URI}`, {
-					prefix: 'crawl.staking.validator',
-				}),
+				QueueService(
+					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
+					{
+						prefix: 'crawl.staking.validator',
+					},
+				),
 				this.callApiMixin,
 				this.dbValidatorMixin,
 			],
