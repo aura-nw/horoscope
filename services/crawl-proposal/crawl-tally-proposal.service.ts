@@ -72,7 +72,7 @@ export default class CrawlProposalService extends Service {
 		});
 		if (foundProposal) {
 			try {
-				let res = await this.adapter.updateById(foundProposal.id, {
+				let res = await this.adapter.updateById(foundProposal._id, {
 					$set: { tally: result.tally },
 				});
 				this.logger.debug(res);
