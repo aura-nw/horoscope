@@ -57,14 +57,19 @@ export default class CrawlCommunityPoolService extends Service {
 			urlToCall,
 		);
 		let jsonConvert = new JsonConvert();
-		jsonConvert.operationMode = OperationMode.LOGGING;
-		const item: any = jsonConvert.deserializeObject(resultCallApi, CommunityPoolEntity);
+		// jsonConvert.operationMode = OperationMode.LOGGING;
+		const item: CommunityPoolEntity = jsonConvert.deserializeObject(
+			resultCallApi,
+			CommunityPoolEntity,
+		);
 		let foundPool = await this.adapter.findOne({ 'custom_info.chain_id': Config.CHAIN_ID });
 		try {
 			if (foundPool) {
-				this.adapter.updateById(foundPool._id, item);
+				item._id = foundPool._id;
+				await this.adapter.updateById(foundPool._id, item);
+				// this.logger.info(`Update community pool success! ${result}`);
 			} else {
-				this.adapter.insert(item);
+				await this.adapter.insert(item);
 			}
 		} catch (error) {
 			this.logger.error(error);

@@ -71,16 +71,17 @@ export default class CrawlProposalService extends Service {
 			let foundProposal = await this.adapter.findOne({
 				proposal_id: `${proposal.proposal_id}`,
 			});
-			this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
+			// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
 			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
-				// this.broker.call('v1.crawlTallyProposal.crawlTally', { id: proposal.proposal_id });
+				this.broker.call('v1.crawlTallyProposal.crawlTally', { id: proposal.proposal_id });
 			}
 			try {
 				if (foundProposal) {
-					let result = await this.adapter.updateById(foundProposal.id, proposal);
+					proposal._id = foundProposal._id;
+					await this.adapter.updateById(foundProposal.id, proposal);
 				} else {
 					const item: any = new JsonConvert().deserializeObject(proposal, ProposalEntity);
-					let id = await this.adapter.insert(item);
+					await this.adapter.insert(item);
 				}
 			} catch (error) {
 				this.logger.error(error);

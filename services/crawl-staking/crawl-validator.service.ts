@@ -75,10 +75,11 @@ export default class CrawlValidatorService extends Service {
 				if (foundValidator) {
 					let result = await this.adapter.updateById(foundValidator.id, validator);
 				} else {
-					const item: any = new JsonConvert().deserializeObject(
+					const item: ValidatorEntity = new JsonConvert().deserializeObject(
 						validator,
 						ValidatorEntity,
 					);
+					item._id = foundValidator._id;
 					let id = await this.adapter.insert(item);
 				}
 			} catch (error) {
