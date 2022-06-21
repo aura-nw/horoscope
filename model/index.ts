@@ -5,3 +5,5 @@ export * from './block.model';
 export * from './validator.model';
 export * from './pool.model';
 export * from './community-pool.model';
+export * from './asset.model';
+export * from './codeid.model';

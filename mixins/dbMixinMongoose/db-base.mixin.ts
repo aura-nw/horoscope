@@ -167,6 +167,8 @@ export class DbBaseMixin {
 				useUnifiedTopology: true,
 				authSource: 'admin',
 				dbName: this.dbInfo.dbname,
+				useCreateIndex: true,
+				autoIndex: true,
 			}),
 			collection: this.collection,
 			model: this.mixModel,

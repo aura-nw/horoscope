@@ -75,6 +75,8 @@ export default class ConfigClass {
 	public static DB_USER: any;
 	public static DB_PRODUCT: any;
 	public static DB_TRANSACTION: any;
+	public static DB_ASSET: any;
+	public static DB_CODE_ID: any;
 	public static DB_BLOCK: any;
 	public static DB_PARAM: any;
 	public static DB_VALIDATOR: any;
@@ -100,5 +102,7 @@ export default class ConfigClass {
 		this.DB_VALIDATOR = genericDbInfo('VALIDATOR');
 		this.DB_POOL = genericDbInfo('POOL');
 		this.DB_COMMUNITY_POOL = genericDbInfo('COMMUNITY_POOL');
+		this.DB_ASSET = genericDbInfo('ASSET');
+		this.DB_CODE_ID = genericDbInfo('CODE_ID');
 	}
 }
