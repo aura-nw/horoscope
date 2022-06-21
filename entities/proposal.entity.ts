@@ -65,11 +65,11 @@ export class Content {
 @JsonObject('Proposal')
 export class ProposalEntity implements IProposal {
 	@JsonProperty('_id', String, true)
-	public _id = Config.DB_PRODUCT.dialect === 'local' ? Types.ObjectId() : null;
+	_id = Config.DB_PRODUCT.dialect === 'local' ? Types.ObjectId() : null;
 	@JsonProperty('proposal_id', String)
-	public proposal_id = '';
+	proposal_id = '';
 	@JsonProperty('content', Content)
-	public content = {} as Content;
+	content = {} as Content;
 	@JsonProperty('status', String)
 	status: String = '';
 	@JsonProperty('final_tally_result', Final_tally_result)

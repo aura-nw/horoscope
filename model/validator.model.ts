@@ -1,5 +1,6 @@
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
+import { customInfoModel } from './custom-info.model';
 
 export interface IConsensusPubkey {
 	'@type': String;
@@ -69,6 +70,7 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 		update_time: String,
 	},
 	min_self_delegation: String,
+	custom_info: customInfoModel,
 });
 
 export const validatorMongoModel = (collection: string): unknown => {

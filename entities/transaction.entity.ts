@@ -67,19 +67,56 @@ export class AuthInfo {
 	granter: string = '';
 }
 
+export class Attribute {
+	@JsonProperty('key', String)
+	key: string = '';
+	@JsonProperty('value', String)
+	value: string = '';
+	@JsonProperty('index', Boolean)
+	index: Boolean = false;
+}
+export class TxResult {
+	@JsonProperty('code', Number)
+	code: Number = 0;
+	@JsonProperty('data', String)
+	data: String = '';
+	@JsonProperty('log', String)
+	log: String = '';
+	@JsonProperty('info', String)
+	info: String = '';
+	@JsonProperty('gas_wanted', String)
+	gas_wanted: String = '';
+	@JsonProperty('gas_used', String)
+	gas_used: String = '';
+	@JsonProperty('events', [Attribute])
+	events: Attribute[] = [];
+	@JsonProperty('codespace', String)
+	codespace: String = '';
+}
 @JsonObject('Transaction')
 export class TransactionEntity {
 	@JsonProperty('_id', String, true)
 	public _id = Config.DB_TRANSACTION.dialect === 'local' ? Types.ObjectId() : null;
 
-	@JsonProperty('body', Body, true)
-	body: Body = {} as Body;
+	@JsonProperty('hash', String)
+	hash: String = '';
+	@JsonProperty('height', String)
+	height: String = '';
+	@JsonProperty('index', Number)
+	index: Number = 0;
+	@JsonProperty('tx_result', TxResult)
+	tx_result: TxResult = {} as TxResult;
+	@JsonProperty('tx', String)
+	tx: String = '';
 
-	@JsonProperty('auth_info', AuthInfo, true)
-	auth_info: AuthInfo = {} as AuthInfo;
+	// @JsonProperty('body', Body, true)
+	// body: Body = {} as Body;
 
-	@JsonProperty('signatures', [String], true)
-	signatures: string[] = [];
+	// @JsonProperty('auth_info', AuthInfo, true)
+	// auth_info: AuthInfo = {} as AuthInfo;
+
+	// @JsonProperty('signatures', [String], true)
+	// signatures: string[] = [];
 
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {

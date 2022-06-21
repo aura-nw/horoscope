@@ -3,7 +3,7 @@
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require ('moleculer-bull');
+const QueueService = require('moleculer-bull');
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 import { ProposalEntity } from '../../entities/proposal.entity';
@@ -71,8 +71,10 @@ export default class CrawlProposalService extends Service {
 			let foundProposal = await this.adapter.findOne({
 				proposal_id: `${proposal.proposal_id}`,
 			});
-			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD)
-				this.broker.call('v1.crawlTallyProposal.crawlTally', { id: proposal.proposal_id });
+			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
+				// this.broker.call('v1.crawlTallyProposal.crawlTally', { id: proposal.proposal_id });
+				this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
+			}
 			try {
 				if (foundProposal) {
 					let result = await this.adapter.updateById(foundProposal.id, proposal);
@@ -103,7 +105,7 @@ export default class CrawlProposalService extends Service {
 		this.getQueue('crawl.proposal').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.proposal').on('failed', (job: Job ) => {
+		this.getQueue('crawl.proposal').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
 		this.getQueue('crawl.proposal').on('progress', (job: Job) => {

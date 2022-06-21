@@ -1,5 +1,6 @@
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
+import { customInfoModel } from './custom-info.model';
 
 export interface IBlockIdPart {
 	total: number;
@@ -124,6 +125,7 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 			],
 		},
 	},
+	custom_info: customInfoModel,
 });
 
 export const blockMongoModel = (collection: string): unknown => {

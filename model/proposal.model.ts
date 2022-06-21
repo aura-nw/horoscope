@@ -1,5 +1,6 @@
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
+import { customInfoModel } from './custom-info.model';
 
 export interface IProposal {
 	_id: ObjectIdNull;
@@ -18,6 +19,7 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 	_id: Types.ObjectId,
 	proposal_id: {
 		type: String,
+		index: true,
 	},
 	content: {
 		'@type': String,
@@ -54,6 +56,7 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 	],
 	voting_start_time: String,
 	voting_end_time: String,
+	custom_info: customInfoModel,
 });
 
 export const proposalMongoModel = (collection: string): unknown => {

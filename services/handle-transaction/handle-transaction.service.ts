@@ -7,6 +7,8 @@ const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
+import { JsonConvert, OperationMode } from 'json2typescript';
+import { TransactionEntity } from '../../entities';
 
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -65,7 +67,6 @@ export default class HandleTransactionService extends Service {
 	private hasRemainingMessage = true;
 	private lastId = '0-0';
 	async handleJob() {
-
 		let xAutoClaimResult = await this.redisClient.xAutoClaim(
 			Config.REDIS_STREAM_TRANSACTION_NAME,
 			Config.REDIS_STREAM_TRANSACTION_GROUP,
@@ -73,7 +74,7 @@ export default class HandleTransactionService extends Service {
 			1000,
 			'0-0',
 			'COUNT',
-			Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_TRANSACTION
+			Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_TRANSACTION,
 		);
 		if (xAutoClaimResult.messages.length == 0) {
 			this.hasRemainingMessage = false;
@@ -92,27 +93,36 @@ export default class HandleTransactionService extends Service {
 		);
 
 		if (result)
-			await result.forEach(async (element: any) => {
+			result.forEach(async (element: any) => {
 				let listTransactionNeedSaveToDb: any[] = [];
 				let listMessageNeedAck: any[] = [];
-				element.messages.forEach(async (item:any) => {
+				element.messages.forEach(async (item: any) => {
 					this.logger.info(`Handling message ${item.id}`);
 					listTransactionNeedSaveToDb.push(JSON.parse(item.message.element));
 					listMessageNeedAck.push(item.id);
 					this.lastId = item.id;
 				});
-
-				await this.handleListTransaction(listTransactionNeedSaveToDb);
-				await this.redisClient.xAck(
-					Config.REDIS_STREAM_TRANSACTION_NAME,
-					Config.REDIS_STREAM_TRANSACTION_GROUP,
-					listMessageNeedAck,
-				);
+				try {
+					this.handleListTransaction(listTransactionNeedSaveToDb);
+					this.redisClient.xAck(
+						Config.REDIS_STREAM_TRANSACTION_NAME,
+						Config.REDIS_STREAM_TRANSACTION_GROUP,
+						listMessageNeedAck,
+					);
+				} catch (error) {
+					this.logger.error(error);
+				}
 			});
 	}
 
 	async handleListTransaction(listTransaction: any) {
-		let listId = await this.adapter.insertMany(listTransaction);
+		let jsonConvert = new JsonConvert();
+		// jsonConvert.operationMode = OperationMode.LOGGING;
+		const item: any = jsonConvert.deserializeArray(listTransaction, TransactionEntity);
+
+		// this.logger.info(`item: ${item}`);
+
+		let listId = await this.adapter.insertMany(item);
 		return listId;
 	}
 
@@ -133,12 +143,10 @@ export default class HandleTransactionService extends Service {
 
 		await this.initEnv();
 
-		
-
 		this.getQueue('handle.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('handle.transaction').on('failed', (job: Job ) => {
+		this.getQueue('handle.transaction').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
 		this.getQueue('handle.transaction').on('progress', (job: Job) => {
