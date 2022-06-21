@@ -20,5 +20,5 @@ export type PoolResponseFromApi = {
 };
 
 export type CommunityPoolResponseFromApi = {
-	pool: CommunityPoolEntity;
+	pool: CommunityPoolEntity[];
 };

@@ -53,8 +53,24 @@ export default class CrawlPoolService extends Service {
 			urlToCall,
 		);
 		const item: any = new JsonConvert().deserializeObject(resultCallApi.pool, PoolEntity);
+
 		try {
-			await this.adapter.insert(item);
+			// let result = await this.adapter.updateMany(
+			// 	{ 'custom_info.chain_id': Config.CHAIN_ID },
+			// 	item,
+			// );
+			// this.logger.info(`Update ${result} item in pool`);
+
+			let foundPool = await this.adapter.findOne({ 'custom_info.chain_id': Config.CHAIN_ID });
+			try {
+				if (foundPool) {
+					this.adapter.updateById(foundPool._id, item);
+				} else {
+					this.adapter.insert(item);
+				}
+			} catch (error) {
+				this.logger.error(error);
+			}
 		} catch (error) {
 			this.logger.error(error);
 		}

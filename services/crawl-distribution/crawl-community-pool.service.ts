@@ -14,7 +14,7 @@ import {
 	ValidatorResponseFromApi,
 } from '../../types';
 import { Job } from 'bull';
-import { PoolEntity, ValidatorEntity } from '../../entities';
+import { CommunityPoolEntity, PoolEntity, ValidatorEntity } from '../../entities';
 
 export default class CrawlCommunityPoolService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -56,9 +56,16 @@ export default class CrawlCommunityPoolService extends Service {
 			URL_TYPE_CONSTANTS.LCD,
 			urlToCall,
 		);
-		const item: any = new JsonConvert().deserializeObject(resultCallApi.pool, PoolEntity);
+		let jsonConvert = new JsonConvert();
+		jsonConvert.operationMode = OperationMode.LOGGING;
+		const item: any = jsonConvert.deserializeObject(resultCallApi, CommunityPoolEntity);
+		let foundPool = await this.adapter.findOne({ 'custom_info.chain_id': Config.CHAIN_ID });
 		try {
-			await this.adapter.insert(item);
+			if (foundPool) {
+				this.adapter.updateById(foundPool._id, item);
+			} else {
+				this.adapter.insert(item);
+			}
 		} catch (error) {
 			this.logger.error(error);
 		}
