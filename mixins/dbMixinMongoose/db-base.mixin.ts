@@ -133,7 +133,7 @@ export class DbBaseMixin {
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private getDBUri() {
-		let uri = `${this.dbInfo.dialect}://${this.dbInfo.user}:${this.dbInfo.password}@${this.dbInfo.host}:${this.dbInfo.port}`;
+		let uri = `${this.dbInfo.dialect}://${this.dbInfo.user}:${this.dbInfo.password}@${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`;
 		return uri;
 	}
 
@@ -167,6 +167,8 @@ export class DbBaseMixin {
 				useUnifiedTopology: true,
 				authSource: 'admin',
 				dbName: this.dbInfo.dbname,
+				useCreateIndex: true,
+				autoIndex: true,
 			}),
 			collection: this.collection,
 			model: this.mixModel,

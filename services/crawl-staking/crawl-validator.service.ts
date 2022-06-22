@@ -4,35 +4,35 @@
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
-import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
-import { JsonConvert } from 'json2typescript';
-import { ProposalEntity } from '../../entities/proposal.entity';
+import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
+import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
-import { PROPOSAL_STATUS, URL_TYPE_CONSTANTS } from '../../common/constant';
-import { ProposalResponseFromApi } from 'types';
+import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { ValidatorResponseFromApi } from '../../types';
 import { Job } from 'bull';
+import { ValidatorEntity } from '../../entities';
 
-export default class CrawlProposalService extends Service {
+export default class CrawlValidatorService extends Service {
 	private callApiMixin = new CallApiMixin().start();
-	private dbProposalMixin = dbProposalMixin;
+	private dbValidatorMixin = dbValidatorMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'crawlProposal',
+			name: 'crawlValidator',
 			version: 1,
 			mixins: [
 				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
-						prefix: 'crawl.proposal',
+						prefix: 'crawl.staking.validator',
 					},
 				),
 				this.callApiMixin,
-				this.dbProposalMixin,
+				this.dbValidatorMixin,
 			],
 			queues: {
-				'crawl.proposal': {
+				'crawl.staking.validator': {
 					concurrency: 1,
 					async process(job: Job) {
 						job.progress(10);
@@ -47,17 +47,17 @@ export default class CrawlProposalService extends Service {
 	}
 
 	async handleJob(url: String) {
-		let listProposal: ProposalEntity[] = [];
+		let listValidator: ValidatorEntity[] = [];
 
 		let urlToCall = url;
-		let resultCallApi: ProposalResponseFromApi;
+		let resultCallApi: ValidatorResponseFromApi;
 
 		let done = false;
 
 		while (!done) {
 			resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlToCall);
 
-			listProposal.push(...resultCallApi.proposals);
+			listValidator.push(...resultCallApi.validators);
 			if (resultCallApi.pagination.next_key === null) {
 				done = true;
 			} else {
@@ -65,23 +65,22 @@ export default class CrawlProposalService extends Service {
 			}
 		}
 
-		this.logger.debug(`result: ${JSON.stringify(listProposal)}`);
+		this.logger.debug(`result: ${JSON.stringify(listValidator)}`);
 
-		listProposal.map(async (proposal) => {
-			let foundProposal = await this.adapter.findOne({
-				proposal_id: `${proposal.proposal_id}`,
+		listValidator.map(async (validator) => {
+			let foundValidator = await this.adapter.findOne({
+				operator_address: `${validator.operator_address}`,
 			});
-			// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
-			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
-				this.broker.call('v1.crawlTallyProposal.crawlTally', { id: proposal.proposal_id });
-			}
 			try {
-				if (foundProposal) {
-					proposal._id = foundProposal._id;
-					await this.adapter.updateById(foundProposal.id, proposal);
+				if (foundValidator) {
+					let result = await this.adapter.updateById(foundValidator.id, validator);
 				} else {
-					const item: any = new JsonConvert().deserializeObject(proposal, ProposalEntity);
-					await this.adapter.insert(item);
+					const item: ValidatorEntity = new JsonConvert().deserializeObject(
+						validator,
+						ValidatorEntity,
+					);
+					item._id = foundValidator._id;
+					let id = await this.adapter.insert(item);
 				}
 			} catch (error) {
 				this.logger.error(error);
@@ -91,27 +90,28 @@ export default class CrawlProposalService extends Service {
 
 	async _start() {
 		this.createJob(
-			'crawl.proposal',
+			'crawl.staking.validator',
 			{
-				url: `${Config.GET_ALL_PROPOSAL}?pagination.limit=${Config.NUMBER_OF_PROPOSAL_PER_CALL}&pagination.countTotal=true`,
+				url: `${Config.GET_ALL_VALIDATOR}?pagination.limit=${Config.NUMBER_OF_VALIDATOR_PER_CALL}`,
 			},
 			{
 				removeOnComplete: true,
 				repeat: {
-					every: parseInt(Config.MILISECOND_CRAWL_PROPOSAL, 10),
+					every: parseInt(Config.MILISECOND_CRAWL_VALIDATOR, 10),
 				},
 			},
 		);
 
-		this.getQueue('crawl.proposal').on('completed', (job: Job) => {
+		this.getQueue('crawl.staking.validator').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.proposal').on('failed', (job: Job) => {
+		this.getQueue('crawl.staking.validator').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('crawl.proposal').on('progress', (job: Job) => {
+		this.getQueue('crawl.staking.validator').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+
 		return super._start();
 	}
 }

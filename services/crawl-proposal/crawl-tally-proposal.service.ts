@@ -3,14 +3,10 @@
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, Context, ServiceBroker } from 'moleculer';
-const QueueService = require ('moleculer-bull');
+const QueueService = require('moleculer-bull');
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
-import { JsonConvert } from 'json2typescript';
-import { ProposalEntity } from '../../entities/proposal.entity';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { ProposalResponseFromApi } from 'types';
-import { Action, Method } from '@ourparentcenter/moleculer-decorators-extended';
 import { Job } from 'bull';
 
 export default class CrawlProposalService extends Service {
@@ -38,18 +34,26 @@ export default class CrawlProposalService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.url);
+						await this.handleJob(job.data.id);
 						job.progress(100);
 						return true;
 					},
 				},
 			},
-			actions: {
-				crawlTally: {
-					async handler(ctx: Context<{ id: string }>) {
+			events: {
+				'proposal.upsert': {
+					handler: (ctx: any) => {
 						this.logger.debug(`Crawl tally by proposal: ${ctx.params.id}`);
-						// @ts-ignore
-						this.handleJob(ctx.params.id);
+
+						this.createJob(
+							'crawl.tally.proposal',
+							{
+								id: ctx.params.id,
+							},
+							{
+								removeOnComplete: true,
+							},
+						);
 						return;
 					},
 				},
@@ -68,7 +72,7 @@ export default class CrawlProposalService extends Service {
 		});
 		if (foundProposal) {
 			try {
-				let res = await this.adapter.updateById(foundProposal.id, {
+				let res = await this.adapter.updateById(foundProposal._id, {
 					$set: { tally: result.tally },
 				});
 				this.logger.debug(res);

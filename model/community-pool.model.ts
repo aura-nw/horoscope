@@ -2,18 +2,28 @@ import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
-export interface IParam {
-	_id: ObjectIdNull;
+export interface ICoin {
+	denom: String;
+	amount: String;
 }
 
-const definition: definitionType<IParam> = (collection?: string) => ({
+export interface ICommunityPool {
+	_id: ObjectIdNull;
+	pool: ICoin[];
+}
+
+const definition: definitionType<ICommunityPool> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	module: String,
-	params: {},
+	pool: [
+		{
+			denom: String,
+			amount: String,
+		},
+	],
 	custom_info: customInfoModel,
 });
 
-export const paramMongoModel = (collection: string): unknown => {
+export const communityPoolMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	const schema = new Schema(definition(collection), {

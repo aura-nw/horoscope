@@ -3,7 +3,7 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require ('moleculer-bull');
+const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { sha256 } from 'js-sha256';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
@@ -31,7 +31,7 @@ export default class CrawlTransactionService extends Service {
 			queues: {
 				'crawl.transaction': {
 					concurrency: 1,
-					async process(job : Job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(job.data.listTx);
@@ -40,24 +40,22 @@ export default class CrawlTransactionService extends Service {
 					},
 				},
 			},
-			actions: {
-				crawlListTransaction: {
-					params: {
-						listTx: { type: 'array' },
-					},
-					async handler(ctx) {
+			events: {
+				'list-transaction.created': {
+					handler: async (ctx: any) => {
 						const listTx = ctx.params.listTx;
 						this.logger.info(`Crawl list transaction: ${JSON.stringify(listTx)}`);
-						this.createJob(
-							'crawl.transaction',
-							{
-								listTx: listTx,
-							},
-							{
-								removeOnComplete: true,
-							},
-						);
-						return true;
+						if (listTx && listTx.length > 0) {
+							this.createJob(
+								'crawl.transaction',
+								{
+									listTx: listTx,
+								},
+								{
+									removeOnComplete: true,
+								},
+							);
+						}
 					},
 				},
 			},
@@ -93,7 +91,7 @@ export default class CrawlTransactionService extends Service {
 		this.getQueue('crawl.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.transaction').on('failed', (job: Job ) => {
+		this.getQueue('crawl.transaction').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
 		this.getQueue('crawl.transaction').on('progress', (job: Job) => {

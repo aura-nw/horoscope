@@ -3,7 +3,7 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require ('moleculer-bull');
+const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
@@ -32,7 +32,7 @@ export default class HandleBlockService extends Service {
 			queues: {
 				'handle.block': {
 					concurrency: 1,
-					async process(job : Job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(job.data.param);
@@ -67,8 +67,7 @@ export default class HandleBlockService extends Service {
 	private lastId = '0-0';
 
 	async handleJob() {
-		this.logger.info("handleJob");
-		
+		this.logger.info('handleJob');
 
 		let xAutoClaimResult = await this.redisClient.xAutoClaim(
 			Config.REDIS_STREAM_BLOCK_NAME,
@@ -77,7 +76,7 @@ export default class HandleBlockService extends Service {
 			1000,
 			'0-0',
 			'COUNT',
-			Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_BLOCK
+			Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_BLOCK,
 		);
 		if (xAutoClaimResult.messages.length == 0) {
 			this.hasRemainingMessage = false;
@@ -96,41 +95,44 @@ export default class HandleBlockService extends Service {
 		);
 		try {
 			if (result)
-			await result.forEach(async (element: any) => {
-				let listBlockNeedSaveToDb: any[] = [];
-				let listMessageNeedAck: any[] = [];
-				let listTx: any[] = [];
-				element.messages.forEach(async (item: any) => {
-					this.logger.info(`Handling message ${item.id}`);
-					let block = JSON.parse(item.message.element);
-					if (block.block.header.height == '2062') {
-						this.logger.info(2);
-					}
-					listBlockNeedSaveToDb.push(block);
-					listTx.push(...block.block.data.txs);
-					listMessageNeedAck.push(item.id);
-					this.lastId = item.id;
-				});
-				if (listBlockNeedSaveToDb.length > 0) {
-					await this.handleListBlock(listBlockNeedSaveToDb);
-				}
-				if (listTx.length > 0) {
-					await this.broker.call('v1.crawltransaction.crawlListTransaction', {
-						listTx: listTx,
+				result.forEach(async (element: any) => {
+					let listBlockNeedSaveToDb: any[] = [];
+					let listMessageNeedAck: any[] = [];
+					let listTx: any[] = [];
+					element.messages.forEach((item: any) => {
+						this.logger.info(`Handling message ${item.id}`);
+						let block = JSON.parse(item.message.element);
+						listBlockNeedSaveToDb.push(block);
+						listTx.push(...block.block.data.txs);
+						listMessageNeedAck.push(item.id);
+						this.lastId = item.id;
 					});
-				}
-				if (listMessageNeedAck.length > 0) {
-					await this.redisClient.xAck(
-						Config.REDIS_STREAM_BLOCK_NAME,
-						Config.REDIS_STREAM_BLOCK_GROUP,
-						listMessageNeedAck,
-					);
-				}
-			});
+					try {
+						if (listBlockNeedSaveToDb.length > 0) {
+							this.handleListBlock(listBlockNeedSaveToDb);
+						}
+						if (listTx.length > 0) {
+							this.broker.emit('list-transaction.created', listTx);
+						}
+						if (listMessageNeedAck.length > 0) {
+							this.redisClient.xAck(
+								Config.REDIS_STREAM_BLOCK_NAME,
+								Config.REDIS_STREAM_BLOCK_GROUP,
+								listMessageNeedAck,
+							);
+							this.redisClient.xDel(
+								Config.REDIS_STREAM_BLOCK_NAME,
+								listMessageNeedAck,
+							)
+						}
+					} catch (error) {
+						this.logger.error(error);
+					}
+				});
 		} catch (error) {
 			this.logger.error(error);
 		}
-		
+
 		this.logger.info(`handleJob done`);
 	}
 
@@ -163,7 +165,7 @@ export default class HandleBlockService extends Service {
 		this.getQueue('handle.block').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('handle.block').on('failed', (job: Job ) => {
+		this.getQueue('handle.block').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
 		this.getQueue('handle.block').on('progress', (job: Job) => {

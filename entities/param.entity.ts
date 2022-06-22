@@ -1,5 +1,7 @@
 import { Coin } from './coin.entity';
 import { JsonObject, JsonProperty } from 'json2typescript';
+import { Config } from '../common';
+import { Types } from 'mongoose';
 
 @JsonObject('SendEnabled')
 export class SendEnabled {
@@ -94,4 +96,53 @@ export class IbcTransferParam {
 	sendEnabled: Boolean = true;
 	@JsonProperty('receive_enabled', Boolean)
 	receiveEnabled: Boolean = true;
+}
+
+@JsonObject('MintParam')
+export class MintParam {
+	@JsonProperty('mint_denom', String)
+	mint_denom: String = '';
+	@JsonProperty('inflation_rate_change', String)
+	inflation_rate_change: String = '';
+	@JsonProperty('inflation_max', String)
+	inflation_max: String = '';
+	@JsonProperty('inflation_min', String)
+	inflation_min: String = '';
+	@JsonProperty('goal_bonded', String)
+	goal_bonded: String = '';
+	@JsonProperty('blocks_per_year', String)
+	blocks_per_year: String = '';
+}
+
+@JsonObject('Param')
+export class ParamEntity {
+	@JsonProperty('_id', String, true)
+	_id = Config.DB_PARAM.dialect === 'local' ? Types.ObjectId() : null;
+	@JsonProperty('module', String)
+	module: String = '';
+	@JsonProperty(
+		'params',
+		BankParam ||
+			GovParam ||
+			DistributionParam ||
+			SlashingParam ||
+			StakingParam ||
+			IbcTransferParam ||
+			MintParam,
+	)
+	params:
+		| BankParam
+		| GovParam
+		| DistributionParam
+		| SlashingParam
+		| StakingParam
+		| IbcTransferParam
+		| MintParam
+		| null = null;
+
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	public getMongoEntity() {
+		// eslint-disable-next-line no-underscore-dangle
+		return { ...this, _id: this._id && (this._id as Types.ObjectId).toString() };
+	}
 }

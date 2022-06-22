@@ -4,17 +4,17 @@
 import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
 
-const QueueService = require ('moleculer-bull');
+const QueueService = require('moleculer-bull');
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from '@redis/client';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { Job  } from 'bull'
+import { Job } from 'bull';
 
 export default class CrawlBlockService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private redisMixin = new RedisMixin().start();
-	
+
 	private currentBlock = 0;
 	// private redisClient = this.getRedisClient();
 
@@ -52,7 +52,6 @@ export default class CrawlBlockService extends Service {
 
 	async initEnv() {
 		//get handled block
-
 		let handledBlockRedis = await this.redisClient.get(Config.REDIS_KEY_CURRENT_BLOCK);
 		this.currentBlock = 0;
 		let START_BLOCK = Config.START_BLOCK;
@@ -78,7 +77,6 @@ export default class CrawlBlockService extends Service {
 		this.logger.info(`latestBlockNetwork: ${latestBlockNetwork}`);
 
 		const startBlock = this.currentBlock + 1;
-		const NUMBER_OF_BLOCK_PER_CALL = Config.NUMBER_OF_BLOCK_PER_CALL;
 
 		let endBlock = startBlock + parseInt(Config.NUMBER_OF_BLOCK_PER_CALL) - 1;
 		if (endBlock > latestBlockNetwork) {
@@ -151,7 +149,7 @@ export default class CrawlBlockService extends Service {
 		this.getQueue('crawl.block').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('crawl.block').on('failed', (job: Job ) => {
+		this.getQueue('crawl.block').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
 		this.getQueue('crawl.block').on('progress', (job: Job) => {
