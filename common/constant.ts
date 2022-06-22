@@ -17,6 +17,10 @@ export const CONST_CHAR = {
 	DELEGATION_RESPONSES: 'delegation_responses',
 	REDELEGATION_RESPONSES: 'redelegation_responses',
 	UNBONDING_RESPONSES: 'unbonding_responses',
+	MESSAGE: 'message',
+	ACTION: 'action',
+	TRANSFER: 'transfer',
+	SENDER: 'sender',
 }
 
 export const MSG_TYPE = {
