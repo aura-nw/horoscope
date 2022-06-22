@@ -120,6 +120,10 @@ export default class HandleBlockService extends Service {
 								Config.REDIS_STREAM_BLOCK_GROUP,
 								listMessageNeedAck,
 							);
+							this.redisClient.xDel(
+								Config.REDIS_STREAM_BLOCK_NAME,
+								listMessageNeedAck,
+							)
 						}
 					} catch (error) {
 						this.logger.error(error);

@@ -44,6 +44,7 @@ const genericDbInfo = (where: string): DBInfo => ({
 	port: +getDbInfo(where, 'PORT', '0'),
 	dbname: getDbInfo(where, 'DBNAME', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),
+	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false')
 });
 
 export default class ConfigClass {

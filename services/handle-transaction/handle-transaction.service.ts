@@ -109,6 +109,10 @@ export default class HandleTransactionService extends Service {
 						Config.REDIS_STREAM_TRANSACTION_GROUP,
 						listMessageNeedAck,
 					);
+					this.redisClient.xDel(
+						Config.REDIS_STREAM_TRANSACTION_NAME,
+						listMessageNeedAck,
+					)
 				} catch (error) {
 					this.logger.error(error);
 				}

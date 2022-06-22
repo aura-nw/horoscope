@@ -31,6 +31,7 @@ export interface DBInfo {
 	port: number;
 	dbname: string;
 	collection: string;
+	retryWrites: string;
 }
 
 export interface RouteSchemaOpts {
