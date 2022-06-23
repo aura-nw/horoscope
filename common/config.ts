@@ -44,7 +44,7 @@ const genericDbInfo = (where: string): DBInfo => ({
 	port: +getDbInfo(where, 'PORT', '0'),
 	dbname: getDbInfo(where, 'DBNAME', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),
-	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false')
+	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false'),
 });
 
 export default class ConfigClass {
@@ -82,6 +82,7 @@ export default class ConfigClass {
 	public static DB_PARAM: any;
 	public static DB_ACCOUNT_INFO: any;
 	public static DB_VALIDATOR: any;
+	public static DB_INFLATION: any;
 
 	public constructor() {
 		Object.keys(configObj).forEach((key: string) => {
@@ -107,5 +108,6 @@ export default class ConfigClass {
 		this.DB_COMMUNITY_POOL = genericDbInfo('COMMUNITY_POOL');
 		this.DB_ASSET = genericDbInfo('ASSET');
 		this.DB_CODE_ID = genericDbInfo('CODE_ID');
+		this.DB_INFLATION = genericDbInfo('INFLATION');
 	}
 }

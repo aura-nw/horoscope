@@ -7,3 +7,4 @@ export * from './validator.entity';
 export * from './pool.entity';
 export * from './community-pool.entity';
 export * from './signing-info.entity';
+export * from './inflation.entity';

@@ -8,7 +8,10 @@ import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
-import { SigningInfoResponseFromApi } from 'types';
+import { SigningInfoEntityResponseFromApi } from 'types';
+import { ValidatorEntity } from 'entities';
+const tmhash = require('tendermint/lib/hash');
+import { bech32 } from 'bech32';
 
 export default class CrawlSigningInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -44,7 +47,6 @@ export default class CrawlSigningInfoService extends Service {
 			events: {
 				'validator.upsert': {
 					handler: (ctx: any) => {
-                        
 						this.createJob(
 							'crawl.signinginfo',
 							{
@@ -62,26 +64,54 @@ export default class CrawlSigningInfoService extends Service {
 	}
 
 	async handleJob(address: String) {
-		let url = `${Config.GET_SIGNING_INFO}/${address}`;
-
-		let result: SigningInfoResponseFromApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, url);
-		this.logger.debug(result);
-
-		let foundValidator = await this.adapter.findOne({
-			address: `${address}`,
+		let foundValidator: ValidatorEntity = await this.adapter.findOne({
+			operator_address: `${address}`,
 		});
 		if (foundValidator) {
 			try {
+				let consensusPubkey = foundValidator.consensus_pubkey;
+				this.logger.info(`Found validator with address ${address}`);
+				this.logger.info(`Found validator with consensusPubkey ${consensusPubkey}`);
+
+				const pubkey = this.getAddressHexFromPubkey(consensusPubkey.key.toString());
+				const consensusAddress = this.hexToBech32(
+					pubkey,
+					`${Config.NETWORK_PREFIX_ADDRESS}${Config.CONSENSUS_PREFIX_ADDRESS}`,
+				);
+				let url = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
+				let result: SigningInfoEntityResponseFromApi = await this.callApi(
+					URL_TYPE_CONSTANTS.LCD,
+					url,
+				);
+				this.logger.info(result);
 				let res = await this.adapter.updateById(foundValidator._id, {
-					$set: { signing_info: result.info },
+					$set: { val_signing_info: result.val_signing_info },
 				});
-				this.logger.debug(res);
+				this.logger.info(res);
 			} catch (error) {
 				this.logger.error(error);
 			}
 		}
 	}
+	getAddressHexFromPubkey(pubkey: string) {
+		var bytes = Buffer.from(pubkey, 'base64');
+		return tmhash.tmhash(bytes).slice(0, 20).toString('hex').toUpperCase();
+	}
+
+	hexToBech32(address: string, prefix: string) {
+		let addressBuffer = Buffer.from(address, 'hex');
+		return bech32.encode(prefix, bech32.toWords(addressBuffer));
+	}
 	async _start() {
+		this.createJob(
+			'crawl.signinginfo',
+			{
+				address: 'auravaloper1p5kp36qlmmczrk56veztdt0re4ly7uzrua9hqs',
+			},
+			{
+				removeOnComplete: true,
+			},
+		);
 		this.getQueue('crawl.signinginfo').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});

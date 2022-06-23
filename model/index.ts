@@ -8,3 +8,4 @@ export * from './community-pool.model';
 export * from './asset.model';
 export * from './codeid.model';
 export * from './account-info.model';
+export * from './inflation.model';

@@ -70,6 +70,7 @@ export default class CrawlProposalService extends Service {
 		listProposal.map(async (proposal) => {
 			let foundProposal = await this.adapter.findOne({
 				proposal_id: `${proposal.proposal_id}`,
+				'custom_info.chain_id': Config.CHAIN_ID,
 			});
 			// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
 			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
@@ -78,7 +79,7 @@ export default class CrawlProposalService extends Service {
 			try {
 				if (foundProposal) {
 					proposal._id = foundProposal._id;
-					await this.adapter.updateById(foundProposal.id, proposal);
+					await this.adapter.updateById(foundProposal._id, proposal);
 				} else {
 					const item: any = new JsonConvert().deserializeObject(proposal, ProposalEntity);
 					await this.adapter.insert(item);
