@@ -7,3 +7,4 @@ export * from './db-pool.mixin';
 export * from './db-community-pool.mixin';
 export * from './db-asset.mixin';
 export * from './db-code-id.mixin';
+export * from './db-account-info.mixin';
