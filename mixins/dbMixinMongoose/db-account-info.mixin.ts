@@ -17,4 +17,3 @@ const dbBaseMixin = new DbBaseMixin({
 });
 
 export const dbAccountInfoMixin = dbBaseMixin.getMixin();
-export const callApiMixin = new CallApiMixin().start();

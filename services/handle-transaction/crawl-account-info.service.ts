@@ -10,10 +10,12 @@ import { Job } from "bull";
 import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "common/constant";
 import { JsonConvert } from "json2typescript";
 import { AccountInfoEntity } from "entities/account-info.entity";
+import CallApiMixin from "@Mixins/callApi/call-api.mixin";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountInfoService extends Service {
-    private redisMixin = new RedisMixin().start();
+    // private redisMixin = new RedisMixin().start();
+    private callApiMixin = new CallApiMixin().start();
     private dbAccountInfoMixin = dbAccountInfoMixin;
 
     public constructor(public broker: ServiceBroker) {
@@ -28,8 +30,9 @@ export default class CrawlAccountInfoService extends Service {
                         prefix: 'crawl.account-info',
                     },
                 ),
-                this.redisMixin,
+                // this.redisMixin,
                 this.dbAccountInfoMixin,
+                this.callApiMixin,
             ],
             queues: {
                 'crawl.account-info': {
@@ -50,7 +53,7 @@ export default class CrawlAccountInfoService extends Service {
                         this.createJob(
                             'crawl.account-info',
                             {
-                                listTx: []
+                                listTx: ctx.params.listTx
                             },
                             {
                                 removeOnComplete: true,
@@ -107,7 +110,7 @@ export default class CrawlAccountInfoService extends Service {
                 const paramsAuthInfo = Config.GET_PARAMS_AUTH_INFO + `/${address}`;
                 const paramsSpendableBalances = Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
 
-                let accountInfo = this.adapter.findOne({
+                let accountInfo = await this.adapter.findOne({
                     address,
                 });
 
@@ -254,10 +257,12 @@ export default class CrawlAccountInfoService extends Service {
                 listAccounts.push(accountInfo);
             };
         }
+        this.logger.info('list account', listAccounts[0])
         try {
             listAccounts.forEach((element) => {
                 if(element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
+                    this.logger.info('element', element)
                     const item: any = new JsonConvert().deserializeObject(element, AccountInfoEntity);
                     this.logger.info('item', item)
                     listUpdateQueries.push(this.adapter.insert(item));
