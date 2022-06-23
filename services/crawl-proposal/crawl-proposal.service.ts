@@ -70,6 +70,7 @@ export default class CrawlProposalService extends Service {
 		listProposal.map(async (proposal) => {
 			let foundProposal = await this.adapter.findOne({
 				proposal_id: `${proposal.proposal_id}`,
+				'custom_info.chain_id': Config.CHAIN_ID,
 			});
 			// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
 			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {

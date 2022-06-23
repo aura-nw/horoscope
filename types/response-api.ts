@@ -34,3 +34,6 @@ export type SigningInfoResponseFromApi = {
 export type SigningInfoEntityResponseFromApi = {
 	val_signing_info: SigningInfoEntity[];
 };
+export type MintInflationResponseFromApi = {
+	inflation: String;
+};
