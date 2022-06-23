@@ -1,4 +1,10 @@
-import { CommunityPoolEntity, PoolEntity, ProposalEntity, SigningInfoEntity, ValidatorEntity } from '../entities';
+import {
+	CommunityPoolEntity,
+	PoolEntity,
+	ProposalEntity,
+	SigningInfoEntity,
+	ValidatorEntity,
+} from '../entities';
 
 export type PagingationResponseFromApi = {
 	next_key: string | null;
@@ -24,4 +30,7 @@ export type CommunityPoolResponseFromApi = {
 };
 export type SigningInfoResponseFromApi = {
 	info: SigningInfoEntity[];
-}
+};
+export type SigningInfoEntityResponseFromApi = {
+	val_signing_info: SigningInfoEntity[];
+};

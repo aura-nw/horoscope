@@ -80,9 +80,10 @@ export default class CrawlValidatorService extends Service {
 						validator,
 						ValidatorEntity,
 					);
-					
+
 					let id = await this.adapter.insert(item);
 				}
+				this.broker.emit('validator.upsert', { address: validator.operator_address });
 			} catch (error) {
 				this.logger.error(error);
 			}

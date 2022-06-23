@@ -78,7 +78,7 @@ export default class CrawlProposalService extends Service {
 			try {
 				if (foundProposal) {
 					proposal._id = foundProposal._id;
-					await this.adapter.updateById(foundProposal.id, proposal);
+					await this.adapter.updateById(foundProposal._id, proposal);
 				} else {
 					const item: any = new JsonConvert().deserializeObject(proposal, ProposalEntity);
 					await this.adapter.insert(item);

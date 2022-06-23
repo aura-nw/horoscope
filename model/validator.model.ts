@@ -70,6 +70,14 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 		update_time: String,
 	},
 	min_self_delegation: String,
+	val_signing_info: {
+		address: String,
+		start_height: String,
+		index_offset: String,
+		jailed_until: String,
+		tombstoned: Boolean,
+		missed_blocks_counter: String,
+	},
 	custom_info: customInfoModel,
 });
 
