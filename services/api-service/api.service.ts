@@ -12,7 +12,8 @@ import pick from 'lodash/pick';
 import { openAPIMixin } from '../../mixins/openapi/openapi.mixin';
 import { Config } from '../../common';
 import {
-	RequestMessage, RestOptions,
+	RequestMessage,
+	RestOptions,
 	// UserJWT,
 	// UserRole,
 	// UserRolesParams,
@@ -23,12 +24,13 @@ import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
 import { AssetIndexParams } from 'types/asset';
 import { error, info } from 'console';
-import CallApiMixin from '@Mixins/callApi/call-api.mixin';
+// import CallApiMixin from '../../../callApi/call-api.mixin';
 import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
 import { Status } from '../../model/codeid.model';
 import { domainToASCII } from 'url';
 import { Ok } from 'ts-results';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 
 const tlBucket = 60000;
 const swMiddleware = swStats.getMiddleware({
@@ -69,7 +71,7 @@ const callApiMixin = new CallApiMixin().start();
 						'upgrade-insecure-requests': [],
 					},
 				},
-			})
+			}),
 		],
 		routes: [
 			// {
@@ -260,25 +262,31 @@ export default class ApiService extends moleculer.Service {
 		name: 'indexAsset',
 		restricted: ['api'],
 		params: {
-			code_id: ['number|integer|positive']
+			code_id: ['number|integer|positive'],
 		},
 	})
 	async indexAsset(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
-
-		return await this.broker.call("code_id.checkStatus", { code_id: ctx.params.code_id }).then((res) => {
-			this.logger.debug("code_id.checkStatus res", res);
-			switch (res) {
-				case Ok:
-					this.broker.call("code_id.create", { _id: new Types.ObjectId, code_id: ctx.params.code_id, status: Status.WAITING });
-				case Status.TBD:
-					this.broker.emit("code_id.validate", ctx.params.code_id);
-					return true;
-				default:
-					return false;
-			}
-		}).catch(error => {
-			this.logger.error("call code_id.checkStatus error", error);
-			return false;
-		});
+		return await this.broker
+			.call('code_id.checkStatus', { code_id: ctx.params.code_id })
+			.then((res) => {
+				this.logger.debug('code_id.checkStatus res', res);
+				switch (res) {
+					case Ok:
+						this.broker.call('code_id.create', {
+							_id: new Types.ObjectId(),
+							code_id: ctx.params.code_id,
+							status: Status.WAITING,
+						});
+					case Status.TBD:
+						this.broker.emit('code_id.validate', ctx.params.code_id);
+						return true;
+					default:
+						return false;
+				}
+			})
+			.catch((error) => {
+				this.logger.error('call code_id.checkStatus error', error);
+				return false;
+			});
 	}
 }
