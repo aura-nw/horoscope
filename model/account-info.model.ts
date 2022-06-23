@@ -1,6 +1,7 @@
 import { IAccountInfo } from "entities/account-info.entity";
 import { model, models, Types, Schema } from "mongoose";
 import { definitionType } from "types";
+import { customInfoModel } from "./custom-info.model";
 
 const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -87,6 +88,7 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 			amount: String,
 		},
 	],
+	custom_info: customInfoModel,
 });
 
 export const accountInfoMongoModel = (collection: string): unknown => {
