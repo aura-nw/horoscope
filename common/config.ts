@@ -80,6 +80,7 @@ export default class ConfigClass {
 	public static DB_CODE_ID: any;
 	public static DB_BLOCK: any;
 	public static DB_PARAM: any;
+	public static DB_ACCOUNT_INFO: any;
 	public static DB_VALIDATOR: any;
 
 	public constructor() {
@@ -100,6 +101,7 @@ export default class ConfigClass {
 		this.DB_TRANSACTION = genericDbInfo('TRANSACTION');
 		this.DB_PARAM = genericDbInfo('PARAM');
 		this.DB_BLOCK = genericDbInfo('BLOCK');
+		this.DB_ACCOUNT_INFO = genericDbInfo('ACCOUNT_INFO');
 		this.DB_VALIDATOR = genericDbInfo('VALIDATOR');
 		this.DB_POOL = genericDbInfo('POOL');
 		this.DB_COMMUNITY_POOL = genericDbInfo('COMMUNITY_POOL');

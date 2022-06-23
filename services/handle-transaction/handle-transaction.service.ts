@@ -113,6 +113,7 @@ export default class HandleTransactionService extends Service {
 						Config.REDIS_STREAM_TRANSACTION_NAME,
 						listMessageNeedAck,
 					)
+					this.broker.emit('account-info.upsert', { listTx: listTransactionNeedSaveToDb });
 				} catch (error) {
 					this.logger.error(error);
 				}
