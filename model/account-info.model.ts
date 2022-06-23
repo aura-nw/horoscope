@@ -1,5 +1,5 @@
 import { IAccountInfo } from "entities/account-info.entity";
-import { model, models, Types } from "mongoose";
+import { model, models, Types, Schema } from "mongoose";
 import { definitionType } from "types";
 
 const definition: definitionType<IAccountInfo> = (collection?: string) => ({
@@ -69,11 +69,11 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 	account: {
 		height: String,
 		result: {
-			type: String,
+			type: { type: String },
 			value: {
 				address: String,
 				public_key: {
-					type: String,
+					type: { type: String },
 					value: String,
 				},
 				account_number: String,

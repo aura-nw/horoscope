@@ -8,6 +8,8 @@ import { Config } from "../../common";
 import { Service, ServiceBroker } from "moleculer";
 import { Job } from "bull";
 import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "common/constant";
+import { JsonConvert } from "json2typescript";
+import { AccountInfoEntity } from "entities/account-info.entity";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountInfoService extends Service {
@@ -77,25 +79,20 @@ export default class CrawlAccountInfoService extends Service {
     }
 
     async handleJob(listTx: any[]) {
-        let listAccounts: any[] = [];
+        let listAccounts: any[] = [], listUpdateQueries: any[] = [];
         if (listTx.length > 0) {
-            listTx.forEach(async (element: any) => {
-                let address = Buffer.from(
-                    element.tx_result.events.find(
-                        (x: any) => x.type == CONST_CHAR.TRANSFER
-                    ).attributes.find(
-                        (x: any) => x.key == Buffer.from(CONST_CHAR.SENDER).toString('base64')
-                    ).value,
-                    'base64'
-                ).toString('ascii');
-                let message = Buffer.from(
-                    element.tx_result.events.find(
-                        (x: any) => x.type == CONST_CHAR.MESSAGE
-                    ).attributes.find(
-                        (x: any) => x.key == Buffer.from(CONST_CHAR.ACTION).toString('base64')
-                    ).value,
-                    'base64'
-                ).toString('ascii');
+            for (const element of listTx) {
+                let log = JSON.parse(element.tx_result.log)[0].events;
+                let address = log.find(
+                    (x: any) => x.type == CONST_CHAR.MESSAGE
+                ).attributes.find(
+                    (x: any) => x.key == CONST_CHAR.SENDER
+                ).value;
+                let message = log.find(
+                    (x: any) => x.type == CONST_CHAR.MESSAGE
+                ).attributes.find(
+                    (x: any) => x.key == CONST_CHAR.ACTION
+                ).value;
                 let listBalances: any[] = [];
                 let listDelegates: any[] = [];
                 let listRedelegates: any[] = [];
@@ -206,6 +203,7 @@ export default class CrawlAccountInfoService extends Service {
                             break;
                     }
                 } else {
+                    accountInfo = {};
                     [
                         balanceData,
                         delegatedData,
@@ -254,11 +252,18 @@ export default class CrawlAccountInfoService extends Service {
                 }
 
                 listAccounts.push(accountInfo);
-            })
+            };
         }
         try {
-            let res = await this.adapter.updateMany({}, listAccounts);
-            this.logger.debug(res);
+            listAccounts.forEach((element) => {
+                if(element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
+                else {
+                    const item: any = new JsonConvert().deserializeObject(element, AccountInfoEntity);
+                    this.logger.info('item', item)
+                    listUpdateQueries.push(this.adapter.insert(item));
+                }
+            });
+            await Promise.all(listUpdateQueries);
         } catch (error) {
             this.logger.error(error);
         }
