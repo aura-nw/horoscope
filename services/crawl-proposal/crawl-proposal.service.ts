@@ -73,7 +73,7 @@ export default class CrawlProposalService extends Service {
 			});
 			// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
 			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
-				this.broker.call('v1.crawlTallyProposal.crawlTally', { id: proposal.proposal_id });
+				this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
 			}
 			try {
 				if (foundProposal) {

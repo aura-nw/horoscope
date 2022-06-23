@@ -112,7 +112,7 @@ export default class HandleBlockService extends Service {
 							this.handleListBlock(listBlockNeedSaveToDb);
 						}
 						if (listTx.length > 0) {
-							this.broker.emit('list-transaction.created', listTx);
+							this.broker.emit('list-transaction.created', {listTx: listTx});
 						}
 						if (listMessageNeedAck.length > 0) {
 							this.redisClient.xAck(
