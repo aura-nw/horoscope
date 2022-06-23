@@ -100,12 +100,12 @@ export default class CrawlAccountInfoService extends Service {
                 let listSpendableBalances: any[] = [];
                 let authInfo;
 
-                const paramsBalance = `cosmos/bank/v1beta1/balances/${address}?pagination.limit=100`;
-                const paramsDelegated = `cosmos/staking/v1beta1/delegations/${address}?pagination.limit=100`;
-                const paramsUnbonding = `cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations?pagination.limit=100`;
-                const paramsRedelegations = `cosmos/staking/v1beta1/delegators/${address}/redelegations?pagination.limit=100`;
-                const paramsAuthInfo = `auth/accounts/${address}`;
-                const paramsSpendableBalances = `cosmos/bank/v1beta1/spendable_balances/${address}?pagination.limit=100`;
+                const paramsBalance = Config.GET_PARAMS_BALANCE + `/${address}?pagination.limit=100`;
+                const paramsDelegated = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
+                const paramsUnbonding = Config.GET_PARAMS_DELEGATOR + `/${address}/unbonding_delegations?pagination.limit=100`;
+                const paramsRedelegations = Config.GET_PARAMS_DELEGATOR + `/${address}/redelegations?pagination.limit=100`;
+                const paramsAuthInfo = Config.GET_PARAMS_AUTH_INFO + `/${address}`;
+                const paramsSpendableBalances = Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
 
                 let accountInfo = this.adapter.findOne({
                     address,
