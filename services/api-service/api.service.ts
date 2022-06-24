@@ -47,7 +47,6 @@ const callApiMixin = new CallApiMixin().start();
  */
 @Service({
 	name: 'api',
-	authToken: Config.API_AUTH_TOKEN,
 	mixins: [callApiMixin, ApiGateway, openAPIMixin()],
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	settings: {
@@ -112,6 +111,7 @@ const callApiMixin = new CallApiMixin().start();
 					// Access to any actions in all services under "/api" URL
 					// '**',
 					'v1.network.*',
+					'v1.account-info.*',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 				use: [swMiddleware],
