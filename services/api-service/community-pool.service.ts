@@ -3,38 +3,26 @@
 'use strict';
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbInflationMixin } from '../../mixins/dbMixinMongoose';
+import { dbCommunityPoolMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
-import { IInflation } from '../../entities';
 import { DbContextParameters } from 'moleculer-db';
+import { ICommunityPool } from '../../entities';
 import { ChainIdParams } from 'types/api-service/network';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
-	name: 'inflation',
+	name: 'communitypool',
 	version: 1,
-	/**
-	 * Mixins
-	 */
-	mixins: [dbInflationMixin],
-	/**
-	 * Settings
-	 */
-	settings: {
-		idField: '_id',
-		// Available fields in the responses
-		fields: ['_id', 'inflation'],
-		rest: '/v1/inflation',
-	},
+	mixins: [dbCommunityPoolMixin],
 })
 export default class InflationService extends MoleculerDBService<
 	{
-		rest: 'v1/inflation';
+		rest: 'v1/communitypool';
 	},
-	IInflation
+	ICommunityPool
 > {
 	@Action({
 		name: 'getByChain',

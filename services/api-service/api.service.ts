@@ -110,7 +110,8 @@ const callApiMixin = new CallApiMixin().start();
 				},
 				whitelist: [
 					// Access to any actions in all services under "/api" URL
-					'**',
+					// '**',
+					'v1.network.*',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 				use: [swMiddleware],
