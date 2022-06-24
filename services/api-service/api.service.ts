@@ -24,13 +24,11 @@ import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
 import { AssetIndexParams } from 'types/asset';
 import { error, info } from 'console';
-// import CallApiMixin from '../../../callApi/call-api.mixin';
 import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
 import { Status } from '../../model/codeid.model';
 import { domainToASCII } from 'url';
 import { Ok } from 'ts-results';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 
 const tlBucket = 60000;
 const swMiddleware = swStats.getMiddleware({
@@ -39,7 +37,7 @@ const swMiddleware = swStats.getMiddleware({
 	uriPath: '/dashboard',
 	swaggerSpec: swaggerSpec,
 });
-const callApiMixin = new CallApiMixin().start();
+
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  * @typedef {import('http').IncomingMessage} IncomingRequest Incoming HTTP Request
@@ -47,7 +45,7 @@ const callApiMixin = new CallApiMixin().start();
  */
 @Service({
 	name: 'api',
-	mixins: [callApiMixin, ApiGateway, openAPIMixin()],
+	mixins: [ApiGateway, openAPIMixin()],
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	settings: {
 		port: Config.PORT || 3000,
