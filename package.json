@@ -51,9 +51,9 @@
     "moleculer-repl": "^0.7.0",
     "prettier": "^2.6.2",
     "swagger-stats": "^0.99.2",
-    "ts-jest": "^27.1.4",
     "ts-node": "^10.7.0",
-    "tsconfig-paths": "^4.0.0"
+    "tsconfig-paths": "^4.0.0",
+    "ts-jest": "^28.0.5"
   },
   "dependencies": {
     "@cosmjs/amino": "^0.28.9",
