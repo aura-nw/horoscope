@@ -2,18 +2,20 @@ import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
 import { Coin } from './coin.entity';
+import { NumericConverter } from './converters/numeric.converter';
+import { DateConverter } from './converters/date.converter';
 
 export interface IProposal {
 	_id: Types.ObjectId | string | null;
-	proposal_id: String;
+	proposal_id: Number | null;
 	content: Content;
 	status: String;
 	final_tally_result: Final_tally_result;
-	submit_time: String;
-	deposit_end_time: String;
+	submit_time: Date | null;
+	deposit_end_time: Date | null;
 	total_deposit: Deposit[];
-	voting_start_time: String;
-	voting_end_time: String;
+	voting_start_time: Date | null;
+	voting_end_time: Date | null;
 }
 
 @JsonObject('Changes')
@@ -66,24 +68,24 @@ export class Content {
 export class ProposalEntity implements IProposal {
 	@JsonProperty('_id', String, true)
 	_id = Config.DB_PRODUCT.dialect === 'local' ? Types.ObjectId() : null;
-	@JsonProperty('proposal_id', String)
-	proposal_id = '';
+	@JsonProperty('proposal_id', NumericConverter)
+	proposal_id = null;
 	@JsonProperty('content', Content)
 	content = {} as Content;
 	@JsonProperty('status', String)
 	status: String = '';
 	@JsonProperty('final_tally_result', Final_tally_result)
 	final_tally_result: Final_tally_result = {} as Final_tally_result;
-	@JsonProperty('submit_time', String)
-	submit_time: String = '';
-	@JsonProperty('deposit_end_time', String)
-	deposit_end_time: String = '';
+	@JsonProperty('submit_time', DateConverter)
+	submit_time = null;
+	@JsonProperty('deposit_end_time', DateConverter)
+	deposit_end_time = null;
 	@JsonProperty('total_deposit', [Deposit])
 	total_deposit: Deposit[] = [];
-	@JsonProperty('voting_start_time', String)
-	voting_start_time: String = '';
-	@JsonProperty('voting_end_time', String)
-	voting_end_time: String = '';
+	@JsonProperty('voting_start_time', DateConverter)
+	voting_start_time = null;
+	@JsonProperty('voting_end_time', DateConverter)
+	voting_end_time = null;
 
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {

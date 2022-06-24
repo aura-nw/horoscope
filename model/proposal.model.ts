@@ -1,24 +1,12 @@
+import { IProposal } from 'entities';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
-export interface IProposal {
-	_id: ObjectIdNull;
-	proposal_id: String;
-	content: Object;
-	status: String;
-	final_tally_result: Object;
-	submit_time: String;
-	deposit_end_time: String;
-	total_deposit: Object;
-	voting_start_time: String;
-	voting_end_time: String;
-}
-
 const definition: definitionType<IProposal> = (collection?: string) => ({
 	_id: Types.ObjectId,
 	proposal_id: {
-		type: String,
+		type: Number,
 		index: true,
 	},
 	content: {
