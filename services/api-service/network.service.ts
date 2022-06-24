@@ -3,7 +3,14 @@
 'use strict';
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
+import {
+	getActionConfig,
+	MoleculerDBService,
+	ResponseDto,
+	RestOptions,
+	ErrorCode,
+	ErrorMessage,
+} from '../../types';
 import { ChainIdParams } from 'types/api-service/network';
 
 /**
@@ -12,13 +19,6 @@ import { ChainIdParams } from 'types/api-service/network';
 @Service({
 	name: 'network',
 	version: 1,
-	/**
-	 * Settings
-	 */
-	settings: {
-		idField: 'chainid',
-		// rest: '/v1/network',
-	},
 })
 export default class NetworkService extends MoleculerDBService<
 	{
@@ -29,8 +29,6 @@ export default class NetworkService extends MoleculerDBService<
 	@Get('/', {
 		name: 'status',
 		params: {
-			...getActionConfig.params,
-			id: { type: 'string', optional: true },
 			chainid: { type: 'string', optional: false },
 		},
 	})
@@ -40,10 +38,14 @@ export default class NetworkService extends MoleculerDBService<
 			this.broker.call('v1.pool.getByChain', { chainid: ctx.params.chainid }),
 			this.broker.call('v1.communitypool.getByChain', { chainid: ctx.params.chainid }),
 		]);
-		let result = {
-			inflation: inflation,
-			pool: pool,
-			communityPool: communityPool,
+		let result: ResponseDto = {
+			error_code: ErrorCode.SUCCESSFUL,
+			message: ErrorMessage.SUCCESSFUL,
+			data: {
+				inflation: inflation,
+				pool: pool,
+				communityPool: communityPool,
+			},
 		};
 		return result;
 	}

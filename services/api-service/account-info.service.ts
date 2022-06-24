@@ -1,15 +1,21 @@
-import { callApiMixin, dbAccountInfoMixin } from "@Mixins/dbMixinMongoose";
-import { Get, Service } from "@ourparentcenter/moleculer-decorators-extended";
-import { Config } from "common";
-import { URL_TYPE_CONSTANTS } from "common/constant";
-import { IAccountInfo } from "entities/account-info.entity";
-import { Context } from "moleculer";
-import { AccountInfoRequest, MoleculerDBService, ResponseDto, userErrorCode, userErrorMessage } from "types";
+import { callApiMixin, dbAccountInfoMixin } from '@Mixins/dbMixinMongoose';
+import { Get, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { Config } from 'common';
+import { URL_TYPE_CONSTANTS } from 'common/constant';
+import { IAccountInfo } from 'entities/account-info.entity';
+import { Context } from 'moleculer';
+import {
+	AccountInfoRequest,
+	MoleculerDBService,
+	ResponseDto,
+	ErrorCode,
+	ErrorMessage,
+} from 'types';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
- @Service({
+@Service({
 	name: 'account-info',
 	version: 1,
 	/**
@@ -32,41 +38,41 @@ export default class AccountInfoService extends MoleculerDBService<
 	},
 	IAccountInfo
 > {
-    @Get('/:address', {
-        name: 'getAccountInfo',
-        /**
-         * Service guard services allowed to connect
-         */
-        restricted: ['api'],
-        params: {
-            address: 'string'
-        }
-    })
-    async getAccountInfoByAddress(ctx: Context<AccountInfoRequest>) {
-		const paramDelegateRewards = Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
-        const [ accountInfo, accountRewards ] = await Promise.all([
+	@Get('/:address', {
+		name: 'getAccountInfo',
+		/**
+		 * Service guard services allowed to connect
+		 */
+		restricted: ['api'],
+		params: {
+			address: 'string',
+		},
+	})
+	async getAccountInfoByAddress(ctx: Context<AccountInfoRequest>) {
+		const paramDelegateRewards =
+			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
+		const [accountInfo, accountRewards] = await Promise.all([
 			this.adapter.findOne({ address: ctx.params.address }),
 			this.callApi(URL_TYPE_CONSTANTS.LCD, paramDelegateRewards),
 		]);
-        if(accountInfo) {
+		if (accountInfo) {
 			const data = {
 				account_info: accountInfo,
 				delegate_rewards: accountRewards,
 			};
 			const result: ResponseDto = {
-				error_code: userErrorCode.SUCCESSFUL,
-				message: userErrorMessage.SUCCESSFUL,
+				error_code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
 				data,
 			};
 			return result;
-		}
-        else {
+		} else {
 			const result: ResponseDto = {
-				error_code: userErrorCode.ADDRESS_NOT_FOUND,
-				message: userErrorMessage.ADDRESS_NOT_FOUND,
+				error_code: ErrorCode.ADDRESS_NOT_FOUND,
+				message: ErrorMessage.ADDRESS_NOT_FOUND,
 				data: null,
 			};
 			return result;
-		};
-    }
+		}
+	}
 }

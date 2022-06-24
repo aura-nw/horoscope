@@ -1,7 +1,7 @@
 import { constants } from 'http2';
 
 // eslint-disable-next-line no-shadow, @typescript-eslint/naming-convention
-export enum userErrorMessage {
+export enum ErrorMessage {
 	SUCCESSFUL = 'Successful',
 	NOT_FOUND = 'user.notfound',
 	WRONG = 'user.wrong',
@@ -12,7 +12,7 @@ export enum userErrorMessage {
 	ADDRESS_NOT_FOUND = 'Address not found',
 }
 
-export const userErrorCode = {
+export const ErrorCode = {
 	SUCCESSFUL: constants.HTTP_STATUS_OK,
 	NOT_FOUND: constants.HTTP_STATUS_NOT_FOUND,
 	WRONG: constants.HTTP_STATUS_UNPROCESSABLE_ENTITY,
