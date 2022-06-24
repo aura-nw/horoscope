@@ -37,3 +37,9 @@ export type SigningInfoEntityResponseFromApi = {
 export type MintInflationResponseFromApi = {
 	inflation: String;
 };
+
+export type ResponseDto = {
+	error_code: number | string;
+	message: string;
+	data: any;
+}
