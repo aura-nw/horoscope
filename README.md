@@ -31,7 +31,8 @@ With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to 
 
 ## List services (currently)
 
--   **api-gateway**: API Gateway services for backend API
+-   **api-gateway**: API Gateway services for backend API, query data from DB
+    -   _network_: get community pool, pool and inflation
 -   **crawl-block**: get block from network and store it in redis stream
 -   **handle-block**: get block from redis stream, then get transaction, evidence in block and put them to redis stream equivalent
 -   **handle-transaction**: get transaction from redis stream then handle
@@ -39,6 +40,7 @@ With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to 
 -   **crawl-proposal**: proposal and tally result (if proposal in voting period)
 -   **crawl-distribution**: get data community pool
 -   **crawl-staking**: get data pool, information about validator
+-   **crawl-mint**: get inflation
 
 ## Install requirements
 
