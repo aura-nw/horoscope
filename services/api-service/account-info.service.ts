@@ -62,7 +62,7 @@ export default class AccountInfoService extends MoleculerDBService<
 				delegate_rewards: accountRewards,
 			};
 			const result: ResponseDto = {
-				error_code: ErrorCode.SUCCESSFUL,
+				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data,
 			};
@@ -76,14 +76,14 @@ export default class AccountInfoService extends MoleculerDBService<
                     delegate_rewards: accountRewards,
                 };
                 const result: ResponseDto = {
-                    error_code: ErrorCode.SUCCESSFUL,
+                    code: ErrorCode.SUCCESSFUL,
                     message: ErrorMessage.SUCCESSFUL,
                     data,
                 };
                 return result;
             } else {
                 const result: ResponseDto = {
-                    error_code: ErrorCode.ADDRESS_NOT_FOUND,
+                    code: ErrorCode.ADDRESS_NOT_FOUND,
                     message: ErrorMessage.ADDRESS_NOT_FOUND,
                     data: null,
                 };

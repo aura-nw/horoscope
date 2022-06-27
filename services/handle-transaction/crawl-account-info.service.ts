@@ -13,9 +13,9 @@ import CallApiMixin from "../../mixins/callApi/call-api.mixin";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountInfoService extends Service {
-    // private redisMixin = new RedisMixin().start();
-    private callApiMixin = new CallApiMixin().start();
-    private dbAccountInfoMixin = dbAccountInfoMixin;
+	// private redisMixin = new RedisMixin().start();
+	private callApiMixin = new CallApiMixin().start();
+	private dbAccountInfoMixin = dbAccountInfoMixin;
 
     public constructor(public broker: ServiceBroker) {
         super(broker);
@@ -77,20 +77,22 @@ export default class CrawlAccountInfoService extends Service {
         })
     }
 
-    async queryAllData(list: any[], result: any, url: string, data: string) {
-        let done = false;
-        while (!done) {
-            if (result) {
-                list.push(...result[data]);
-                if (result.pagination.next_key === null) {
-                    done = true;
-                } else {
-                    let param = `${url}&pagination.key=${encodeURIComponent(result.pagination.next_key)}`;
-                    result = await this.callApi(URL_TYPE_CONSTANTS.LCD, param);
-                }
-            }
-        }
-    }
+	async queryAllData(list: any[], result: any, url: string, data: string) {
+		let done = false;
+		while (!done) {
+			if (result) {
+				list.push(...result[data]);
+				if (result.pagination.next_key === null) {
+					done = true;
+				} else {
+					let param = `${url}&pagination.key=${encodeURIComponent(
+						result.pagination.next_key,
+					)}`;
+					result = await this.callApi(URL_TYPE_CONSTANTS.LCD, param);
+				}
+			}
+		}
+	}
 
     async handleJob(listTx: any[], source: string): Promise<any[]> {
         let listAccounts: any[] = [], listUpdateQueries: any[] = [];
@@ -121,101 +123,159 @@ export default class CrawlAccountInfoService extends Service {
                 let listSpendableBalances: any[] = [];
                 let authInfo;
 
-                const paramsBalance = Config.GET_PARAMS_BALANCE + `/${address}?pagination.limit=100`;
-                const paramsDelegated = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
-                const paramsUnbonding = Config.GET_PARAMS_DELEGATOR + `/${address}/unbonding_delegations?pagination.limit=100`;
-                const paramsRedelegations = Config.GET_PARAMS_DELEGATOR + `/${address}/redelegations?pagination.limit=100`;
-                const paramsAuthInfo = Config.GET_PARAMS_AUTH_INFO + `/${address}`;
-                const paramsSpendableBalances = Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
+				const paramsBalance =
+					Config.GET_PARAMS_BALANCE + `/${address}?pagination.limit=100`;
+				const paramsDelegated =
+					Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
+				const paramsUnbonding =
+					Config.GET_PARAMS_DELEGATOR +
+					`/${address}/unbonding_delegations?pagination.limit=100`;
+				const paramsRedelegations =
+					Config.GET_PARAMS_DELEGATOR + `/${address}/redelegations?pagination.limit=100`;
+				const paramsAuthInfo = Config.GET_PARAMS_AUTH_INFO + `/${address}`;
+				const paramsSpendableBalances =
+					Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
 
                 let accountInfo: AccountInfoEntity = await this.adapter.findOne({
                     address,
                 });
 
-                let balanceData, delegatedData, unbondingData, redelegationsData, authInfoData, spendableBalances;
-                if (accountInfo) {
-                    switch (message) {
-                        case MSG_TYPE.MSG_DELEGATE:
-                            [
-                                balanceData,
-                                delegatedData,
-                                authInfoData,
-                                spendableBalances
-                            ] = await Promise.all([
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
-                            ]);
+				let balanceData,
+					delegatedData,
+					unbondingData,
+					redelegationsData,
+					authInfoData,
+					spendableBalances;
+				if (accountInfo) {
+					switch (message) {
+						case MSG_TYPE.MSG_DELEGATE:
+							[balanceData, delegatedData, authInfoData, spendableBalances] =
+								await Promise.all([
+									this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
+									this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
+									this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
+									this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
+								]);
 
-                            authInfo = authInfoData;
+							authInfo = authInfoData;
 
-                            await Promise.all([
-                                this.queryAllData(listBalances, balanceData, paramsBalance, CONST_CHAR.BALANCES),
-                                this.queryAllData(listDelegates, delegatedData, paramsDelegated, CONST_CHAR.DELEGATION_RESPONSES),
-                                this.queryAllData(listSpendableBalances, spendableBalances, paramsSpendableBalances, CONST_CHAR.BALANCES),
-                            ])
-                            break;
-                        case MSG_TYPE.MSG_REDELEGATE:
-                            [
-                                balanceData,
-                                delegatedData,
-                                redelegationsData,
-                                authInfoData,
-                                spendableBalances
-                            ] = await Promise.all([
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsRedelegations),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
-                            ]);
+							await Promise.all([
+								this.queryAllData(
+									listBalances,
+									balanceData,
+									paramsBalance,
+									CONST_CHAR.BALANCES,
+								),
+								this.queryAllData(
+									listDelegates,
+									delegatedData,
+									paramsDelegated,
+									CONST_CHAR.DELEGATION_RESPONSES,
+								),
+								this.queryAllData(
+									listSpendableBalances,
+									spendableBalances,
+									paramsSpendableBalances,
+									CONST_CHAR.BALANCES,
+								),
+							]);
+							break;
+						case MSG_TYPE.MSG_REDELEGATE:
+							[
+								balanceData,
+								delegatedData,
+								redelegationsData,
+								authInfoData,
+								spendableBalances,
+							] = await Promise.all([
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsRedelegations),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
+							]);
 
-                            authInfo = authInfoData;
+							authInfo = authInfoData;
 
-                            await Promise.all([
-                                this.queryAllData(listBalances, balanceData, paramsBalance, CONST_CHAR.BALANCES),
-                                this.queryAllData(listDelegates, delegatedData, paramsDelegated, CONST_CHAR.DELEGATION_RESPONSES),
-                                this.queryAllData(listRedelegates, redelegationsData, paramsRedelegations, CONST_CHAR.REDELEGATION_RESPONSES),
-                                this.queryAllData(listSpendableBalances, spendableBalances, paramsSpendableBalances, CONST_CHAR.BALANCES),
-                            ])
-                            break;
-                        case MSG_TYPE.MSG_UNDELEGATE:
-                            [
-                                balanceData,
-                                delegatedData,
-                                unbondingData,
-                                authInfoData,
-                                spendableBalances
-                            ] = await Promise.all([
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsUnbonding),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
-                            ]);
+							await Promise.all([
+								this.queryAllData(
+									listBalances,
+									balanceData,
+									paramsBalance,
+									CONST_CHAR.BALANCES,
+								),
+								this.queryAllData(
+									listDelegates,
+									delegatedData,
+									paramsDelegated,
+									CONST_CHAR.DELEGATION_RESPONSES,
+								),
+								this.queryAllData(
+									listRedelegates,
+									redelegationsData,
+									paramsRedelegations,
+									CONST_CHAR.REDELEGATION_RESPONSES,
+								),
+								this.queryAllData(
+									listSpendableBalances,
+									spendableBalances,
+									paramsSpendableBalances,
+									CONST_CHAR.BALANCES,
+								),
+							]);
+							break;
+						case MSG_TYPE.MSG_UNDELEGATE:
+							[
+								balanceData,
+								delegatedData,
+								unbondingData,
+								authInfoData,
+								spendableBalances,
+							] = await Promise.all([
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsUnbonding),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
+							]);
 
-                            authInfo = authInfoData;
+							authInfo = authInfoData;
 
-                            await Promise.all([
-                                this.queryAllData(listBalances, balanceData, paramsBalance, CONST_CHAR.BALANCES),
-                                this.queryAllData(listDelegates, delegatedData, paramsDelegated, CONST_CHAR.DELEGATION_RESPONSES),
-                                this.queryAllData(listUnbonds, unbondingData, paramsUnbonding, CONST_CHAR.UNBONDING_RESPONSES),
-                                this.queryAllData(listSpendableBalances, spendableBalances, paramsSpendableBalances, CONST_CHAR.BALANCES),
-                            ])
-                            break;
-                        default:
-                            [
-                                balanceData,
-                                authInfoData,
-                                spendableBalances
-                            ] = await Promise.all([
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
-                                this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
-                            ]);
+							await Promise.all([
+								this.queryAllData(
+									listBalances,
+									balanceData,
+									paramsBalance,
+									CONST_CHAR.BALANCES,
+								),
+								this.queryAllData(
+									listDelegates,
+									delegatedData,
+									paramsDelegated,
+									CONST_CHAR.DELEGATION_RESPONSES,
+								),
+								this.queryAllData(
+									listUnbonds,
+									unbondingData,
+									paramsUnbonding,
+									CONST_CHAR.UNBONDING_RESPONSES,
+								),
+								this.queryAllData(
+									listSpendableBalances,
+									spendableBalances,
+									paramsSpendableBalances,
+									CONST_CHAR.BALANCES,
+								),
+							]);
+							break;
+						default:
+							[balanceData, authInfoData, spendableBalances] = await Promise.all([
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
+								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
+							]);
 
-                            authInfo = authInfoData;
+							authInfo = authInfoData;
 
                             await Promise.all([
                                 this.queryAllData(listBalances, balanceData, paramsBalance, CONST_CHAR.BALANCES),
@@ -241,36 +301,61 @@ export default class CrawlAccountInfoService extends Service {
                         this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
                     ]);
 
-                    accountInfo.address = address;
-                    authInfo = authInfoData;
+					accountInfo.address = address;
+					authInfo = authInfoData;
 
-                    await Promise.all([
-                        this.queryAllData(listBalances, balanceData, paramsBalance, CONST_CHAR.BALANCES),
-                        this.queryAllData(listDelegates, delegatedData, paramsDelegated, CONST_CHAR.DELEGATION_RESPONSES),
-                        this.queryAllData(listUnbonds, unbondingData, paramsUnbonding, CONST_CHAR.UNBONDING_RESPONSES),
-                        this.queryAllData(listRedelegates, redelegationsData, paramsRedelegations, CONST_CHAR.REDELEGATION_RESPONSES),
-                        this.queryAllData(listSpendableBalances, spendableBalances, paramsSpendableBalances, CONST_CHAR.BALANCES),
-                    ])
-                }
+					await Promise.all([
+						this.queryAllData(
+							listBalances,
+							balanceData,
+							paramsBalance,
+							CONST_CHAR.BALANCES,
+						),
+						this.queryAllData(
+							listDelegates,
+							delegatedData,
+							paramsDelegated,
+							CONST_CHAR.DELEGATION_RESPONSES,
+						),
+						this.queryAllData(
+							listUnbonds,
+							unbondingData,
+							paramsUnbonding,
+							CONST_CHAR.UNBONDING_RESPONSES,
+						),
+						this.queryAllData(
+							listRedelegates,
+							redelegationsData,
+							paramsRedelegations,
+							CONST_CHAR.REDELEGATION_RESPONSES,
+						),
+						this.queryAllData(
+							listSpendableBalances,
+							spendableBalances,
+							paramsSpendableBalances,
+							CONST_CHAR.BALANCES,
+						),
+					]);
+				}
 
-                if (listBalances) {
-                    accountInfo.balances = listBalances;
-                }
-                if (listDelegates) {
-                    accountInfo.delegation_responses = listDelegates;
-                }
-                if (listUnbonds) {
-                    accountInfo.unbonding_responses = listUnbonds;
-                }
-                if (listRedelegates) {
-                    accountInfo.redelegation_responses = listRedelegates;
-                }
-                if (listSpendableBalances) {
-                    accountInfo.spendable_balances = listSpendableBalances;
-                }
-                if (authInfo) {
-                    accountInfo.account = authInfo;
-                }
+				if (listBalances) {
+					accountInfo.balances = listBalances;
+				}
+				if (listDelegates) {
+					accountInfo.delegation_responses = listDelegates;
+				}
+				if (listUnbonds) {
+					accountInfo.unbonding_responses = listUnbonds;
+				}
+				if (listRedelegates) {
+					accountInfo.redelegation_responses = listRedelegates;
+				}
+				if (listSpendableBalances) {
+					accountInfo.spendable_balances = listSpendableBalances;
+				}
+				if (authInfo) {
+					accountInfo.account = authInfo;
+				}
 
                 listAccounts.push(accountInfo);
             };
@@ -291,16 +376,16 @@ export default class CrawlAccountInfoService extends Service {
         return [];
     }
 
-    async _start() {
-        this.getQueue('crawl.account-info').on('completed', (job: Job) => {
-            this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
-        });
-        this.getQueue('crawl.account-info').on('failed', (job: Job) => {
-            this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
-        });
-        this.getQueue('crawl.account-info').on('progress', (job: Job) => {
-            this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
-        });
-        return super._start();
-    }
+	async _start() {
+		this.getQueue('crawl.account-info').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
+		});
+		this.getQueue('crawl.account-info').on('failed', (job: Job) => {
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+		});
+		this.getQueue('crawl.account-info').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
+		});
+		return super._start();
+	}
 }
