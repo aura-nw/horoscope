@@ -1,13 +1,16 @@
 import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
+import { ObjectIdNull } from 'types';
 
-export interface IPool {
-	_id: Types.ObjectId | string | null;
+export interface IPoolDetail {
 	not_bonded_tokens: String;
 	bonded_tokens: String;
 }
-
+export interface IPool {
+	_id: ObjectIdNull;
+	pool: IPoolDetail;
+}
 @JsonObject('Pool')
 export class PoolEntity {
 	@JsonProperty('_id', String, true)

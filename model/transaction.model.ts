@@ -1,20 +1,16 @@
+import { ITransaction } from '../entities';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
-export interface ITransaction {
-	_id: ObjectIdNull;
-	hash: String;
-	height: String;
-	index: Number;
-	tx_result: Object;
-	tx: String;
-}
-
 const definition: definitionType<ITransaction> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	hash: String,
-	height: String,
+	hash: {
+		type: String,
+		index: true,
+		unique: true,
+	},
+	height: Number,
 	index: Number,
 	tx_result: {
 		code: Number,

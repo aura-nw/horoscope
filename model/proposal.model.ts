@@ -1,4 +1,5 @@
 import { IProposal } from 'entities';
+import { Long } from 'mongodb';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
@@ -8,6 +9,7 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 	proposal_id: {
 		type: Number,
 		index: true,
+		unique: true,
 	},
 	content: {
 		'@type': String,
@@ -34,16 +36,16 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 		abstain: String,
 		no_with_veto: String,
 	},
-	submit_time: String,
-	deposit_end_time: String,
+	submit_time: Date,
+	deposit_end_time: Date,
 	total_deposit: [
 		{
 			denom: String,
 			amount: String,
 		},
 	],
-	voting_start_time: String,
-	voting_end_time: String,
+	voting_start_time: Date,
+	voting_end_time: Date,
 	custom_info: customInfoModel,
 });
 

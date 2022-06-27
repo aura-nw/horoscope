@@ -1,14 +1,49 @@
 import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
-import { Coin } from './coin.entity';
+import { ObjectIdNull } from 'types';
+
+export interface IConsensusPubkey {
+	'@type': String;
+	key: String;
+}
+
+export interface IDescription {
+	moniker: String;
+	identity: String;
+	website: String;
+	details: String;
+	security_contact: String;
+}
+
+export interface ICommissionRate {
+	rate: String;
+	max_rate: String;
+	max_change_rate: String;
+}
+
+export interface ICommission {
+	commision_rates: ICommissionRate;
+	update_time: String;
+}
 
 export interface IValidator {
-	_id: Types.ObjectId | string | null;
+	_id: ObjectIdNull;
+	operator_address: String;
+	consensus_pubkey: IConsensusPubkey;
+	jailed: Boolean;
+	status: String;
+	tokens: String;
+	delegator_shares: String;
+	description: IDescription;
+	unbonding_height: String;
+	unbonding_time: String;
+	commission: ICommission;
+	min_self_delegation: String;
 }
 
 @JsonObject('ConsensusPubkey')
-export class ConsensusPubkey {
+export class ConsensusPubkey implements IConsensusPubkey {
 	@JsonProperty('@type', String)
 	'@type': String = '';
 	@JsonProperty('key', String)
@@ -16,7 +51,7 @@ export class ConsensusPubkey {
 }
 
 @JsonObject('description')
-export class Description {
+export class Description implements IDescription {
 	@JsonProperty('moniker', String)
 	moniker: String = '';
 	@JsonProperty('identity', String)
@@ -25,10 +60,12 @@ export class Description {
 	website: String = '';
 	@JsonProperty('details', String)
 	details: String = '';
+	@JsonProperty('security_contact', String)
+	security_contact: String = '';
 }
 
 @JsonObject('CommissionRate')
-export class CommissionRate {
+export class CommissionRate implements ICommissionRate {
 	@JsonProperty('rate', String)
 	rate: String = '';
 	@JsonProperty('max_rate', String)
@@ -38,7 +75,7 @@ export class CommissionRate {
 }
 
 @JsonObject('Commission')
-export class Commission {
+export class Commission implements ICommission {
 	@JsonProperty('commission_rates', CommissionRate)
 	commision_rates: CommissionRate = {} as CommissionRate;
 	@JsonProperty('update_time', String)

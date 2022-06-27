@@ -1,15 +1,7 @@
+import { IPool } from '../entities';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
-
-export interface IPoolDetail {
-	not_bonded_tokens: String;
-	bonded_tokens: String;
-}
-export interface IPool {
-	_id: ObjectIdNull;
-	pool: IPoolDetail;
-}
 
 const definition: definitionType<IPool> = (collection?: string) => ({
 	_id: Types.ObjectId,
