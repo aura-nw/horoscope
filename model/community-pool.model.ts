@@ -1,16 +1,7 @@
+import { ICommunityPool } from '../entities';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
-
-export interface ICoin {
-	denom: String;
-	amount: String;
-}
-
-export interface ICommunityPool {
-	_id: ObjectIdNull;
-	pool: ICoin[];
-}
 
 const definition: definitionType<ICommunityPool> = (collection?: string) => ({
 	_id: Types.ObjectId,

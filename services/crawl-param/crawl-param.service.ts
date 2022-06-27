@@ -86,8 +86,20 @@ export default class CrawlParamService extends Service {
 		this.logger.info(`paramGov: ${JSON.stringify(paramGov)}`);
 
 		let listParamInDb = await this.adapter.find({
-			module: ['bank', 'distribution', 'gov', 'slashing', 'staking', 'ibc-transfer', 'mint'],
-			'custom_info.chain_id': Config.CHAIN_ID,
+			query: {
+				module: {
+					$in: [
+						'bank',
+						'distribution',
+						'gov',
+						'slashing',
+						'staking',
+						'ibc-transfer',
+						'mint',
+					],
+				},
+				'custom_info.chain_id': Config.CHAIN_ID,
+			},
 		});
 
 		this.logger.info(`listParamInDb: ${listParamInDb}`);

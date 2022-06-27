@@ -112,7 +112,7 @@ export default class HandleBlockService extends Service {
 							this.handleListBlock(listBlockNeedSaveToDb);
 						}
 						if (listTx.length > 0) {
-							this.broker.emit('list-transaction.created', {listTx: listTx});
+							this.broker.emit('list-transaction.created', { listTx: listTx });
 						}
 						if (listMessageNeedAck.length > 0) {
 							this.redisClient.xAck(
@@ -123,7 +123,7 @@ export default class HandleBlockService extends Service {
 							this.redisClient.xDel(
 								Config.REDIS_STREAM_BLOCK_NAME,
 								listMessageNeedAck,
-							)
+							);
 						}
 					} catch (error) {
 						this.logger.error(error);
@@ -139,9 +139,37 @@ export default class HandleBlockService extends Service {
 	async handleListBlock(listBlock: any) {
 		let jsonConvert: JsonConvert = new JsonConvert();
 		// jsonConvert.operationMode = OperationMode.LOGGING;
-		const item: any = jsonConvert.deserializeArray(listBlock, BlockEntity);
-		let listId = await this.adapter.insertMany(item);
-		return listId;
+		const listBlockEntity: BlockEntity[] = jsonConvert.deserializeArray(listBlock, BlockEntity);
+		let listBlockNeedSaveToDb: BlockEntity[] = [];
+		let listHash = listBlockEntity.map((item: BlockEntity) => {
+			if (item && item.block_id && item.block_id.hash) return item.block_id.hash;
+			return null;
+		});
+		let listFoundBlock: BlockEntity[] = await this.adapter.find({
+			query: {
+				'block_id.hash': {
+					$in: listHash,
+				},
+			},
+		});
+		this.logger.info(`Found ${listFoundBlock.length} blocks in db`);
+		listBlockEntity.forEach((block: BlockEntity) => {
+			try {
+				let hash = block?.block_id?.hash;
+				let foundItem = listFoundBlock.find((item: BlockEntity) => {
+					return item?.block_id?.hash === hash;
+				});
+				if (!foundItem) {
+					listBlockNeedSaveToDb.push(block);
+				}
+			} catch (error) {
+				this.logger.error(error);
+			}
+		});
+		if (listBlockNeedSaveToDb.length > 0) {
+			let listId = await this.adapter.insertMany(listBlockNeedSaveToDb);
+			return listId;
+		}
 	}
 
 	async _start() {

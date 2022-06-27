@@ -2,17 +2,81 @@ import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { ObjectIdNull } from 'types';
 import { Types } from 'mongoose';
+import { NumericConverter } from './converters/numeric.converter';
+
+export interface IBlockIdPart {
+	total: Number;
+	hash: String;
+}
+export interface IBlockId {
+	hash: String;
+	parts: IBlockIdPart | null;
+}
+export interface IBlockHeaderVersion {
+	block: String;
+}
+export interface IBlockHeader {
+	version: IBlockHeaderVersion | null;
+	chain_id: String;
+	height: Number;
+	time: String;
+	last_block_id: IBlockId | null;
+	last_commit_hash: String;
+	data_hash: String;
+	validators_hash: String;
+	next_validators_hash: String;
+	consensus_hash: String;
+	app_hash: String;
+	last_results_hash: String;
+	evidence_hash: String;
+	proposer_address: String;
+}
+
+export interface IData {
+	txs: String[];
+}
+export interface IEvidenceDetail {
+	evidence: String[];
+}
+export interface IEvidence {
+	evidence: IEvidenceDetail;
+}
+
+export interface ISignature {
+	block_id_flag: Number;
+	validator_address: String;
+	timestamp: String;
+	signature: String | null;
+}
+export interface ILastCommit {
+	height: String;
+	round: Number;
+	block_id: IBlockId | null;
+	signatures: ISignature[];
+}
+export interface IBlockDetail {
+	header: IBlockHeader;
+	data: IData;
+	evidence: IEvidence;
+	last_commit: ILastCommit;
+}
+
+export interface IBlock {
+	_id: ObjectIdNull;
+	block_id: IBlockId;
+	block: IBlockDetail;
+}
 
 @JsonObject('BlockIdPart')
-export class BlockIdPart {
+export class BlockIdPart implements IBlockIdPart {
 	@JsonProperty('total', Number)
-	total: number = 0;
+	total: Number = 0;
 	@JsonProperty('hash', String)
 	hash: String = '';
 }
 
 @JsonObject('BlockId')
-export class BlockId {
+export class BlockId implements IBlockId {
 	@JsonProperty('hash', String)
 	hash: String = '';
 	@JsonProperty('parts', BlockIdPart)
@@ -20,19 +84,19 @@ export class BlockId {
 }
 
 @JsonObject('BlockHeaderVersion')
-export class BlockHeaderVersion {
+export class BlockHeaderVersion implements IBlockHeaderVersion {
 	@JsonProperty('block', String)
 	block: String = '';
 }
 
 @JsonObject('BlockHeader')
-export class BlockHeader {
+export class BlockHeader implements IBlockHeader {
 	@JsonProperty('version', BlockHeaderVersion)
 	version: BlockHeaderVersion | null = null;
 	@JsonProperty('chain_id', String)
 	chain_id: String = '';
-	@JsonProperty('height', String)
-	height: String = '';
+	@JsonProperty('height', NumericConverter)
+	height: Number = 0;
 	@JsonProperty('time', String)
 	time: String = '';
 	@JsonProperty('last_block_id', BlockId)
@@ -58,17 +122,17 @@ export class BlockHeader {
 }
 
 @JsonObject('BlockData')
-export class BlockData {
+export class BlockData implements IData {
 	@JsonProperty('txs', [String])
 	txs: String[] = [];
 }
 @JsonObject('BlockDataEvidence')
-export class BlockDataEvidence {
+export class BlockDataEvidence implements IEvidenceDetail {
 	@JsonProperty('evidence', [String])
 	evidence: String[] = [];
 }
 @JsonObject('Signatures')
-export class Signature {
+export class Signature implements ISignature {
 	@JsonProperty('block_id_flag', Number)
 	block_id_flag: number = 0;
 	@JsonProperty('validator_address', String)
@@ -80,7 +144,7 @@ export class Signature {
 }
 
 @JsonObject('BlockLastCommit')
-export class BlockLastCommit {
+export class BlockLastCommit implements ILastCommit {
 	@JsonProperty('height', String)
 	height: String = '';
 	@JsonProperty('round', Number)
