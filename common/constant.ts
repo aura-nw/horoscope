@@ -21,6 +21,8 @@ export const CONST_CHAR = {
 	ACTION: 'action',
 	TRANSFER: 'transfer',
 	SENDER: 'sender',
+	CRAWL: 'crawl',
+	API: 'api',
 }
 
 export const MSG_TYPE = {
