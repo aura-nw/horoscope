@@ -39,7 +39,7 @@ export type MintInflationResponseFromApi = {
 };
 
 export type ResponseDto = {
-	error_code: number | string;
+	code: number | string;
 	message: string;
 	data: any;
-}
+};

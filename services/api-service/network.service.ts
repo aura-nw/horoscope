@@ -39,7 +39,7 @@ export default class NetworkService extends MoleculerDBService<
 			this.broker.call('v1.communitypool.getByChain', { chainid: ctx.params.chainid }),
 		]);
 		let result: ResponseDto = {
-			error_code: ErrorCode.SUCCESSFUL,
+			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
 			data: {
 				inflation: inflation,
