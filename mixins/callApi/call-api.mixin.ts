@@ -79,3 +79,5 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 		return this.schema;
 	}
 }
+
+export const callApiMixin = new CallApiMixin().start();

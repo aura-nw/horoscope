@@ -2,15 +2,14 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import { dbAccountInfoMixin } from "@Mixins/dbMixinMongoose/db-account-info.mixin";
-import RedisMixin from "@Mixins/redis/redis.mixin";
+import { dbAccountInfoMixin } from "../../mixins/dbMixinMongoose/db-account-info.mixin";
 import { Config } from "../../common";
 import { Service, ServiceBroker } from "moleculer";
 import { Job } from "bull";
-import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "common/constant";
+import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert } from "json2typescript";
-import { AccountInfoEntity } from "entities/account-info.entity";
-import CallApiMixin from "@Mixins/callApi/call-api.mixin";
+import { AccountInfoEntity } from "../../entities/account-info.entity";
+import CallApiMixin from "../../mixins/callApi/call-api.mixin";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountInfoService extends Service {
@@ -110,7 +109,7 @@ export default class CrawlAccountInfoService extends Service {
                 const paramsAuthInfo = Config.GET_PARAMS_AUTH_INFO + `/${address}`;
                 const paramsSpendableBalances = Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
 
-                let accountInfo = await this.adapter.findOne({
+                let accountInfo: AccountInfoEntity = await this.adapter.findOne({
                     address,
                 });
 
@@ -206,7 +205,7 @@ export default class CrawlAccountInfoService extends Service {
                             break;
                     }
                 } else {
-                    accountInfo = {};
+                    accountInfo = new AccountInfoEntity();
                     [
                         balanceData,
                         delegatedData,
@@ -257,7 +256,7 @@ export default class CrawlAccountInfoService extends Service {
                 listAccounts.push(accountInfo);
             };
         }
-        this.logger.info('list account', listAccounts[0])
+        this.logger.info('list account', listAccounts)
         try {
             listAccounts.forEach((element) => {
                 if(element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));

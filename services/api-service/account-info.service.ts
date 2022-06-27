@@ -1,8 +1,9 @@
-import { callApiMixin, dbAccountInfoMixin } from '@Mixins/dbMixinMongoose';
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
+import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Get, Service } from '@ourparentcenter/moleculer-decorators-extended';
-import { Config } from 'common';
-import { URL_TYPE_CONSTANTS } from 'common/constant';
-import { IAccountInfo } from 'entities/account-info.entity';
+import { Config } from '../../common';
+import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { IAccountInfo } from '../../entities/account-info.entity';
 import { Context } from 'moleculer';
 import {
 	AccountInfoRequest,
@@ -10,7 +11,7 @@ import {
 	ResponseDto,
 	ErrorCode,
 	ErrorMessage,
-} from 'types';
+} from '../../types';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
