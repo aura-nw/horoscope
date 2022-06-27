@@ -2,8 +2,8 @@ import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Get, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { Config } from '../../common';
-import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { IAccountInfo } from '../../entities/account-info.entity';
+import { CONST_CHAR, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { AccountInfoEntity, IAccountInfo } from '../../entities/account-info.entity';
 import { Context } from 'moleculer';
 import {
 	AccountInfoRequest,
@@ -68,12 +68,27 @@ export default class AccountInfoService extends MoleculerDBService<
 			};
 			return result;
 		} else {
-			const result: ResponseDto = {
-				error_code: ErrorCode.ADDRESS_NOT_FOUND,
-				message: ErrorMessage.ADDRESS_NOT_FOUND,
-				data: null,
-			};
-			return result;
+            let account: AccountInfoEntity[] = await this.broker.call('v1.crawlAccountInfo.accountinfoupsert', { listTx: [{ address: ctx.params.address, message: '' }], source: CONST_CHAR.API });
+            this.logger.info('account', account)
+			if(account.length > 0) {
+                const data = {
+                    account_info: account[0],
+                    delegate_rewards: accountRewards,
+                };
+                const result: ResponseDto = {
+                    error_code: ErrorCode.SUCCESSFUL,
+                    message: ErrorMessage.SUCCESSFUL,
+                    data,
+                };
+                return result;
+            } else {
+                const result: ResponseDto = {
+                    error_code: ErrorCode.ADDRESS_NOT_FOUND,
+                    message: ErrorMessage.ADDRESS_NOT_FOUND,
+                    data: null,
+                };
+                return result;
+            }
 		}
 	}
 }

@@ -39,10 +39,21 @@ export default class CrawlAccountInfoService extends Service {
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
-                        await this.handleJob(job.data.listTx);
+                        await this.handleJob(job.data.listTx, job.data.source);
                         job.progress(100);
                         return true;
                     },
+                }
+            },
+            actions: {
+                accountinfoupsert: {
+                    name: 'accountinfoupsert',
+                    rest: 'GET /account-info/:address',
+                    handler: async (ctx: any): Promise<any[]> => {
+                        this.logger.debug(`Crawl account info`);
+                        let result = await this.handleJob(ctx.params.listTx, ctx.params.source);
+                        return result;
+                    }
                 }
             },
             events: {
@@ -52,7 +63,8 @@ export default class CrawlAccountInfoService extends Service {
                         this.createJob(
                             'crawl.account-info',
                             {
-                                listTx: ctx.params.listTx
+                                listTx: ctx.params.listTx,
+                                source: ctx.params.source,
                             },
                             {
                                 removeOnComplete: true,
@@ -80,21 +92,28 @@ export default class CrawlAccountInfoService extends Service {
         }
     }
 
-    async handleJob(listTx: any[]) {
+    async handleJob(listTx: any[], source: string): Promise<any[]> {
         let listAccounts: any[] = [], listUpdateQueries: any[] = [];
         if (listTx.length > 0) {
             for (const element of listTx) {
-                let log = JSON.parse(element.tx_result.log)[0].events;
-                let address = log.find(
-                    (x: any) => x.type == CONST_CHAR.MESSAGE
-                ).attributes.find(
-                    (x: any) => x.key == CONST_CHAR.SENDER
-                ).value;
-                let message = log.find(
-                    (x: any) => x.type == CONST_CHAR.MESSAGE
-                ).attributes.find(
-                    (x: any) => x.key == CONST_CHAR.ACTION
-                ).value;
+                let address, message;
+                if (source == CONST_CHAR.CRAWL) {
+                    let log = JSON.parse(element.tx_result.log)[0].events;
+                    address = log.find(
+                        (x: any) => x.type == CONST_CHAR.MESSAGE
+                    ).attributes.find(
+                        (x: any) => x.key == CONST_CHAR.SENDER
+                    ).value;
+                    message = log.find(
+                        (x: any) => x.type == CONST_CHAR.MESSAGE
+                    ).attributes.find(
+                        (x: any) => x.key == CONST_CHAR.ACTION
+                    ).value;
+                } else if (source == CONST_CHAR.API) {
+                    address = element.address;
+                    message = element.message;
+                }
+
                 let listBalances: any[] = [];
                 let listDelegates: any[] = [];
                 let listRedelegates: any[] = [];
@@ -256,21 +275,20 @@ export default class CrawlAccountInfoService extends Service {
                 listAccounts.push(accountInfo);
             };
         }
-        this.logger.info('list account', listAccounts)
         try {
             listAccounts.forEach((element) => {
-                if(element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
+                if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
-                    this.logger.info('element', element)
                     const item: any = new JsonConvert().deserializeObject(element, AccountInfoEntity);
-                    this.logger.info('item', item)
                     listUpdateQueries.push(this.adapter.insert(item));
                 }
             });
             await Promise.all(listUpdateQueries);
+            return listAccounts;
         } catch (error) {
             this.logger.error(error);
         }
+        return [];
     }
 
     async _start() {
