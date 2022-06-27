@@ -3,7 +3,7 @@
 'use strict';
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
+import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
 	ErrorMessage,
@@ -14,21 +14,21 @@ import {
 	RestOptions,
 } from '../../types';
 import { DbContextParameters } from 'moleculer-db';
-import { IProposal } from '../../entities';
+import { IValidator } from '../../entities';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
-	name: 'proposal',
+	name: 'validator',
 	version: 1,
-	mixins: [dbProposalMixin],
+	mixins: [dbValidatorMixin],
 })
-export default class ProposalService extends MoleculerDBService<
+export default class ValidatorService extends MoleculerDBService<
 	{
-		rest: 'v1/proposal';
+		rest: 'v1/validator';
 	},
-	IProposal
+	IValidator
 > {
 	@Get('/', {
 		name: 'getByChain',
@@ -59,15 +59,16 @@ export default class ProposalService extends MoleculerDBService<
 				query: { 'custom_info.chain_id': ctx.params.chainid },
 				limit: ctx.params.pageLimit,
 				offset: ctx.params.pageOffset,
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-ignore
-				sort: '-proposal_id',
+			});
+			let count = await this.adapter.count({
+				query: { 'custom_info.chain_id': ctx.params.chainid },
 			});
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
-					result,
+					validators: result,
+					count: count,
 				},
 			};
 		} catch (error) {
