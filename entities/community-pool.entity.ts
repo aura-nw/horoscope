@@ -1,14 +1,13 @@
 import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
-import { Coin } from './coin.entity';
+import { Coin, ICoin } from './coin.entity';
 import { Types } from 'mongoose';
-import { ICoin } from '@Model';
+import { ObjectIdNull } from 'types';
 
 export interface ICommunityPool {
-	_id: Types.ObjectId | string | null;
+	_id: ObjectIdNull;
 	pool: ICoin[];
 }
-
 @JsonObject('CommunityPool')
 export class CommunityPoolEntity {
 	@JsonProperty('_id', String, true)

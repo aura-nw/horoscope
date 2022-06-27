@@ -2,6 +2,16 @@ import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
 import { Coin } from './coin.entity';
+import { NumericConverter } from './converters/numeric.converter';
+
+export interface ITransaction {
+	_id: Types.ObjectId | string | null;
+	hash: String;
+	height: Number | null;
+	index: Number;
+	tx_result: TxResult;
+	tx: String;
+}
 
 @JsonObject('MsgBank')
 export class MsgBank {
@@ -94,14 +104,14 @@ export class TxResult {
 	codespace: String = '';
 }
 @JsonObject('Transaction')
-export class TransactionEntity {
+export class TransactionEntity implements ITransaction {
 	@JsonProperty('_id', String, true)
 	public _id = Config.DB_TRANSACTION.dialect === 'local' ? Types.ObjectId() : null;
 
 	@JsonProperty('hash', String)
 	hash: String = '';
-	@JsonProperty('height', String)
-	height: String = '';
+	@JsonProperty('height', NumericConverter)
+	height = null;
 	@JsonProperty('index', Number)
 	index: Number = 0;
 	@JsonProperty('tx_result', TxResult)

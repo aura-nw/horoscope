@@ -1,49 +1,11 @@
+import { IValidator } from '../entities';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
-export interface IConsensusPubkey {
-	'@type': String;
-	key: String;
-}
-
-export interface IDescription {
-	moniker: String;
-	identity: String;
-	website: String;
-	details: String;
-	security_contact: String;
-}
-
-export interface ICommissionRate {
-	rate: String;
-	max_rate: String;
-	max_change_rate: String;
-}
-
-export interface ICommission {
-	commision_rates: ICommissionRate;
-	update_time: String;
-}
-
-export interface IValidator {
-	_id: ObjectIdNull;
-	operator_address: String;
-	consensus_pubkey: IConsensusPubkey;
-	jailed: Boolean;
-	status: String;
-	tokens: String;
-	delegator_shares: String;
-	description: IDescription;
-	unbonding_height: String;
-	unbonding_time: String;
-	commission: ICommission;
-	min_self_delegation: String;
-}
-
 const definition: definitionType<IValidator> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	operator_address: String,
+	operator_address: { type: String, index: true, unique: true },
 	consensus_pubkey: {
 		'@type': String,
 		key: String,
@@ -71,7 +33,7 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 	},
 	min_self_delegation: String,
 	val_signing_info: {
-		address: String,
+		address: { type: String, index: true, unique: true },
 		start_height: String,
 		index_offset: String,
 		jailed_until: String,
