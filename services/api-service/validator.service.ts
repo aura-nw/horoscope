@@ -30,6 +30,43 @@ export default class ValidatorService extends MoleculerDBService<
 	},
 	IValidator
 > {
+	/**
+	 *  @swagger
+	 *  /v1/validator:
+	 *    get:
+	 *      tags:
+	 *        - Validator
+	 *      summary: Get validator
+	 *      description: Get validator
+	 *      produces:
+	 *        - application/json
+	 *      consumes:
+	 *        - application/json
+	 *      parameters:
+	 *        - in: query
+	 *          name: chainid
+	 *          required: true
+	 *          type: string
+	 *          description: "Chain Id of network need to query"
+	 *        - in: query
+	 *          name: pageLimit
+	 *          required: false
+	 *          default: 10
+	 *          type: number
+	 *          description: "number record return in a page"
+	 *        - in: query
+	 *          name: pageOffset
+	 *          required: false
+	 *          default: 0
+	 *          type: number
+	 *          description: "Page number, start at 0"
+	 *      responses:
+	 *        '200':
+	 *          description: Register result
+	 *        '422':
+	 *          description: Missing parameters
+	 *
+	 */
 	@Get('/', {
 		name: 'getByChain',
 		params: {

@@ -30,6 +30,43 @@ export default class ProposalService extends MoleculerDBService<
 	},
 	IProposal
 > {
+	/**
+	 *  @swagger
+	 *  /v1/proposal:
+	 *    get:
+	 *      tags:
+	 *        - Proposal
+	 *      summary: Get latest proposal
+	 *      description: Get latest proposal
+	 *      produces:
+	 *        - application/json
+	 *      consumes:
+	 *        - application/json
+	 *      parameters:
+	 *        - in: query
+	 *          name: chainid
+	 *          required: true
+	 *          type: string
+	 *          description: "Chain Id of network need to query"
+	 *        - in: query
+	 *          name: pageLimit
+	 *          required: false
+	 *          default: 10
+	 *          type: number
+	 *          description: "number record return in a page"
+	 *        - in: query
+	 *          name: pageOffset
+	 *          required: false
+	 *          default: 0
+	 *          type: number
+	 *          description: "Page number, start at 0"
+	 *      responses:
+	 *        '200':
+	 *          description: Register result
+	 *        '422':
+	 *          description: Missing parameters
+	 *
+	 */
 	@Get('/', {
 		name: 'getByChain',
 		params: {
@@ -63,11 +100,15 @@ export default class ProposalService extends MoleculerDBService<
 				// @ts-ignore
 				sort: '-proposal_id',
 			});
+			let count = await this.adapter.count({
+				query: { 'custom_info.chain_id': ctx.params.chainid },
+			});
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
-					result,
+					proposals: result,
+					count: count,
 				},
 			};
 		} catch (error) {

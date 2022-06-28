@@ -26,6 +26,31 @@ export default class NetworkService extends MoleculerDBService<
 	},
 	{}
 > {
+	/**
+	 *  @swagger
+	 *  /v1/network/status:
+	 *    get:
+	 *      tags:
+	 *        - Network
+	 *      summary: Get status network
+	 *      description: Get status network
+	 *      produces:
+	 *        - application/json
+	 *      consumes:
+	 *        - application/json
+	 *      parameters:
+	 *        - in: query
+	 *          name: chainid
+	 *          required: true
+	 *          type: string
+	 *          description: "Chain Id of network need to query"
+	 *      responses:
+	 *        '200':
+	 *          description: Register result
+	 *        '422':
+	 *          description: Missing parameters
+	 *
+	 */
 	@Get('/', {
 		name: 'status',
 		params: {
