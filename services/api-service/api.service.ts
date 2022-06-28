@@ -112,6 +112,7 @@ const swMiddleware = swStats.getMiddleware({
 					'v1.account-info.*',
 					'v1.proposal.getByChain',
 					'v1.validator.getByChain',
+					'v1.block.getByChain',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 				use: [swMiddleware],
