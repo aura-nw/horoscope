@@ -8,6 +8,7 @@ import SocketIOMixin from 'moleculer-io';
 import { Service, Method, Post } from '@ourparentcenter/moleculer-decorators-extended';
 import ApiGatewayService from 'moleculer-web';
 import { Config } from '../../common';
+import { io } from 'socket.io-client';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  * @typedef {import('http').IncomingMessage} IncomingRequest Incoming HTTP Request
@@ -23,15 +24,29 @@ import { Config } from '../../common';
 		},
 	},
 	started(): any {
-		const io = require('socket.io-client');
 		const socket = io('ws://localhost:3001');
-		socket.emit('call', 'math.add', { a: 123, b: 456 }, function (err: any, res: any) {
-			if (err) {
-				console.error(err);
-			} else {
-				console.log('call success:', res);
-			}
+		socket.on('open', () => {
+			console.log('socket open');
 		});
+		socket.on('connect', () => {
+			console.log('socket connected');
+		});
+		socket.on('abc', (arg) => {
+			console.log(arg); // world
+		});
+
+		socket.onAny((event, data) => {
+			console.log('event ne');
+			console.log(event, data);
+		});
+
+		// socket.emit('call', 'math.add', { a: 123, b: 456 }, function (err: any, res: any) {
+		// 	if (err) {
+		// 		console.error(err);
+		// 	} else {
+		// 		console.log('call success:', res);
+		// 	}
+		// });
 		return true;
 	},
 })
