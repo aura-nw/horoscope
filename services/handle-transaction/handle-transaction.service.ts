@@ -110,11 +110,14 @@ export default class HandleTransactionService extends Service {
 						Config.REDIS_STREAM_TRANSACTION_GROUP,
 						listMessageNeedAck,
 					);
-					this.redisClient.xDel(
-						Config.REDIS_STREAM_TRANSACTION_NAME,
-						listMessageNeedAck,
-					)
-					this.broker.emit('account-info.upsert', { listTx: listTransactionNeedSaveToDb, source: CONST_CHAR.CRAWL });
+					this.redisClient.xDel(Config.REDIS_STREAM_TRANSACTION_NAME, listMessageNeedAck);
+					this.broker.emit('handle-transaction.inserted', {
+						listTx: listTransactionNeedSaveToDb,
+					});
+					this.broker.emit('account-info.upsert', {
+						listTx: listTransactionNeedSaveToDb,
+						source: CONST_CHAR.CRAWL,
+					});
 				} catch (error) {
 					this.logger.error(error);
 				}

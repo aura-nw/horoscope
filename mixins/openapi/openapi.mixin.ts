@@ -125,7 +125,7 @@ export const openAPIMixin = (mixinOptions?: any) => {
 								// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 								// @ts-ignore
 								this.logger.debug(schema);
-								if (Config.NODE_ENV !== 'production') {
+								if (Config.REWRITE_SWAGGER === 'true') {
 									writeFileSync(
 										'./swagger.json',
 										JSON.stringify(schema, null, 4),
