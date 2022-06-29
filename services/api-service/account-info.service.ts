@@ -12,6 +12,7 @@ import {
 	ErrorCode,
 	ErrorMessage,
 } from '../../types';
+import { Utils } from '../../utils/utils';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -52,9 +53,11 @@ export default class AccountInfoService extends MoleculerDBService<
 	async getAccountInfoByAddress(ctx: Context<AccountInfoRequest>) {
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
 		const [accountInfo, accountRewards] = await Promise.all([
 			this.adapter.findOne({ address: ctx.params.address }),
-			this.callApi(URL_TYPE_CONSTANTS.LCD, paramDelegateRewards),
+			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
 		if (accountInfo) {
 			const data = {
@@ -68,27 +71,30 @@ export default class AccountInfoService extends MoleculerDBService<
 			};
 			return result;
 		} else {
-            let account: AccountInfoEntity[] = await this.broker.call('v1.crawlAccountInfo.accountinfoupsert', { listTx: [{ address: ctx.params.address, message: '' }], source: CONST_CHAR.API });
-            this.logger.info('account', account)
-			if(account.length > 0) {
-                const data = {
-                    account_info: account[0],
-                    delegate_rewards: accountRewards,
-                };
-                const result: ResponseDto = {
-                    code: ErrorCode.SUCCESSFUL,
-                    message: ErrorMessage.SUCCESSFUL,
-                    data,
-                };
-                return result;
-            } else {
-                const result: ResponseDto = {
-                    code: ErrorCode.ADDRESS_NOT_FOUND,
-                    message: ErrorMessage.ADDRESS_NOT_FOUND,
-                    data: null,
-                };
-                return result;
-            }
+			let account: AccountInfoEntity[] = await this.broker.call(
+				'v1.crawlAccountInfo.accountinfoupsert',
+				{ listTx: [{ address: ctx.params.address, message: '' }], source: CONST_CHAR.API },
+			);
+			this.logger.info('account', account);
+			if (account.length > 0) {
+				const data = {
+					account_info: account[0],
+					delegate_rewards: accountRewards,
+				};
+				const result: ResponseDto = {
+					code: ErrorCode.SUCCESSFUL,
+					message: ErrorMessage.SUCCESSFUL,
+					data,
+				};
+				return result;
+			} else {
+				const result: ResponseDto = {
+					code: ErrorCode.ADDRESS_NOT_FOUND,
+					message: ErrorMessage.ADDRESS_NOT_FOUND,
+					data: null,
+				};
+				return result;
+			}
 		}
 	}
 }

@@ -15,6 +15,7 @@ import {
 } from '../../types';
 import { Job } from 'bull';
 import { CommunityPoolEntity, PoolEntity, ValidatorEntity } from '../../entities';
+import { Utils } from '../../utils/utils';
 
 export default class CrawlCommunityPoolService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -50,12 +51,10 @@ export default class CrawlCommunityPoolService extends Service {
 		});
 	}
 
-	async handleJob(url: String) {
-		let urlToCall = url;
-		let resultCallApi: CommunityPoolResponseFromApi = await this.callApi(
-			URL_TYPE_CONSTANTS.LCD,
-			urlToCall,
-		);
+	async handleJob(path: String) {
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
+		let resultCallApi: CommunityPoolResponseFromApi = await this.callApiFromDomain(url, path);
 		let jsonConvert = new JsonConvert();
 		// jsonConvert.operationMode = OperationMode.LOGGING;
 		const item: CommunityPoolEntity = jsonConvert.deserializeObject(

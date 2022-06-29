@@ -20,6 +20,9 @@ import { io } from 'socket.io-client';
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	actions: {
 		add(ctx) {
+			//@ts-ignore
+			this.broker.call('io.broadcast', { event: 'abc', args: ['arg1', 'arg2'] });
+
 			return Number(ctx.params.a) + Number(ctx.params.b);
 		},
 	},
@@ -31,11 +34,11 @@ import { io } from 'socket.io-client';
 		socket.on('connect', () => {
 			console.log('socket connected');
 		});
-		socket.on('abc', (arg) => {
-			console.log(arg); // world
+		socket.on('abc', (...arg) => {
+			console.log('listen abc: ', arg);
 		});
 
-		socket.onAny((event, data) => {
+		socket.onAny((event, ...data) => {
 			console.log('event ne');
 			console.log(event, data);
 		});

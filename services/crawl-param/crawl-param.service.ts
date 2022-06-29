@@ -10,6 +10,7 @@ import { dbParamMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { ParamEntity } from '../../entities';
+import { Utils } from '../../utils/utils';
 export default class CrawlParamService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbParamMixin = dbParamMixin;
@@ -46,6 +47,8 @@ export default class CrawlParamService extends Service {
 
 	async initEnv() {}
 	async handleJob() {
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
 		let [
 			paramBank,
 			paramDistribution,
@@ -57,15 +60,15 @@ export default class CrawlParamService extends Service {
 			paramIBCTransfer,
 			paramMint,
 		] = await Promise.all([
-			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_BANK),
-			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_DISTRIBUTION),
-			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_GOV_VOTING),
-			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_GOV_TALLYING),
-			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_GOV_DEPOSIT),
-			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_SLASHING),
-			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_STAKING),
-			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_IBC_TRANSFER),
-			this.callApi(URL_TYPE_CONSTANTS.LCD, Config.GET_PARAMS_MINT),
+			this.callApiFromDomain(url, Config.GET_PARAMS_BANK),
+			this.callApiFromDomain(url, Config.GET_PARAMS_DISTRIBUTION),
+			this.callApiFromDomain(url, Config.GET_PARAMS_GOV_VOTING),
+			this.callApiFromDomain(url, Config.GET_PARAMS_GOV_TALLYING),
+			this.callApiFromDomain(url, Config.GET_PARAMS_GOV_DEPOSIT),
+			this.callApiFromDomain(url, Config.GET_PARAMS_SLASHING),
+			this.callApiFromDomain(url, Config.GET_PARAMS_STAKING),
+			this.callApiFromDomain(url, Config.GET_PARAMS_IBC_TRANSFER),
+			this.callApiFromDomain(url, Config.GET_PARAMS_MINT),
 		]);
 
 		this.logger.info(`paramBank: ${JSON.stringify(paramBank)}`);
@@ -134,10 +137,12 @@ export default class CrawlParamService extends Service {
 		}
 	}
 
-	async createParamFromApi(type: String, url: String) {
+	async createParamFromApi(type: String, path: String) {
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
 		return {
 			type: type,
-			params: (await this.callApi(URL_TYPE_CONSTANTS.LCD, url)).params,
+			params: (await this.callApiFromDomain(url, path)).params,
 		};
 	}
 

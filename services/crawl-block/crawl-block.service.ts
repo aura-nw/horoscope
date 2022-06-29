@@ -10,13 +10,13 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from '@redis/client';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
+import { Utils } from '../../utils/utils';
 
 export default class CrawlBlockService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private redisMixin = new RedisMixin().start();
 
 	private currentBlock = 0;
-	// private redisClient = this.getRedisClient();
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -69,8 +69,9 @@ export default class CrawlBlockService extends Service {
 		this.logger.info(`currentBlock: ${this.currentBlock}`);
 	}
 	async handleJob(param: String) {
-		const responseGetLatestBlock = await this.callApi(
-			URL_TYPE_CONSTANTS.RPC,
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.RPC);
+		const responseGetLatestBlock = await this.callApiFromDomain(
+			url,
 			`${Config.GET_LATEST_BLOCK_API}`,
 		);
 		const latestBlockNetwork = parseInt(responseGetLatestBlock.result.block.header.height);
@@ -83,8 +84,8 @@ export default class CrawlBlockService extends Service {
 			endBlock = latestBlockNetwork;
 		}
 		this.logger.info('startBlock: ' + startBlock + ' endBlock: ' + endBlock);
-		let data = await this.callApi(
-			URL_TYPE_CONSTANTS.RPC,
+		let data = await this.callApiFromDomain(
+			url,
 			`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
 		);
 		if (data == null) {

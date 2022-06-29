@@ -11,6 +11,7 @@ import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { PoolResponseFromApi, ValidatorResponseFromApi } from '../../types';
 import { Job } from 'bull';
 import { PoolEntity, ValidatorEntity } from '../../entities';
+import { Utils } from '../../utils/utils';
 
 export default class CrawlPoolService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -46,24 +47,17 @@ export default class CrawlPoolService extends Service {
 		});
 	}
 
-	async handleJob(url: String) {
-		let urlToCall = url;
-		let resultCallApi: PoolResponseFromApi = await this.callApi(
-			URL_TYPE_CONSTANTS.LCD,
-			urlToCall,
-		);
+	async handleJob(path: String) {
+		let urlToCall = path;
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
+		let resultCallApi: PoolResponseFromApi = await this.callApiFromDomain(url, urlToCall);
 		const item: PoolEntity = new JsonConvert().deserializeObject(
 			resultCallApi.pool,
 			PoolEntity,
 		);
 
 		try {
-			// let result = await this.adapter.updateMany(
-			// 	{ 'custom_info.chain_id': Config.CHAIN_ID },
-			// 	item,
-			// );
-			// this.logger.info(`Update ${result} item in pool`);
-
 			let foundPool = await this.adapter.findOne({ 'custom_info.chain_id': Config.CHAIN_ID });
 			try {
 				if (foundPool) {

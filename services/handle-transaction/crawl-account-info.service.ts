@@ -2,14 +2,15 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import { dbAccountInfoMixin } from "../../mixins/dbMixinMongoose/db-account-info.mixin";
-import { Config } from "../../common";
-import { Service, ServiceBroker } from "moleculer";
-import { Job } from "bull";
-import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
-import { JsonConvert } from "json2typescript";
-import { AccountInfoEntity } from "../../entities/account-info.entity";
-import CallApiMixin from "../../mixins/callApi/call-api.mixin";
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose/db-account-info.mixin';
+import { Config } from '../../common';
+import { Service, ServiceBroker } from 'moleculer';
+import { Job } from 'bull';
+import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { JsonConvert } from 'json2typescript';
+import { AccountInfoEntity } from '../../entities/account-info.entity';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
+import { Utils } from '../../utils/utils';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountInfoService extends Service {
@@ -17,111 +18,110 @@ export default class CrawlAccountInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
 
-    public constructor(public broker: ServiceBroker) {
-        super(broker);
-        this.parseServiceSchema({
-            name: 'crawlAccountInfo',
-            version: 1,
-            mixins: [
-                QueueService(
-                    `redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-                    {
-                        prefix: 'crawl.account-info',
-                    },
-                ),
-                // this.redisMixin,
-                this.dbAccountInfoMixin,
-                this.callApiMixin,
-            ],
-            queues: {
-                'crawl.account-info': {
-                    concurrency: 1,
-                    async process(job: Job) {
-                        job.progress(10);
-                        // @ts-ignore
-                        await this.handleJob(job.data.listTx, job.data.source);
-                        job.progress(100);
-                        return true;
-                    },
-                }
-            },
-            actions: {
-                accountinfoupsert: {
-                    name: 'accountinfoupsert',
-                    rest: 'GET /account-info/:address',
-                    handler: async (ctx: any): Promise<any[]> => {
-                        this.logger.debug(`Crawl account info`);
-                        let result = await this.handleJob(ctx.params.listTx, ctx.params.source);
-                        return result;
-                    }
-                }
-            },
-            events: {
-                'account-info.upsert': {
-                    handler: (ctx: any) => {
-                        this.logger.debug(`Crawl account info`);
-                        this.createJob(
-                            'crawl.account-info',
-                            {
-                                listTx: ctx.params.listTx,
-                                source: ctx.params.source,
-                            },
-                            {
-                                removeOnComplete: true,
-                            },
-                        );
-                        return;
-                    }
-                }
-            }
-        })
-    }
+	public constructor(public broker: ServiceBroker) {
+		super(broker);
+		this.parseServiceSchema({
+			name: 'crawlAccountInfo',
+			version: 1,
+			mixins: [
+				QueueService(
+					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
+					{
+						prefix: 'crawl.account-info',
+					},
+				),
+				// this.redisMixin,
+				this.dbAccountInfoMixin,
+				this.callApiMixin,
+			],
+			queues: {
+				'crawl.account-info': {
+					concurrency: 1,
+					async process(job: Job) {
+						job.progress(10);
+						// @ts-ignore
+						await this.handleJob(job.data.listTx, job.data.source);
+						job.progress(100);
+						return true;
+					},
+				},
+			},
+			actions: {
+				accountinfoupsert: {
+					name: 'accountinfoupsert',
+					rest: 'GET /account-info/:address',
+					handler: async (ctx: any): Promise<any[]> => {
+						this.logger.debug(`Crawl account info`);
+						let result = await this.handleJob(ctx.params.listTx, ctx.params.source);
+						return result;
+					},
+				},
+			},
+			events: {
+				'account-info.upsert': {
+					handler: (ctx: any) => {
+						this.logger.debug(`Crawl account info`);
+						this.createJob(
+							'crawl.account-info',
+							{
+								listTx: ctx.params.listTx,
+								source: ctx.params.source,
+							},
+							{
+								removeOnComplete: true,
+							},
+						);
+						return;
+					},
+				},
+			},
+		});
+	}
 
-	async queryAllData(list: any[], result: any, url: string, data: string) {
+	async queryAllData(list: any[], result: any, api: string, data: string) {
 		let done = false;
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
 		while (!done) {
 			if (result) {
 				list.push(...result[data]);
 				if (result.pagination.next_key === null) {
 					done = true;
 				} else {
-					let param = `${url}&pagination.key=${encodeURIComponent(
+					let param = `${api}&pagination.key=${encodeURIComponent(
 						result.pagination.next_key,
 					)}`;
-					result = await this.callApi(URL_TYPE_CONSTANTS.LCD, param);
+					result = await this.callApiFromDomain(url, param);
 				}
 			}
 		}
 	}
 
-    async handleJob(listTx: any[], source: string): Promise<any[]> {
-        let listAccounts: any[] = [], listUpdateQueries: any[] = [];
-        if (listTx.length > 0) {
-            for (const element of listTx) {
-                let address, message;
-                if (source == CONST_CHAR.CRAWL) {
-                    let log = JSON.parse(element.tx_result.log)[0].events;
-                    address = log.find(
-                        (x: any) => x.type == CONST_CHAR.MESSAGE
-                    ).attributes.find(
-                        (x: any) => x.key == CONST_CHAR.SENDER
-                    ).value;
-                    message = log.find(
-                        (x: any) => x.type == CONST_CHAR.MESSAGE
-                    ).attributes.find(
-                        (x: any) => x.key == CONST_CHAR.ACTION
-                    ).value;
-                } else if (source == CONST_CHAR.API) {
-                    address = element.address;
-                    message = element.message;
-                }
+	async handleJob(listTx: any[], source: string): Promise<any[]> {
+		let listAccounts: any[] = [],
+			listUpdateQueries: any[] = [];
+		if (listTx.length > 0) {
+			for (const element of listTx) {
+				let address, message;
+				if (source == CONST_CHAR.CRAWL) {
+					let log = JSON.parse(element.tx_result.log)[0].events;
+					address = log
+						.find((x: any) => x.type == CONST_CHAR.MESSAGE)
+						.attributes.find((x: any) => x.key == CONST_CHAR.SENDER).value;
+					message = log
+						.find((x: any) => x.type == CONST_CHAR.MESSAGE)
+						.attributes.find((x: any) => x.key == CONST_CHAR.ACTION).value;
+				} else if (source == CONST_CHAR.API) {
+					address = element.address;
+					message = element.message;
+				}
 
-                let listBalances: any[] = [];
-                let listDelegates: any[] = [];
-                let listRedelegates: any[] = [];
-                let listUnbonds: any[] = [];
-                let listSpendableBalances: any[] = [];
-                let authInfo;
+				let listBalances: any[] = [];
+				let listDelegates: any[] = [];
+				let listRedelegates: any[] = [];
+				let listUnbonds: any[] = [];
+				let listSpendableBalances: any[] = [];
+				let authInfo;
 
 				const paramsBalance =
 					Config.GET_PARAMS_BALANCE + `/${address}?pagination.limit=100`;
@@ -136,9 +136,10 @@ export default class CrawlAccountInfoService extends Service {
 				const paramsSpendableBalances =
 					Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
 
-                let accountInfo: AccountInfoEntity = await this.adapter.findOne({
-                    address,
-                });
+				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
+					address,
+				});
+				const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 				let balanceData,
 					delegatedData,
@@ -151,10 +152,10 @@ export default class CrawlAccountInfoService extends Service {
 						case MSG_TYPE.MSG_DELEGATE:
 							[balanceData, delegatedData, authInfoData, spendableBalances] =
 								await Promise.all([
-									this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
-									this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
-									this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
-									this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
+									this.callApiFromDomain(url, paramsBalance),
+									this.callApiFromDomain(url, paramsDelegated),
+									this.callApiFromDomain(url, paramsAuthInfo),
+									this.callApiFromDomain(url, paramsSpendableBalances),
 								]);
 
 							authInfo = authInfoData;
@@ -188,11 +189,11 @@ export default class CrawlAccountInfoService extends Service {
 								authInfoData,
 								spendableBalances,
 							] = await Promise.all([
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsRedelegations),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
+								this.callApiFromDomain(url, paramsBalance),
+								this.callApiFromDomain(url, paramsDelegated),
+								this.callApiFromDomain(url, paramsRedelegations),
+								this.callApiFromDomain(url, paramsAuthInfo),
+								this.callApiFromDomain(url, paramsSpendableBalances),
 							]);
 
 							authInfo = authInfoData;
@@ -232,11 +233,11 @@ export default class CrawlAccountInfoService extends Service {
 								authInfoData,
 								spendableBalances,
 							] = await Promise.all([
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsUnbonding),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
+								this.callApiFromDomain(url, paramsBalance),
+								this.callApiFromDomain(url, paramsDelegated),
+								this.callApiFromDomain(url, paramsUnbonding),
+								this.callApiFromDomain(url, paramsAuthInfo),
+								this.callApiFromDomain(url, paramsSpendableBalances),
 							]);
 
 							authInfo = authInfoData;
@@ -270,36 +271,46 @@ export default class CrawlAccountInfoService extends Service {
 							break;
 						default:
 							[balanceData, authInfoData, spendableBalances] = await Promise.all([
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
-								this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
+								this.callApiFromDomain(url, paramsBalance),
+								this.callApiFromDomain(url, paramsAuthInfo),
+								this.callApiFromDomain(url, paramsSpendableBalances),
 							]);
 
 							authInfo = authInfoData;
 
-                            await Promise.all([
-                                this.queryAllData(listBalances, balanceData, paramsBalance, CONST_CHAR.BALANCES),
-                                this.queryAllData(listSpendableBalances, spendableBalances, paramsSpendableBalances, CONST_CHAR.BALANCES),
-                            ])
-                            break;
-                    }
-                } else {
-                    accountInfo = new AccountInfoEntity();
-                    [
-                        balanceData,
-                        delegatedData,
-                        unbondingData,
-                        redelegationsData,
-                        authInfoData,
-                        spendableBalances
-                    ] = await Promise.all([
-                        this.callApi(URL_TYPE_CONSTANTS.LCD, paramsBalance),
-                        this.callApi(URL_TYPE_CONSTANTS.LCD, paramsDelegated),
-                        this.callApi(URL_TYPE_CONSTANTS.LCD, paramsUnbonding),
-                        this.callApi(URL_TYPE_CONSTANTS.LCD, paramsRedelegations),
-                        this.callApi(URL_TYPE_CONSTANTS.LCD, paramsAuthInfo),
-                        this.callApi(URL_TYPE_CONSTANTS.LCD, paramsSpendableBalances),
-                    ]);
+							await Promise.all([
+								this.queryAllData(
+									listBalances,
+									balanceData,
+									paramsBalance,
+									CONST_CHAR.BALANCES,
+								),
+								this.queryAllData(
+									listSpendableBalances,
+									spendableBalances,
+									paramsSpendableBalances,
+									CONST_CHAR.BALANCES,
+								),
+							]);
+							break;
+					}
+				} else {
+					accountInfo = new AccountInfoEntity();
+					[
+						balanceData,
+						delegatedData,
+						unbondingData,
+						redelegationsData,
+						authInfoData,
+						spendableBalances,
+					] = await Promise.all([
+						this.callApiFromDomain(url, paramsBalance),
+						this.callApiFromDomain(url, paramsDelegated),
+						this.callApiFromDomain(url, paramsUnbonding),
+						this.callApiFromDomain(url, paramsRedelegations),
+						this.callApiFromDomain(url, paramsAuthInfo),
+						this.callApiFromDomain(url, paramsSpendableBalances),
+					]);
 
 					accountInfo.address = address;
 					authInfo = authInfoData;
@@ -357,24 +368,28 @@ export default class CrawlAccountInfoService extends Service {
 					accountInfo.account = authInfo;
 				}
 
-                listAccounts.push(accountInfo);
-            };
-        }
-        try {
-            listAccounts.forEach((element) => {
-                if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
-                else {
-                    const item: any = new JsonConvert().deserializeObject(element, AccountInfoEntity);
-                    listUpdateQueries.push(this.adapter.insert(item));
-                }
-            });
-            await Promise.all(listUpdateQueries);
-            return listAccounts;
-        } catch (error) {
-            this.logger.error(error);
-        }
-        return [];
-    }
+				listAccounts.push(accountInfo);
+			}
+		}
+		try {
+			listAccounts.forEach((element) => {
+				if (element._id)
+					listUpdateQueries.push(this.adapter.updateById(element._id, element));
+				else {
+					const item: any = new JsonConvert().deserializeObject(
+						element,
+						AccountInfoEntity,
+					);
+					listUpdateQueries.push(this.adapter.insert(item));
+				}
+			});
+			await Promise.all(listUpdateQueries);
+			return listAccounts;
+		} catch (error) {
+			this.logger.error(error);
+		}
+		return [];
+	}
 
 	async _start() {
 		this.getQueue('crawl.account-info').on('completed', (job: Job) => {
