@@ -25,6 +25,7 @@ export const CONST_CHAR = {
 	SENDER: 'sender',
 	CRAWL: 'crawl',
 	API: 'api',
+	RECIPIENT: 'recipient',
 };
 
 export const MSG_TYPE = {

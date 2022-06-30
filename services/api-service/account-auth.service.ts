@@ -3,39 +3,38 @@
 'use strict';
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbInflationMixin } from '../../mixins/dbMixinMongoose';
+import { dbAccountAuthMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
-import { IInflation } from '../../entities';
+import { IAccountAuth } from '../../entities';
 import { DbContextParameters } from 'moleculer-db';
-import { ChainIdParams } from '../../types';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
-	name: 'inflation',
+	name: 'account-auth',
 	version: 1,
 	/**
 	 * Mixins
 	 */
-	mixins: [dbInflationMixin],
+	mixins: [dbAccountAuthMixin],
 	/**
 	 * Settings
 	 */
 })
-export default class InflationService extends MoleculerDBService<
+export default class AccountAuthService extends MoleculerDBService<
 	{
-		rest: 'v1/inflation';
+		rest: 'v1/accountauth';
 	},
-	IInflation
+	IAccountAuth
 > {
 	@Action({
-		name: 'getByChain',
+		name: 'getByAddress',
 	})
-	async getByChain(ctx: Context<DbContextParameters>) {
+	async getByAddress(ctx: Context<DbContextParameters>) {
 		const params = await this.sanitizeParams(ctx, ctx.params);
-		let result = await this.adapter.findOne({ 'custom_info.chain_id': params.chainid });
+		let result = await this.adapter.findOne({ address: params.address, 'custom_info.chain_id': params.chainid });
 		return result;
 	}
 }

@@ -111,6 +111,11 @@ export default class HandleTransactionService extends Service {
 						Config.REDIS_STREAM_TRANSACTION_GROUP,
 						listMessageNeedAck,
 					);
+					this.redisClient.xDel(
+						Config.REDIS_STREAM_TRANSACTION_NAME,
+						listMessageNeedAck,
+					)
+					this.broker.emit('account-info.handle-address', { listTx: listTransactionNeedSaveToDb, source: CONST_CHAR.CRAWL });
 					this.redisClient.xDel(Config.REDIS_STREAM_TRANSACTION_NAME, listMessageNeedAck);
 					this.broker.emit('handle-transaction.inserted', {
 						listTx: listTransactionNeedSaveToDb,
@@ -130,8 +135,8 @@ export default class HandleTransactionService extends Service {
 		try {
 			// jsonConvert.operationMode = OperationMode.LOGGING;
 			const item: any = jsonConvert.deserializeArray(listTransaction, TransactionEntity);
-			let listId = await this.adapter.insertMany(item);
-			return listId;
+			// let listId = await this.adapter.insertMany(item);
+			// return listId;
 		} catch (error) {
 			throw error;
 		}
