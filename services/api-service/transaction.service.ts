@@ -3,40 +3,42 @@
 'use strict';
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
+import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
 	ErrorMessage,
 	getActionConfig,
+	GetTxRequest,
 	GetByChainIdAndPageLimitRequest,
 	MoleculerDBService,
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { IBlock } from '../../entities';
+import { ITransaction } from '../../entities';
+import { QueryOptions } from 'moleculer-db';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
-	name: 'block',
+	name: 'transaction',
 	version: 1,
-	mixins: [dbBlockMixin],
+	mixins: [dbTransactionMixin],
 })
 export default class BlockService extends MoleculerDBService<
 	{
-		rest: 'v1/block';
+		rest: 'v1/transaction';
 	},
-	IBlock
+	ITransaction
 > {
 	/**
 	 *  @swagger
-	 *  /v1/block:
+	 *  /v1/transaction:
 	 *    get:
 	 *      tags:
-	 *        - Block
-	 *      summary: Get latest block
-	 *      description: Get latest block
+	 *        - Transaction
+	 *      summary: Get latest transaction
+	 *      description: Get latest transaction
 	 *      produces:
 	 *        - application/json
 	 *      consumes:
@@ -48,17 +50,27 @@ export default class BlockService extends MoleculerDBService<
 	 *          type: string
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
-	 *          name: pageLimit
+	 *          name: blockHeight
 	 *          required: false
-	 *          default: 10
-	 *          type: number
-	 *          description: "number record return in a page"
+	 *          type: string
+	 *          description: "Block height of transaction"
+	 *        - in: query
+	 *          name: txHash
+	 *          required: false
+	 *          type: string
+	 *          description: "Transaction hash"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
 	 *          default: 0
 	 *          type: number
 	 *          description: "Page number, start at 0"
+	 *        - in: query
+	 *          name: pageLimit
+	 *          required: false
+	 *          default: 10
+	 *          type: number
+	 *          description: "number record return in a page"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -70,6 +82,8 @@ export default class BlockService extends MoleculerDBService<
 		name: 'getByChain',
 		params: {
 			chainid: { type: 'string', optional: false },
+			blockHeight: { type: 'number', optional: true, convert: true },
+			txHash: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -89,18 +103,33 @@ export default class BlockService extends MoleculerDBService<
 		},
 		cache: true,
 	})
-	async getByChain(ctx: Context<GetByChainIdAndPageLimitRequest, Record<string, unknown>>) {
+	async getByChain(ctx: Context<GetTxRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
+
+		const blockHeight = ctx.params.blockHeight;
+		const txHash = ctx.params.txHash;
+		this.logger.info(blockHeight);
+		this.logger.info(txHash);
+		let query: QueryOptions = {
+			'custom_info.chain_id': ctx.params.chainid,
+		};
+
+		if (blockHeight) {
+			query['tx_response.height'] = blockHeight;
+		}
+		if (txHash) {
+			query['tx_response.txhash'] = txHash;
+		}
 		try {
 			let result = await this.adapter.find({
-				query: { 'custom_info.chain_id': ctx.params.chainid },
+				query: query,
 				limit: ctx.params.pageLimit,
 				offset: ctx.params.pageOffset,
 				// @ts-ignore
-				sort: '-block.header.height',
+				sort: '-tx_response.height',
 			});
 			let count = await this.adapter.count({
-				query: { 'custom_info.chain_id': ctx.params.chainid },
+				query: query,
 			});
 			response = {
 				code: ErrorCode.SUCCESSFUL,

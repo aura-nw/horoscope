@@ -80,8 +80,8 @@ const definition: definitionType<ITransaction> = (collection?: string) => ({
 		height: Number,
 		txhash: {
 			type: String,
-			// index: true,
-			// unique: true,
+			index: true,
+			unique: true,
 		},
 		codespace: String,
 		code: String,
