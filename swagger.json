@@ -177,6 +177,68 @@
                 }
             }
         },
+        "/v1/transaction": {
+            "get": {
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Get latest transaction",
+                "description": "Get latest transaction",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "blockHeight",
+                        "required": false,
+                        "type": "string",
+                        "description": "Block height of transaction"
+                    },
+                    {
+                        "in": "query",
+                        "name": "txHash",
+                        "required": false,
+                        "type": "string",
+                        "description": "Transaction hash"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
         "/v1/validator": {
             "get": {
                 "tags": [

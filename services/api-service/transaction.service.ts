@@ -14,7 +14,7 @@ import {
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { IBlock } from '../../entities';
+import { ITransaction } from '../../entities';
 import { QueryOptions } from 'moleculer-db';
 
 /**
@@ -29,16 +29,16 @@ export default class BlockService extends MoleculerDBService<
 	{
 		rest: 'v1/transaction';
 	},
-	IBlock
+	ITransaction
 > {
 	/**
 	 *  @swagger
-	 *  /v1/block:
+	 *  /v1/transaction:
 	 *    get:
 	 *      tags:
-	 *        - Block
-	 *      summary: Get latest block
-	 *      description: Get latest block
+	 *        - Transaction
+	 *      summary: Get latest transaction
+	 *      description: Get latest transaction
 	 *      produces:
 	 *        - application/json
 	 *      consumes:
@@ -50,17 +50,27 @@ export default class BlockService extends MoleculerDBService<
 	 *          type: string
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
-	 *          name: pageLimit
+	 *          name: blockHeight
 	 *          required: false
-	 *          default: 10
-	 *          type: number
-	 *          description: "number record return in a page"
+	 *          type: string
+	 *          description: "Block height of transaction"
+	 *        - in: query
+	 *          name: txHash
+	 *          required: false
+	 *          type: string
+	 *          description: "Transaction hash"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
 	 *          default: 0
 	 *          type: number
 	 *          description: "Page number, start at 0"
+	 *        - in: query
+	 *          name: pageLimit
+	 *          required: false
+	 *          default: 10
+	 *          type: number
+	 *          description: "number record return in a page"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -68,7 +78,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          description: Missing parameters
 	 *
 	 */
-	@Get('/getByChain', {
+	@Get('/', {
 		name: 'getByChain',
 		params: {
 			chainid: { type: 'string', optional: false },
@@ -91,6 +101,7 @@ export default class BlockService extends MoleculerDBService<
 				max: 100,
 			},
 		},
+		cache: true,
 	})
 	async getByChain(ctx: Context<GetTxRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
@@ -114,6 +125,8 @@ export default class BlockService extends MoleculerDBService<
 				query: query,
 				limit: ctx.params.pageLimit,
 				offset: ctx.params.pageOffset,
+				// @ts-ignore
+				sort: '-tx_response.height',
 			});
 			let count = await this.adapter.count({
 				query: query,

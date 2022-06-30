@@ -87,6 +87,7 @@ export default class BlockService extends MoleculerDBService<
 				max: 100,
 			},
 		},
+		cache: true,
 	})
 	async getByChain(ctx: Context<GetByChainIdAndPageLimitRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
@@ -95,7 +96,6 @@ export default class BlockService extends MoleculerDBService<
 				query: { 'custom_info.chain_id': ctx.params.chainid },
 				limit: ctx.params.pageLimit,
 				offset: ctx.params.pageOffset,
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 				// @ts-ignore
 				sort: '-block.header.height',
 			});
