@@ -56,6 +56,9 @@ export default class NetworkService extends MoleculerDBService<
 		params: {
 			chainid: { type: 'string', optional: false },
 		},
+		cache: {
+			ttl: 5,
+		},
 	})
 	async getStatus(ctx: Context<ChainIdParams, Record<string, unknown>>) {
 		let [inflation, pool, communityPool] = await Promise.all([
