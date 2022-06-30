@@ -11,7 +11,7 @@ import {
 	ErrorCode,
 	ErrorMessage,
 } from '../../types';
-import { ChainIdParams } from 'types/api-service/network';
+import { ChainIdParams } from '../../types';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
