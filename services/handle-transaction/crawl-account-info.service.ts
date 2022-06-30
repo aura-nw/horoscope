@@ -100,17 +100,8 @@ export default class CrawlAccountInfoService extends Service {
             for (const element of listTx) {
                 let address, message;
                 if (source == CONST_CHAR.CRAWL) {
-                    let log = JSON.parse(element.tx_result.log)[0].events;
-                    address = log.find(
-                        (x: any) => x.type == CONST_CHAR.MESSAGE
-                    ).attributes.find(
-                        (x: any) => x.key == CONST_CHAR.SENDER
-                    ).value;
-                    message = log.find(
-                        (x: any) => x.type == CONST_CHAR.MESSAGE
-                    ).attributes.find(
-                        (x: any) => x.key == CONST_CHAR.ACTION
-                    ).value;
+                    address = element.tx.body.mesages[0].sender;
+                    message = element.tx.body.mesages[0]['@type'];
                 } else if (source == CONST_CHAR.API) {
                     address = element.address;
                     message = element.message;

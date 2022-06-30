@@ -9,7 +9,7 @@ import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { TransactionEntity } from '../../entities';
-import { CONST_CHAR } from 'common/constant';
+import { CONST_CHAR } from '../../common/constant';
 
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -114,7 +114,7 @@ export default class HandleTransactionService extends Service {
 						Config.REDIS_STREAM_TRANSACTION_NAME,
 						listMessageNeedAck,
 					)
-					this.broker.emit('account-info.upsert', { listTx: listTransactionNeedSaveToDb, source: CONST_CHAR.CRAWL });
+					this.broker.emit('account-info.handle-address', { listTx: listTransactionNeedSaveToDb, source: CONST_CHAR.CRAWL });
 				} catch (error) {
 					this.logger.error(error);
 				}
@@ -128,8 +128,9 @@ export default class HandleTransactionService extends Service {
 
 		// this.logger.info(`item: ${item}`);
 
-		let listId = await this.adapter.insertMany(item);
-		return listId;
+		// let listId = await this.adapter.insertMany(item);
+		// return listId;
+		return true;
 	}
 
 	async _start() {

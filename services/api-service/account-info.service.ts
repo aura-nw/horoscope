@@ -47,13 +47,14 @@ export default class AccountInfoService extends MoleculerDBService<
 		restricted: ['api'],
 		params: {
 			address: 'string',
+			chainId: 'string',
 		},
 	})
 	async getAccountInfoByAddress(ctx: Context<AccountInfoRequest>) {
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const [accountInfo, accountRewards] = await Promise.all([
-			this.adapter.findOne({ address: ctx.params.address }),
+			this.adapter.findOne({ address: ctx.params.address, 'custom_info.chain_id': ctx.params.chainId }),
 			this.callApi(URL_TYPE_CONSTANTS.LCD, paramDelegateRewards),
 		]);
 		if (accountInfo) {
