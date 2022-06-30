@@ -88,6 +88,9 @@ export default class ValidatorService extends MoleculerDBService<
 				max: 100,
 			},
 		},
+		cache: {
+			ttl: 5,
+		},
 	})
 	async getByChain(ctx: Context<GetByChainIdAndPageLimitRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
