@@ -10,6 +10,7 @@ import { Config } from '../../common';
 import { contextParamsCloning, retryPolicy } from 'moleculer.config';
 import { Types } from 'mongoose';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { Utils } from 'utils/utils';
 
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
@@ -71,19 +72,21 @@ export default class CrawlAssetService extends moleculer.Service {
 	async handleJob(ctx: Context, code_id: Number) {
 		let contractList: any[] = [];
 		const urlGetContractList = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
-		let urlToCall = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
+		let path = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
 		let next_key = null;
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
 		do {
-			let resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlToCall);
+			let resultCallApi = await this.callApiFromDomain(url, path);
 			if (resultCallApi?.contracts?.length > 0) {
 				contractList.push(...resultCallApi.contracts);
 				next_key = resultCallApi.pagination.next_key;
 				if (next_key === null) {
 					break;
 				}
-				urlToCall = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
+				path = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
 			} else {
-				this.logger.error('Call urlGetContractList return error', urlToCall);
+				this.logger.error('Call urlGetContractList return error', path);
 			}
 		} while (next_key != null);
 
@@ -105,23 +108,24 @@ export default class CrawlAssetService extends moleculer.Service {
 	async checkIfContractImplementCW721Interface(code_id: Number) {
 		let cw721flag: any = null;
 		const urlGetContractList = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
-		let urlToCall = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+		let path = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
 		let next_key = null;
 		do {
-			let resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlToCall);
+			let resultCallApi = await this.callApiFromDomain(url, path);
 			if (resultCallApi?.contracts?.length > 0) {
 				let i = 0;
 				while (i < resultCallApi.contracts.length) {
 					let address = resultCallApi.contracts[i];
 					let urlGetListToken = `${CONTRACT_URI}${address}/smart/${GET_TOKEN_LIST}`;
-					let listTokenIDs = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlGetListToken);
+					let listTokenIDs = await this.callApiFromDomain(url, urlGetListToken);
 					if (listTokenIDs?.data?.tokens !== undefined) {
 						if (listTokenIDs.data.tokens.length > 0) {
 							const id = listTokenIDs.data.tokens[0];
 							const str = `{"all_nft_info":{"token_id":"${id}"}}`;
 							const stringEncode64bytes = Buffer.from(str).toString('base64');
 							let urlGetOwner = `${CONTRACT_URI}${address}/smart/${stringEncode64bytes}`;
-							let tokenInfo = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlGetOwner);
+							let tokenInfo = await this.callApiFromDomain(url, urlGetOwner);
 							cw721flag = tokenInfo?.data?.access?.owner !== undefined;
 							break;
 						}
@@ -135,9 +139,9 @@ export default class CrawlAssetService extends moleculer.Service {
 				if (next_key === null) {
 					break;
 				}
-				urlToCall = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
+				path = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
 			} else {
-				this.logger.error('Call urlGetContractList unsatisfactory return', urlToCall);
+				this.logger.error('Call urlGetContractList unsatisfactory return', path);
 			}
 		} while (next_key != null && cw721flag === null);
 		this.logger.debug(
@@ -177,7 +181,9 @@ export default class CrawlAssetService extends moleculer.Service {
 		let address = ctx.params.address;
 		try {
 			let urlGetListToken = `${CONTRACT_URI}${ctx.params.address}/smart/${GET_TOKEN_LIST}`;
-			let listTokenIDs = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlGetListToken);
+			const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
+			let listTokenIDs = await this.callApiFromDomain(url, urlGetListToken);
 			if (listTokenIDs?.data?.tokens !== undefined && listTokenIDs.data.tokens.length > 0) {
 				let get_token_info_retry_time = 0;
 				const getInforPromises = await Promise.all(
@@ -207,11 +213,13 @@ export default class CrawlAssetService extends moleculer.Service {
 		// let get_token_info_retry_time = ctx.meta.retry_time + 1;
 		let code_id = ctx.params.code_id;
 		let address = ctx.params.address;
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
 		try {
 			const str = `{"all_nft_info":{"token_id":"${ctx.params.token_id}"}}`;
 			const stringEncode64bytes = Buffer.from(str).toString('base64');
 			let urlGetOwner = `${CONTRACT_URI}${ctx.params.address}/smart/${stringEncode64bytes}`;
-			let tokenInfo = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlGetOwner);
+			let tokenInfo = await this.callApiFromDomain(url, urlGetOwner);
 			if (tokenInfo?.data?.access?.owner !== undefined) {
 				const asset = await this.createAssetObject(
 					ctx.params.code_id,

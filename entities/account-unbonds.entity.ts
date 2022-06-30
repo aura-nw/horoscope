@@ -1,4 +1,4 @@
-import { Config } from "common";
+import { Config } from "../common";
 import { JsonObject, JsonProperty } from "json2typescript";
 import { Types } from "mongoose";
 

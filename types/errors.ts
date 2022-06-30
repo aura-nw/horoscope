@@ -10,6 +10,7 @@ export enum ErrorMessage {
 	DUPLICATED_EMAIL = 'user.duplicated.email',
 	DELETE_ITSELF = 'user.delete.itself',
 	ADDRESS_NOT_FOUND = 'Address not found',
+	CRAWL_SUCCESSFUL = 'Data crawl successful! Please call API again to get data',
 }
 
 export const ErrorCode = {

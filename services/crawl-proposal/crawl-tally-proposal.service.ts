@@ -8,6 +8,7 @@ import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
+import { Utils } from '../../utils/utils';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -62,9 +63,10 @@ export default class CrawlProposalService extends Service {
 	}
 
 	async handleJob(proposalId: String) {
-		let url = `${Config.GET_ALL_PROPOSAL}/${proposalId}/tally`;
+		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/tally`;
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let result = await this.callApi(URL_TYPE_CONSTANTS.LCD, url);
+		let result = await this.callApiFromDomain(url, path);
 		this.logger.debug(result);
 
 		let foundProposal = await this.adapter.findOne({

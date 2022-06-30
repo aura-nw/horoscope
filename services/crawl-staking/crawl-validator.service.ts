@@ -11,6 +11,7 @@ import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { ValidatorResponseFromApi } from '../../types';
 import { Job } from 'bull';
 import { ValidatorEntity } from '../../entities';
+import { Utils } from '../../utils/utils';
 
 export default class CrawlValidatorService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -46,16 +47,17 @@ export default class CrawlValidatorService extends Service {
 		});
 	}
 
-	async handleJob(url: String) {
+	async handleJob(path: String) {
 		let listValidator: ValidatorEntity[] = [];
 
-		let urlToCall = url;
+		let urlToCall = path;
 		let resultCallApi: ValidatorResponseFromApi;
 
 		let done = false;
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		while (!done) {
-			resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlToCall);
+			resultCallApi = await this.callApiFromDomain(url, urlToCall);
 
 			listValidator.push(...resultCallApi.validators);
 			if (resultCallApi.pagination.next_key === null) {

@@ -233,7 +233,7 @@ export default class ApiService extends moleculer.Service {
 	/**
 	 *  @swagger
 	 *
-	 *  api/indexAsset:
+	 *  /api/indexAsset:
 	 *    post:
 	 *      tags:
 	 *      - "Asset"

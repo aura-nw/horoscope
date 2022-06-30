@@ -1,4 +1,3 @@
-import { dbAccountInfoMixin } from "../../mixins/dbMixinMongoose";
 import { Config } from "../../common";
 import { Service, ServiceBroker } from "moleculer";
 import { Job } from "bull";
@@ -32,17 +31,16 @@ export default class HandleAddressService extends Service {
                     },
                 }
             },
-            // actions: {
-            //     accountinfoupsert: {
-            //         name: 'accountinfoupsert',
-            //         rest: 'GET /account-info/:address',
-            //         handler: async (ctx: any): Promise<any[]> => {
-            //             this.logger.debug(`Crawl account info`);
-            //             let result = await this.handleJob(ctx.params.listTx, ctx.params.source);
-            //             return result;
-            //         }
-            //     }
-            // },
+            actions: {
+                accountinfoupsert: {
+                    name: 'accountinfoupsert',
+                    rest: 'GET /account-info/:address',
+                    handler: (ctx: any) => {
+                        this.logger.debug(`Crawl account info`);
+                        this.handleJob(ctx.params.listTx, ctx.params.source);
+                    }
+                }
+            },
             events: {
                 'account-info.handle-address': {
                     handler: (ctx: any) => {
@@ -68,13 +66,12 @@ export default class HandleAddressService extends Service {
         let listAddresses: any[] = [];
         if (listTx.length > 0) {
             for (const element of listTx) {
-                if (element.tx_response.code !== 0) continue;
                 let message;
                 if (source == CONST_CHAR.CRAWL) {
-                    message = element.tx.body.mesages[0]['@type'];
+                    if (element.tx_response.code !== 0) continue;
+                    message = element.tx.body.messages[0]['@type'];
                 } else if (source == CONST_CHAR.API) {
                     listAddresses.push(element.address);
-                    message = element.message;
                 }
                 
                 switch(message) {
@@ -119,5 +116,18 @@ export default class HandleAddressService extends Service {
 
             this.broker.emit('account-info.upsert-each', { listAddresses });
         }
+    }
+
+    async _start() {
+        this.getQueue('handle.address').on('completed', (job: Job) => {
+            this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
+        });
+        this.getQueue('handle.address').on('failed', (job: Job) => {
+            this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+        });
+        this.getQueue('handle.address').on('progress', (job: Job) => {
+            this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
+        });
+        return super._start();
     }
 }

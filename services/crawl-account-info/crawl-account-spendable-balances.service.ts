@@ -3,10 +3,10 @@ import { dbAccountSpendableBalancesMixin } from "../../mixins/dbMixinMongoose";
 import { Job } from "bull";
 import { Config } from "../../common";
 import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
-import { AccountInfoEntity } from "../../entities/account-info.entity";
 import { JsonConvert } from "json2typescript";
 import { Service, ServiceBroker } from "moleculer";
 import { AccountSpendableBalancesEntity } from "../../entities/account-spendable-balances.entity";
+import { Utils } from "utils/utils";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountSpendableBalancesService extends Service {
@@ -41,17 +41,6 @@ export default class CrawlAccountSpendableBalancesService extends Service {
                     },
                 }
             },
-            // actions: {
-            //     accountinfoupsert: {
-            //         name: 'accountinfoupsert',
-            //         rest: 'GET /account-info/:address',
-            //         handler: async (ctx: any): Promise<any[]> => {
-            //             this.logger.debug(`Crawl account info`);
-            //             let result = await this.handleJob(ctx.params.listTx, ctx.params.source);
-            //             return result;
-            //         }
-            //     }
-            // },
             events: {
                 'account-info.upsert-each': {
                     handler: (ctx: any) => {
@@ -78,8 +67,9 @@ export default class CrawlAccountSpendableBalancesService extends Service {
             for (const address of listAddresses) {
                 let listSpendableBalances: any[] = [];
 
-                const url =
+                const param =
                     Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
+                const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
                 let accountInfo: AccountSpendableBalancesEntity = await this.adapter.findOne({
                     address,
@@ -88,17 +78,17 @@ export default class CrawlAccountSpendableBalancesService extends Service {
                     accountInfo = {} as AccountSpendableBalancesEntity;
                 }
 
-                let urlToCall = url;
+                let urlToCall = param;
                 let done = false;
                 let resultCallApi;
                 while (!done) {
-                    resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlToCall);
+                    resultCallApi = await this.callApiFromDomain(url, param);
 
                     listSpendableBalances.push(...resultCallApi.balances);
                     if (resultCallApi.pagination.next_key === null) {
                         done = true;
                     } else {
-                        urlToCall = `${url}&pagination.key=${resultCallApi.pagination.next_key}`;
+                        urlToCall = `${param}&pagination.key=${resultCallApi.pagination.next_key}`;
                     }
                 }
 

@@ -1,3 +1,5 @@
+import { Config } from 'common';
+
 export const URL_TYPE_CONSTANTS = {
 	LCD: 'LCD',
 	RPC: 'RPC',
@@ -24,7 +26,7 @@ export const CONST_CHAR = {
 	CRAWL: 'crawl',
 	API: 'api',
 	RECIPIENT: 'recipient',
-}
+};
 
 export const MSG_TYPE = {
 	MSG_SEND: '/cosmos.bank.v1beta1.MsgSend',
@@ -39,4 +41,25 @@ export const MSG_TYPE = {
 	MSG_DELEGATE: '/cosmos.staking.v1beta1.MsgDelegate',
 	MSG_REDELEGATE: '/cosmos.staking.v1beta1.MsgBeginRedelegate',
 	MSG_UNDELEGATE: '/cosmos.staking.v1beta1.MsgUndelegate',
-}
+};
+
+export const LIST_NETWORK = [
+	{
+		chainName: 'Aura devnet',
+		chainId: 'aura-devnet',
+		RPC: ['https://rpc.dev.aura.network'],
+		LCD: ['https://lcd.dev.aura.network'],
+	},
+	{
+		chainName: 'Aura Serenity',
+		chainId: 'serenity-testnet-001',
+		RPC: ['https://rpc.serenity.aura.network'],
+		LCD: ['https://lcd.serenity.aura.network'],
+	},
+	{
+		chainName: 'Aura Halo',
+		chainId: 'halo-testnet-001',
+		RPC: ['https://rpc.halo.aura.network'],
+		LCD: ['https://lcd.halo.aura.network'],
+	},
+];

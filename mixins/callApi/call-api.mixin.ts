@@ -4,8 +4,10 @@ import { defaultMaxListeners } from 'events';
 import { Context, Service, ServiceBroker, ServiceSchema } from 'moleculer';
 const axios = require('axios').default;
 const Resilient = require('resilient');
+
+// import { Resilient as Resilient } from 'resilient';
 import { Config } from '../../common';
-import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Service> {
 	private schema: Partial<ServiceSchema> & ThisType<Service>;
 	public constructor() {
@@ -18,13 +20,13 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 				listLcdUrl: JSON.parse(Config.LIST_LCD_URL),
 			},
 			methods: {
-				async callApi(typeUrl: string, url: string) {
+				async callApi(typeUrl: string, path: string) {
 					if (typeUrl === URL_TYPE_CONSTANTS.LCD) {
-						return this.callApiLcd(url);
+						return this.callApiLcd(path);
 					}
-					return this.callApiRpc(url);
+					return this.callApiRpc(path);
 				},
-				async callApiRpc(url: string) {
+				async callApiRpc(path: string) {
 					if (this.callRpcClient === undefined) {
 						if (this.settings.enableLoadBalancer === 'false') {
 							let axiosClient = axios.create({
@@ -41,15 +43,14 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 					}
 					try {
 						// @ts-ignore
-						let result = await this.callRpcClient.get(url);
+						let result = await this.callRpcClient.get(path);
 						return result.data;
 					} catch (error) {
 						this.logger.error(error);
-						this.logger.error(url);
 						return null;
 					}
 				},
-				async callApiLcd(url: string) {
+				async callApiLcd(path: string) {
 					if (this.callLcdClient === undefined) {
 						if (this.settings.enableLoadBalancer === 'false') {
 							let axiosClient = axios.create({
@@ -64,7 +65,27 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 					}
 					try {
 						// @ts-ignore
-						let result = await this.callLcdClient.get(url);
+						let result = await this.callLcdClient.get(path);
+						return result.data;
+					} catch (error) {
+						this.logger.error(error);
+						return null;
+					}
+				},
+				async callApiFromDomain(domain: string[], path: string) {
+					let callApiClient = null;
+					if (this.settings.enableLoadBalancer === 'false') {
+						let axiosClient = axios.create({
+							baseURL: domain[0],
+						});
+						callApiClient = axiosClient;
+					} else {
+						let resilientClient = Resilient({ service: { basePath: '/' } });
+						resilientClient.setServers(domain);
+						callApiClient = resilientClient;
+					}
+					try {
+						let result = await callApiClient.get(path);
 						return result.data;
 					} catch (error) {
 						this.logger.error(error);

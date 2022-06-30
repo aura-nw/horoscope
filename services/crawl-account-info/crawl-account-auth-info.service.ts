@@ -3,10 +3,10 @@ import { dbAccountAuthMixin } from "../../mixins/dbMixinMongoose";
 import { Job } from "bull";
 import { Config } from "../../common";
 import { CONST_CHAR, URL_TYPE_CONSTANTS } from "../../common/constant";
-import { AccountInfoEntity } from "../../entities/account-info.entity";
 import { JsonConvert, OperationMode } from "json2typescript";
 import { Service, ServiceBroker } from "moleculer";
 import { AccountAuthEntity } from "../../entities/account-auth.entity";
+import { Utils } from "utils/utils";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountAuthInfoService extends Service {
@@ -41,17 +41,6 @@ export default class CrawlAccountAuthInfoService extends Service {
                     },
                 }
             },
-            // actions: {
-            //     accountinfoupsert: {
-            //         name: 'accountinfoupsert',
-            //         rest: 'GET /account-info/:address',
-            //         handler: async (ctx: any): Promise<any[]> => {
-            //             this.logger.debug(`Crawl account info`);
-            //             let result = await this.handleJob(ctx.params.listTx, ctx.params.source);
-            //             return result;
-            //         }
-            //     }
-            // },
             events: {
                 'account-info.upsert-each': {
                     handler: (ctx: any) => {
@@ -76,8 +65,9 @@ export default class CrawlAccountAuthInfoService extends Service {
         let listAccounts: any[] = [], listUpdateQueries: any[] = [];
         if (listAddresses.length > 0) {
             for (const address of listAddresses) {
-                const url =
+                const param =
                     Config.GET_PARAMS_AUTH_INFO + `/${address}`;
+                const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
                 let accountInfo: AccountAuthEntity = await this.adapter.findOne({
                     address,
@@ -87,7 +77,7 @@ export default class CrawlAccountAuthInfoService extends Service {
                     accountInfo.address = address;
                 }
 
-                let resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, url);
+                let resultCallApi = await this.callApiFromDomain(url, param);
 
                 accountInfo.account = resultCallApi;
 
@@ -99,7 +89,6 @@ export default class CrawlAccountAuthInfoService extends Service {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
                     const item: AccountAuthEntity = new JsonConvert().deserializeObject(element, AccountAuthEntity);
-                    this.logger.info('item', item)
                     listUpdateQueries.push(this.adapter.insert(item));
                 }
             });

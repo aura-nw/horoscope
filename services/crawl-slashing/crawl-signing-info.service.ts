@@ -12,6 +12,7 @@ import { SigningInfoEntityResponseFromApi } from 'types';
 import { ValidatorEntity } from 'entities';
 const tmhash = require('tendermint/lib/hash');
 import { bech32 } from 'bech32';
+import { Utils } from '../../utils/utils';
 
 export default class CrawlSigningInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -78,10 +79,12 @@ export default class CrawlSigningInfoService extends Service {
 					pubkey,
 					`${Config.NETWORK_PREFIX_ADDRESS}${Config.CONSENSUS_PREFIX_ADDRESS}`,
 				);
-				let url = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
-				let result: SigningInfoEntityResponseFromApi = await this.callApi(
-					URL_TYPE_CONSTANTS.LCD,
+				let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
+				const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
+				let result: SigningInfoEntityResponseFromApi = await this.callApiFromDomain(
 					url,
+					path,
 				);
 				this.logger.info(result);
 				let res = await this.adapter.updateById(foundValidator._id, {

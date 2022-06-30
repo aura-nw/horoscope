@@ -5,7 +5,8 @@ import { Config } from "../../common";
 import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert } from "json2typescript";
 import { Service, ServiceBroker } from "moleculer";
-import { AccountRedelegationsEntity } from "entities";
+import { AccountRedelegationsEntity } from "../../entities";
+import { Utils } from "utils/utils";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountRedelegatesService extends Service {
@@ -40,17 +41,6 @@ export default class CrawlAccountRedelegatesService extends Service {
                     },
                 },
             },
-            // actions: {
-            //     accountinfoupsert: {
-            //         name: 'accountinfoupsert',
-            //         rest: 'GET /account-info/:address',
-            //         handler: async (ctx: any): Promise<any[]> => {
-            //             this.logger.debug(`Crawl account info`);
-            //             let result = await this.handleJob(ctx.params.listTx, ctx.params.source);
-            //             return result;
-            //         }
-            //     }
-            // },
             events: {
                 'account-info.upsert-each': {
                     handler: (ctx: any) => {
@@ -77,8 +67,9 @@ export default class CrawlAccountRedelegatesService extends Service {
             for (const address of listAddresses) {
                 let listRedelegates: any[] = [];
 
-                const url =
+                const param =
                     Config.GET_PARAMS_DELEGATOR + `/${address}/redelegations?pagination.limit=100`;
+                const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
                 let accountInfo: AccountRedelegationsEntity = await this.adapter.findOne({
                     address,
@@ -88,17 +79,17 @@ export default class CrawlAccountRedelegatesService extends Service {
                     accountInfo.address = address;
                 }
 
-                let urlToCall = url;
+                let urlToCall = param;
                 let done = false;
                 let resultCallApi;
                 while (!done) {
-                    resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlToCall);
+                    resultCallApi = await this.callApiFromDomain(url, param);
 
                     listRedelegates.push(...resultCallApi.redelegation_responses);
                     if (resultCallApi.pagination.next_key === null) {
                         done = true;
                     } else {
-                        urlToCall = `${url}&pagination.key=${resultCallApi.pagination.next_key}`;
+                        urlToCall = `${param}&pagination.key=${resultCallApi.pagination.next_key}`;
                     }
                 }
 
@@ -112,7 +103,7 @@ export default class CrawlAccountRedelegatesService extends Service {
                         let hour = expireTime.getUTCHours();
                         let minute = expireTime.getUTCMinutes();
                         let second = expireTime.getUTCSeconds();
-                        let cron = `${second} ${minute} ${hour} ${day} ${month} ? ${year}`;
+                        let cron = `${second} ${minute} ${hour} ${day} ${month} ?`;
                         this.createJob(
                             'crawl.account-redelegates',
                             {

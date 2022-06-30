@@ -9,6 +9,7 @@ import { sha256 } from 'js-sha256';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
+import { Utils } from '../../utils/utils';
 export default class CrawlTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private callApiMixin = new CallApiMixin().start();
@@ -65,20 +66,19 @@ export default class CrawlTransactionService extends Service {
 	async initEnv() {}
 	async handleJob(listTx: any) {
 		// this.logger.info(`Handle job: ${JSON.stringify(listTx)}`);
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
 		listTx.map(async (tx: any) => {
 			const txHash = sha256(Buffer.from(tx, 'base64')).toUpperCase();
 			this.logger.info(`txhash: ${txHash}`);
-			let result = await this.callApi(
-				URL_TYPE_CONSTANTS.RPC,
-				`${Config.GET_TX_API}0x${txHash}`,
-			);
-			if (result && result.result) {
+			let result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
+			if (result) {
 				this.redisClient.sendCommand([
 					'XADD',
 					Config.REDIS_STREAM_TRANSACTION_NAME,
 					'*',
 					'element',
-					JSON.stringify(result.result),
+					JSON.stringify(result),
 				]);
 				this.logger.debug(`result: ${JSON.stringify(result)}`);
 			}

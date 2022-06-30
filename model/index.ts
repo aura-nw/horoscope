@@ -7,7 +7,6 @@ export * from './pool.model';
 export * from './community-pool.model';
 export * from './asset.model';
 export * from './codeid.model';
-export * from './account-info.model';
 export * from './inflation.model';
 export * from './account-auth.model';
 export * from './account-balances.model';

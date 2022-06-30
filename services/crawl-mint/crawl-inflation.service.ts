@@ -11,6 +11,7 @@ import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { InflationEntity, ParamEntity } from '../../entities';
 import { MintInflationResponseFromApi, ProposalResponseFromApi } from 'types';
+import { Utils } from '../../utils/utils';
 export default class CrawlInflationService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbInflationMixin = dbInflationMixin;
@@ -45,8 +46,10 @@ export default class CrawlInflationService extends Service {
 		});
 	}
 	async handleJob(param: any) {
-		let resultCallApi: MintInflationResponseFromApi = await this.callApi(
-			URL_TYPE_CONSTANTS.LCD,
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+
+		let resultCallApi: MintInflationResponseFromApi = await this.callApiFromDomain(
+			url,
 			param.url,
 		);
 
@@ -67,26 +70,6 @@ export default class CrawlInflationService extends Service {
 			);
 			await this.adapter.insert(item);
 		}
-		// listProposal.map(async (proposal) => {
-		// 	let foundProposal = await this.adapter.findOne({
-		// 		proposal_id: `${proposal.proposal_id}`,
-		// 	});
-		// 	// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
-		// 	if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
-		// 		this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
-		// 	}
-		// 	try {
-		// 		if (foundProposal) {
-		// 			proposal._id = foundProposal._id;
-		// 			await this.adapter.updateById(foundProposal._id, proposal);
-		// 		} else {
-		// 			const item: any = new JsonConvert().deserializeObject(proposal, ProposalEntity);
-		// 			await this.adapter.insert(item);
-		// 		}
-		// 	} catch (error) {
-		// 		this.logger.error(error);
-		// 	}
-		// });
 	}
 
 	async _start() {

@@ -7,7 +7,6 @@ export * from './db-pool.mixin';
 export * from './db-community-pool.mixin';
 export * from './db-asset.mixin';
 export * from './db-code-id.mixin';
-export * from './db-account-info.mixin';
 export * from './db-inflation.mixin';
 export * from './db-account-spendable-balances.mixin';
 export * from './db-account-balances.mixin';

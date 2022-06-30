@@ -11,6 +11,7 @@ import { Config } from '../../common';
 import { PROPOSAL_STATUS, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { ProposalResponseFromApi } from 'types';
 import { Job } from 'bull';
+import { Utils } from '../../utils/utils';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -46,16 +47,17 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async handleJob(url: String) {
+	async handleJob(path: String) {
 		let listProposal: ProposalEntity[] = [];
 
-		let urlToCall = url;
+		let urlToCall = path;
 		let resultCallApi: ProposalResponseFromApi;
 
 		let done = false;
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		while (!done) {
-			resultCallApi = await this.callApi(URL_TYPE_CONSTANTS.LCD, urlToCall);
+			resultCallApi = await this.callApiFromDomain(url, urlToCall);
 
 			listProposal.push(...resultCallApi.proposals);
 			if (resultCallApi.pagination.next_key === null) {

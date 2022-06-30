@@ -97,14 +97,15 @@ export default class HandleTransactionService extends Service {
 			result.forEach(async (element: any) => {
 				let listTransactionNeedSaveToDb: any[] = [];
 				let listMessageNeedAck: any[] = [];
-				element.messages.forEach(async (item: any) => {
-					this.logger.info(`Handling message ${item.id}`);
-					listTransactionNeedSaveToDb.push(JSON.parse(item.message.element));
-					listMessageNeedAck.push(item.id);
-					this.lastId = item.id;
-				});
 				try {
-					this.handleListTransaction(listTransactionNeedSaveToDb);
+					element.messages.forEach(async (item: any) => {
+						this.logger.info(`Handling message ${item.id}`);
+						listTransactionNeedSaveToDb.push(JSON.parse(item.message.element));
+						listMessageNeedAck.push(item.id);
+						this.lastId = item.id;
+					});
+
+					await this.handleListTransaction(listTransactionNeedSaveToDb);
 					this.redisClient.xAck(
 						Config.REDIS_STREAM_TRANSACTION_NAME,
 						Config.REDIS_STREAM_TRANSACTION_GROUP,
@@ -115,6 +116,14 @@ export default class HandleTransactionService extends Service {
 						listMessageNeedAck,
 					)
 					this.broker.emit('account-info.handle-address', { listTx: listTransactionNeedSaveToDb, source: CONST_CHAR.CRAWL });
+					this.redisClient.xDel(Config.REDIS_STREAM_TRANSACTION_NAME, listMessageNeedAck);
+					this.broker.emit('handle-transaction.inserted', {
+						listTx: listTransactionNeedSaveToDb,
+					});
+					this.broker.emit('account-info.upsert', {
+						listTx: listTransactionNeedSaveToDb,
+						source: CONST_CHAR.CRAWL,
+					});
 				} catch (error) {
 					this.logger.error(error);
 				}
@@ -123,14 +132,14 @@ export default class HandleTransactionService extends Service {
 
 	async handleListTransaction(listTransaction: any) {
 		let jsonConvert = new JsonConvert();
-		// jsonConvert.operationMode = OperationMode.LOGGING;
-		const item: any = jsonConvert.deserializeArray(listTransaction, TransactionEntity);
-
-		// this.logger.info(`item: ${item}`);
-
-		// let listId = await this.adapter.insertMany(item);
-		// return listId;
-		return true;
+		try {
+			// jsonConvert.operationMode = OperationMode.LOGGING;
+			const item: any = jsonConvert.deserializeArray(listTransaction, TransactionEntity);
+			// let listId = await this.adapter.insertMany(item);
+			// return listId;
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	async _start() {
