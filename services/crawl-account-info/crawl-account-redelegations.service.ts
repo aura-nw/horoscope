@@ -97,21 +97,15 @@ export default class CrawlAccountRedelegatesService extends Service {
                     accountInfo.redelegation_responses = listRedelegates;
                     listRedelegates.map((redelegate: any) => {
                         let expireTime = new Date(redelegate.entries[0].redelegation_entry.completion_time);
-                        let year = expireTime.getFullYear();
-                        let month = expireTime.getMonth();
-                        let day = expireTime.getDate();
-                        let hour = expireTime.getUTCHours();
-                        let minute = expireTime.getUTCMinutes();
-                        let second = expireTime.getUTCSeconds();
-                        let cron = `${second} ${minute} ${hour} ${day} ${month} ?`;
+                        let delay = expireTime.getTime() - new Date().getTime();
                         this.createJob(
-                            'crawl.account-redelegates',
+                            'crawl.account-unbonds',
                             {
                                 listAddresses: [address],
                             },
                             {
                                 removeOnComplete: true,
-                                repeat: { cron }
+                                delay
                             },
                         );
                     });

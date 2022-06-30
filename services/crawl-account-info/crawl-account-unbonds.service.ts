@@ -97,13 +97,7 @@ export default class CrawlAccountUnbondsService extends Service {
                     accountInfo.unbonding_responses = listUnbonds;
                     listUnbonds.map((unbond: any) => {
                         let expireTime = new Date(unbond.entries[0].completion_time);
-                        let year = expireTime.getFullYear();
-                        let month = expireTime.getMonth();
-                        let day = expireTime.getDate();
-                        let hour = expireTime.getUTCHours();
-                        let minute = expireTime.getUTCMinutes();
-                        let second = expireTime.getUTCSeconds();
-                        let cron = `${second} ${minute} ${hour} ${day} ${month} ?`;
+                        let delay = expireTime.getTime() - new Date().getTime();
                         this.createJob(
                             'crawl.account-unbonds',
                             {
@@ -111,7 +105,7 @@ export default class CrawlAccountUnbondsService extends Service {
                             },
                             {
                                 removeOnComplete: true,
-                                repeat: { cron }
+                                delay
                             },
                         );
                     });
