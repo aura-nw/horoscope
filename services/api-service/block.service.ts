@@ -87,9 +87,9 @@ export default class BlockService extends MoleculerDBService<
 				max: 100,
 			},
 		},
-		// cache: {
-		// 	ttl: 10,
-		// },
+		cache: {
+			ttl: 10,
+		},
 	})
 	async getByChain(ctx: Context<GetByChainIdAndPageLimitRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
