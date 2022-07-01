@@ -6,7 +6,7 @@ import { CONST_CHAR, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert, OperationMode } from "json2typescript";
 import { Service, ServiceBroker } from "moleculer";
 import { AccountAuthEntity } from "../../entities/account-auth.entity";
-import { Utils } from "utils/utils";
+import { Utils } from "../../utils/utils";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountAuthInfoService extends Service {
@@ -71,6 +71,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 
                 let accountInfo: AccountAuthEntity = await this.adapter.findOne({
                     address,
+                    'custom_info.chain_id': Config.CHAIN_ID,
                 });
                 if (!accountInfo) {
                     accountInfo = {} as AccountAuthEntity;
