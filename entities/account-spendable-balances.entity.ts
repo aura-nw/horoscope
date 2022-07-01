@@ -2,11 +2,13 @@ import { Config } from "../common";
 import { JsonObject, JsonProperty } from "json2typescript";
 import { Types } from "mongoose";
 import { Coin } from "./coin.entity";
+import { CustomInfo } from "./custom-info.entity";
 
 export interface IAccountSpendableBalances {
     _id: Types.ObjectId | string | null;
     address: String;
     spendable_balances: Coin[];
+    custom_info: CustomInfo;
 }
 
 @JsonObject('AccountSpendableBalances')
@@ -17,6 +19,7 @@ export class AccountSpendableBalancesEntity implements IAccountSpendableBalances
     address: String = '';
     @JsonProperty('spendable_balances', [Coin], true)
     spendable_balances: Coin[] = [];
+    custom_info = {} as CustomInfo;
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {

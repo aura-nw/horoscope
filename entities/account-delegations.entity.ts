@@ -2,11 +2,13 @@ import { Config } from "../common";
 import { JsonObject, JsonProperty } from "json2typescript";
 import { Types } from "mongoose";
 import { Coin } from "./coin.entity";
+import { CustomInfo } from "./custom-info.entity";
 
 export interface IAccountDelegations {
     _id: Types.ObjectId | string | null;
     address: String;
     delegation_responses: DelegationResponse[];
+    custom_info: CustomInfo;
 }
 
 export class Delegation {
@@ -33,6 +35,7 @@ export class AccountDelegationsEntity implements IAccountDelegations {
     address: String = '';
     @JsonProperty('delegation_responses', [DelegationResponse], true)
     delegation_responses: DelegationResponse[] = [];
+    custom_info = {} as CustomInfo;
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {

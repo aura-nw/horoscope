@@ -1,11 +1,13 @@
 import { Config } from "../common";
 import { JsonObject, JsonProperty } from "json2typescript";
 import { Types } from "mongoose";
+import { CustomInfo } from "./custom-info.entity";
 
 export interface IAccountUnbonds {
     _id: Types.ObjectId | string | null;
     address: String;
     unbonding_responses: UnbondingResponse[];
+    custom_info: CustomInfo;
 }
 
 export class UndelegateEntry {
@@ -36,6 +38,7 @@ export class AccountUnbondsEntity implements IAccountUnbonds {
     address: String = '';
     @JsonProperty('unbonding_responses', [UnbondingResponse], true)
     unbonding_responses: UnbondingResponse[] = [];
+    custom_info = {} as CustomInfo;
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {

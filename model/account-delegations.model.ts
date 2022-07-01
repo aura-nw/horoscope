@@ -19,7 +19,10 @@ const definition: definitionType<IAccountDelegations> = (collection?: string) =>
 			},
 		},
 	],
-	custom_info: customInfoModel,
+	custom_info: {
+		chain_id: String,
+		chain_name: String,
+	},
 });
 
 export const accountDelegationsMongoModel = (collection: string): unknown => {
