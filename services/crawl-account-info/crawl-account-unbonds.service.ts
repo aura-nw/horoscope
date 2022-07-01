@@ -6,7 +6,7 @@ import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant"
 import { JsonConvert } from "json2typescript";
 import { Service, ServiceBroker } from "moleculer";
 import { AccountUnbondsEntity } from "../../entities";
-import { Utils } from "utils/utils";
+import { Utils } from "../../utils/utils";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountUnbondsService extends Service {
@@ -73,6 +73,7 @@ export default class CrawlAccountUnbondsService extends Service {
 
                 let accountInfo: AccountUnbondsEntity = await this.adapter.findOne({
                     address,
+                    'custom_info.chain_id': Config.CHAIN_ID,
                 });
                 if (!accountInfo) {
                     accountInfo = {} as AccountUnbondsEntity;
