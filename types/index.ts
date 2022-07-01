@@ -4,3 +4,5 @@ export * from './errors';
 export * from './response-api';
 export * from './account-info';
 export * from './api-service/';
+export * from './redis.service-interface';
+export * from './event';

@@ -45,7 +45,6 @@ export default class CrawlParamService extends Service {
 		});
 	}
 
-	async initEnv() {}
 	async handleJob() {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
