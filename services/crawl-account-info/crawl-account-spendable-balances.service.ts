@@ -4,9 +4,11 @@ import { Job } from "bull";
 import { Config } from "../../common";
 import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert } from "json2typescript";
-import { Service, ServiceBroker } from "moleculer";
+import { Context, Service, ServiceBroker } from "moleculer";
 import { AccountSpendableBalancesEntity } from "../../entities/account-spendable-balances.entity";
 import { Utils } from "../../utils/utils";
+import { CrawlAccountInfoParams } from "../../types";
+import { Coin } from "../../entities/coin.entity";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountSpendableBalancesService extends Service {
@@ -31,7 +33,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
             ],
             queues: {
                 'account-spendable-balances': {
-                    concurrency: 1,
+                    concurrency: Config.CONCURRENCY_ACCOUNT_SPENDABLE_BALANCES,
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
@@ -43,7 +45,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
             },
             events: {
                 'account-info.upsert-each': {
-                    handler: (ctx: any) => {
+                    handler: (ctx: Context<CrawlAccountInfoParams>) => {
                         this.logger.debug(`Crawl account spendable balances`);
                         this.createJob(
                             'account-spendable-balances',
@@ -62,11 +64,11 @@ export default class CrawlAccountSpendableBalancesService extends Service {
         })
     }
 
-    async handleJob(listAddresses: any[], chainId: string) {
-        let listAccounts: any[] = [], listUpdateQueries: any[] = [];
+    async handleJob(listAddresses: string[], chainId: string) {
+        let listAccounts: AccountSpendableBalancesEntity[] = [], listUpdateQueries: any[] = [];
         if (listAddresses.length > 0) {
             for (const address of listAddresses) {
-                let listSpendableBalances: any[] = [];
+                let listSpendableBalances: Coin[] = [];
 
                 const param =
                     Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
@@ -107,7 +109,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
                     const chain = LIST_NETWORK.find(x => x.chainId === chainId);
-                    const item: any = new JsonConvert().deserializeObject(element, AccountSpendableBalancesEntity);
+                    const item: AccountSpendableBalancesEntity = new JsonConvert().deserializeObject(element, AccountSpendableBalancesEntity);
                     item.custom_info = {
                         chain_id: chainId,
                         chain_name: chain ? chain.chainName : '',
