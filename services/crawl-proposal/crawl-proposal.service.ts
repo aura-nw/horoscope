@@ -6,10 +6,10 @@ import { Service, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
-import { ProposalEntity } from '../../entities/proposal.entity';
+import { IProposal, ProposalEntity } from '../../entities/proposal.entity';
 import { Config } from '../../common';
 import { PROPOSAL_STATUS, URL_TYPE_CONSTANTS } from '../../common/constant';
-import { ProposalResponseFromApi } from 'types';
+import { IProposalResponseFromLCD } from '../../types';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 
@@ -48,10 +48,10 @@ export default class CrawlProposalService extends Service {
 	}
 
 	async handleJob(path: String) {
-		let listProposal: ProposalEntity[] = [];
+		let listProposal: IProposal[] = [];
 
 		let urlToCall = path;
-		let resultCallApi: ProposalResponseFromApi;
+		let resultCallApi: IProposalResponseFromLCD;
 
 		let done = false;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
@@ -70,7 +70,7 @@ export default class CrawlProposalService extends Service {
 		this.logger.debug(`result: ${JSON.stringify(listProposal)}`);
 
 		listProposal.map(async (proposal) => {
-			let foundProposal = await this.adapter.findOne({
+			let foundProposal: ProposalEntity = await this.adapter.findOne({
 				proposal_id: `${proposal.proposal_id}`,
 				'custom_info.chain_id': Config.CHAIN_ID,
 			});
