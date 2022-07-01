@@ -2,11 +2,11 @@ import CallApiMixin from "../../mixins/callApi/call-api.mixin";
 import { dbAccountRedelegationsMixin } from "../../mixins/dbMixinMongoose";
 import { Job } from "bull";
 import { Config } from "../../common";
-import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert } from "json2typescript";
 import { Service, ServiceBroker } from "moleculer";
 import { AccountRedelegationsEntity } from "../../entities";
-import { Utils } from "utils/utils";
+import { Utils } from "../../utils/utils";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountRedelegatesService extends Service {
@@ -35,7 +35,7 @@ export default class CrawlAccountRedelegatesService extends Service {
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
-                        await this.handleJob(job.data.listAddresses);
+                        await this.handleJob(job.data.listAddresses, job.data.chainId);
                         job.progress(100);
                         return true;
                     },
@@ -49,6 +49,7 @@ export default class CrawlAccountRedelegatesService extends Service {
                             'crawl.account-redelegates',
                             {
                                 listAddresses: ctx.params.listAddresses,
+                                chainId: ctx.params.chainId,
                             },
                             {
                                 removeOnComplete: true,
@@ -61,7 +62,7 @@ export default class CrawlAccountRedelegatesService extends Service {
         })
     }
 
-    async handleJob(listAddresses: any[]) {
+    async handleJob(listAddresses: any[], chainId: string) {
         let listAccounts: any[] = [], listUpdateQueries: any[] = [];
         if (listAddresses.length > 0) {
             for (const address of listAddresses) {
@@ -69,10 +70,11 @@ export default class CrawlAccountRedelegatesService extends Service {
 
                 const param =
                     Config.GET_PARAMS_DELEGATOR + `/${address}/redelegations?pagination.limit=100`;
-                const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+                const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
                 let accountInfo: AccountRedelegationsEntity = await this.adapter.findOne({
                     address,
+                    'custom_info.chain_id': chainId,
                 });
                 if (!accountInfo) {
                     accountInfo = {} as AccountRedelegationsEntity;
@@ -118,7 +120,12 @@ export default class CrawlAccountRedelegatesService extends Service {
             listAccounts.forEach((element) => {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
+                    const chain = LIST_NETWORK.find(x => x.chainId === chainId);
                     const item: any = new JsonConvert().deserializeObject(element, AccountRedelegationsEntity);
+                    item.custom_info = {
+                        chain_id: chainId,
+                        chain_name: chain ? chain.chainName : '',
+                    };
                     listUpdateQueries.push(this.adapter.insert(item));
                 }
             });

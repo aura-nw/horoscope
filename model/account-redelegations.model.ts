@@ -34,7 +34,10 @@ const definition: definitionType<IAccountRedelegations> = (collection?: string) 
 			],
 		},
 	],
-	custom_info: customInfoModel,
+	custom_info: {
+		chain_id: String,
+		chain_name: String,
+	},
 });
 
 export const accountRedelegationsMongoModel = (collection: string): unknown => {

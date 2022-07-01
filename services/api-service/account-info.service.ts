@@ -114,7 +114,7 @@ export default class AccountInfoService extends MoleculerDBService<
 		} else {
 			this.broker.call(
 				'v1.handleAddress.accountinfoupsert',
-				{ listTx: [{ address: ctx.params.address, message: '' }], source: CONST_CHAR.API },
+				{ listTx: [{ address: ctx.params.address, message: '' }], source: CONST_CHAR.API, chainId: ctx.params.chainId },
 			);
 			if (!accountRewards.code) {
 				const result: ResponseDto = {
@@ -204,7 +204,7 @@ export default class AccountInfoService extends MoleculerDBService<
 		} else {
 			this.broker.call(
 				'v1.handleAddress.accountinfoupsert',
-				{ listTx: [{ address: ctx.params.address, message: '' }], source: CONST_CHAR.API },
+				{ listTx: [{ address: ctx.params.address, message: '' }], source: CONST_CHAR.API, chainId: ctx.params.chainId },
 			);
 			if (!accountRewards.code) {
 				const result: ResponseDto = {

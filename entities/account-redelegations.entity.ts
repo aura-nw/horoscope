@@ -1,11 +1,13 @@
 import { Config } from "../common";
 import { JsonObject, JsonProperty } from "json2typescript";
 import { Types } from "mongoose";
+import { CustomInfo } from "./custom-info.entity";
 
 export interface IAccountRedelegations {
     _id: Types.ObjectId | string | null;
     address: String;
     redelegation_responses: RedelegationResponse[];
+    custom_info: CustomInfo;
 }
 
 export class RedelegationEntry {
@@ -52,6 +54,7 @@ export class AccountRedelegationsEntity implements IAccountRedelegations {
     address: String = '';
     @JsonProperty('redelegation_responses', [RedelegationResponse], true)
     redelegation_responses: RedelegationResponse[] = [];
+    custom_info = {} as CustomInfo;
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
