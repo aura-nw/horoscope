@@ -107,11 +107,11 @@ export default class CrawlAccountSpendableBalancesService extends Service {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
                     const chain = LIST_NETWORK.find(x => x.chainId === chainId);
-                    element.custom_info = {
+                    const item: any = new JsonConvert().deserializeObject(element, AccountSpendableBalancesEntity);
+                    item.custom_info = {
                         chain_id: chainId,
                         chain_name: chain ? chain.chainName : '',
                     };
-                    const item: any = new JsonConvert().deserializeObject(element, AccountSpendableBalancesEntity);
                     listUpdateQueries.push(this.adapter.insert(item));
                 }
             });

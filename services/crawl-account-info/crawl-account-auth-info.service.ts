@@ -91,11 +91,11 @@ export default class CrawlAccountAuthInfoService extends Service {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
                     const chain = LIST_NETWORK.find(x => x.chainId === chainId);
-                    element.custom_info = {
+                    const item: AccountAuthEntity = new JsonConvert().deserializeObject(element, AccountAuthEntity);
+                    item.custom_info = {
                         chain_id: chainId,
                         chain_name: chain ? chain.chainName : '',
                     };
-                    const item: AccountAuthEntity = new JsonConvert().deserializeObject(element, AccountAuthEntity);
                     listUpdateQueries.push(this.adapter.insert(item));
                 }
             });
