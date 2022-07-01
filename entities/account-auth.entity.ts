@@ -1,11 +1,13 @@
 import { Config } from "../common";
 import { JsonObject, JsonProperty } from "json2typescript";
 import { Types } from "mongoose";
+import { CustomInfo } from "./custom-info.entity";
 
 export interface IAccountAuth {
     _id: Types.ObjectId | string | null;
     address: String;
     account: Account;
+    custom_info: CustomInfo;
 }
 
 export class AccountPubKey {
@@ -48,6 +50,7 @@ export class AccountAuthEntity implements IAccountAuth {
     address: String = '';
     @JsonProperty('account', Account)
     account = {} as Account;
+    custom_info = {} as CustomInfo;
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {

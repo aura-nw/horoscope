@@ -9,12 +9,12 @@ import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import {
-	CommunityPoolResponseFromApi,
-	PoolResponseFromApi,
-	ValidatorResponseFromApi,
+	ICommunityPoolResponseFromLCD,
+	IPoolResponseFromLCD,
+	IValidatorResponseFromLCD,
 } from '../../types';
 import { Job } from 'bull';
-import { CommunityPoolEntity, PoolEntity, ValidatorEntity } from '../../entities';
+import { CommunityPoolEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 
 export default class CrawlCommunityPoolService extends Service {
@@ -54,19 +54,20 @@ export default class CrawlCommunityPoolService extends Service {
 	async handleJob(path: String) {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let resultCallApi: CommunityPoolResponseFromApi = await this.callApiFromDomain(url, path);
+		let resultCallApi: ICommunityPoolResponseFromLCD = await this.callApiFromDomain(url, path);
 		let jsonConvert = new JsonConvert();
 		// jsonConvert.operationMode = OperationMode.LOGGING;
 		const item: CommunityPoolEntity = jsonConvert.deserializeObject(
 			resultCallApi,
 			CommunityPoolEntity,
 		);
-		let foundPool = await this.adapter.findOne({ 'custom_info.chain_id': Config.CHAIN_ID });
+		let foundPool: CommunityPoolEntity = await this.adapter.findOne({
+			'custom_info.chain_id': Config.CHAIN_ID,
+		});
 		try {
 			if (foundPool) {
 				item._id = foundPool._id;
 				await this.adapter.updateById(foundPool._id, item);
-				// this.logger.info(`Update community pool success! ${result}`);
 			} else {
 				await this.adapter.insert(item);
 			}

@@ -20,7 +20,10 @@ const definition: definitionType<IAccountUnbonds> = (collection?: string) => ({
 			],
 		},
 	],
-	custom_info: customInfoModel,
+	custom_info: {
+		chain_id: String,
+		chain_name: String,
+	},
 });
 
 export const accountUnbondsMongoModel = (collection: string): unknown => {
