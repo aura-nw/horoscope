@@ -55,16 +55,16 @@ export interface ILastCommit {
 	signatures: ISignature[];
 }
 export interface IBlockDetail {
-	header: IBlockHeader;
-	data: IData;
-	evidence: IEvidence;
-	last_commit: ILastCommit;
+	header: IBlockHeader | null;
+	data: IData | null;
+	evidence: IEvidence | null;
+	last_commit: ILastCommit | null;
 }
 
 export interface IBlock {
 	_id: ObjectIdNull;
-	block_id: IBlockId;
-	block: IBlockDetail;
+	block_id: IBlockId | null;
+	block: IBlockDetail | null;
 }
 
 @JsonObject('BlockIdPart')
@@ -156,19 +156,19 @@ export class BlockLastCommit implements ILastCommit {
 }
 
 @JsonObject('BlockDetail')
-export class BlockDetail {
+export class BlockDetail implements IBlockDetail {
 	@JsonProperty('header', BlockHeader)
 	header: BlockHeader | null = null;
 	@JsonProperty('data', BlockData)
 	data: BlockData | null = null;
 	@JsonProperty('evidence', BlockDataEvidence)
-	evidence: BlockDataEvidence | null = null;
+	evidence: IEvidence | null = null;
 	@JsonProperty('last_commit', BlockLastCommit)
 	last_commit: BlockLastCommit | null = null;
 }
 
 @JsonObject('Block')
-export class BlockEntity {
+export class BlockEntity implements IBlock {
 	@JsonProperty('_id', String, true)
 	_id = Config.DB_BLOCK.dialect === 'local' ? Types.ObjectId() : null;
 	@JsonProperty('block_id', BlockId)

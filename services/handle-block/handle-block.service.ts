@@ -7,8 +7,10 @@ const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
-import { BlockEntity } from '../../entities';
+import { BlockEntity, IBlock } from '../../entities';
 import { Job } from 'bull';
+import { IRedisStreamData, IRedisStreamResponse } from '../../types';
+import { ListTxInBlockParams } from '../../types';
 export default class HandleBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbBlockMixin = dbBlockMixin;
@@ -35,7 +37,7 @@ export default class HandleBlockService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.param);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -69,7 +71,7 @@ export default class HandleBlockService extends Service {
 	async handleJob() {
 		this.logger.info('handleJob');
 
-		let xAutoClaimResult = await this.redisClient.xAutoClaim(
+		let xAutoClaimResult: IRedisStreamResponse = await this.redisClient.xAutoClaim(
 			Config.REDIS_STREAM_BLOCK_NAME,
 			Config.REDIS_STREAM_BLOCK_GROUP,
 			this.consumer,
@@ -88,31 +90,44 @@ export default class HandleBlockService extends Service {
 		} else {
 			idXReadGroup = '>';
 		}
-		const result = await this.redisClient.xReadGroup(
+		const result: IRedisStreamResponse[] = await this.redisClient.xReadGroup(
 			Config.REDIS_STREAM_BLOCK_GROUP,
 			this.consumer,
 			[{ key: Config.REDIS_STREAM_BLOCK_NAME, id: idXReadGroup }],
 		);
 		try {
 			if (result)
-				result.forEach(async (element: any) => {
-					let listBlockNeedSaveToDb: any[] = [];
-					let listMessageNeedAck: any[] = [];
-					let listTx: any[] = [];
-					element.messages.forEach((item: any) => {
-						this.logger.info(`Handling message ${item.id}`);
-						let block = JSON.parse(item.message.element);
-						listBlockNeedSaveToDb.push(block);
-						listTx.push(...block.block.data.txs);
-						listMessageNeedAck.push(item.id);
-						this.lastId = item.id;
-					});
+				result.forEach(async (element: IRedisStreamResponse) => {
+					let listBlockNeedSaveToDb: IBlock[] = [];
+					let listMessageNeedAck: String[] = [];
+					let listTx: String[] = [];
 					try {
+						element.messages.forEach((item: IRedisStreamData) => {
+							this.logger.info(`Handling message ${item.id}`);
+							// let block = JSON.parse(item.message.element.toString());
+
+							const block: BlockEntity = new JsonConvert().deserializeObject(
+								JSON.parse(item.message.element.toString()),
+								BlockEntity,
+							);
+
+							listBlockNeedSaveToDb.push(block);
+							let listTxInBlock = block.block?.data?.txs;
+							if (listTxInBlock) {
+								listTx.push(...listTxInBlock);
+							}
+
+							listMessageNeedAck.push(item.id);
+							this.lastId = item.id.toString();
+						});
+
 						if (listBlockNeedSaveToDb.length > 0) {
 							this.handleListBlock(listBlockNeedSaveToDb);
 						}
 						if (listTx.length > 0) {
-							this.broker.emit('list-transaction.created', { listTx: listTx });
+							this.broker.emit('list-transaction.created', {
+								listTx: listTx,
+							} as ListTxInBlockParams);
 						}
 						if (listMessageNeedAck.length > 0) {
 							this.redisClient.xAck(
@@ -136,7 +151,7 @@ export default class HandleBlockService extends Service {
 		this.logger.info(`handleJob done`);
 	}
 
-	async handleListBlock(listBlock: any) {
+	async handleListBlock(listBlock: IBlock[]) {
 		let jsonConvert: JsonConvert = new JsonConvert();
 		// jsonConvert.operationMode = OperationMode.LOGGING;
 		const listBlockEntity: BlockEntity[] = jsonConvert.deserializeArray(listBlock, BlockEntity);
