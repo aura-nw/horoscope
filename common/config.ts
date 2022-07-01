@@ -83,6 +83,12 @@ export default class ConfigClass {
 	public static DB_ACCOUNT_INFO: any;
 	public static DB_VALIDATOR: any;
 	public static DB_INFLATION: any;
+	public static DB_ACCOUNT_BALANCES: any;
+	public static DB_ACCOUNT_DELEGATIONS: any;
+	public static DB_ACCOUNT_AUTH: any;
+	public static DB_ACCOUNT_SPENDABLE_BALANCES: any;
+	public static DB_ACCOUNT_REDELEGATIONS: any;
+	public static DB_ACCOUNT_UNBONDS: any;
 
 	public constructor() {
 		Object.keys(configObj).forEach((key: string) => {
@@ -109,5 +115,11 @@ export default class ConfigClass {
 		this.DB_ASSET = genericDbInfo('ASSET');
 		this.DB_CODE_ID = genericDbInfo('CODE_ID');
 		this.DB_INFLATION = genericDbInfo('INFLATION');
+		this.DB_ACCOUNT_BALANCES = genericDbInfo('ACCOUNT_BALANCES');
+		this.DB_ACCOUNT_DELEGATIONS = genericDbInfo('ACCOUNT_DELEGATIONS');
+		this.DB_ACCOUNT_AUTH = genericDbInfo('ACCOUNT_AUTH');
+		this.DB_ACCOUNT_SPENDABLE_BALANCES = genericDbInfo('ACCOUNT_SPENDABLE_BALANCES');
+		this.DB_ACCOUNT_REDELEGATIONS = genericDbInfo('ACCOUNT_REDELEGATIONS');
+		this.DB_ACCOUNT_UNBONDS = genericDbInfo('ACCOUNT_UNBONDS');
 	}
 }
