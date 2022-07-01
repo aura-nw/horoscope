@@ -2,7 +2,7 @@ import CallApiMixin from "../../mixins/callApi/call-api.mixin";
 import { dbAccountAuthMixin } from "../../mixins/dbMixinMongoose";
 import { Job } from "bull";
 import { Config } from "../../common";
-import { CONST_CHAR, URL_TYPE_CONSTANTS } from "../../common/constant";
+import { CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert, OperationMode } from "json2typescript";
 import { Service, ServiceBroker } from "moleculer";
 import { AccountAuthEntity } from "../../entities/account-auth.entity";
@@ -90,6 +90,11 @@ export default class CrawlAccountAuthInfoService extends Service {
             listAccounts.forEach((element) => {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
+                    const chain = LIST_NETWORK.find(x => x.chainId === chainId);
+                    element.custom_info = {
+                        chain_id: chainId,
+                        chain_name: chain ? chain.chainName : '',
+                    };
                     const item: AccountAuthEntity = new JsonConvert().deserializeObject(element, AccountAuthEntity);
                     listUpdateQueries.push(this.adapter.insert(item));
                 }

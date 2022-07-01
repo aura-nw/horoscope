@@ -2,7 +2,7 @@ import CallApiMixin from "../../mixins/callApi/call-api.mixin";
 import { dbAccountBalancesMixin } from "../../mixins/dbMixinMongoose";
 import { Job } from "bull";
 import { Config } from "../../common";
-import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert } from "json2typescript";
 import { Service, ServiceBroker } from "moleculer";
 import { AccountBalancesEntity } from "../../entities/account-balances.entity";
@@ -106,6 +106,11 @@ export default class CrawlAccountBalancesService extends Service {
             listAccounts.forEach((element) => {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
+                    const chain = LIST_NETWORK.find(x => x.chainId === chainId);
+                    element.custom_info = {
+                        chain_id: chainId,
+                        chain_name: chain ? chain.chainName : '',
+                    };
                     const item: any = new JsonConvert().deserializeObject(element, AccountBalancesEntity);
                     listUpdateQueries.push(this.adapter.insert(item));
                 }
