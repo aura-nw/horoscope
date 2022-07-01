@@ -14,7 +14,7 @@ import {
 	RestOptions,
 } from '../../types';
 import { IBlock } from '../../entities';
-
+const { performance } = require('perf_hooks');
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -87,13 +87,14 @@ export default class BlockService extends MoleculerDBService<
 				max: 100,
 			},
 		},
-		cache: {
-			ttl: 10,
-		},
+		// cache: {
+		// 	ttl: 10,
+		// },
 	})
 	async getByChain(ctx: Context<GetByChainIdAndPageLimitRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		try {
+			this.logger.info('1: ', performance.now());
 			let result = await this.adapter.find({
 				query: { 'custom_info.chain_id': ctx.params.chainid },
 				limit: ctx.params.pageLimit,
@@ -101,9 +102,11 @@ export default class BlockService extends MoleculerDBService<
 				// @ts-ignore
 				sort: '-block.header.height',
 			});
+			this.logger.info('2: ', performance.now());
 			let count = await this.adapter.count({
 				query: { 'custom_info.chain_id': ctx.params.chainid },
 			});
+			this.logger.info('3: ', performance.now());
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
