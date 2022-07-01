@@ -8,7 +8,7 @@ import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
-import { SigningInfoEntityResponseFromApi } from 'types';
+import { ISigningInfoEntityResponseFromLCD } from '../../types';
 import { ValidatorEntity } from 'entities';
 const tmhash = require('tendermint/lib/hash');
 import { bech32 } from 'bech32';
@@ -82,7 +82,7 @@ export default class CrawlSigningInfoService extends Service {
 				let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
 				const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-				let result: SigningInfoEntityResponseFromApi = await this.callApiFromDomain(
+				let result: ISigningInfoEntityResponseFromLCD = await this.callApiFromDomain(
 					url,
 					path,
 				);
