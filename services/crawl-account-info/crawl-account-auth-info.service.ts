@@ -35,7 +35,7 @@ export default class CrawlAccountAuthInfoService extends Service {
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
-                        await this.handleJob(job.data.listAddresses);
+                        await this.handleJob(job.data.listAddresses, job.data.chainId);
                         job.progress(100);
                         return true;
                     },
@@ -49,6 +49,7 @@ export default class CrawlAccountAuthInfoService extends Service {
                             'account-auth-info',
                             {
                                 listAddresses: ctx.params.listAddresses,
+                                chainId: ctx.params.chainId,
                             },
                             {
                                 removeOnComplete: true,
@@ -61,17 +62,17 @@ export default class CrawlAccountAuthInfoService extends Service {
         })
     }
 
-    async handleJob(listAddresses: any[]) {
+    async handleJob(listAddresses: any[], chainId: string) {
         let listAccounts: any[] = [], listUpdateQueries: any[] = [];
         if (listAddresses.length > 0) {
             for (const address of listAddresses) {
                 const param =
                     Config.GET_PARAMS_AUTH_INFO + `/${address}`;
-                const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+                const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
                 let accountInfo: AccountAuthEntity = await this.adapter.findOne({
                     address,
-                    'custom_info.chain_id': Config.CHAIN_ID,
+                    'custom_info.chain_id': chainId,
                 });
                 if (!accountInfo) {
                     accountInfo = {} as AccountAuthEntity;

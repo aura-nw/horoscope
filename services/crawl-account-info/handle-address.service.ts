@@ -25,7 +25,7 @@ export default class HandleAddressService extends Service {
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
-                        await this.handleJob(job.data.listTx, job.data.source);
+                        await this.handleJob(job.data.listTx, job.data.source, job.data.chainId);
                         job.progress(100);
                         return true;
                     },
@@ -37,7 +37,7 @@ export default class HandleAddressService extends Service {
                     rest: 'GET /account-info/:address',
                     handler: (ctx: any) => {
                         this.logger.debug(`Crawl account info`);
-                        this.handleJob(ctx.params.listTx, ctx.params.source);
+                        this.handleJob(ctx.params.listTx, ctx.params.source, ctx.params.chainId);
                     }
                 }
             },
@@ -50,6 +50,7 @@ export default class HandleAddressService extends Service {
                             {
                                 listTx: ctx.params.listTx,
                                 source: ctx.params.source,
+                                chainId: ctx.params.chainId
                             },
                             {
                                 removeOnComplete: true,
@@ -62,7 +63,7 @@ export default class HandleAddressService extends Service {
         });
     }
 
-    async handleJob(listTx: any[], source: string) {
+    async handleJob(listTx: any[], source: string, chainId: string) {
         let listAddresses: any[] = [];
         if (listTx.length > 0) {
             for (const element of listTx) {
@@ -114,7 +115,7 @@ export default class HandleAddressService extends Service {
                 }
             }
 
-            this.broker.emit('account-info.upsert-each', { listAddresses });
+            this.broker.emit('account-info.upsert-each', { listAddresses, chainId });
         }
     }
 
