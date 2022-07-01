@@ -3,40 +3,6 @@ import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
-// const definition: definitionType<ITransaction> = (collection?: string) => ({
-// 	_id: Types.ObjectId,
-// 	hash: {
-// 		type: String,
-// 		index: true,
-// 		unique: true,
-// 	},
-// 	height: Number,
-// 	index: Number,
-// 	tx_result: {
-// 		code: Number,
-// 		data: String,
-// 		log: String,
-// 		info: String,
-// 		gas_wanted: String,
-// 		gas_used: String,
-// 		events: [
-// 			{
-// 				type: { type: String },
-// 				attributes: [
-// 					{
-// 						key: String,
-// 						value: String,
-// 						index: Boolean,
-// 					},
-// 				],
-// 			},
-// 		],
-// 		codespace: String,
-// 	},
-// 	tx: String,
-// 	custom_info: customInfoModel,
-// });
-
 const definition: definitionType<ITransaction> = (collection?: string) => ({
 	_id: Types.ObjectId,
 	tx: {
@@ -133,5 +99,6 @@ export const transactionMongoModel = (collection: string): unknown => {
 		// strict: false,
 		collection: collection,
 	});
+	schema.index({ 'tx_response.height': 1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };
