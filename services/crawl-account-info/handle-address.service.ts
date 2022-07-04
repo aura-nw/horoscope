@@ -1,7 +1,9 @@
 import { Config } from "../../common";
-import { Service, ServiceBroker } from "moleculer";
+import { Context, Service, ServiceBroker } from "moleculer";
 import { Job } from "bull";
 import { CONST_CHAR, MSG_TYPE } from "../../common/constant";
+import { ListTxCreatedParams } from "types";
+import { ITransaction } from "entities";
 const QueueService = require('moleculer-bull');
 
 export default class HandleAddressService extends Service {
@@ -43,7 +45,7 @@ export default class HandleAddressService extends Service {
             },
             events: {
                 'account-info.handle-address': {
-                    handler: (ctx: any) => {
+                    handler: (ctx: Context<ListTxCreatedParams>) => {
                         this.logger.debug(`Handle address`);
                         this.createJob(
                             'handle.address',

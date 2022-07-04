@@ -4,9 +4,10 @@ import { Job } from "bull";
 import { Config } from "../../common";
 import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert } from "json2typescript";
-import { Service, ServiceBroker } from "moleculer";
-import { AccountDelegationsEntity } from "../../entities/account-delegations.entity";
+import { Context, Service, ServiceBroker } from "moleculer";
+import { AccountDelegationsEntity, DelegationResponse } from "../../entities/account-delegations.entity";
 import { Utils } from "../../utils/utils";
+import { CrawlAccountInfoParams } from "../../types";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountDelegatesService extends Service {
@@ -31,7 +32,7 @@ export default class CrawlAccountDelegatesService extends Service {
             ],
             queues: {
                 'crawl.account-delegates': {
-                    concurrency: 1,
+                    concurrency: Config.CONCURRENCY_ACCOUNT_DELEGATIONS,
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
@@ -43,7 +44,7 @@ export default class CrawlAccountDelegatesService extends Service {
             },
             events: {
                 'account-info.upsert-each': {
-                    handler: (ctx: any) => {
+                    handler: (ctx: Context<CrawlAccountInfoParams>) => {
                         this.logger.debug(`Crawl account delegates`);
                         this.createJob(
                             'crawl.account-delegates',
@@ -62,11 +63,11 @@ export default class CrawlAccountDelegatesService extends Service {
         })
     }
 
-    async handleJob(listAddresses: any[], chainId: string) {
-        let listAccounts: any[] = [], listUpdateQueries: any[] = [];
+    async handleJob(listAddresses: string[], chainId: string) {
+        let listAccounts: AccountDelegationsEntity[] = [], listUpdateQueries: any[] = [];
         if (listAddresses.length > 0) {
             for (const address of listAddresses) {
-                let listDelegates: any[] = [];
+                let listDelegates: DelegationResponse[] = [];
 
                 const param =
                     Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
@@ -107,7 +108,7 @@ export default class CrawlAccountDelegatesService extends Service {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
                     const chain = LIST_NETWORK.find(x => x.chainId === chainId);
-                    const item: any = new JsonConvert().deserializeObject(element, AccountDelegationsEntity);
+                    const item: AccountDelegationsEntity = new JsonConvert().deserializeObject(element, AccountDelegationsEntity);
                     item.custom_info = {
                         chain_id: chainId,
                         chain_name: chain ? chain.chainName : '',

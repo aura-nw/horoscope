@@ -4,9 +4,10 @@ import { Job } from "bull";
 import { Config } from "../../common";
 import { CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert, OperationMode } from "json2typescript";
-import { Service, ServiceBroker } from "moleculer";
+import { Context, Service, ServiceBroker } from "moleculer";
 import { AccountAuthEntity } from "../../entities/account-auth.entity";
 import { Utils } from "../../utils/utils";
+import { CrawlAccountInfoParams } from "../../types";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountAuthInfoService extends Service {
@@ -31,7 +32,7 @@ export default class CrawlAccountAuthInfoService extends Service {
             ],
             queues: {
                 'account-auth-info': {
-                    concurrency: 1,
+                    concurrency: Config.CONCURRENCY_ACCOUNT_AUTH,
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
@@ -43,7 +44,7 @@ export default class CrawlAccountAuthInfoService extends Service {
             },
             events: {
                 'account-info.upsert-each': {
-                    handler: (ctx: any) => {
+                    handler: (ctx: Context<CrawlAccountInfoParams>) => {
                         this.logger.debug(`Crawl account auth info`);
                         this.createJob(
                             'account-auth-info',
@@ -62,8 +63,8 @@ export default class CrawlAccountAuthInfoService extends Service {
         })
     }
 
-    async handleJob(listAddresses: any[], chainId: string) {
-        let listAccounts: any[] = [], listUpdateQueries: any[] = [];
+    async handleJob(listAddresses: string[], chainId: string) {
+        let listAccounts: AccountAuthEntity[] = [], listUpdateQueries: any[] = [];
         if (listAddresses.length > 0) {
             for (const address of listAddresses) {
                 const param =

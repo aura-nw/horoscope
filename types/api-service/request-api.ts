@@ -18,3 +18,13 @@ export interface TxHashParams {
 export interface GetByChainIdAndPageLimitRequest extends ChainIdParams, PageLimit {}
 
 export interface GetTxRequest extends ChainIdParams, PageLimit, BlockHeightParams, TxHashParams {}
+
+export interface AccountInfoRequest {
+    address: string;
+    chainId: string;
+}
+
+export interface CrawlAccountInfoParams {
+	listAddresses: string[];
+	chainId: string;
+}

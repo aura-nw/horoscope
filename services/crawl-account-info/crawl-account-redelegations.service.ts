@@ -4,9 +4,10 @@ import { Job } from "bull";
 import { Config } from "../../common";
 import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { JsonConvert } from "json2typescript";
-import { Service, ServiceBroker } from "moleculer";
-import { AccountRedelegationsEntity } from "../../entities";
+import { Context, Service, ServiceBroker } from "moleculer";
+import { AccountRedelegationsEntity, RedelegationResponse } from "../../entities";
 import { Utils } from "../../utils/utils";
+import { CrawlAccountInfoParams } from "../../types";
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountRedelegatesService extends Service {
@@ -31,7 +32,7 @@ export default class CrawlAccountRedelegatesService extends Service {
             ],
             queues: {
                 'crawl.account-redelegates': {
-                    concurrency: 1,
+                    concurrency: Config.CONCURRENCY_ACCOUNT_REDELEGATIONS,
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
@@ -43,7 +44,7 @@ export default class CrawlAccountRedelegatesService extends Service {
             },
             events: {
                 'account-info.upsert-each': {
-                    handler: (ctx: any) => {
+                    handler: (ctx: Context<CrawlAccountInfoParams>) => {
                         this.logger.debug(`Crawl account redelegates`);
                         this.createJob(
                             'crawl.account-redelegates',
@@ -62,11 +63,11 @@ export default class CrawlAccountRedelegatesService extends Service {
         })
     }
 
-    async handleJob(listAddresses: any[], chainId: string) {
-        let listAccounts: any[] = [], listUpdateQueries: any[] = [];
+    async handleJob(listAddresses: string[], chainId: string) {
+        let listAccounts: AccountRedelegationsEntity[] = [], listUpdateQueries: any[] = [];
         if (listAddresses.length > 0) {
             for (const address of listAddresses) {
-                let listRedelegates: any[] = [];
+                let listRedelegates: RedelegationResponse[] = [];
 
                 const param =
                     Config.GET_PARAMS_DELEGATOR + `/${address}/redelegations?pagination.limit=100`;
@@ -97,8 +98,8 @@ export default class CrawlAccountRedelegatesService extends Service {
 
                 if (listRedelegates) {
                     accountInfo.redelegation_responses = listRedelegates;
-                    listRedelegates.map((redelegate: any) => {
-                        let expireTime = new Date(redelegate.entries[0].redelegation_entry.completion_time);
+                    listRedelegates.map((redelegate: RedelegationResponse) => {
+                        let expireTime = new Date(redelegate.entries[0].redelegation_entry.completion_time.toString());
                         let delay = expireTime.getTime() - new Date().getTime();
                         this.createJob(
                             'crawl.account-unbonds',
@@ -121,7 +122,7 @@ export default class CrawlAccountRedelegatesService extends Service {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
                     const chain = LIST_NETWORK.find(x => x.chainId === chainId);
-                    const item: any = new JsonConvert().deserializeObject(element, AccountRedelegationsEntity);
+                    const item: AccountRedelegationsEntity = new JsonConvert().deserializeObject(element, AccountRedelegationsEntity);
                     item.custom_info = {
                         chain_id: chainId,
                         chain_name: chain ? chain.chainName : '',
