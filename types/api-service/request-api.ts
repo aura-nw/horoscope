@@ -1,6 +1,8 @@
 export interface PageLimit {
 	pageOffset: number;
 	pageLimit: number;
+	countTotal?: boolean;
+	nextKey?: string;
 }
 
 export interface ChainIdParams {
@@ -20,8 +22,8 @@ export interface GetByChainIdAndPageLimitRequest extends ChainIdParams, PageLimi
 export interface GetTxRequest extends ChainIdParams, PageLimit, BlockHeightParams, TxHashParams {}
 
 export interface AccountInfoRequest {
-    address: string;
-    chainId: string;
+	address: string;
+	chainId: string;
 }
 
 export interface CrawlAccountInfoParams {

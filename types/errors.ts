@@ -3,14 +3,15 @@ import { constants } from 'http2';
 // eslint-disable-next-line no-shadow, @typescript-eslint/naming-convention
 export enum ErrorMessage {
 	SUCCESSFUL = 'Successful',
-	NOT_FOUND = 'user.notfound',
-	WRONG = 'user.wrong',
-	NOT_ACTIVE = 'user.notactive',
+	NOT_FOUND = 'notfound',
+	WRONG = 'wrong',
+	NOT_ACTIVE = 'notactive',
 	DUPLICATED_LOGIN = 'user.duplicated.login',
 	DUPLICATED_EMAIL = 'user.duplicated.email',
 	DELETE_ITSELF = 'user.delete.itself',
 	ADDRESS_NOT_FOUND = 'Address not found',
 	CRAWL_SUCCESSFUL = 'Data crawl successful! Please call API again to get data',
+	VALIDATION_ERROR = 'Validation error',
 }
 
 export const ErrorCode = {

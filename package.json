@@ -63,6 +63,8 @@
     "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",
     "bech32": "^2.0.0",
+    "bjson": "^1.0.1",
+    "bson": "^4.6.4",
     "cookie-parser": "^1.4.6",
     "core-js": "^3.22.4",
     "cross-env": "^7.0.3",

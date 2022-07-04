@@ -5,6 +5,7 @@ import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import {
+	ChainIdParams,
 	ErrorCode,
 	ErrorMessage,
 	getActionConfig,
@@ -13,8 +14,12 @@ import {
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { IBlock } from '../../entities';
+import { BlockEntity, IBlock } from '../../entities';
+import { JsonConvert } from 'json2typescript';
+import { FilterOptions, QueryOptions } from 'moleculer-db';
+import { ObjectId } from 'mongodb';
 const { performance } = require('perf_hooks');
+import { BSONTypeError } from 'bson';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -59,6 +64,18 @@ export default class BlockService extends MoleculerDBService<
 	 *          default: 0
 	 *          type: number
 	 *          description: "Page number, start at 0"
+	 *        - in: query
+	 *          name: countTotal
+	 *          required: false
+	 *          default: false
+	 *          type: boolean
+	 *          description: "count total record"
+	 *        - in: query
+	 *          name: nextKey
+	 *          required: false
+	 *          default:
+	 *          type: string
+	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -86,6 +103,17 @@ export default class BlockService extends MoleculerDBService<
 				convert: true,
 				max: 100,
 			},
+			countTotal: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
 		},
 		cache: {
 			ttl: 10,
@@ -93,26 +121,56 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<GetByChainIdAndPageLimitRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
 		try {
-			this.logger.info('1: ', performance.now());
-			let result = await this.adapter.find({
-				query: { 'custom_info.chain_id': ctx.params.chainid },
-				limit: ctx.params.pageLimit,
-				offset: ctx.params.pageOffset,
-				// @ts-ignore
-				sort: '-block.header.height',
-			});
-			this.logger.info('2: ', performance.now());
-			let count = await this.adapter.count({
-				query: { 'custom_info.chain_id': ctx.params.chainid },
-			});
-			this.logger.info('3: ', performance.now());
+			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+
+			if (ctx.params.nextKey) {
+				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				ctx.params.pageOffset = 0;
+				ctx.params.countTotal = false;
+			}
+
+			// @ts-ignore
+			let [resultBlock, resultCount] = await Promise.all<BlockEntity, BlockEntity>([
+				this.adapter.find({
+					query: query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					// @ts-ignore
+					sort: '-block.header.height',
+				}),
+				ctx.params.countTotal === true
+					? this.adapter.find({
+							query: { 'custom_info.chain_id': ctx.params.chainid },
+							limit: 1,
+							offset: 0,
+							// @ts-ignore
+							sort: '-block.header.height',
+					  })
+					: 0,
+			]);
+
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
-					blocks: result,
-					count: count,
+					blocks: resultBlock,
+					count:
+						ctx.params.countTotal === true ? resultCount[0].block?.header?.height : 0,
+					nextKey: resultBlock[resultBlock.length - 1]?._id,
 				},
 			};
 		} catch (error) {
@@ -124,7 +182,6 @@ export default class BlockService extends MoleculerDBService<
 				},
 			};
 		}
-
 		return response;
 	}
 }

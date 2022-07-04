@@ -16,6 +16,7 @@ import {
 } from '../../types';
 import { ITransaction } from '../../entities';
 import { QueryOptions } from 'moleculer-db';
+import { ObjectId } from 'mongodb';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -71,6 +72,18 @@ export default class BlockService extends MoleculerDBService<
 	 *          default: 10
 	 *          type: number
 	 *          description: "number record return in a page"
+	 *        - in: query
+	 *          name: countTotal
+	 *          required: false
+	 *          default: false
+	 *          type: boolean
+	 *          description: "count total record"
+	 *        - in: query
+	 *          name: nextKey
+	 *          required: false
+	 *          default:
+	 *          type: string
+	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -100,6 +113,17 @@ export default class BlockService extends MoleculerDBService<
 				convert: true,
 				max: 100,
 			},
+			countTotal: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
 		},
 		cache: {
 			ttl: 10,
@@ -107,11 +131,22 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<GetTxRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
 
 		const blockHeight = ctx.params.blockHeight;
 		const txHash = ctx.params.txHash;
-		this.logger.info(blockHeight);
-		this.logger.info(txHash);
 		let query: QueryOptions = {
 			'custom_info.chain_id': ctx.params.chainid,
 		};
@@ -122,17 +157,25 @@ export default class BlockService extends MoleculerDBService<
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
 		}
+		if (ctx.params.nextKey) {
+			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+			ctx.params.pageOffset = 0;
+			ctx.params.countTotal = false;
+		}
+
 		try {
-			let result = await this.adapter.find({
-				query: query,
-				limit: ctx.params.pageLimit,
-				offset: ctx.params.pageOffset,
-				// @ts-ignore
-				sort: '-tx_response.height',
-			});
-			let count = await this.adapter.count({
-				query: query,
-			});
+			let [result, count] = await Promise.all([
+				this.adapter.find({
+					query: query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					// @ts-ignore
+					sort: '-tx_response.height',
+				}),
+				this.adapter.count({
+					query: query,
+				}),
+			]);
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
