@@ -321,6 +321,22 @@
                         "default": 10,
                         "type": "number",
                         "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
                     }
                 ],
                 "responses": {

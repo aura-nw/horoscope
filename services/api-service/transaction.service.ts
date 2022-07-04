@@ -14,7 +14,7 @@ import {
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { ITransaction } from '../../entities';
+import { ITransaction, TransactionEntity } from '../../entities';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
 
@@ -164,7 +164,8 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		try {
-			let [result, count] = await Promise.all([
+			// @ts-ignore
+			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
 				this.adapter.find({
 					query: query,
 					limit: ctx.params.pageLimit,
@@ -172,9 +173,11 @@ export default class BlockService extends MoleculerDBService<
 					// @ts-ignore
 					sort: '-tx_response.height',
 				}),
-				this.adapter.count({
-					query: query,
-				}),
+				ctx.params.countTotal === true
+					? this.adapter.count({
+							query: query,
+					  })
+					: 0,
 			]);
 			response = {
 				code: ErrorCode.SUCCESSFUL,
@@ -182,6 +185,7 @@ export default class BlockService extends MoleculerDBService<
 				data: {
 					blocks: result,
 					count: count,
+					nextKey: result[result.length - 1]?._id,
 				},
 			};
 		} catch (error) {
