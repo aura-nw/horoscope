@@ -22,13 +22,7 @@ import {
 } from '../../types';
 import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
-import { AssetIndexParams } from 'types/asset';
-import { error, info } from 'console';
-import { Types } from 'mongoose';
-// import rateLimit from 'micro-ratelimit';
-import { Status } from '../../model/codeid.model';
-import { domainToASCII } from 'url';
-import { Ok } from 'ts-results';
+
 
 const tlBucket = 60000;
 const swMiddleware = swStats.getMiddleware({
@@ -113,6 +107,7 @@ const swMiddleware = swStats.getMiddleware({
 					'v1.proposal.getByChain',
 					'v1.validator.getByChain',
 					'v1.block.getByChain',
+					'v1.asset.indexAsset',
 					'v1.transaction.getByChain',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
@@ -229,67 +224,5 @@ export default class ApiService extends moleculer.Service {
 			res.end(JSON.stringify(errObj, null, 2));
 		}
 		this.logResponse(req, res, err ? err.ctx : null);
-	}
-
-	/**
-	 *  @swagger
-	 *
-	 *  /api/indexAsset:
-	 *    post:
-	 *      tags:
-	 *      - "Asset"
-	 *      summary:  Register asset with the code id
-	 *      description: Register asset with the code id
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
-	 *      parameters:
-	 *        - in: body
-	 *          name: params
-	 *          schema:
-	 *            type: object
-	 *            required:
-	 *              - name
-	 *            properties:
-	 *              code_id:
-	 *                type: number
-	 *                description: code id
-	 *      responses:
-	 *        200:
-	 *          description: Register result
-	 *        422:
-	 *          description: Missing parameters
-	 */
-	@Post<RestOptions>('api/indexAsset', {
-		name: 'indexAsset',
-		restricted: ['api'],
-		params: {
-			code_id: ['number|integer|positive'],
-		},
-	})
-	async indexAsset(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
-		return await this.broker
-			.call('code_id.checkStatus', { code_id: ctx.params.code_id })
-			.then((res) => {
-				this.logger.debug('code_id.checkStatus res', res);
-				switch (res) {
-					case Ok:
-						this.broker.call('code_id.create', {
-							_id: new Types.ObjectId(),
-							code_id: ctx.params.code_id,
-							status: Status.WAITING,
-						});
-					case Status.TBD:
-						this.broker.emit('code_id.validate', ctx.params.code_id);
-						return true;
-					default:
-						return false;
-				}
-			})
-			.catch((error) => {
-				this.logger.error('call code_id.checkStatus error', error);
-				return false;
-			});
 	}
 }

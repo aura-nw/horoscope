@@ -86,7 +86,7 @@
                 }
             }
         },
-        "/api/indexAsset": {
+        "/v1/asset/indexAsset": {
             "post": {
                 "tags": [
                     "Asset"
