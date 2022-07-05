@@ -50,20 +50,22 @@ export default class CrawlProposalService extends Service {
 	async handleJob(path: String) {
 		let listProposal: IProposal[] = [];
 
-		let urlToCall = path;
+		let param = path;
 		let resultCallApi: IProposalResponseFromLCD;
 
 		let done = false;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		while (!done) {
-			resultCallApi = await this.callApiFromDomain(url, urlToCall);
+			resultCallApi = await this.callApiFromDomain(url, param);
 
 			listProposal.push(...resultCallApi.proposals);
 			if (resultCallApi.pagination.next_key === null) {
 				done = true;
 			} else {
-				urlToCall = `${url}&pagination.key=${resultCallApi.pagination.next_key}`;
+				param = `${path}&pagination.key=${encodeURIComponent(
+					resultCallApi.pagination.next_key.toString(),
+				)}`;
 			}
 		}
 

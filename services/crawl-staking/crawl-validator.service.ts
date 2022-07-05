@@ -50,20 +50,22 @@ export default class CrawlValidatorService extends Service {
 	async handleJob(path: String) {
 		let listValidator: IValidator[] = [];
 
-		let urlToCall = path;
+		let param = path;
 		let resultCallApi: IValidatorResponseFromLCD;
 
 		let done = false;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		while (!done) {
-			resultCallApi = await this.callApiFromDomain(url, urlToCall);
+			resultCallApi = await this.callApiFromDomain(url, param);
 
 			listValidator.push(...resultCallApi.validators);
 			if (resultCallApi.pagination.next_key === null) {
 				done = true;
 			} else {
-				urlToCall = `${url}&pagination.key=${resultCallApi.pagination.next_key}`;
+				param = `${path}&pagination.key=${encodeURIComponent(
+					resultCallApi.pagination.next_key.toString(),
+				)}`;
 			}
 		}
 
