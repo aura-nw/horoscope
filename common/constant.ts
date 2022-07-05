@@ -65,13 +65,19 @@ export const LIST_NETWORK = [
 	{
 		chainName: 'Theta Testnet',
 		chainId: 'theta-testnet-001',
-		RPC: ['https://rpc.sentry-01.theta-testnet.polypore.xyz/'],
-		LCD: ['https://rest.sentry-01.theta-testnet.polypore.xyz/'],
+		RPC: ['https://rpc.sentry-01.theta-testnet.polypore.xyz'],
+		LCD: ['https://rest.sentry-01.theta-testnet.polypore.xyz'],
 	},
 	{
 		chainName: 'Osmosis Testnet',
 		chainId: 'osmo-test-4',
 		RPC: ['https://testnet-rpc.osmosis.zone/'],
 		LCD: ['https://osmosistest-lcd.quickapi.com'],
+	},
+	{
+		chainName: 'Osmosis Mainnet',
+		chainId: 'osmosis-1',
+		RPC: ['https://rpc.osmosis.zone'],
+		LCD: ['https://lcd.osmosis.zone'],
 	},
 ];
