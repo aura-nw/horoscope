@@ -21,7 +21,7 @@ import { io } from 'socket.io-client';
 	actions: {
 		add(ctx) {
 			//@ts-ignore
-			this.broker.call('io.broadcast', { event: 'abc', args: ['arg1', 'arg2'] });
+			this.broker.call('io.broadcast', { event: 'abc', args: [ctx.params.a, ctx.params.b] });
 
 			return Number(ctx.params.a) + Number(ctx.params.b);
 		},

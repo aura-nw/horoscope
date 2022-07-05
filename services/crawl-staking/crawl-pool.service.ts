@@ -8,7 +8,7 @@ import { dbPoolMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { PoolResponseFromApi, ValidatorResponseFromApi } from '../../types';
+import { IPoolResponseFromLCD } from '../../types';
 import { Job } from 'bull';
 import { PoolEntity, ValidatorEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
@@ -51,7 +51,7 @@ export default class CrawlPoolService extends Service {
 		let urlToCall = path;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let resultCallApi: PoolResponseFromApi = await this.callApiFromDomain(url, urlToCall);
+		let resultCallApi: IPoolResponseFromLCD = await this.callApiFromDomain(url, urlToCall);
 		const item: PoolEntity = new JsonConvert().deserializeObject(
 			resultCallApi.pool,
 			PoolEntity,

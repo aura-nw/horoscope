@@ -5,12 +5,15 @@ import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
 
 const QueueService = require('moleculer-bull');
+// import createService from 'moleculer-bull';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from '@redis/client';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
+import { BlockResponseFromLCD, ResponseFromRPC } from '../../types';
+import { IBlock } from 'entities';
 
 export default class CrawlBlockService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -41,7 +44,7 @@ export default class CrawlBlockService extends Service {
 						// @ts-ignore
 						await this.initEnv();
 						// @ts-ignore
-						await this.handleJob(job.data.param);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -68,7 +71,7 @@ export default class CrawlBlockService extends Service {
 		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : 0;
 		this.logger.info(`currentBlock: ${this.currentBlock}`);
 	}
-	async handleJob(param: String) {
+	async handleJob() {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.RPC);
 		const responseGetLatestBlock = await this.callApiFromDomain(
 			url,
@@ -84,23 +87,27 @@ export default class CrawlBlockService extends Service {
 			endBlock = latestBlockNetwork;
 		}
 		this.logger.info('startBlock: ' + startBlock + ' endBlock: ' + endBlock);
-		let data = await this.callApiFromDomain(
-			url,
-			`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
-		);
-		if (data == null) {
+		try {
+			let data: ResponseFromRPC = await this.callApiFromDomain(
+				url,
+				`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
+			);
+			if (data == null) {
+				throw new Error('cannot crawl block');
+			}
+			this.handleListBlock(data);
+			this.currentBlock = endBlock;
+			let redisClient: RedisClientType = await this.getRedisClient();
+			redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
+		} catch (error) {
 			throw new Error('cannot crawl block');
 		}
-		this.handleListBlock(data);
-		this.currentBlock = endBlock;
-		let redisClient: RedisClientType = await this.getRedisClient();
-		redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
 	}
-	async handleListBlock(data: any) {
-		const listBlock = data.result.blocks;
-		listBlock.map((block: any) => {
+	async handleListBlock(data: ResponseFromRPC) {
+		const listBlock: BlockResponseFromLCD = data.result;
+		listBlock.blocks.map((block: IBlock) => {
 			//pust block to redis stream
-			this.logger.info('xadd block: ' + block.block.header.height);
+			this.logger.info('xadd block: ' + block?.block?.header?.height);
 
 			this.redisClient.sendCommand([
 				'XADD',

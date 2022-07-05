@@ -11,7 +11,7 @@ import {
 	ErrorCode,
 	ErrorMessage,
 } from '../../types';
-import { ChainIdParams } from 'types/api-service/network';
+import { ChainIdParams } from '../../types';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -55,6 +55,9 @@ export default class NetworkService extends MoleculerDBService<
 		name: 'status',
 		params: {
 			chainid: { type: 'string', optional: false },
+		},
+		cache: {
+			ttl: 5,
 		},
 	})
 	async getStatus(ctx: Context<ChainIdParams, Record<string, unknown>>) {

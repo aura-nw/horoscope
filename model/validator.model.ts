@@ -5,7 +5,7 @@ import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<IValidator> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	operator_address: { type: String, index: true, unique: true },
+	operator_address: { type: String, index: true },
 	consensus_pubkey: {
 		'@type': String,
 		key: String,
@@ -33,7 +33,7 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 	},
 	min_self_delegation: String,
 	val_signing_info: {
-		address: { type: String, index: true, unique: true },
+		address: { type: String, index: true },
 		start_height: String,
 		index_offset: String,
 		jailed_until: String,
@@ -51,5 +51,6 @@ export const validatorMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection: collection,
 	});
+	schema.index({ operator_address: 1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

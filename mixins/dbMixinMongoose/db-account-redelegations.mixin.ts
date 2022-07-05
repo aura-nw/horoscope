@@ -3,17 +3,17 @@
 import CallApiMixin from '../callApi/call-api.mixin';
 import { Config } from '../../common';
 import { DbBaseMixin } from './db-base.mixin';
-import { accountInfoMongoModel } from '../../model';
+import { accountRedelegationsMongoModel } from '../../model';
 
-const dbInfo = Config.DB_ACCOUNT_INFO;
+const dbInfo = Config.DB_ACCOUNT_REDELEGATIONS;
 
 const dbBaseMixin = new DbBaseMixin({
 	dbInfo,
-	name: 'dbAccountInfoMixin',
+	name: 'dbAccountRedelegationsMixin',
 	collection: dbInfo.collection,
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	model: accountInfoMongoModel(dbInfo.collection),
+	model: accountRedelegationsMongoModel(dbInfo.collection),
 });
 
-export const dbAccountInfoMixin = dbBaseMixin.getMixin();
+export const dbAccountRedelegationsMixin = dbBaseMixin.getMixin();

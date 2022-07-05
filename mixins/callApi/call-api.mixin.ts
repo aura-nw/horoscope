@@ -14,64 +14,8 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 		this.schema = {
 			settings: {
 				enableLoadBalancer: Config.ENABLE_LOADBALANCER,
-				rpcUrl: Config.RPC_URL,
-				listRpcUrl: JSON.parse(Config.LIST_RPC_URL),
-				lcdUrl: Config.LCD_URL,
-				listLcdUrl: JSON.parse(Config.LIST_LCD_URL),
 			},
 			methods: {
-				async callApi(typeUrl: string, path: string) {
-					if (typeUrl === URL_TYPE_CONSTANTS.LCD) {
-						return this.callApiLcd(path);
-					}
-					return this.callApiRpc(path);
-				},
-				async callApiRpc(path: string) {
-					if (this.callRpcClient === undefined) {
-						if (this.settings.enableLoadBalancer === 'false') {
-							let axiosClient = axios.create({
-								baseURL: this.settings.rpcUrl,
-							});
-							this.callRpcClient = axiosClient;
-						} else {
-							let resilientClient = Resilient({
-								service: { basePath: '/', retry: 3 },
-							});
-							resilientClient.setServers(this.settings.listRpcUrl);
-							this.callRpcClient = resilientClient;
-						}
-					}
-					try {
-						// @ts-ignore
-						let result = await this.callRpcClient.get(path);
-						return result.data;
-					} catch (error) {
-						this.logger.error(error);
-						return null;
-					}
-				},
-				async callApiLcd(path: string) {
-					if (this.callLcdClient === undefined) {
-						if (this.settings.enableLoadBalancer === 'false') {
-							let axiosClient = axios.create({
-								baseURL: this.settings.lcdUrl,
-							});
-							this.callLcdClient = axiosClient;
-						} else {
-							let resilientClient = Resilient({ service: { basePath: '/' } });
-							resilientClient.setServers(this.settings.listLcdUrl);
-							this.callLcdClient = resilientClient;
-						}
-					}
-					try {
-						// @ts-ignore
-						let result = await this.callLcdClient.get(path);
-						return result.data;
-					} catch (error) {
-						this.logger.error(error);
-						return null;
-					}
-				},
 				async callApiFromDomain(domain: string[], path: string) {
 					let callApiClient = null;
 					if (this.settings.enableLoadBalancer === 'false') {

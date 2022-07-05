@@ -8,9 +8,9 @@ import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { ValidatorResponseFromApi } from '../../types';
+import { IValidatorResponseFromLCD } from '../../types';
 import { Job } from 'bull';
-import { ValidatorEntity } from '../../entities';
+import { IValidator, ValidatorEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 
 export default class CrawlValidatorService extends Service {
@@ -48,10 +48,10 @@ export default class CrawlValidatorService extends Service {
 	}
 
 	async handleJob(path: String) {
-		let listValidator: ValidatorEntity[] = [];
+		let listValidator: IValidator[] = [];
 
 		let urlToCall = path;
-		let resultCallApi: ValidatorResponseFromApi;
+		let resultCallApi: IValidatorResponseFromLCD;
 
 		let done = false;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);

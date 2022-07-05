@@ -8,6 +8,84 @@
     "basePath": "/api",
     "swagger": "2.0",
     "paths": {
+        "/v1/account-info": {
+            "get": {
+                "tags": [
+                    "Account Info"
+                ],
+                "summary": "Get information of an address",
+                "description": "Get information of an address",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "address",
+                        "required": true,
+                        "type": "string",
+                        "description": "Address of account"
+                    },
+                    {
+                        "in": "query",
+                        "name": "chainId",
+                        "required": true,
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/account-info/delegations": {
+            "get": {
+                "tags": [
+                    "Account Info"
+                ],
+                "summary": "Get delegation information of an address",
+                "description": "Get delegation information of an address",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "address",
+                        "required": true,
+                        "type": "string",
+                        "description": "Address of account"
+                    },
+                    {
+                        "in": "query",
+                        "name": "chainId",
+                        "required": true,
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
         "/v1/asset/indexAsset": {
             "post": {
                 "tags": [
@@ -72,6 +150,20 @@
                     },
                     {
                         "in": "query",
+                        "name": "blockHeight",
+                        "required": false,
+                        "type": "string",
+                        "description": "Block height of transaction"
+                    },
+                    {
+                        "in": "query",
+                        "name": "blockHash",
+                        "required": false,
+                        "type": "string",
+                        "description": "Block hash"
+                    },
+                    {
+                        "in": "query",
                         "name": "pageLimit",
                         "required": false,
                         "default": 10,
@@ -85,6 +177,22 @@
                         "default": 0,
                         "type": "number",
                         "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
                     }
                 ],
                 "responses": {
@@ -165,6 +273,84 @@
                         "default": 0,
                         "type": "number",
                         "description": "Page number, start at 0"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/transaction": {
+            "get": {
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Get latest transaction",
+                "description": "Get latest transaction",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "blockHeight",
+                        "required": false,
+                        "type": "string",
+                        "description": "Block height of transaction"
+                    },
+                    {
+                        "in": "query",
+                        "name": "txHash",
+                        "required": false,
+                        "type": "string",
+                        "description": "Transaction hash"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
                     }
                 ],
                 "responses": {

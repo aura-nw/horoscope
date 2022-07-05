@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Config } from '../../common';
-import { Service, ServiceBroker } from 'moleculer';
+import { Context, Service, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { sha256 } from 'js-sha256';
@@ -10,6 +10,7 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
+import { ListTxInBlockParams } from 'types';
 export default class CrawlTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private callApiMixin = new CallApiMixin().start();
@@ -43,7 +44,7 @@ export default class CrawlTransactionService extends Service {
 			},
 			events: {
 				'list-transaction.created': {
-					handler: async (ctx: any) => {
+					handler: async (ctx: Context<ListTxInBlockParams, Record<string, unknown>>) => {
 						const listTx = ctx.params.listTx;
 						this.logger.info(`Crawl list transaction: ${JSON.stringify(listTx)}`);
 						if (listTx && listTx.length > 0) {
@@ -63,12 +64,11 @@ export default class CrawlTransactionService extends Service {
 		});
 	}
 
-	async initEnv() {}
-	async handleJob(listTx: any) {
+	async handleJob(listTx: string[]) {
 		// this.logger.info(`Handle job: ${JSON.stringify(listTx)}`);
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		listTx.map(async (tx: any) => {
+		listTx.map(async (tx: string) => {
 			const txHash = sha256(Buffer.from(tx, 'base64')).toUpperCase();
 			this.logger.info(`txhash: ${txHash}`);
 			let result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);

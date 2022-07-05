@@ -8,8 +8,9 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
-import { TransactionEntity } from '../../entities';
+import { ITransaction, TransactionEntity } from '../../entities';
 import { CONST_CHAR } from '../../common/constant';
+import { IRedisStreamData, IRedisStreamResponse, ListTxCreatedParams } from '../../types';
 
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -68,7 +69,7 @@ export default class HandleTransactionService extends Service {
 	private hasRemainingMessage = true;
 	private lastId = '0-0';
 	async handleJob() {
-		let xAutoClaimResult = await this.redisClient.xAutoClaim(
+		let xAutoClaimResult: IRedisStreamResponse = await this.redisClient.xAutoClaim(
 			Config.REDIS_STREAM_TRANSACTION_NAME,
 			Config.REDIS_STREAM_TRANSACTION_GROUP,
 			this.consumer,
@@ -87,22 +88,26 @@ export default class HandleTransactionService extends Service {
 		} else {
 			idXReadGroup = '>';
 		}
-		const result = await this.redisClient.xReadGroup(
+		const result: IRedisStreamResponse[] = await this.redisClient.xReadGroup(
 			Config.REDIS_STREAM_TRANSACTION_GROUP,
 			this.consumer,
 			[{ key: Config.REDIS_STREAM_TRANSACTION_NAME, id: idXReadGroup }],
 		);
 
 		if (result)
-			result.forEach(async (element: any) => {
-				let listTransactionNeedSaveToDb: any[] = [];
-				let listMessageNeedAck: any[] = [];
+			result.forEach(async (element: IRedisStreamResponse) => {
+				let listTransactionNeedSaveToDb: ITransaction[] = [];
+				let listMessageNeedAck: String[] = [];
 				try {
-					element.messages.forEach(async (item: any) => {
+					element.messages.forEach(async (item: IRedisStreamData) => {
 						this.logger.info(`Handling message ${item.id}`);
-						listTransactionNeedSaveToDb.push(JSON.parse(item.message.element));
+						const transaction: TransactionEntity = new JsonConvert().deserializeObject(
+							JSON.parse(item.message.element.toString()),
+							TransactionEntity,
+						);
+						listTransactionNeedSaveToDb.push(transaction);
 						listMessageNeedAck.push(item.id);
-						this.lastId = item.id;
+						this.lastId = item.id.toString();
 					});
 
 					await this.handleListTransaction(listTransactionNeedSaveToDb);
@@ -112,20 +117,18 @@ export default class HandleTransactionService extends Service {
 						listMessageNeedAck,
 					);
 					this.redisClient.xDel(Config.REDIS_STREAM_TRANSACTION_NAME, listMessageNeedAck);
-					this.broker.emit('handle-transaction.inserted', {
-						listTx: listTransactionNeedSaveToDb,
-					});
-					this.broker.emit('account-info.upsert', {
+					this.broker.emit('account-info.handle-address', {
 						listTx: listTransactionNeedSaveToDb,
 						source: CONST_CHAR.CRAWL,
-					});
+						chainId: Config.CHAIN_ID,
+					} as ListTxCreatedParams);
 				} catch (error) {
 					this.logger.error(error);
 				}
 			});
 	}
 
-	async handleListTransaction(listTransaction: any) {
+	async handleListTransaction(listTransaction: ITransaction[]) {
 		let jsonConvert = new JsonConvert();
 		try {
 			// jsonConvert.operationMode = OperationMode.LOGGING;
