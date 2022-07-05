@@ -47,7 +47,7 @@ const definition: definitionType<ITransaction> = (collection?: string) => ({
 		txhash: {
 			type: String,
 			index: true,
-			// unique: true,
+			unique: true,
 		},
 		codespace: String,
 		code: String,

@@ -20,7 +20,7 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 			},
 			chain_id: String,
 			height: Number,
-			time: String,
+			time: Date,
 			last_block_id: {
 				hash: String,
 				parts: {
@@ -45,7 +45,7 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 			evidence: [String],
 		},
 		last_commit: {
-			height: String,
+			height: Number,
 			round: Number,
 			block_id: {
 				hash: String,

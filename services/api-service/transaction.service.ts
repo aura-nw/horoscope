@@ -7,12 +7,9 @@ import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
 	ErrorMessage,
-	getActionConfig,
 	GetTxRequest,
-	GetByChainIdAndPageLimitRequest,
 	MoleculerDBService,
 	ResponseDto,
-	RestOptions,
 } from '../../types';
 import { ITransaction, TransactionEntity } from '../../entities';
 import { QueryOptions } from 'moleculer-db';
@@ -157,6 +154,11 @@ export default class BlockService extends MoleculerDBService<
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
 		}
+		if (ctx.params.txHash) {
+			ctx.params.nextKey = undefined;
+			ctx.params.countTotal = false;
+			ctx.params.pageOffset = 0;
+		}
 		if (ctx.params.nextKey) {
 			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 			ctx.params.pageOffset = 0;
@@ -185,7 +187,7 @@ export default class BlockService extends MoleculerDBService<
 				data: {
 					blocks: result,
 					count: count,
-					nextKey: result[result.length - 1]?._id,
+					nextKey: ctx.params.txHash ? null : result[result.length - 1]?._id,
 				},
 			};
 		} catch (error) {

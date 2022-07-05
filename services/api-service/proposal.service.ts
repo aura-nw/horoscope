@@ -8,7 +8,7 @@ import {
 	ErrorCode,
 	ErrorMessage,
 	getActionConfig,
-	GetByChainIdAndPageLimitRequest,
+	GetProposalRequest,
 	MoleculerDBService,
 	ResponseDto,
 	RestOptions,
@@ -92,7 +92,7 @@ export default class ProposalService extends MoleculerDBService<
 			ttl: 5,
 		},
 	})
-	async getByChain(ctx: Context<GetByChainIdAndPageLimitRequest, Record<string, unknown>>) {
+	async getByChain(ctx: Context<GetProposalRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		try {
 			let result = await this.adapter.find({

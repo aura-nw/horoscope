@@ -150,6 +150,20 @@
                     },
                     {
                         "in": "query",
+                        "name": "blockHeight",
+                        "required": false,
+                        "type": "string",
+                        "description": "Block height of transaction"
+                    },
+                    {
+                        "in": "query",
+                        "name": "blockHash",
+                        "required": false,
+                        "type": "string",
+                        "description": "Block hash"
+                    },
+                    {
+                        "in": "query",
                         "name": "pageLimit",
                         "required": false,
                         "default": 10,

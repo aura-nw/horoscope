@@ -9,7 +9,7 @@ import {
 	ErrorCode,
 	ErrorMessage,
 	getActionConfig,
-	GetByChainIdAndPageLimitRequest,
+	GetBlockRequest,
 	MoleculerDBService,
 	ResponseDto,
 	RestOptions,
@@ -53,6 +53,16 @@ export default class BlockService extends MoleculerDBService<
 	 *          type: string
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
+	 *          name: blockHeight
+	 *          required: false
+	 *          type: string
+	 *          description: "Block height of transaction"
+	 *        - in: query
+	 *          name: blockHash
+	 *          required: false
+	 *          type: string
+	 *          description: "Block hash"
+	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
 	 *          default: 10
@@ -87,6 +97,8 @@ export default class BlockService extends MoleculerDBService<
 		name: 'getByChain',
 		params: {
 			chainid: { type: 'string', optional: false },
+			blockHeight: { type: 'number', optional: true, convert: true },
+			blockHash: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -119,7 +131,7 @@ export default class BlockService extends MoleculerDBService<
 			ttl: 10,
 		},
 	})
-	async getByChain(ctx: Context<GetByChainIdAndPageLimitRequest, Record<string, unknown>>) {
+	async getByChain(ctx: Context<GetBlockRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		if (ctx.params.nextKey) {
 			try {
@@ -136,6 +148,18 @@ export default class BlockService extends MoleculerDBService<
 		}
 		try {
 			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			const blockHeight = ctx.params.blockHeight;
+			const blockHash = ctx.params.blockHash;
+
+			let needNextKey = true;
+			if (blockHeight) {
+				query['block.header.height'] = blockHeight;
+				needNextKey = false;
+			}
+			if (blockHash) {
+				query['block_id.hash'] = blockHash;
+				needNextKey = false;
+			}
 
 			if (ctx.params.nextKey) {
 				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
@@ -170,7 +194,7 @@ export default class BlockService extends MoleculerDBService<
 					blocks: resultBlock,
 					count:
 						ctx.params.countTotal === true ? resultCount[0].block?.header?.height : 0,
-					nextKey: resultBlock[resultBlock.length - 1]?._id,
+					nextKey: needNextKey ? resultBlock[resultBlock.length - 1]?._id : null,
 				},
 			};
 		} catch (error) {

@@ -3,6 +3,7 @@ import { JsonObject, JsonProperty } from 'json2typescript';
 import { ObjectIdNull } from 'types';
 import { Types } from 'mongoose';
 import { NumericConverter } from './converters/numeric.converter';
+import { DateConverter } from './converters/date.converter';
 
 export interface IBlockIdPart {
 	total: Number;
@@ -19,7 +20,7 @@ export interface IBlockHeader {
 	version: IBlockHeaderVersion | null;
 	chain_id: String;
 	height: Number;
-	time: String;
+	time: Date | null;
 	last_block_id: IBlockId | null;
 	last_commit_hash: String;
 	data_hash: String;
@@ -49,7 +50,7 @@ export interface ISignature {
 	signature: String | null;
 }
 export interface ILastCommit {
-	height: String;
+	height: Number;
 	round: Number;
 	block_id: IBlockId | null;
 	signatures: ISignature[];
@@ -97,8 +98,8 @@ export class BlockHeader implements IBlockHeader {
 	chain_id: String = '';
 	@JsonProperty('height', NumericConverter)
 	height: Number = 0;
-	@JsonProperty('time', String)
-	time: String = '';
+	@JsonProperty('time', DateConverter)
+	time: Date | null = null;
 	@JsonProperty('last_block_id', BlockId)
 	last_block_id: BlockId | null = null;
 	@JsonProperty('last_commit_hash', String)
@@ -145,8 +146,8 @@ export class Signature implements ISignature {
 
 @JsonObject('BlockLastCommit')
 export class BlockLastCommit implements ILastCommit {
-	@JsonProperty('height', String)
-	height: String = '';
+	@JsonProperty('height', NumericConverter)
+	height: Number = 0;
 	@JsonProperty('round', Number)
 	round: number = 0;
 	@JsonProperty('block_id', BlockId)
