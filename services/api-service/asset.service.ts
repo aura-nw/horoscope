@@ -2,17 +2,16 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action, Post } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import {
-	ErrorCode,
-	ErrorMessage,
-	getActionConfig,
-	GetByChainIdAndPageLimitRequest,
-	MoleculerDBService,
-	ResponseDto,
-	RestOptions,
-} from '../../types';
+	Put,
+	Method,
+	Service,
+	Get,
+	Action,
+	Post,
+} from '@ourparentcenter/moleculer-decorators-extended';
+import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
+import { ErrorCode, ErrorMessage, MoleculerDBService, ResponseDto, RestOptions } from '../../types';
 import { IBlock } from '../../entities';
 import { AssetIndexParams } from 'types/asset';
 import { Types } from 'mongoose';
@@ -29,12 +28,11 @@ import { Ok } from 'ts-results';
 	mixins: [dbBlockMixin],
 })
 export default class BlockService extends MoleculerDBService<
-{
-	rest: 'v1/asset';
-},
-IBlock
+	{
+		rest: 'v1/asset';
+	},
+	IBlock
 > {
-
 	/**
 	 *  @swagger
 	 *
@@ -95,19 +93,19 @@ IBlock
 						registed = false;
 						break;
 				}
-				return response = {
+				return (response = {
 					code: ErrorCode.SUCCESSFUL,
 					message: ErrorMessage.SUCCESSFUL,
 					data: { registed },
-				};
+				});
 			})
 			.catch((error) => {
 				this.logger.error('call code_id.checkStatus error', error);
-				return response = {
+				return (response = {
 					code: ErrorCode.WRONG,
 					message: ErrorMessage.WRONG,
 					data: { error },
-				};
+				});
 			});
 	}
 }
