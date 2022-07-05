@@ -8,7 +8,7 @@ import {
 	ErrorCode,
 	ErrorMessage,
 	getActionConfig,
-	GetByChainIdAndPageLimitRequest,
+	GetValidatorRequest,
 	MoleculerDBService,
 	ResponseDto,
 	RestOptions,
@@ -88,8 +88,11 @@ export default class ValidatorService extends MoleculerDBService<
 				max: 100,
 			},
 		},
+		cache: {
+			ttl: 10,
+		},
 	})
-	async getByChain(ctx: Context<GetByChainIdAndPageLimitRequest, Record<string, unknown>>) {
+	async getByChain(ctx: Context<GetValidatorRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		try {
 			let result = await this.adapter.find({

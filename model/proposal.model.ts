@@ -8,8 +8,6 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 	_id: Types.ObjectId,
 	proposal_id: {
 		type: Number,
-		index: true,
-		unique: true,
 	},
 	content: {
 		'@type': String,
@@ -56,5 +54,6 @@ export const proposalMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection: collection,
 	});
+	schema.index({ proposal_id: 1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

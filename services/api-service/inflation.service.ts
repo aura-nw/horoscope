@@ -8,7 +8,7 @@ import { Config } from '../../common';
 import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
 import { IInflation } from '../../entities';
 import { DbContextParameters } from 'moleculer-db';
-import { ChainIdParams } from 'types/api-service/network';
+import { ChainIdParams } from '../../types';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -23,12 +23,6 @@ import { ChainIdParams } from 'types/api-service/network';
 	/**
 	 * Settings
 	 */
-	settings: {
-		idField: '_id',
-		// Available fields in the responses
-		fields: ['_id', 'inflation'],
-		rest: '/v1/inflation',
-	},
 })
 export default class InflationService extends MoleculerDBService<
 	{

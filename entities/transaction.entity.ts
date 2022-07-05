@@ -7,11 +7,6 @@ import { DateConverter } from './converters/date.converter';
 
 export interface ITransaction {
 	_id: Types.ObjectId | string | null;
-	// hash: String;
-	// height: Number | null;
-	// index: Number;
-	// tx_result: TxResult;
-	// tx: String;
 	tx: ITxInput;
 	tx_response: ITxResponse;
 }

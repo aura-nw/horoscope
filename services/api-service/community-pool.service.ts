@@ -8,7 +8,7 @@ import { Config } from '../../common';
 import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
 import { DbContextParameters } from 'moleculer-db';
 import { ICommunityPool } from '../../entities';
-import { ChainIdParams } from 'types/api-service/network';
+import { ChainIdParams } from '../../types/';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context

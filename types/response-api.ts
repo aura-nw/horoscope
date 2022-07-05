@@ -1,42 +1,59 @@
+import { ISigningInfo } from 'model/signing-info.model';
 import {
+	BlockEntity,
 	CommunityPoolEntity,
+	IBlock,
+	ICommunityPool,
+	IPool,
+	IProposal,
+	IValidator,
 	PoolEntity,
 	ProposalEntity,
 	SigningInfoEntity,
 	ValidatorEntity,
 } from '../entities';
 
-export type PagingationResponseFromApi = {
-	next_key: string | null;
-	total: string;
-};
+export interface IPagingationResponseFromLCD {
+	next_key: String | null;
+	total: String;
+}
 
-export type ProposalResponseFromApi = {
-	proposals: ProposalEntity[];
-	pagination: PagingationResponseFromApi;
-};
+export interface IProposalResponseFromLCD {
+	proposals: IProposal[];
+	pagination: IPagingationResponseFromLCD;
+}
 
-export type ValidatorResponseFromApi = {
-	validators: ValidatorEntity[];
-	pagination: PagingationResponseFromApi;
-};
+export interface IValidatorResponseFromLCD {
+	validators: IValidator[];
+	pagination: IPagingationResponseFromLCD;
+}
 
-export type PoolResponseFromApi = {
-	pool: PoolEntity;
-};
+export interface IPoolResponseFromLCD {
+	pool: IPool;
+}
 
-export type CommunityPoolResponseFromApi = {
-	pool: CommunityPoolEntity[];
-};
-export type SigningInfoResponseFromApi = {
-	info: SigningInfoEntity[];
-};
-export type SigningInfoEntityResponseFromApi = {
-	val_signing_info: SigningInfoEntity[];
-};
-export type MintInflationResponseFromApi = {
+export interface ICommunityPoolResponseFromLCD {
+	pool: ICommunityPool[];
+}
+export interface ISigningInfoResponseFromLCD {
+	info: ISigningInfo[];
+}
+export interface ISigningInfoEntityResponseFromLCD {
+	val_signing_info: ISigningInfo[];
+}
+export interface MintInflationResponseFromLCD {
 	inflation: String;
-};
+}
+
+export interface ResponseFromRPC {
+	jsonrpc: String;
+	id: String;
+	result: any;
+}
+
+export interface BlockResponseFromLCD {
+	blocks: IBlock[];
+}
 
 export type ResponseDto = {
 	code: number | string;

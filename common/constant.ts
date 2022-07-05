@@ -25,6 +25,7 @@ export const CONST_CHAR = {
 	SENDER: 'sender',
 	CRAWL: 'crawl',
 	API: 'api',
+	RECIPIENT: 'recipient',
 };
 
 export const MSG_TYPE = {
@@ -60,6 +61,24 @@ export const LIST_NETWORK = [
 		chainId: 'halo-testnet-001',
 		RPC: ['https://rpc.halo.aura.network'],
 		LCD: ['https://lcd.halo.aura.network'],
+	},
+	{
+		chainName: 'Theta Testnet',
+		chainId: 'theta-testnet-001',
+		RPC: ['https://rpc.sentry-01.theta-testnet.polypore.xyz'],
+		LCD: ['https://rest.sentry-01.theta-testnet.polypore.xyz'],
+	},
+	{
+		chainName: 'Osmosis Testnet',
+		chainId: 'osmo-test-4',
+		RPC: ['https://testnet-rpc.osmosis.zone/'],
+		LCD: ['https://osmosistest-lcd.quickapi.com'],
+	},
+	{
+		chainName: 'Osmosis Mainnet',
+		chainId: 'osmosis-1',
+		RPC: ['https://rpc.osmosis.zone'],
+		LCD: ['https://lcd.osmosis.zone'],
 	},
 ];
 
