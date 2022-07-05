@@ -81,7 +81,7 @@ export default class CrawlParamService extends Service {
 			type: 'gov',
 			params: {
 				voting_param: paramGovVoting.voting_params,
-				tallying_param: paramGovTallying.tallying_params,
+				tallying_param: paramGovTallying.tally_params,
 				deposit_param: paramGovDeposit.deposit_params,
 			},
 		};
