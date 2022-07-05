@@ -106,15 +106,6 @@ export default class CrawlSigningInfoService extends Service {
 		return bech32.encode(prefix, bech32.toWords(addressBuffer));
 	}
 	async _start() {
-		this.createJob(
-			'crawl.signinginfo',
-			{
-				address: 'auravaloper1p5kp36qlmmczrk56veztdt0re4ly7uzrua9hqs',
-			},
-			{
-				removeOnComplete: true,
-			},
-		);
 		this.getQueue('crawl.signinginfo').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
