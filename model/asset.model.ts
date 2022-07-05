@@ -2,6 +2,7 @@ import { uniqueId } from 'lodash';
 import { model, models, Schema, Types } from 'mongoose';
 import { type } from 'os';
 import { definitionType, ObjectIdNull } from '../types';
+import { customInfoModel } from './custom-info.model';
 
 export interface IAsset {
 	_id: ObjectIdNull;
@@ -39,7 +40,8 @@ const definition: definitionType<IAsset> = (collection?: string) => ({
 	},
 	history: {
 		type: [String]
-	}
+	},
+	custom_info: customInfoModel,
 })
 
 

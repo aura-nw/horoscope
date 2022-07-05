@@ -155,13 +155,13 @@ export default class HandleTransactionService extends Service {
 		await this.initEnv();
 
 		this.getQueue('handle.transaction').on('completed', (job: Job) => {
-			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
+			// this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('handle.transaction').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
 		this.getQueue('handle.transaction').on('progress', (job: Job) => {
-			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
+			// this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
 	}
