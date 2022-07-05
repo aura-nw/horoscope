@@ -78,7 +78,7 @@ IBlock
 		return await this.broker
 			.call('code_id.checkStatus', { code_id: ctx.params.code_id })
 			.then((res) => {
-				this.logger.debug('code_id.checkStatus res', res);
+				this.logger.info('code_id.checkStatus res', res);
 				switch (res) {
 					case Ok:
 						this.broker.call('code_id.create', {
@@ -90,8 +90,10 @@ IBlock
 						// case Status.WAITING:
 						this.broker.emit('code_id.validate', ctx.params.code_id);
 						registed = true;
+						break;
 					default:
 						registed = false;
+						break;
 				}
 				return response = {
 					code: ErrorCode.SUCCESSFUL,
