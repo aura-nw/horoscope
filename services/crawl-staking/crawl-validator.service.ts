@@ -71,7 +71,7 @@ export default class CrawlValidatorService extends Service {
 
 		this.logger.debug(`result: ${JSON.stringify(listValidator)}`);
 
-		listValidator.map(async (validator) => {
+		listValidator.forEach(async (validator) => {
 			let foundValidator = await this.adapter.findOne({
 				operator_address: `${validator.operator_address}`,
 			});
@@ -87,11 +87,15 @@ export default class CrawlValidatorService extends Service {
 
 					let id = await this.adapter.insert(item);
 				}
-				this.broker.emit('validator.upsert', { address: validator.operator_address });
+				// this.broker.emit('validator.upsert', { address: validator.operator_address });
 			} catch (error) {
 				this.logger.error(error);
 			}
 		});
+		let listAddress: string[] = listValidator.map((item) => item.operator_address.toString());
+		if (listAddress.length > 0) {
+			this.broker.emit('validator.upsert', { listAddress: listAddress });
+		}
 	}
 
 	async _start() {

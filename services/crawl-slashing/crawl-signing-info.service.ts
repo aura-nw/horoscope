@@ -8,7 +8,7 @@ import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
-import { ISigningInfoEntityResponseFromLCD } from '../../types';
+import { ISigningInfoEntityResponseFromLCD, ListValidatorAddress } from '../../types';
 import { ValidatorEntity } from 'entities';
 const tmhash = require('tendermint/lib/hash');
 import { bech32 } from 'bech32';
@@ -39,7 +39,7 @@ export default class CrawlSigningInfoService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.address);
+						await this.handleJob(job.data.listAddress);
 						job.progress(100);
 						return true;
 					},
@@ -47,11 +47,11 @@ export default class CrawlSigningInfoService extends Service {
 			},
 			events: {
 				'validator.upsert': {
-					handler: (ctx: any) => {
+					handler: (ctx: Context<ListValidatorAddress, Record<string, unknown>>) => {
 						this.createJob(
 							'crawl.signinginfo',
 							{
-								address: ctx.params.address,
+								listAddress: ctx.params.listAddress,
 							},
 							{
 								removeOnComplete: true,
@@ -64,14 +64,19 @@ export default class CrawlSigningInfoService extends Service {
 		});
 	}
 
-	async handleJob(address: String) {
-		let foundValidator: ValidatorEntity = await this.adapter.findOne({
-			operator_address: `${address}`,
+	async handleJob(listAddress: string[]) {
+		let listFoundValidator: ValidatorEntity[] = await this.adapter.find({
+			query: {
+				operator_address: {
+					$in: listAddress,
+				},
+			},
 		});
-		if (foundValidator) {
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+		listFoundValidator.map(async (foundValidator: ValidatorEntity) => {
 			try {
 				let consensusPubkey = foundValidator.consensus_pubkey;
-				this.logger.info(`Found validator with address ${address}`);
+				this.logger.info(`Found validator with address ${foundValidator.operator_address}`);
 				this.logger.info(`Found validator with consensusPubkey ${consensusPubkey}`);
 
 				const pubkey = this.getAddressHexFromPubkey(consensusPubkey.key.toString());
@@ -80,7 +85,6 @@ export default class CrawlSigningInfoService extends Service {
 					`${Config.NETWORK_PREFIX_ADDRESS}${Config.CONSENSUS_PREFIX_ADDRESS}`,
 				);
 				let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
-				const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 				let result: ISigningInfoEntityResponseFromLCD = await this.callApiFromDomain(
 					url,
@@ -94,7 +98,7 @@ export default class CrawlSigningInfoService extends Service {
 			} catch (error) {
 				this.logger.error(error);
 			}
-		}
+		});
 	}
 	getAddressHexFromPubkey(pubkey: string) {
 		var bytes = Buffer.from(pubkey, 'base64');

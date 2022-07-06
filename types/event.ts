@@ -8,3 +8,7 @@ export interface ListTxCreatedParams {
 	source: string;
 	chainId: string;
 }
+
+export interface ListValidatorAddress {
+	listAddress: string[];
+}
