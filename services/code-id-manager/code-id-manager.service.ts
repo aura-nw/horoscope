@@ -16,7 +16,7 @@ import { Ok } from 'ts-results';
 				// @ts-ignore
 				let foundCodeID = await this.adapter.findOne(ctx.params);
 				// @ts-ignore
-				this.logger.debug(`found ${JSON.stringify(foundCodeID)}`);
+				this.logger.info(`found ${JSON.stringify(foundCodeID)}`);
 				if (foundCodeID) {
 					return foundCodeID?.status;
 				} else {
