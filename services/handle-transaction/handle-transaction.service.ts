@@ -111,12 +111,17 @@ export default class HandleTransactionService extends Service {
 					});
 
 					await this.handleListTransaction(listTransactionNeedSaveToDb);
-					this.redisClient.xAck(
-						Config.REDIS_STREAM_TRANSACTION_NAME,
-						Config.REDIS_STREAM_TRANSACTION_GROUP,
-						listMessageNeedAck,
-					);
-					this.redisClient.xDel(Config.REDIS_STREAM_TRANSACTION_NAME, listMessageNeedAck);
+					if (listMessageNeedAck.length > 0) {
+						this.redisClient.xAck(
+							Config.REDIS_STREAM_TRANSACTION_NAME,
+							Config.REDIS_STREAM_TRANSACTION_GROUP,
+							listMessageNeedAck,
+						);
+						this.redisClient.xDel(
+							Config.REDIS_STREAM_TRANSACTION_NAME,
+							listMessageNeedAck,
+						);
+					}
 					this.broker.emit('account-info.handle-address', {
 						listTx: listTransactionNeedSaveToDb,
 						source: CONST_CHAR.CRAWL,
@@ -132,8 +137,31 @@ export default class HandleTransactionService extends Service {
 		let jsonConvert = new JsonConvert();
 		try {
 			// jsonConvert.operationMode = OperationMode.LOGGING;
-			const item: any = jsonConvert.deserializeArray(listTransaction, TransactionEntity);
-			let listId = await this.adapter.insertMany(item);
+			const listTransactionEntity: any = jsonConvert.deserializeArray(
+				listTransaction,
+				TransactionEntity,
+			);
+			let listHash = listTransaction.map((item: ITransaction) => {
+				return item.tx_response.txhash;
+			});
+			let listFoundTransaction: ITransaction[] = await this.adapter.find({
+				query: {
+					'tx_response.txhash': {
+						$in: listHash,
+					},
+				},
+			});
+			let listTransactionNeedSaveToDb: ITransaction[] = [];
+			listTransactionEntity.forEach((tx: ITransaction) => {
+				let hash = tx.tx_response.txhash;
+				let foundItem = listFoundTransaction.find((itemFound: ITransaction) => {
+					return itemFound.tx_response.txhash == hash;
+				});
+				if (!foundItem) {
+					listTransactionNeedSaveToDb.push(tx);
+				}
+			});
+			let listId = await this.adapter.insertMany(listTransactionNeedSaveToDb);
 			return listId;
 		} catch (error) {
 			throw error;
