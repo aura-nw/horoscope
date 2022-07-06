@@ -10,14 +10,17 @@ import {
 	Action,
 	Post,
 } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
-import { ErrorCode, ErrorMessage, MoleculerDBService, ResponseDto, RestOptions } from '../../types';
+import { dbAssetMixin } from '../../mixins/dbMixinMongoose';
+import { ErrorCode, ErrorMessage, GetAssetByAddressRequest, MoleculerDBService, ResponseDto, RestOptions } from '../../types';
 import { IBlock } from '../../entities';
 import { AssetIndexParams } from 'types/asset';
 import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
 import { Status } from '../../model/codeid.model';
+import { IAsset } from '../../model/asset.model';
 import { Ok } from 'ts-results';
+import { QueryOptions } from 'moleculer-db';
+import { ObjectId } from 'mongodb';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -25,7 +28,7 @@ import { Ok } from 'ts-results';
 @Service({
 	name: 'asset',
 	version: 1,
-	mixins: [dbBlockMixin],
+	mixins: [dbAssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
 {
@@ -107,5 +110,160 @@ IBlock
 					data: { error },
 				});
 			});
+	}
+	/**
+	 *  @swagger
+	 *  /v1/asset/getByAddress:
+	 *    get:
+	 *      tags:
+	 *        - Asset
+	 *      summary: Get latest block
+	 *      description: Get latest block
+	 *      produces:
+	 *        - application/json
+	 *      consumes:
+	 *        - application/json
+	 *      parameters:
+	 *        - in: query
+	 *          name: address
+	 *          required: true
+	 *          type: string
+	 *          description: "Address need to query"
+	 *        - in: query
+	 *          name: chainid
+	 *          required: false
+	 *          type: string
+	 *          description: "Chain Id of network need to query"
+	 *        - in: query
+	 *          name: pageLimit
+	 *          required: false
+	 *          default: 10
+	 *          type: number
+	 *          description: "number record return in a page"
+	 *        - in: query
+	 *          name: pageOffset
+	 *          required: false
+	 *          default: 0
+	 *          type: number
+	 *          description: "Page number, start at 0"
+	 *        - in: query
+	 *          name: countTotal
+	 *          required: false
+	 *          default: false
+	 *          type: boolean
+	 *          description: "count total record"
+	 *        - in: query
+	 *          name: nextKey
+	 *          required: false
+	 *          default:
+	 *          type: string
+	 *          description: "key for next page"
+	 *      responses:
+	 *        '200':
+	 *          description: Register result
+	 *        '422':
+	 *          description: Missing parameters
+	 *
+	 */
+	@Get('/getByAddress', {
+		name: 'getByAddress',
+		params: {
+			address: { type: 'string', optional: false },
+			chainid: { type: 'string', optional: true },
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				max: 100,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				max: 100,
+			},
+			countTotal: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+		},
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getByAddress(ctx: Context<GetAssetByAddressRequest, Record<string, unknown>>) {
+		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
+		try {
+			let query: QueryOptions = { 'owner': ctx.params.address };
+			if (ctx.params.chainid) {
+				query['custom_info.chain_id'] = ctx.params.chainid;
+			}
+			let needNextKey = true;
+			if (ctx.params.nextKey) {
+				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				ctx.params.pageOffset = 0;
+				ctx.params.countTotal = false;
+			}
+
+			this.logger.info("query", query);
+			// @ts-ignore
+			let [assets, count] = await Promise.all<IAsset, IAsset>([
+				this.adapter.find({
+					query: query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					// @ts-ignore
+					// sort: '-block.header.height',
+				}),
+				ctx.params.countTotal === true
+					? this.adapter.count({
+						query: query,
+					})
+					: 0,
+			]);
+
+			response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					assets,
+					count,
+					nextKey: needNextKey ? assets[assets.length - 1]?._id : null,
+				},
+			};
+		} catch (error) {
+			response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					error,
+				},
+			};
+		}
+		return response;
 	}
 }
