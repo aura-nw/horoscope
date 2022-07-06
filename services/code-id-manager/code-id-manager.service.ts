@@ -4,7 +4,7 @@
 import moleculer, { Context } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
-import { Ok } from 'ts-results';
+// import { Ok } from 'ts-results';
 
 @Service({
 	name: 'code_id',
@@ -20,7 +20,7 @@ import { Ok } from 'ts-results';
 				if (foundCodeID) {
 					return foundCodeID?.status;
 				} else {
-					return Ok;
+					return "NotFound";
 				}
 			},
 		},

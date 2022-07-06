@@ -28,10 +28,10 @@ import { Ok } from 'ts-results';
 	mixins: [dbBlockMixin],
 })
 export default class BlockService extends MoleculerDBService<
-	{
-		rest: 'v1/codeid';
-	},
-	IBlock
+{
+	rest: 'v1/codeid';
+},
+IBlock
 > {
 	/**
 	 *  @swagger
@@ -68,18 +68,16 @@ export default class BlockService extends MoleculerDBService<
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		try {
-			let result = await this.broker.call('v1.code_id.checkStatus', {
+			let status = await this.broker.call('v1.code_id.checkStatus', {
 				code_id: ctx.params.code_id,
 			});
 
-			let status = null;
-			this.logger.debug('code_id.checkStatus res', result);
-			status = result === Ok ? 'Not Found' : result;
+			this.logger.debug('code_id.checkStatus res', status);
 
 			return (response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
-				data: { status: status },
+				data: { status },
 			});
 		} catch (error) {
 			this.logger.error('call code_id.checkStatus error', error);
