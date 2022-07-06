@@ -67,26 +67,27 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
-		return await this.broker
-			.call('v1.code_id.checkStatus', { code_id: ctx.params.code_id })
-			.then((res) => {
-				let status = null;
-				this.logger.debug('code_id.checkStatus res', res);
-				status = res === Ok ? 'Not Found' : res;
-
-				return (response = {
-					code: ErrorCode.SUCCESSFUL,
-					message: ErrorMessage.SUCCESSFUL,
-					data: { status: status },
-				});
-			})
-			.catch((error) => {
-				this.logger.error('call code_id.checkStatus error', error);
-				return (response = {
-					code: ErrorCode.WRONG,
-					message: ErrorMessage.WRONG,
-					data: { error },
-				});
+		try {
+			let result = await this.broker.call('v1.code_id.checkStatus', {
+				code_id: ctx.params.code_id,
 			});
+
+			let status = null;
+			this.logger.debug('code_id.checkStatus res', result);
+			status = result === Ok ? 'Not Found' : result;
+
+			return (response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: { status: status },
+			});
+		} catch (error) {
+			this.logger.error('call code_id.checkStatus error', error);
+			return (response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: { error },
+			});
+		}
 	}
 }
