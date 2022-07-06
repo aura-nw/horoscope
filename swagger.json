@@ -205,6 +205,38 @@
                 }
             }
         },
+        "/v1/codeid/{code_id}/checkStatus": {
+            "get": {
+                "tags": [
+                    "CodeId"
+                ],
+                "summary": "Check status of code_id",
+                "description": "Check status of code_id",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "code_id",
+                        "required": true,
+                        "type": "number",
+                        "description": "Code Id of stored contract need to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
         "/v1/network/status": {
             "get": {
                 "tags": [

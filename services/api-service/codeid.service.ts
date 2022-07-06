@@ -23,80 +23,61 @@ import { Ok } from 'ts-results';
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
-	name: 'asset',
+	name: 'codeid',
 	version: 1,
 	mixins: [dbBlockMixin],
 })
 export default class BlockService extends MoleculerDBService<
 {
-	rest: 'v1/asset';
+	rest: 'v1/codeid';
 },
 IBlock
 > {
 	/**
 	 *  @swagger
-	 *
-	 *  /v1/asset/indexAsset:
-	 *    post:
+	 *  /v1/codeid/{code_id}/checkStatus:
+	 *    get:
 	 *      tags:
-	 *      - "Asset"
-	 *      summary:  Register asset with the code id
-	 *      description: Register asset with the code id
+	 *        - CodeId
+	 *      summary: Check status of code_id
+	 *      description: Check status of code_id
 	 *      produces:
 	 *        - application/json
 	 *      consumes:
 	 *        - application/json
 	 *      parameters:
-	 *        - in: body
-	 *          name: params
-	 *          schema:
-	 *            type: object
-	 *            required:
-	 *              - name
-	 *            properties:
-	 *              code_id:
-	 *                type: number
-	 *                description: code id
+	 *        - in: path
+	 *          name: code_id
+	 *          required: true
+	 *          type: number
+	 *          description: "Code Id of stored contract need to query"
 	 *      responses:
-	 *        200:
+	 *        '200':
 	 *          description: Register result
-	 *        422:
+	 *        '422':
 	 *          description: Missing parameters
+	 *
 	 */
-	@Post<RestOptions>('/indexAsset', {
-		name: 'indexAsset',
+	@Get('/:code_id/checkStatus', {
+		name: 'checkStatus',
 		restricted: ['api'],
 		params: {
-			code_id: ['number|integer|positive'],
+			code_id: { type: 'number', convert: true },
 		},
 	})
-	async indexAsset(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
+	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
-		let registed: boolean = false;
 		return await this.broker
 			.call('code_id.checkStatus', { code_id: ctx.params.code_id })
 			.then((res) => {
-				this.logger.info('code_id.checkStatus res', res);
-				switch (res) {
-					case Ok:
-						this.broker.call('code_id.create', {
-							_id: new Types.ObjectId(),
-							code_id: ctx.params.code_id,
-							status: Status.WAITING,
-						});
-					case Status.TBD:
-						// case Status.WAITING:
-						this.broker.emit('code_id.validate', ctx.params.code_id);
-						registed = true;
-						break;
-					default:
-						registed = false;
-						break;
-				}
+				let status = null;
+				this.logger.debug('code_id.checkStatus res', res);
+				status = (res === Ok) ? "Not Found" : res;
+
 				return (response = {
 					code: ErrorCode.SUCCESSFUL,
 					message: ErrorMessage.SUCCESSFUL,
-					data: { registed },
+					data: { status },
 				});
 			})
 			.catch((error) => {

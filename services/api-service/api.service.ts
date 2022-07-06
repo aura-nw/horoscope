@@ -108,6 +108,7 @@ const swMiddleware = swStats.getMiddleware({
 					'v1.validator.getByChain',
 					'v1.block.getByChain',
 					'v1.asset.indexAsset',
+					'v1.codeid.*',
 					'v1.transaction.getByChain',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
