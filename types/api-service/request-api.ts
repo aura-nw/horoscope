@@ -29,9 +29,7 @@ export interface GetBlockRequest
 
 export interface GetAssetByAddressRequest
 	extends ChainIdParams,
-	PageLimit,
-	BlockHashParams,
-	BlockHeightParams {
+	PageLimit {
 	address: string,
 }
 

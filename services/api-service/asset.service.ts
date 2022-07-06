@@ -10,13 +10,14 @@ import {
 	Action,
 	Post,
 } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
+import { dbAssetMixin } from '../../mixins/dbMixinMongoose';
 import { ErrorCode, ErrorMessage, GetAssetByAddressRequest, MoleculerDBService, ResponseDto, RestOptions } from '../../types';
 import { IBlock } from '../../entities';
 import { AssetIndexParams } from 'types/asset';
 import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
 import { Status } from '../../model/codeid.model';
+import { IAsset } from '../../model/asset.model';
 import { Ok } from 'ts-results';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
@@ -27,7 +28,7 @@ import { ObjectId } from 'mongodb';
 @Service({
 	name: 'asset',
 	version: 1,
-	mixins: [dbBlockMixin],
+	mixins: [dbAssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
 {
@@ -124,20 +125,15 @@ IBlock
 	 *        - application/json
 	 *      parameters:
 	 *        - in: query
+	 *          name: address
+	 *          required: true
+	 *          type: string
+	 *          description: "Address need to query"
+	 *        - in: query
 	 *          name: chainid
 	 *          required: false
 	 *          type: string
 	 *          description: "Chain Id of network need to query"
-	 *        - in: query
-	 *          name: blockHeight
-	 *          required: false
-	 *          type: string
-	 *          description: "Block height of transaction"
-	 *        - in: query
-	 *          name: blockHash
-	 *          required: false
-	 *          type: string
-	 *          description: "Block hash"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
@@ -169,12 +165,11 @@ IBlock
 	 *          description: Missing parameters
 	 *
 	 */
-	 @Get('/getByAddress', {
+	@Get('/getByAddress', {
 		name: 'getByAddress',
 		params: {
-			chainid: { type: 'string', optional: false },
-			blockHeight: { type: 'number', optional: true, convert: true },
-			blockHash: { type: 'string', optional: true },
+			address: { type: 'string', optional: false },
+			chainid: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -223,43 +218,31 @@ IBlock
 			}
 		}
 		try {
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
-			const blockHeight = ctx.params.blockHeight;
-			const blockHash = ctx.params.blockHash;
-
+			let query: QueryOptions = { 'owner': ctx.params.address };
+			if (ctx.params.chainid) {
+				query['custom_info.chain_id'] = ctx.params.chainid;
+			}
 			let needNextKey = true;
-			if (blockHeight) {
-				query['block.header.height'] = blockHeight;
-				needNextKey = false;
-			}
-			if (blockHash) {
-				query['block_id.hash'] = blockHash;
-				needNextKey = false;
-			}
-
 			if (ctx.params.nextKey) {
 				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
 			}
 
+			this.logger.info("query", query);
 			// @ts-ignore
-			let [resultBlock, resultCount] = await Promise.all<BlockEntity, BlockEntity>([
+			let [assets, count] = await Promise.all<IAsset, IAsset>([
 				this.adapter.find({
 					query: query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-block.header.height',
+					// sort: '-block.header.height',
 				}),
 				ctx.params.countTotal === true
-					? this.adapter.find({
-							query: { 'custom_info.chain_id': ctx.params.chainid },
-							limit: 1,
-							offset: 0,
-							// @ts-ignore
-							sort: '-block.header.height',
-					  })
+					? this.adapter.count({
+						query: query,
+					})
 					: 0,
 			]);
 
@@ -267,10 +250,9 @@ IBlock
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
-					blocks: resultBlock,
-					count:
-						ctx.params.countTotal === true ? resultCount[0].block?.header?.height : 0,
-					nextKey: needNextKey ? resultBlock[resultBlock.length - 1]?._id : null,
+					assets,
+					count,
+					nextKey: needNextKey ? assets[assets.length - 1]?._id : null,
 				},
 			};
 		} catch (error) {
