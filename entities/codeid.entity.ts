@@ -10,20 +10,18 @@ export interface ICoin {
 
 @JsonObject('Asset')
 export class AssetEntity implements IAsset {
-	// asset_id: String;
-	code_id: String;
-	asset_info: Object;
-	constract_address: String;
-	token_id: String;
-	owner: String;
-	history: String[];
-	
+
 	@JsonProperty('_id', String, true)
 	_id = Config.DB_BLOCK.dialect === 'local' ? Types.ObjectId() : null;
-	@JsonProperty('asset_id', String)
-	asset_id: String  = '';
-	@JsonProperty('asset_info', BlockDetail)
-	asset_info: BlockDetail | null = null;
+	// @JsonProperty('asset_id', String)
+	code_id: String = '';
+	asset_id: String = '';
+	constract_address: String = '';
+	token_id: String = '';
+	owner: String = '';
+	history: String[] = [];
+	// @JsonProperty('asset_info', Object)
+	asset_info: Object = {};
 
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
