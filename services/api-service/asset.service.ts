@@ -11,7 +11,14 @@ import {
 	Post,
 } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbAssetMixin } from '../../mixins/dbMixinMongoose';
-import { ErrorCode, ErrorMessage, GetAssetByAddressRequest, MoleculerDBService, ResponseDto, RestOptions } from '../../types';
+import {
+	ErrorCode,
+	ErrorMessage,
+	GetAssetByAddressRequest,
+	MoleculerDBService,
+	ResponseDto,
+	RestOptions,
+} from '../../types';
 import { IBlock } from '../../entities';
 import { AssetIndexParams } from 'types/asset';
 import { Types } from 'mongoose';
@@ -31,10 +38,10 @@ import { ObjectId } from 'mongodb';
 	mixins: [dbAssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
-{
-	rest: 'v1/asset';
-},
-IBlock
+	{
+		rest: 'v1/asset';
+	},
+	IBlock
 > {
 	/**
 	 *  @swagger
@@ -77,12 +84,12 @@ IBlock
 		let response: ResponseDto = {} as ResponseDto;
 		let registed: boolean = false;
 		return await this.broker
-			.call('code_id.checkStatus', { code_id: ctx.params.code_id })
+			.call('v1.code_id.checkStatus', { code_id: ctx.params.code_id })
 			.then((res) => {
 				this.logger.info('code_id.checkStatus res', res);
 				switch (res) {
 					case Ok:
-						this.broker.call('code_id.create', {
+						this.broker.call('v1.code_id.create', {
 							_id: new Types.ObjectId(),
 							code_id: ctx.params.code_id,
 							status: Status.WAITING,
@@ -218,7 +225,7 @@ IBlock
 			}
 		}
 		try {
-			let query: QueryOptions = { 'owner': ctx.params.address };
+			let query: QueryOptions = { owner: ctx.params.address };
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
@@ -229,7 +236,7 @@ IBlock
 				ctx.params.countTotal = false;
 			}
 
-			this.logger.info("query", query);
+			this.logger.info('query', query);
 			// @ts-ignore
 			let [assets, count] = await Promise.all<IAsset, IAsset>([
 				this.adapter.find({
@@ -241,8 +248,8 @@ IBlock
 				}),
 				ctx.params.countTotal === true
 					? this.adapter.count({
-						query: query,
-					})
+							query: query,
+					  })
 					: 0,
 			]);
 
