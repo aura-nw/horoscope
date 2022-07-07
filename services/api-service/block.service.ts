@@ -19,7 +19,7 @@ import { JsonConvert } from 'json2typescript';
 import { FilterOptions, QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
 const { performance } = require('perf_hooks');
-import { BSONTypeError } from 'bson';
+
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */

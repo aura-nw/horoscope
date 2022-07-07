@@ -64,6 +64,7 @@ export default class CrawlAccountUnbondsService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
+		this.logger.info('current time', new Date());
 		let listAccounts: AccountUnbondsEntity[] = [],
 			listUpdateQueries: any[] = [];
 		if (listAddresses.length > 0) {
@@ -104,7 +105,7 @@ export default class CrawlAccountUnbondsService extends Service {
 					accountInfo.unbonding_responses = listUnbonds;
 					listUnbonds.map((unbond: UnbondingResponse) => {
 						let expireTime = new Date(unbond.entries[0].completion_time.toString());
-						let delay = expireTime.getTime() - new Date().getTime();
+						let delay = Math.floor((expireTime.getTime() - new Date().getTime()) / 1000);
 						this.createJob(
 							'crawl.account-unbonds',
 							{
