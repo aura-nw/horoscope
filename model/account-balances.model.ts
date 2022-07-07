@@ -25,5 +25,6 @@ export const accountBalancesMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection: collection,
 	});
+	schema.index({ 'address': 1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };
