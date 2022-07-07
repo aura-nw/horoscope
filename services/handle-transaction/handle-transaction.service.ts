@@ -109,6 +109,12 @@ export default class HandleTransactionService extends Service {
 						this.lastId = item.id.toString();
 					});
 
+					this.broker.emit('account-info.handle-address', {
+						listTx: listTransactionNeedSaveToDb,
+						source: CONST_CHAR.CRAWL,
+						chainId: Config.CHAIN_ID,
+					} as ListTxCreatedParams);
+
 					await this.handleListTransaction(listTransactionNeedSaveToDb);
 					if (listMessageNeedAck.length > 0) {
 						this.redisClient.xAck(
@@ -121,11 +127,6 @@ export default class HandleTransactionService extends Service {
 							listMessageNeedAck,
 						);
 					}
-					this.broker.emit('account-info.handle-address', {
-						listTx: listTransactionNeedSaveToDb,
-						source: CONST_CHAR.CRAWL,
-						chainId: Config.CHAIN_ID,
-					} as ListTxCreatedParams);
 				} catch (error) {
 					this.logger.error(error);
 				}
