@@ -105,7 +105,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 						let expireTime = new Date(
 							redelegate.entries[0].redelegation_entry.completion_time.toString(),
 						);
-						let delay = expireTime.getTime() - new Date().getTime();
+						let delay = Math.floor((expireTime.getTime() - new Date().getTime()) / 1000);
 						this.createJob(
 							'crawl.account-unbonds',
 							{
