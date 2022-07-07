@@ -77,8 +77,7 @@ export default class HandleBlockService extends Service {
 			this.consumer,
 			1000,
 			'0-0',
-			'COUNT',
-			Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_BLOCK,
+			{ COUNT: Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_BLOCK },
 		);
 		if (xAutoClaimResult.messages.length == 0) {
 			this.hasRemainingMessage = false;

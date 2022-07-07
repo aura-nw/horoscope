@@ -75,8 +75,7 @@ export default class HandleTransactionService extends Service {
 			this.consumer,
 			1000,
 			'0-0',
-			'COUNT',
-			Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_TRANSACTION,
+			{ COUNT: Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_TRANSACTION },
 		);
 		if (xAutoClaimResult.messages.length == 0) {
 			this.hasRemainingMessage = false;
