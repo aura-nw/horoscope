@@ -100,6 +100,7 @@ export default class CrawlBlockService extends Service {
 			let redisClient: RedisClientType = await this.getRedisClient();
 			redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
 		} catch (error) {
+			this.logger.error(error);
 			throw new Error('cannot crawl block');
 		}
 	}
