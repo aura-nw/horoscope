@@ -109,7 +109,7 @@ export default class HandleTransactionService extends Service {
 						this.lastId = item.id.toString();
 					});
 
-					this.broker.emit('account-info.handle-address', {
+					this.broker.emit('list-tx.upsert', {
 						listTx: listTransactionNeedSaveToDb,
 						source: CONST_CHAR.CRAWL,
 						chainId: Config.CHAIN_ID,

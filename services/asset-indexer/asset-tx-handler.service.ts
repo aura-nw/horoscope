@@ -2,15 +2,15 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import { dbAssetMixin } from "../../mixins/dbMixinMongoose";
-import { Config } from "../../common";
-import { Service, ServiceBroker } from "moleculer";
-import { Job } from "bull";
-import * as _ from "lodash";
-import { URL_TYPE_CONSTANTS, EVENT_TYPE, ASSET_INDEXER_ACTION } from "../../common/constant";
-import CallApiMixin from "../../mixins/callApi/call-api.mixin";
-import { Utils } from "../../utils/utils";
-import { Status } from "@Model";
+import { dbAssetMixin } from '../../mixins/dbMixinMongoose';
+import { Config } from '../../common';
+import { Service, ServiceBroker } from 'moleculer';
+import { Job } from 'bull';
+import * as _ from 'lodash';
+import { URL_TYPE_CONSTANTS, EVENT_TYPE, ASSET_INDEXER_ACTION } from '../../common/constant';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
+import { Utils } from '../../utils/utils';
+import { Status } from '@Model';
 import { Common } from './common';
 
 const QueueService = require('moleculer-bull');
@@ -47,10 +47,10 @@ export default class CrawlAccountInfoService extends Service {
 						job.progress(100);
 						return true;
 					},
-				}
+				},
 			},
 			events: {
-				'account-info.upsert': {
+				'list-tx.upsert': {
 					handler: (ctx: any) => {
 						this.createJob(
 							'asset.tx-handle',
@@ -65,7 +65,7 @@ export default class CrawlAccountInfoService extends Service {
 					},
 				},
 			},
-		})
+		});
 	}
 
 	async handleJob(listTx: any[]): Promise<any[]> {
@@ -74,11 +74,9 @@ export default class CrawlAccountInfoService extends Service {
 			if (listTx.length > 0) {
 				for (const tx of listTx) {
 					let log = tx.tx_response.logs[0].events;
-					let attributes = log.find(
-						(x: any) => x.type == EVENT_TYPE.EXECUTE
-					).attributes;
-					contractListFromEvent.push(...attributes)
-				};
+					let attributes = log.find((x: any) => x.type == EVENT_TYPE.EXECUTE).attributes;
+					contractListFromEvent.push(...attributes);
+				}
 			}
 			let contractList = _.map(_.uniqBy(contractListFromEvent, 'value'), 'value');
 			this.logger.debug(`contractList ${JSON.stringify(contractList)}`);
@@ -114,7 +112,10 @@ export default class CrawlAccountInfoService extends Service {
 												return await this.broker.call(
 													ASSET_INDEXER_ACTION.ASSET_MANAGER_UPSERT,
 													asset,
-													{ timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ },
+													{
+														timeout: ACTION_TIMEOUT,
+														retries: MAX_RETRY_REQ,
+													},
 												);
 											}
 										}),
@@ -124,7 +125,7 @@ export default class CrawlAccountInfoService extends Service {
 							}
 							await this.broker.cacher?.del(`contract_${address}`);
 						}
-					})
+					}),
 				);
 				await updateInforPromises;
 			}
@@ -139,7 +140,7 @@ export default class CrawlAccountInfoService extends Service {
 		let contractInfo = await this.callApiFromDomain(URL, urlGetContractInfo);
 		if (contractInfo?.contract_info?.code_id != undefined) {
 			return await this.broker
-				.call('code_id.checkStatus', { code_id: contractInfo.contract_info.code_id })
+				.call('v1.code_id.checkStatus', { code_id: contractInfo.contract_info.code_id })
 				.then((res) => {
 					if (res === Status.COMPLETED) {
 						return contractInfo.contract_info.code_id;
@@ -150,7 +151,7 @@ export default class CrawlAccountInfoService extends Service {
 					return null;
 				});
 		} else {
-			this.logger.error("Fail to get token info", urlGetContractInfo);
+			this.logger.error('Fail to get token info', urlGetContractInfo);
 			return null;
 		}
 	}

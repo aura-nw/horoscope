@@ -85,17 +85,16 @@ export const LIST_NETWORK = [
 export const EVENT_TYPE = {
 	WASM: 'wasm',
 	EXECUTE: 'execute',
-}
-
+};
 
 export const EVENT_KEY = {
 	CONTRACT_ADDRESS: '_contract_address',
-}
+};
 
 export const ASSET_INDEXER_ACTION = {
 	GET_TOKEN_LIST: 'eyJhbGxfdG9rZW5zIjp7fX0=',
 	ACTION_GET_TOKEN_INFOR: 'v1.assetHandleCodeID.getTokenInfor',
 	ACTION_GET_TOKEN_LIST: 'v1.assetHandleCodeID.getTokenList',
-	ASSET_MANAGER_UPSERT: 'asset-manager.upsert',
-	CODEID_UPDATEMANY: 'code_id.updateMany',
-}
+	ASSET_MANAGER_UPSERT: 'v1.asset-manager.upsert',
+	CODEID_UPDATEMANY: 'v1.code_id.updateMany',
+};

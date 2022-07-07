@@ -88,7 +88,7 @@ export default class BlockService extends MoleculerDBService<
 			.then((res) => {
 				this.logger.info('code_id.checkStatus res', res);
 				switch (res) {
-					case "NotFound":
+					case 'NotFound':
 						this.broker.call('v1.code_id.create', {
 							_id: new Types.ObjectId(),
 							code_id: ctx.params.code_id,

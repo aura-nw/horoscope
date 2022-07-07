@@ -10,6 +10,7 @@ import { dbAssetMixin } from '../../mixins/dbMixinMongoose';
 	mixins: [
 		dbAssetMixin,
 	],
+	version: 1,
 	actions: {
 		"upsert": {
 			async handler(ctx: Context): Promise<any> {
