@@ -8,8 +8,18 @@
 		"LCD":[
 		   "https://lcd.dev.aura.network"
 		]
-	 },
-	 {
+	},
+	{
+		"chainName":"Aura devnet",
+		"chainId":"aura-testnet",
+		"RPC":[
+		   "https://rpc.dev.aura.network"
+		],
+		"LCD":[
+		   "https://lcd.dev.aura.network"
+		]
+	},
+	{
 		"chainName":"Aura Serenity",
 		"chainId":"serenity-testnet-001",
 		"RPC":[
