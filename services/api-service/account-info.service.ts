@@ -76,7 +76,7 @@ export default class AccountInfoService extends MoleculerDBService<
 	async getAccountInfoByAddress(ctx: Context<AccountInfoRequest>) {
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
-		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
 		const [
 			accountAuth,
