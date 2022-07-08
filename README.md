@@ -40,7 +40,7 @@ With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to 
     -   _validator_: get validator information
     -   _account-info_: get information of a wallet onchain
     -   _asset_: manage, register asset
--   [**crawl-block**](./docs/sequence-diagram/CrawlBlock.png): get block from network and store it in redis stream
+-   [**crawl-block**](./docs/sequence-diagram/CrawlBlock.png): get block from network and store it in redis stream  
 -   [**handle-block**](./docs/sequence-diagram/HandleBlock.png): get block from redis stream, then get transaction, evidence in block and put them to redis stream equivalent
 -   [**crawl-transaction**](./docs/sequence-diagram/CrawlTransaction.png): get transaction by hash from network and store it in redis stream
 -   [**handle-transaction**](./docs/sequence-diagram/HandleTransaction.png): get transaction from redis stream then handle
