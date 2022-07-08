@@ -40,23 +40,22 @@ With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to 
     -   _validator_: get validator information
     -   _account-info_: get information of a wallet onchain
     -   _asset_: manage, register asset
--   **crawl-block**: get block from network and store it in redis stream
--   **handle-block**: get block from redis stream, then get transaction, evidence in block and put them to redis stream equivalent
--   **crawl-transaction**: get transaction by hash from network and store it in redis stream
--   **handle-transaction**: get transaction from redis stream then handle
--   **crawl-param**: param from module Bank, Distribution, Governance, IBC Transfer, Mint, Staking, Slashing
--   **crawl-proposal**: proposal and tally result (if proposal in voting period)
--   **crawl-distribution**: get data community pool
--   **crawl-staking**: get data pool, information about validator
--   **crawl-mint**: get inflation
--   **crawl-account-info**: get information of a wallet onchain
-    -   _crawl-account-auth_: get auth information
-    -   _crawl-account-balances_: get balance of all coins
-    -   _crawl-account-delegations_: get delegation information
-    -   _crawl-account-redelegations_: get redelegation information 
-    -   _crawl-account-unbonds_: get unbond information
-    -   _crawl-account-spendable-balances_: get spendable balance of all coins
-    -   _handle-address_: get all addresses within a list of transactions to crawl datas
+-   [**crawl-block**](./docs/sequence-diagram/CrawlBlock.png): get block from network and store it in redis stream
+-   [**handle-block**](./docs/sequence-diagram/HandleBlock.png): get block from redis stream, then get transaction, evidence in block and put them to redis stream equivalent
+-   [**crawl-transaction**](./docs/sequence-diagram/CrawlTransaction.png): get transaction by hash from network and store it in redis stream
+-   [**handle-transaction**](./docs/sequence-diagram/HandleTransaction.png): get transaction from redis stream then handle
+-   [**crawl-param**](): param from module Bank, Distribution, Governance, IBC Transfer, Mint, Staking, Slashing
+-   [**crawl-proposal**](./docs/sequence-diagram/CrawlProposal.png), [**crawl-tally-proposal**](./docs/sequence-diagram/CrawlProposal-Tally.png): proposal and tally result (if proposal in voting period)
+-   [**crawl-distribution**](): get data community pool
+-   [**crawl-staking-validator**](./docs/sequence-diagram/CrawlStaking-Validator.png), [**crawl-staking-pool**](./docs/sequence-diagram/CrawlStaking-Validator.png): get data pool, information about validator
+-   [**crawl-mint**](): get inflation
+-   [**handle-address**](./docs/sequence-diagram/HandleAddress.png): get information of a wallet onchain
+    -   [_crawl-account-auth_](./docs/sequence-diagram/CrawlAccountAuth.png): get auth information
+    -   [_crawl-account-balances_](./docs/sequence-diagram/CrawlAccountBalances.png): get balance of all coins
+    -   [_crawl-account-delegations_](./docs/sequence-diagram/CrawlAccountDelegations.png): get delegation information
+    -   [_crawl-account-redelegations_](./docs/sequence-diagram/CrawlAccountRedelegations.png): get redelegation information 
+    -   [_crawl-account-unbonds_](./docs/sequence-diagram/CrawlAccountUnbonds.png): get unbond information
+    -   [_crawl-account-spendable-balances_](./docs/sequence-diagram/CrawlAccountSpendableBalances.png): get spendable balance of all coins
 
 ## Install requirements
 

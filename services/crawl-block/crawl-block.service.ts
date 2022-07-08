@@ -90,7 +90,7 @@ export default class CrawlBlockService extends Service {
 		try {
 			let listPromise = [];
 			for (let i = startBlock; i <= endBlock; i++) {
-				listPromise.push(this.callApiFromDomain(url, `/block?height=${i}`));
+				listPromise.push(this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`));
 			}
 			let resultListPromise : ResponseFromRPC[] = await Promise.all(listPromise);
 			
