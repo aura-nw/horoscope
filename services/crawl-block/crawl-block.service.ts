@@ -88,10 +88,24 @@ export default class CrawlBlockService extends Service {
 		}
 		this.logger.info('startBlock: ' + startBlock + ' endBlock: ' + endBlock);
 		try {
-			let data: ResponseFromRPC = await this.callApiFromDomain(
-				url,
-				`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
-			);
+			let listPromise = [];
+			for (let i = startBlock; i <= endBlock; i++) {
+				listPromise.push(this.callApiFromDomain(url, `/block?height=${i}`));
+			}
+			let resultListPromise : ResponseFromRPC[] = await Promise.all(listPromise);
+			
+			let data : ResponseFromRPC = {
+				id: '',
+				jsonrpc: '',
+				result: {
+					blocks: resultListPromise.map( item => {return item.result}),
+				}
+			}
+			// this.logger.info(data);
+			// let data: ResponseFromRPC = await this.callApiFromDomain(
+			// 	url,
+			// 	`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
+			// );
 			if (data == null) {
 				throw new Error('cannot crawl block');
 			}
