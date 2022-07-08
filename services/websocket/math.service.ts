@@ -9,6 +9,7 @@ import { Service, Method, Post } from '@ourparentcenter/moleculer-decorators-ext
 import ApiGatewayService from 'moleculer-web';
 import { Config } from '../../common';
 import { io } from 'socket.io-client';
+import { LIST_NETWORK } from '../../common/constant';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  * @typedef {import('http').IncomingMessage} IncomingRequest Incoming HTTP Request
@@ -27,6 +28,10 @@ import { io } from 'socket.io-client';
 		},
 	},
 	started(): any {
+		console.log('network info')
+		console.log(LIST_NETWORK)
+		console.log(LIST_NETWORK[0].chainId)
+
 		const socket = io('ws://localhost:3001');
 		socket.on('open', () => {
 			console.log('socket open');

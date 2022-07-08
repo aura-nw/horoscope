@@ -1,4 +1,6 @@
-import { Config } from 'common';
+import { NetworkInfo } from "types";
+
+// export const networkFile: 
 
 export const URL_TYPE_CONSTANTS = {
 	LCD: 'LCD',
@@ -43,44 +45,7 @@ export const MSG_TYPE = {
 	MSG_UNDELEGATE: '/cosmos.staking.v1beta1.MsgUndelegate',
 };
 
-export const LIST_NETWORK = [
-	{
-		chainName: 'Aura devnet',
-		chainId: 'aura-devnet',
-		RPC: ['https://rpc.dev.aura.network'],
-		LCD: ['https://lcd.dev.aura.network'],
-	},
-	{
-		chainName: 'Aura Serenity',
-		chainId: 'serenity-testnet-001',
-		RPC: ['https://rpc.serenity.aura.network'],
-		LCD: ['https://lcd.serenity.aura.network'],
-	},
-	{
-		chainName: 'Aura Halo',
-		chainId: 'halo-testnet-001',
-		RPC: ['https://rpc.halo.aura.network'],
-		LCD: ['https://lcd.halo.aura.network'],
-	},
-	{
-		chainName: 'Theta Testnet',
-		chainId: 'theta-testnet-001',
-		RPC: ['https://rpc.sentry-01.theta-testnet.polypore.xyz'],
-		LCD: ['https://rest.sentry-01.theta-testnet.polypore.xyz'],
-	},
-	{
-		chainName: 'Osmosis Testnet',
-		chainId: 'osmo-test-4',
-		RPC: ['https://testnet-rpc.osmosis.zone/'],
-		LCD: ['https://osmosistest-lcd.quickapi.com'],
-	},
-	{
-		chainName: 'Osmosis Mainnet',
-		chainId: 'osmosis-1',
-		RPC: ['https://rpc.osmosis.zone'],
-		LCD: ['https://lcd.osmosis.zone'],
-	},
-];
+export const LIST_NETWORK: NetworkInfo[] = require('../network.json');
 
 export const EVENT_TYPE = {
 	WASM: 'wasm',

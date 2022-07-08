@@ -77,3 +77,10 @@ export interface ApiGatewayMeta {
 	$responseHeaders?: any;
 	$location?: string;
 }
+
+export interface NetworkInfo{
+	chainName: string;
+	chainId: string;
+	RPC: string[];
+	LCD: string[];
+}

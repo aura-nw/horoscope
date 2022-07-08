@@ -39,9 +39,10 @@ With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to 
     -   _proposal_: get proposal information
     -   _validator_: get validator information
     -   _account-info_: get information of a wallet onchain
-
+    -   _asset_: manage, register asset
 -   **crawl-block**: get block from network and store it in redis stream
 -   **handle-block**: get block from redis stream, then get transaction, evidence in block and put them to redis stream equivalent
+-   **crawl-transaction**: get transaction by hash from network and store it in redis stream
 -   **handle-transaction**: get transaction from redis stream then handle
 -   **crawl-param**: param from module Bank, Distribution, Governance, IBC Transfer, Mint, Staking, Slashing
 -   **crawl-proposal**: proposal and tally result (if proposal in voting period)
@@ -67,7 +68,7 @@ With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to 
 ```bash
 # create file env
 cp .env.example .env
-# then replace env field with your own value
+# then replace env field with your own value, point SERVICE to service you want to run
 
 # run with moleculer cli
 npm run dev
@@ -83,3 +84,6 @@ npm run dev
 -   `npm test`: Run tests & generate coverage report
 -   `npm run dc:up`: Start the stack with Docker Compose
 -   `npm run dc:down`: Stop the stack with Docker Compose
+
+## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details how to contribute.
