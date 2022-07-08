@@ -24,7 +24,7 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 						});
 						callApiClient = axiosClient;
 					} else {
-						let resilientClient = Resilient({ service: { basePath: '/' } });
+						let resilientClient = Resilient({ service: { basePath: '/', retry: Infinity } });
 						resilientClient.setServers(domain);
 						callApiClient = resilientClient;
 					}
