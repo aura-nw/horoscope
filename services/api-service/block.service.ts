@@ -18,6 +18,7 @@ import { BlockEntity, IBlock } from '../../entities';
 import { JsonConvert } from 'json2typescript';
 import { FilterOptions, QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
+import { LIST_NETWORK } from '../../common/constant';
 const { performance } = require('perf_hooks');
 
 /**
@@ -50,6 +51,7 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: chainid
 	 *          required: true
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4",]
 	 *          type: string
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
@@ -96,7 +98,7 @@ export default class BlockService extends MoleculerDBService<
 	@Get('/', {
 		name: 'getByChain',
 		params: {
-			chainid: { type: 'string', optional: false },
+			chainid: { type: 'string', optional: false, enum: LIST_NETWORK.map(e=>{return e.chainId}) },
 			blockHeight: { type: 'number', optional: true, convert: true },
 			blockHash: { type: 'string', optional: true },
 			pageLimit: {
@@ -167,8 +169,7 @@ export default class BlockService extends MoleculerDBService<
 				ctx.params.countTotal = false;
 			}
 
-			// @ts-ignore
-			let [resultBlock, resultCount] = await Promise.all<BlockEntity, BlockEntity>([
+			let [resultBlock, resultCount]: [any[], any] = await Promise.all([
 				this.adapter.find({
 					query: query,
 					limit: ctx.params.pageLimit,
@@ -193,8 +194,8 @@ export default class BlockService extends MoleculerDBService<
 				data: {
 					blocks: resultBlock,
 					count:
-						ctx.params.countTotal === true ? resultCount[0].block?.header?.height : 0,
-					nextKey: needNextKey ? resultBlock[resultBlock.length - 1]?._id : null,
+						ctx.params.countTotal === true && resultCount.length ? resultCount[0].block?.header?.height : 0,
+					nextKey: needNextKey && resultBlock.length ? resultBlock[resultBlock.length - 1]?._id : null,
 				},
 			};
 		} catch (error) {

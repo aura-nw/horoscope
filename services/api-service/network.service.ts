@@ -12,6 +12,7 @@ import {
 	ErrorMessage,
 } from '../../types';
 import { ChainIdParams } from '../../types';
+import { LIST_NETWORK } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -43,6 +44,7 @@ export default class NetworkService extends MoleculerDBService<
 	 *          name: chainid
 	 *          required: true
 	 *          type: string
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4",]
 	 *          description: "Chain Id of network need to query"
 	 *      responses:
 	 *        '200':
@@ -54,7 +56,7 @@ export default class NetworkService extends MoleculerDBService<
 	@Get('/', {
 		name: 'status',
 		params: {
-			chainid: { type: 'string', optional: false },
+			chainid: { type: 'string', optional: false, enum: LIST_NETWORK.map(e=>{return e.chainId}) },
 		},
 		cache: {
 			ttl: 5,

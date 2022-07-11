@@ -14,6 +14,7 @@ import {
 import { ITransaction, TransactionEntity } from '../../entities';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
+import { LIST_NETWORK } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -46,6 +47,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: chainid
 	 *          required: true
 	 *          type: string
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4",]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: blockHeight
@@ -91,7 +93,7 @@ export default class BlockService extends MoleculerDBService<
 	@Get('/', {
 		name: 'getByChain',
 		params: {
-			chainid: { type: 'string', optional: false },
+			chainid: { type: 'string', optional: false, enum: LIST_NETWORK.map(e=>{return e.chainId}) },
 			blockHeight: { type: 'number', optional: true, convert: true },
 			txHash: { type: 'string', optional: true },
 			pageLimit: {

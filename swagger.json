@@ -1,8 +1,8 @@
 {
     "info": {
-        "title": "crawl-system API Documentation",
+        "title": "Indexer API Documentation",
         "version": "1.0.0",
-        "description": "Moleculer JS Microservice Boilerplate with Typescript, TypeORM, CLI, Service Clients, Swagger, Jest, Docker, Eslint support and everything you will ever need to deploy rock solid projects.."
+        "description": "Indexer for multiple Cosmos Network"
     },
     "host": "localhost:3000",
     "basePath": "/api",
@@ -216,6 +216,14 @@
                         "in": "query",
                         "name": "chainid",
                         "required": true,
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4"
+                        ],
                         "type": "string",
                         "description": "Chain Id of network need to query"
                     },
@@ -327,6 +335,14 @@
                         "name": "chainid",
                         "required": true,
                         "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4"
+                        ],
                         "description": "Chain Id of network need to query"
                     }
                 ],
@@ -359,7 +375,22 @@
                         "name": "chainid",
                         "required": true,
                         "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4"
+                        ],
                         "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "proposalId",
+                        "required": false,
+                        "type": "string",
+                        "description": "proposal Id"
                     },
                     {
                         "in": "query",
@@ -376,6 +407,14 @@
                         "default": 0,
                         "type": "number",
                         "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
                     }
                 ],
                 "responses": {
@@ -407,6 +446,14 @@
                         "name": "chainid",
                         "required": true,
                         "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4"
+                        ],
                         "description": "Chain Id of network need to query"
                     },
                     {
@@ -485,7 +532,22 @@
                         "name": "chainid",
                         "required": true,
                         "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4"
+                        ],
                         "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "operatorAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "operator address"
                     },
                     {
                         "in": "query",
@@ -502,6 +564,14 @@
                         "default": 0,
                         "type": "number",
                         "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
                     }
                 ],
                 "responses": {

@@ -54,11 +54,11 @@ export const openAPIMixin = (mixinOptions?: any) => {
 				try {
 					const swaggerDefinition = {
 						info: {
-							title: `${pkg.name} API Documentation`, // Title of the documentation
+							title: `Indexer API Documentation`, // Title of the documentation
 							version: pkg.version, // Version of the app
 							description:
 								// eslint-disable-next-line max-len
-								'Moleculer JS Microservice Boilerplate with Typescript, TypeORM, CLI, Service Clients, Swagger, Jest, Docker, Eslint support and everything you will ever need to deploy rock solid projects..', // Short description of the app
+								'Indexer for multiple Cosmos Network', // Short description of the app
 						},
 						host: `${Config.SWAGGER_HOST}:${Config.SWAGGER_PORT}`, // The host or url of the app
 						basePath: `${Config.SWAGGER_BASEPATH}`, // The basepath of your endpoint
@@ -92,6 +92,15 @@ export const openAPIMixin = (mixinOptions?: any) => {
 
 		async created() {
 			const pathToSwaggerUi = SwaggerUI.absolutePath();
+
+			let swaggerUIInitialized = readFileSync(`${pathToSwaggerUi}/swagger-initializer.js`)
+				.toString()
+				.replace(
+					'https://petstore.swagger.io/v2/swagger.json',
+					`${Config.BASE_URL}:${Config.BASE_PORT}/openapi/swagger.json`,
+				);
+			writeFileSync(`${pathToSwaggerUi}/swagger-initializer.js`, swaggerUIInitialized);
+
 			const indexContent = readFileSync(`${pathToSwaggerUi}/index.html`)
 				.toString()
 				.replace(

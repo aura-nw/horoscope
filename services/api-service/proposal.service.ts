@@ -13,8 +13,10 @@ import {
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { DbContextParameters } from 'moleculer-db';
-import { IProposal } from '../../entities';
+import { DbContextParameters, QueryOptions } from 'moleculer-db';
+import { IProposal, ProposalEntity } from '../../entities';
+import { LIST_NETWORK } from '../../common/constant';
+import { ObjectId } from 'bson';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -47,7 +49,13 @@ export default class ProposalService extends MoleculerDBService<
 	 *          name: chainid
 	 *          required: true
 	 *          type: string
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4",]
 	 *          description: "Chain Id of network need to query"
+	 *        - in: query
+	 *          name: proposalId
+	 *          required: false
+	 *          type: string
+	 *          description: "proposal Id"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
@@ -60,6 +68,12 @@ export default class ProposalService extends MoleculerDBService<
 	 *          default: 0
 	 *          type: number
 	 *          description: "Page number, start at 0"
+	 *        - in: query
+	 *          name: nextKey
+	 *          required: false
+	 *          default:
+	 *          type: string
+	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -70,7 +84,14 @@ export default class ProposalService extends MoleculerDBService<
 	@Get('/', {
 		name: 'getByChain',
 		params: {
-			chainid: { type: 'string', optional: false },
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+			proposalId: { type: 'string', optional: true, default: null },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -87,6 +108,11 @@ export default class ProposalService extends MoleculerDBService<
 				convert: true,
 				max: 100,
 			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
 		},
 		cache: {
 			ttl: 5,
@@ -94,24 +120,53 @@ export default class ProposalService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<GetProposalRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
 		try {
-			let result = await this.adapter.find({
-				query: { 'custom_info.chain_id': ctx.params.chainid },
-				limit: ctx.params.pageLimit,
-				offset: ctx.params.pageOffset,
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-ignore
-				sort: '-proposal_id',
-			});
-			let count = await this.adapter.count({
-				query: { 'custom_info.chain_id': ctx.params.chainid },
-			});
+			const proposalId = ctx.params.proposalId;
+			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			let needNextKey = true;
+			if (proposalId) {
+				query['proposal_id'] = proposalId;
+				needNextKey = false;
+			}
+			if (ctx.params.nextKey) {
+				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				ctx.params.pageOffset = 0;
+				ctx.params.countTotal = false;
+			}
+
+			let [result, count]: [any[], number] = await Promise.all([
+				this.adapter.find({
+					query: query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					// @ts-ignore
+					sort: '-proposal_id',
+				}),
+				this.adapter.count({
+					query: query,
+				}),
+			]);
+
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					proposals: result,
 					count: count,
+					nextKey: needNextKey && result.length ? result[result.length - 1]._id : null,
 				},
 			};
 		} catch (error) {

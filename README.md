@@ -2,11 +2,12 @@
 
 Aura Indexer is an indexing service for Cosmos-based blockchain. It crawl data from the blockchain and index it into mongoDB. Based on the data, it can provide search functionality instead of querying data from LCD or RPC directly.
 
-Currently, it supports network builded by Cosmos SDK v0.45.1 or later. Testing network:
+Currently, it supports network builded by Cosmos SDK v0.45.1 or later. Supporting network:
 
 -   [Aura Network](https://github.com/aura-nw/aura)
 -   [Osmosis](https://github.com/osmosis-labs/osmosis)
 -   [Cosmos Hub](https://github.com/cosmos/gaia)
+-   [Evmos](https://github.com/evmos/evmos)
 
 Aura Indexer includes 2 main components:
 
@@ -72,6 +73,14 @@ cp .env.example .env
 # run with moleculer cli
 npm run dev
 ```
+## Configuration
+Config file is located at `.env`, all service used [moleculerJS Config](https://moleculer.services/docs/0.14/configuration.html), another config is custom:
+
+
+| environment variable           | description                                                                                                                                               |
+|--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CHAIN_ID`              | Chain Id of Network want to be crawled (**example**: serenity-testnet-001).                                         
+| `ENABLE_LOADBALANCER`              | Client Api used when get data from network, if yes use [Resilent](https://www.npmjs.com/package/resilient), if no use [Axios](https://www.npmjs.com/package/axios) . **default:** true
 
 ## NPM scripts
 

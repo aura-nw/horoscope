@@ -45,6 +45,10 @@ export interface CrawlAccountInfoParams {
 	chainId: string;
 }
 
-export interface GetProposalRequest extends ChainIdParams, PageLimit { }
+export interface GetProposalRequest extends ChainIdParams, PageLimit {
+	proposalId: string;
+}
 
-export interface GetValidatorRequest extends ChainIdParams, PageLimit { }
+export interface GetValidatorRequest extends ChainIdParams, PageLimit {
+	operatorAddress: string;
+}
