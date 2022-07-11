@@ -57,5 +57,6 @@ export const assetMongoModel = (collection: string): unknown => {
 		}
 		// strict: true
 	});
+	schema.index({ 'custom_info.chain_id': 1, 'asset_id': 1 });
 	return models[collection] || model(collection, schema);
 };

@@ -14,7 +14,7 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 		checkStatus: {
 			async handler(ctx: Context) {
 				// @ts-ignore
-				let foundCodeID = await this.adapter.findOne(ctx.params);
+				let foundCodeID = await this.adapter.findOne({ code_id: ctx.params.code_id, 'custom_info.chain_id': ctx.params.chain_id });
 				// @ts-ignore
 				this.logger.info(`found ${JSON.stringify(foundCodeID)}`);
 				if (foundCodeID) {
@@ -34,4 +34,4 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 		},
 	},
 })
-export default class CodeIDService extends moleculer.Service {}
+export default class CodeIDService extends moleculer.Service { }

@@ -86,7 +86,7 @@
                 }
             }
         },
-        "/v1/asset/indexAsset": {
+        "/v1/asset/index": {
             "post": {
                 "tags": [
                     "Asset"
@@ -105,13 +105,25 @@
                         "name": "params",
                         "schema": {
                             "type": "object",
-                            "required": [
-                                "name"
-                            ],
                             "properties": {
-                                "code_id": {
+                                "codeId": {
+                                    "required": true,
                                     "type": "number",
-                                    "description": "code id"
+                                    "description": "Code id of stored contract"
+                                },
+                                "contractType": {
+                                    "required": true,
+                                    "type": "string",
+                                    "enum": [
+                                        "CW721"
+                                    ],
+                                    "description": "Type of contract want to register"
+                                },
+                                "chainId": {
+                                    "required": true,
+                                    "type": "string",
+                                    "example": "aura-devnet",
+                                    "description": "Chain Id of network"
                                 }
                             }
                         }
@@ -276,7 +288,7 @@
                 }
             }
         },
-        "/v1/codeid/{code_id}/checkStatus": {
+        "/v1/codeid/{chainId}/{codeId}/checkStatus": {
             "get": {
                 "tags": [
                     "CodeId"
@@ -292,7 +304,15 @@
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "code_id",
+                        "name": "chainId",
+                        "required": true,
+                        "type": "string",
+                        "example": "aura-devnet",
+                        "description": "Chain Id of network"
+                    },
+                    {
+                        "in": "path",
+                        "name": "codeId",
                         "required": true,
                         "type": "number",
                         "description": "Code Id of stored contract need to query"

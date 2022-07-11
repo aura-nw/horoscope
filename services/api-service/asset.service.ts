@@ -20,14 +20,15 @@ import {
 	RestOptions,
 } from '../../types';
 import { IBlock } from '../../entities';
-import { AssetIndexParams } from 'types/asset';
+import { AssetIndexParams } from '../../types/asset';
 import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
 import { Status } from '../../model/codeid.model';
 import { IAsset } from '../../model/asset.model';
-import { Ok } from 'ts-results';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
+import { CONTRACT_TYPE, LIST_NETWORK } from '../../common/constant';
+import { error } from 'console';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -38,15 +39,15 @@ import { ObjectId } from 'mongodb';
 	mixins: [dbAssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
-	{
-		rest: 'v1/asset';
-	},
-	IBlock
+{
+	rest: 'v1/asset';
+},
+IBlock
 > {
 	/**
 	 *  @swagger
 	 *
-	 *  /v1/asset/indexAsset:
+	 *  /v1/asset/index:
 	 *    post:
 	 *      tags:
 	 *      - "Asset"
@@ -61,42 +62,61 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: params
 	 *          schema:
 	 *            type: object
-	 *            required:
-	 *              - name
 	 *            properties:
-	 *              code_id:
+	 *              codeId:
+	 *                required: true
 	 *                type: number
-	 *                description: code id
+	 *                description: "Code id of stored contract"
+	 *              contractType:
+	 *                required: true
+	 *                type: string
+	 *                enum: 
+	 *                - "CW721"
+	 *                description: "Type of contract want to register"
+	 *              chainId:
+	 *                required: true
+	 *                type: string
+	 *                example: aura-devnet
+	 *                description: "Chain Id of network"
 	 *      responses:
 	 *        200:
 	 *          description: Register result
 	 *        422:
 	 *          description: Missing parameters
 	 */
-	@Post<RestOptions>('/indexAsset', {
-		name: 'indexAsset',
+	@Post<RestOptions>('/index', {
+		name: 'index',
 		restricted: ['api'],
 		params: {
-			code_id: ['number|integer|positive'],
+			codeId: ['number|integer|positive'],
+			contractType: { type: 'string', optional: false, enum: ['CW721'] },
+			chainId: { type: 'string', optional: false, enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
 		},
 	})
-	async indexAsset(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
+	async index(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		let registed: boolean = false;
+		const code_id = ctx.params.codeId;
+		const chain_id = ctx.params.chainId;
+		const contract_type = ctx.params.contractType;
 		return await this.broker
-			.call('v1.code_id.checkStatus', { code_id: ctx.params.code_id })
+			.call('v1.code_id.checkStatus', { code_id, chain_id })
 			.then((res) => {
 				this.logger.info('code_id.checkStatus res', res);
 				switch (res) {
 					case 'NotFound':
 						this.broker.call('v1.code_id.create', {
 							_id: new Types.ObjectId(),
-							code_id: ctx.params.code_id,
+							code_id,
 							status: Status.WAITING,
+							custom_info: {
+								chain_id,
+								chain_name: LIST_NETWORK.find(x => x.chainId == chain_id)?.chainName,
+							}
 						});
 					case Status.TBD:
 						// case Status.WAITING:
-						this.broker.emit('code_id.validate', ctx.params.code_id);
+						this.broker.emit('code_id.validate', { chain_id, code_id });
 						registed = true;
 						break;
 					default:
@@ -118,6 +138,7 @@ export default class BlockService extends MoleculerDBService<
 				});
 			});
 	}
+
 	/**
 	 *  @swagger
 	 *  /v1/asset/getByAddress:
@@ -176,7 +197,7 @@ export default class BlockService extends MoleculerDBService<
 		name: 'getByAddress',
 		params: {
 			address: { type: 'string', optional: false },
-			chainid: { type: 'string', optional: true },
+			chainid: { type: 'string', optional: true, enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -248,8 +269,8 @@ export default class BlockService extends MoleculerDBService<
 				}),
 				ctx.params.countTotal === true
 					? this.adapter.count({
-							query: query,
-					  })
+						query: query,
+					})
 					: 0,
 			]);
 

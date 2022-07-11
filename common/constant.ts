@@ -63,3 +63,8 @@ export const ASSET_INDEXER_ACTION = {
 	ASSET_MANAGER_UPSERT: 'v1.asset-manager.upsert',
 	CODEID_UPDATEMANY: 'v1.code_id.updateMany',
 };
+
+export const CONTRACT_TYPE = {
+	CW721: 'CW721',
+	CW20: 'CW20',
+};
