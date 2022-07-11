@@ -93,11 +93,16 @@ export const openAPIMixin = (mixinOptions?: any) => {
 		async created() {
 			const pathToSwaggerUi = SwaggerUI.absolutePath();
 
+			let SwaggerUrl = `${Config.BASE_URL}`;
+			if (Config.BASE_PORT) {
+				SwaggerUrl += `:${Config.BASE_PORT}`;
+			}
+
 			let swaggerUIInitialized = readFileSync(`${pathToSwaggerUi}/swagger-initializer.js`)
 				.toString()
 				.replace(
 					'https://petstore.swagger.io/v2/swagger.json',
-					`${Config.BASE_URL}:${Config.BASE_PORT}/openapi/swagger.json`,
+					`${SwaggerUrl}/openapi/swagger.json`,
 				);
 			writeFileSync(`${pathToSwaggerUi}/swagger-initializer.js`, swaggerUIInitialized);
 
@@ -106,7 +111,7 @@ export const openAPIMixin = (mixinOptions?: any) => {
 				.replace(
 					// eslint-disable-next-line max-len
 					/(?:(?:https?|undefined):(\/\/|undefined?)|www\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/gim,
-					`${Config.BASE_URL}:${Config.BASE_PORT}/openapi/swagger.json`,
+					`${SwaggerUrl}/openapi/swagger.json`,
 				)
 				.replace('layout: "StandaloneLayout"', '');
 			writeFileSync(`${pathToSwaggerUi}/index.html`, indexContent);
