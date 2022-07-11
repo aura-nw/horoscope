@@ -1,6 +1,6 @@
-import { NetworkInfo } from "types";
+import { NetworkInfo } from 'types';
 
-// export const networkFile: 
+// export const networkFile:
 
 export const URL_TYPE_CONSTANTS = {
 	LCD: 'LCD',
@@ -62,4 +62,11 @@ export const ASSET_INDEXER_ACTION = {
 	ACTION_GET_TOKEN_LIST: 'v1.assetHandleCodeID.getTokenList',
 	ASSET_MANAGER_UPSERT: 'v1.asset-manager.upsert',
 	CODEID_UPDATEMANY: 'v1.code_id.updateMany',
+};
+
+export const BOND_STATUS = {
+	BOND_STATUS_UNSPECIFIED: 'BOND_STATUS_UNSPECIFIED',
+	BOND_STATUS_UNBONDED: 'BOND_STATUS_UNBONDED',
+	BOND_STATUS_UNBONDING: 'BOND_STATUS_UNBONDING',
+	BOND_STATUS_BONDED: 'BOND_STATUS_BONDED',
 };

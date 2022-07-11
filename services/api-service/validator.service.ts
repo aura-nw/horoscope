@@ -15,7 +15,7 @@ import {
 } from '../../types';
 import { DbContextParameters, QueryOptions } from 'moleculer-db';
 import { IValidator } from '../../entities';
-import { LIST_NETWORK } from '../../common/constant';
+import { BOND_STATUS, LIST_NETWORK } from '../../common/constant';
 import { ObjectId } from 'bson';
 
 /**
@@ -57,6 +57,12 @@ export default class ValidatorService extends MoleculerDBService<
 	 *          type: string
 	 *          description: "operator address"
 	 *        - in: query
+	 *          name: status
+	 *          required: false
+	 *          type: string
+	 *          enum: ["BOND_STATUS_UNSPECIFIED", "BOND_STATUS_UNBONDED", "BOND_STATUS_UNBONDING", "BOND_STATUS_BONDED"]
+	 *          description: "status"
+	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
 	 *          default: 10
@@ -92,6 +98,13 @@ export default class ValidatorService extends MoleculerDBService<
 				}),
 			},
 			operatorAddress: { type: 'string', optional: true, default: null },
+			status: {
+				type: 'string',
+				optional: true,
+				enum: Object.keys(BOND_STATUS).map((e) => {
+					return e;
+				}),
+			},
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -135,11 +148,14 @@ export default class ValidatorService extends MoleculerDBService<
 		}
 		try {
 			const operatorAddress = ctx.params.operatorAddress;
+			const status = ctx.params.status;
 			let needNextKey = true;
 			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
 			if (operatorAddress) {
 				query['operator_address'] = operatorAddress;
-				needNextKey = false;
+			}
+			if (status) {
+				query['status'] = status;
 			}
 			if (ctx.params.nextKey) {
 				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
