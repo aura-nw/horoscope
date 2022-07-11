@@ -63,12 +63,12 @@ export default class CrawlBlockService extends Service {
 			this.currentBlock = parseInt(handledBlockRedis);
 		} else {
 			if (!isNaN(START_BLOCK)) {
-				this.currentBlock = START_BLOCK;
+				this.currentBlock = parseInt(START_BLOCK);
 			} else {
 				this.currentBlock = 0;
 			}
 		}
-		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : 0;
+		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : this.currentBlock;
 		this.logger.info(`currentBlock: ${this.currentBlock}`);
 	}
 	async handleJob() {

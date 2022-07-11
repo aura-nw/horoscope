@@ -53,7 +53,7 @@
 		"chainName":"Osmosis Testnet",
 		"chainId":"osmo-test-4",
 		"RPC":[
-			"https://testnet-rpc.osmosis.zone/"
+			"https://testnet-rpc.osmosis.zone"
 		],
 		"LCD":[
 			"https://osmosistest-lcd.quickapi.com"
@@ -67,6 +67,17 @@
 		],
 		"LCD":[
 			"https://lcd.osmosis.zone"
+		]
+	},
+	{
+		"chainName":"Evmos Testnet",
+		"chainId":"evmos_9000-4",
+		"RPC":[
+			"https://tendermint.bd.evmos.dev:26657"
+			
+		],
+		"LCD":[
+			"https://rest.bd.evmos.dev:1317"
 		]
 	}
 ]
