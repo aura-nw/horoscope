@@ -19,6 +19,7 @@ import { JsonConvert } from 'json2typescript';
 import { FilterOptions, QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
 import { LIST_NETWORK } from '../../common/constant';
+import { Utils } from '../../utils/utils';
 const { performance } = require('perf_hooks');
 
 /**
@@ -65,6 +66,11 @@ export default class BlockService extends MoleculerDBService<
 	 *          type: string
 	 *          description: "Block hash"
 	 *        - in: query
+	 *          name: operatorAddress
+	 *          required: false
+	 *          type: string
+	 *          description: "operator address who proposed this block"
+	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
 	 *          default: 10
@@ -98,9 +104,16 @@ export default class BlockService extends MoleculerDBService<
 	@Get('/', {
 		name: 'getByChain',
 		params: {
-			chainid: { type: 'string', optional: false, enum: LIST_NETWORK.map(e=>{return e.chainId}) },
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
 			blockHeight: { type: 'number', optional: true, convert: true },
 			blockHash: { type: 'string', optional: true },
+			operatorAddress: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -152,8 +165,13 @@ export default class BlockService extends MoleculerDBService<
 			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
 			const blockHeight = ctx.params.blockHeight;
 			const blockHash = ctx.params.blockHash;
-
+			const operatorAddress = ctx.params.operatorAddress;
 			let needNextKey = true;
+
+			if (operatorAddress) {
+				console.log(Utils.bech32ToHex(operatorAddress));
+			}
+
 			if (blockHeight) {
 				query['block.header.height'] = blockHeight;
 				needNextKey = false;
@@ -194,8 +212,13 @@ export default class BlockService extends MoleculerDBService<
 				data: {
 					blocks: resultBlock,
 					count:
-						ctx.params.countTotal === true && resultCount.length ? resultCount[0].block?.header?.height : 0,
-					nextKey: needNextKey && resultBlock.length ? resultBlock[resultBlock.length - 1]?._id : null,
+						ctx.params.countTotal === true && resultCount.length
+							? resultCount[0].block?.header?.height
+							: 0,
+					nextKey:
+						needNextKey && resultBlock.length
+							? resultBlock[resultBlock.length - 1]?._id
+							: null,
 				},
 			};
 		} catch (error) {

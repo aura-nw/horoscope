@@ -7,7 +7,8 @@
 		],
 		"LCD":[
 		   "https://lcd.dev.aura.network"
-		]
+		],
+		"prefixAddress":"aura"
 	},
 	{
 		"chainName":"Aura devnet",
@@ -17,7 +18,8 @@
 		],
 		"LCD":[
 		   "https://lcd.dev.aura.network"
-		]
+		],
+		"prefixAddress":"aura"
 	},
 	{
 		"chainName":"Aura Serenity",
@@ -27,7 +29,8 @@
 		],
 		"LCD":[
 		   "https://lcd.serenity.aura.network"
-		]
+		],
+		"prefixAddress":"aura"
 	},
 	{
 		"chainName":"Aura Halo",
@@ -37,7 +40,8 @@
 		],
 		"LCD":[
 			"https://lcd.halo.aura.network"
-		]
+		],
+		"prefixAddress":"aura"
 	},
 	{
 		"chainName":"Theta Testnet",
@@ -47,7 +51,8 @@
 		],
 		"LCD":[
 			"https://rest.sentry-01.theta-testnet.polypore.xyz"
-		]
+		],
+		"prefixAddress":"cosmos"
 	},
 	{
 		"chainName":"Osmosis Testnet",
@@ -57,7 +62,8 @@
 		],
 		"LCD":[
 			"https://osmosistest-lcd.quickapi.com"
-		]
+		],
+		"prefixAddress":"osmo"
 	},
 	{
 		"chainName":"Osmosis Mainnet",
@@ -67,7 +73,8 @@
 		],
 		"LCD":[
 			"https://lcd.osmosis.zone"
-		]
+		],
+		"prefixAddress":"osmo"
 	},
 	{
 		"chainName":"Evmos Testnet",
@@ -78,6 +85,7 @@
 		],
 		"LCD":[
 			"https://rest.bd.evmos.dev:1317"
-		]
+		],
+		"prefixAddress":"evmos"
 	}
 ]

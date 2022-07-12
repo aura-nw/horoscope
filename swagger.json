@@ -243,6 +243,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "operatorAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "operator address who proposed this block"
+                    },
+                    {
+                        "in": "query",
                         "name": "pageLimit",
                         "required": false,
                         "default": 10,
