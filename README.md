@@ -1,4 +1,4 @@
-# Aura Indexer 
+# Aura Indexer
 
 Aura Indexer is an indexing service for Cosmos-based blockchain. It crawl data from the blockchain and index it into mongoDB. Based on the data, it can provide search functionality instead of querying data from LCD or RPC directly.
 
@@ -41,7 +41,8 @@ With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to 
     -   _validator_: get validator information
     -   _account-info_: get information of a wallet onchain
     -   _asset_: manage, register asset
--   [**crawl-block**](./docs/sequence-diagram/CrawlBlock.png): get block from network and store it in redis stream  
+
+-   [**crawl-block**](./docs/sequence-diagram/CrawlBlock.png): get block from network and store it in redis stream
 -   [**handle-block**](./docs/sequence-diagram/HandleBlock.png): get block from redis stream, then get transaction, evidence in block and put them to redis stream equivalent
 -   [**crawl-transaction**](./docs/sequence-diagram/CrawlTransaction.png): get transaction by hash from network and store it in redis stream
 -   [**handle-transaction**](./docs/sequence-diagram/HandleTransaction.png): get transaction from redis stream then handle
@@ -54,14 +55,14 @@ With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to 
     -   [_crawl-account-auth_](./docs/sequence-diagram/CrawlAccountAuth.png): get auth information
     -   [_crawl-account-balances_](./docs/sequence-diagram/CrawlAccountBalances.png): get balance of all coins
     -   [_crawl-account-delegations_](./docs/sequence-diagram/CrawlAccountDelegations.png): get delegation information
-    -   [_crawl-account-redelegations_](./docs/sequence-diagram/CrawlAccountRedelegations.png): get redelegation information 
+    -   [_crawl-account-redelegations_](./docs/sequence-diagram/CrawlAccountRedelegations.png): get redelegation information
     -   [_crawl-account-unbonds_](./docs/sequence-diagram/CrawlAccountUnbonds.png): get unbond information
     -   [_crawl-account-spendable-balances_](./docs/sequence-diagram/CrawlAccountSpendableBalances.png): get spendable balance of all coins
 
 ## Install requirements
 
 -   **Redis**: `docker run --name redis -p 6379:6379 -d redis`
--   **MongoDB**: `docker run --name mongo -p 27017:27017 -d redis`
+-   **MongoDB**: `docker run --name mongo -p 27017:27017 -d -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=xxx mongo`
 
 ## How to run
 
@@ -73,14 +74,15 @@ cp .env.example .env
 # run with moleculer cli
 npm run dev
 ```
+
 ## Configuration
+
 Config file is located at `.env`, all service used [moleculerJS Config](https://moleculer.services/docs/0.14/configuration.html), another config is custom:
 
-
-| environment variable           | description                                                                                                                                               |
-|--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `CHAIN_ID`              | Chain Id of Network want to be crawled (**example**: serenity-testnet-001).                                         
-| `ENABLE_LOADBALANCER`              | Client Api used when get data from network, if yes use [Resilent](https://www.npmjs.com/package/resilient), if no use [Axios](https://www.npmjs.com/package/axios) . **default:** true
+| environment variable  | description                                                                                                                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CHAIN_ID`            | Chain Id of Network want to be crawled (**example**: serenity-testnet-001).                                                                                                            |
+| `ENABLE_LOADBALANCER` | Client Api used when get data from network, if yes use [Resilent](https://www.npmjs.com/package/resilient), if no use [Axios](https://www.npmjs.com/package/axios) . **default:** true |
 
 ## NPM scripts
 
@@ -94,4 +96,5 @@ Config file is located at `.env`, all service used [moleculerJS Config](https://
 -   `npm run dc:down`: Stop the stack with Docker Compose
 
 ## Contributing
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details how to contribute.
