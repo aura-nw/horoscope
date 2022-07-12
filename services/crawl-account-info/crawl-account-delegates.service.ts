@@ -89,7 +89,7 @@ export default class CrawlAccountDelegatesService extends Service {
 				let done = false;
 				let resultCallApi;
 				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, param);
+					resultCallApi = await this.callApiFromDomain(url, urlToCall);
 
 					listDelegates.push(...resultCallApi.delegation_responses);
 					if (resultCallApi.pagination.next_key === null) {

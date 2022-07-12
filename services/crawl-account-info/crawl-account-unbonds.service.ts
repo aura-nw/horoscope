@@ -88,7 +88,7 @@ export default class CrawlAccountUnbondsService extends Service {
 				let done = false;
 				let resultCallApi;
 				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, param);
+					resultCallApi = await this.callApiFromDomain(url, urlToCall);
 
 					listUnbonds.push(...resultCallApi.unbonding_responses);
 					if (resultCallApi.pagination.next_key === null) {

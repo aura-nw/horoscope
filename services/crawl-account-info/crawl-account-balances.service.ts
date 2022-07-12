@@ -87,7 +87,7 @@ export default class CrawlAccountBalancesService extends Service {
 				let done = false;
 				let resultCallApi;
 				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, param);
+					resultCallApi = await this.callApiFromDomain(url, urlToCall);
 
 					listBalances.push(...resultCallApi.balances);
 					if (resultCallApi.pagination.next_key === null) {
