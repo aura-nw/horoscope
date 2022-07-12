@@ -6,7 +6,7 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { ISigningInfoEntityResponseFromLCD, ListValidatorAddress } from '../../types';
 import { ValidatorEntity } from 'entities';
@@ -48,15 +48,17 @@ export default class CrawlSigningInfoService extends Service {
 			events: {
 				'validator.upsert': {
 					handler: (ctx: Context<ListValidatorAddress, Record<string, unknown>>) => {
-						this.createJob(
-							'crawl.signinginfo',
-							{
-								listAddress: ctx.params.listAddress,
-							},
-							{
-								removeOnComplete: true,
-							},
-						);
+						this.handleJob(ctx.params.listAddress);
+
+						// this.createJob(
+						// 	'crawl.signinginfo',
+						// 	{
+						// 		listAddress: ctx.params.listAddress,
+						// 	},
+						// 	{
+						// 		removeOnComplete: true,
+						// 	},
+						// );
 						return;
 					},
 				},
@@ -73,6 +75,9 @@ export default class CrawlSigningInfoService extends Service {
 			},
 		});
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+		const prefixAddress = LIST_NETWORK.find(
+			(item) => item.chainId === Config.CHAIN_ID,
+		)?.prefixAddress;
 		listFoundValidator.map(async (foundValidator: ValidatorEntity) => {
 			try {
 				let consensusPubkey = foundValidator.consensus_pubkey;
@@ -82,7 +87,7 @@ export default class CrawlSigningInfoService extends Service {
 				const pubkey = this.getAddressHexFromPubkey(consensusPubkey.key.toString());
 				const consensusAddress = this.hexToBech32(
 					pubkey,
-					`${Config.NETWORK_PREFIX_ADDRESS}${Config.CONSENSUS_PREFIX_ADDRESS}`,
+					`${prefixAddress}${Config.CONSENSUS_PREFIX_ADDRESS}`,
 				);
 				let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
 
