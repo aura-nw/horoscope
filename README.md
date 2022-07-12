@@ -1,4 +1,4 @@
-# Aura Indexer
+# Aura Indexer 
 
 Aura Indexer is an indexing service for Cosmos-based blockchain. It crawl data from the blockchain and index it into mongoDB. Based on the data, it can provide search functionality instead of querying data from LCD or RPC directly.
 
