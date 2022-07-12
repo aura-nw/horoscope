@@ -107,7 +107,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 						);
 						let delay = expireTime.getTime() - new Date().getTime();
 						this.createJob(
-							'crawl.account-unbonds',
+							'crawl.account-redelegates',
 							{
 								listAddresses: [address],
 								chainId
@@ -147,13 +147,13 @@ export default class CrawlAccountRedelegatesService extends Service {
 	}
 
 	async _start() {
-		this.getQueue('crawl.account-delegates').on('completed', (job: Job) => {
+		this.getQueue('crawl.account-redelegates').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
-		this.getQueue('crawl.account-delegates').on('failed', (job: Job) => {
+		this.getQueue('crawl.account-redelegates').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
 		});
-		this.getQueue('crawl.account-delegates').on('progress', (job: Job) => {
+		this.getQueue('crawl.account-redelegates').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
 		return super._start();

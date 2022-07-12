@@ -31,7 +31,7 @@ export default class CrawlAccountAuthInfoService extends Service {
                 this.callApiMixin,
             ],
             queues: {
-                'account-auth-info': {
+                'crawl.account-auth-info': {
                     concurrency: Config.CONCURRENCY_ACCOUNT_AUTH,
                     async process(job: Job) {
                         job.progress(10);
@@ -47,7 +47,7 @@ export default class CrawlAccountAuthInfoService extends Service {
                     handler: (ctx: Context<CrawlAccountInfoParams>) => {
                         this.logger.debug(`Crawl account auth info`);
                         this.createJob(
-                            'account-auth-info',
+                            'crawl.account-auth-info',
                             {
                                 listAddresses: ctx.params.listAddresses,
                                 chainId: ctx.params.chainId,

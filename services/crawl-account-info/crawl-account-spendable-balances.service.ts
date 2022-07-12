@@ -32,7 +32,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				this.callApiMixin,
 			],
 			queues: {
-				'account-spendable-balances': {
+				'crawl.account-spendable-balances': {
 					concurrency: Config.CONCURRENCY_ACCOUNT_SPENDABLE_BALANCES,
 					async process(job: Job) {
 						job.progress(10);
@@ -48,7 +48,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 					handler: (ctx: Context<CrawlAccountInfoParams>) => {
 						this.logger.debug(`Crawl account spendable balances`);
 						this.createJob(
-							'account-spendable-balances',
+							'crawl.account-spendable-balances',
 							{
 								listAddresses: ctx.params.listAddresses,
 								chainId: ctx.params.chainId,
