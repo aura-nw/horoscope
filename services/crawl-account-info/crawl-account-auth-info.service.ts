@@ -32,7 +32,7 @@ export default class CrawlAccountAuthInfoService extends Service {
             ],
             queues: {
                 'crawl.account-auth-info': {
-                    concurrency: Config.CONCURRENCY_ACCOUNT_AUTH,
+                    concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_AUTH, 10),
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore

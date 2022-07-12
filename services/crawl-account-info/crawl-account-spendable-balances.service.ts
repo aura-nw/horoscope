@@ -33,7 +33,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 			],
 			queues: {
 				'crawl.account-spendable-balances': {
-					concurrency: Config.CONCURRENCY_ACCOUNT_SPENDABLE_BALANCES,
+					concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_SPENDABLE_BALANCES, 10),
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore

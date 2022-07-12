@@ -35,7 +35,7 @@ export default class CrawlAccountDelegatesService extends Service {
 			],
 			queues: {
 				'crawl.account-delegates': {
-					concurrency: Config.CONCURRENCY_ACCOUNT_DELEGATIONS,
+					concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_DELEGATIONS, 10),
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
