@@ -222,7 +222,8 @@
                             "halo-testnet-001",
                             "theta-testnet-001",
                             "osmo-test-4",
-                            "evmos_9000-4"
+                            "evmos_9000-4",
+                            "euphoria-1"
                         ],
                         "type": "string",
                         "description": "Chain Id of network need to query"
@@ -348,7 +349,8 @@
                             "halo-testnet-001",
                             "theta-testnet-001",
                             "osmo-test-4",
-                            "evmos_9000-4"
+                            "evmos_9000-4",
+                            "euphoria-1"
                         ],
                         "description": "Chain Id of network need to query"
                     }
@@ -388,7 +390,8 @@
                             "halo-testnet-001",
                             "theta-testnet-001",
                             "osmo-test-4",
-                            "evmos_9000-4"
+                            "evmos_9000-4",
+                            "euphoria-1"
                         ],
                         "description": "Chain Id of network need to query"
                     },
@@ -459,7 +462,8 @@
                             "halo-testnet-001",
                             "theta-testnet-001",
                             "osmo-test-4",
-                            "evmos_9000-4"
+                            "evmos_9000-4",
+                            "euphoria-1"
                         ],
                         "description": "Chain Id of network need to query"
                     },
@@ -545,7 +549,8 @@
                             "halo-testnet-001",
                             "theta-testnet-001",
                             "osmo-test-4",
-                            "evmos_9000-4"
+                            "evmos_9000-4",
+                            "euphoria-1"
                         ],
                         "description": "Chain Id of network need to query"
                     },

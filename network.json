@@ -87,5 +87,16 @@
 			"https://rest.bd.evmos.dev:1317"
 		],
 		"prefixAddress":"evmos"
+	},
+	{
+		"chainName":"Aura Euphoria",
+		"chainId":"euphoria-1",
+		"RPC":[
+		   "https://rpc.euphoria.aura.network"
+		],
+		"LCD":[
+		   "https://lcd.euphoria.aura.network"
+		],
+		"prefixAddress":"aura"
 	}
 ]
