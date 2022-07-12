@@ -87,7 +87,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 				let done = false;
 				let resultCallApi;
 				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, param);
+					resultCallApi = await this.callApiFromDomain(url, urlToCall);
 
 					listRedelegates.push(...resultCallApi.redelegation_responses);
 					if (resultCallApi.pagination.next_key === null) {
