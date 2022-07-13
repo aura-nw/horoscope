@@ -14,3 +14,4 @@ export * from './account-delegations.model';
 export * from './account-redelegations.model';
 export * from './account-spendable-balances.model';
 export * from './account-unbonds.model';
+export * from './supply.model';

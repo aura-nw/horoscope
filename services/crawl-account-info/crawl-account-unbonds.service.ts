@@ -32,7 +32,7 @@ export default class CrawlAccountUnbondsService extends Service {
 			],
 			queues: {
 				'crawl.account-unbonds': {
-					concurrency: Config.CONCURRENCY_ACCOUNT_UNBONDS,
+					concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_UNBONDS, 10),
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
