@@ -1,3 +1,4 @@
+import { Coin } from 'entities/coin.entity';
 import { ISigningInfo } from 'model/signing-info.model';
 import {
 	BlockEntity,
@@ -6,6 +7,7 @@ import {
 	ICommunityPool,
 	IPool,
 	IProposal,
+	ISupply,
 	IValidator,
 	PoolEntity,
 	ProposalEntity,
@@ -53,6 +55,11 @@ export interface ResponseFromRPC {
 
 export interface BlockResponseFromLCD {
 	blocks: IBlock[];
+}
+
+export interface ISupplyResponseFromLCD {
+	supply: Coin[];
+	pagination: IPagingationResponseFromLCD;
 }
 
 export type ResponseDto = {

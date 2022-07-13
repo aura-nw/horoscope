@@ -14,4 +14,5 @@ export * from './account-delegations.entity';
 export * from './account-redelegations.entity';
 export * from './account-unbonds.entity';
 export * from './account-spendable-balances.entity';
-// export * from './account-spendable-balances.entity';
+export * from './account-spendable-balances.entity';
+export * from './supply.entity';

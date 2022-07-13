@@ -69,18 +69,20 @@ export default class NetworkService extends MoleculerDBService<
 		},
 	})
 	async getStatus(ctx: Context<ChainIdParams, Record<string, unknown>>) {
-		let [inflation, pool, communityPool] = await Promise.all([
+		let [inflation, pool, communityPool, supply] = await Promise.all([
 			this.broker.call('v1.inflation.getByChain', { chainid: ctx.params.chainid }),
 			this.broker.call('v1.pool.getByChain', { chainid: ctx.params.chainid }),
 			this.broker.call('v1.communitypool.getByChain', { chainid: ctx.params.chainid }),
+			this.broker.call('v1.supply.getByChain', { chainid: ctx.params.chainid }),
 		]);
 		let result: ResponseDto = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
 			data: {
-				inflation: inflation,
-				pool: pool,
-				communityPool: communityPool,
+				inflation,
+				pool,
+				communityPool,
+				supply
 			},
 		};
 		return result;
