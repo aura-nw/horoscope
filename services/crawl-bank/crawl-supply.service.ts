@@ -72,11 +72,6 @@ export default class CrawlSupplyService extends Service {
         let crawlSupply = {} as SupplyEntity;
         crawlSupply.supply = listSupplies;
 
-        // let jsonConvert = new JsonConvert();
-        // const item: SupplyEntity = jsonConvert.deserializeObject(
-        //     crawlSupply,
-        //     SupplyEntity,
-        // );
         let foundSupply: SupplyEntity = await this.adapter.findOne({
             'custom_info.chain_id': Config.CHAIN_ID,
         });
@@ -85,7 +80,12 @@ export default class CrawlSupplyService extends Service {
                 crawlSupply._id = foundSupply._id;
                 await this.adapter.updateById(foundSupply._id, crawlSupply);
             } else {
-                await this.adapter.insert(crawlSupply);
+                let jsonConvert = new JsonConvert();
+                const item: SupplyEntity = jsonConvert.deserializeObject(
+                    crawlSupply,
+                    SupplyEntity,
+                );
+                await this.adapter.insert(item);
             }
         } catch (error) {
             this.logger.error(error);
