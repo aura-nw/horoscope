@@ -7,6 +7,7 @@ export interface ICodeID {
 	_id: ObjectIdNull;
 	code_id: String;
 	status: String;
+	contract_type: String;
 }
 export enum Status {
 	WAITING = "WAITING",
@@ -22,6 +23,7 @@ const definition: definitionType<ICodeID> = (collection?: string) => ({
 		type: String,
 		enum: Status
 	},
+	contract_type: { type: String, default: null},
 	custom_info: customInfoModel,
 })
 

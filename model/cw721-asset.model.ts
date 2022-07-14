@@ -1,10 +1,8 @@
-import { uniqueId } from 'lodash';
 import { model, models, Schema, Types } from 'mongoose';
-import { type } from 'os';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
-export interface IAsset {
+export interface ICW721Asset {
 	_id: ObjectIdNull;
 	asset_id: String;
 	code_id: String;
@@ -15,7 +13,7 @@ export interface IAsset {
 	history: String[];
 }
 
-const definition: definitionType<IAsset> = (collection?: string) => ({
+const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 	_id: Types.ObjectId,
 	asset_id: {
 		type: String, unique : true, index: true
@@ -45,10 +43,10 @@ const definition: definitionType<IAsset> = (collection?: string) => ({
 })
 
 
-export const assetMongoModel = (collection: string): unknown => {
+export const cw721AssetMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	const schema = new Schema<IAsset>(definition(collection), {
+	const schema = new Schema<ICW721Asset>(definition(collection), {
 		autoIndex: true,
 		collection: collection,
 		timestamps:{

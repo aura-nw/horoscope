@@ -57,11 +57,16 @@ export const EVENT_KEY = {
 };
 
 export const ASSET_INDEXER_ACTION = {
-	GET_TOKEN_LIST: 'eyJhbGxfdG9rZW5zIjp7fX0=',
-	ACTION_GET_TOKEN_INFOR: 'v1.assetHandleCodeID.getTokenInfor',
-	ACTION_GET_TOKEN_LIST: 'v1.assetHandleCodeID.getTokenList',
+	COM_GET_CONTRACT_LIST: 'v1.asset-common.getContractListByCodeID',
+	CW721_GET_TOKEN_LIST: 'eyJhbGxfdG9rZW5zIjp7fX0=',
+	CW721_ACTION_GET_TOKEN_INFOR: 'v1.CW721.getTokenInfor',
+	CW721_ACTION_GET_TOKEN_LIST: 'v1.CW721.getTokenList',
+	CW20_GET_OWNER_LIST: 'eyJhbGxfYWNjb3VudHMiOiB7fX0=',
+	CW20_GET_TOKEN_INFO: 'eyJ0b2tlbl9pbmZvIjoge319',
+	CW20_ACTION_GET_OWNER_LIST: 'v1.CW20.getOwnerList',
+	CW20_ACTION_GET_BALANCE: 'v1.CW20.getBalance',
 	ASSET_MANAGER_UPSERT: 'v1.asset-manager.upsert',
-	CODEID_UPDATEMANY: 'v1.code_id.updateMany',
+	CODEID_UPDATEMANY: 'v1.codeid-manager.updateMany',
 };
 
 export const CONTRACT_TYPE = {

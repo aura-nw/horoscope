@@ -139,13 +139,13 @@
                 }
             }
         },
-        "/v1/asset/getByAddress": {
+        "/v1/asset/getByOwner": {
             "get": {
                 "tags": [
                     "Asset"
                 ],
-                "summary": "Get latest block",
-                "description": "Get latest block",
+                "summary": "Get asset by owner",
+                "description": "Get asset by owner",
                 "produces": [
                     "application/json"
                 ],
@@ -155,10 +155,57 @@
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "address",
+                        "name": "owner",
                         "required": true,
                         "type": "string",
-                        "description": "Address need to query"
+                        "description": "Owner address need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": false,
+                        "type": "string",
+                        "description": "Chain Id of network need to query(if null it will return asset on all chainid)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/asset/getByContractType": {
+            "get": {
+                "tags": [
+                    "Asset"
+                ],
+                "summary": "Get asset by contract type",
+                "description": "Get asset by contract type",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "contractType",
+                        "required": true,
+                        "type": "string",
+                        "description": "Contract type need to query"
                     },
                     {
                         "in": "query",

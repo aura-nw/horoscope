@@ -1,7 +1,7 @@
 import { Config } from 'common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
-import { IAsset } from '../model/asset.model';
+import { ICW721Asset } from '../model/cw721-asset.model';
 
 export interface ICoin {
 	amount: String;
@@ -9,7 +9,7 @@ export interface ICoin {
 }
 
 @JsonObject('Asset')
-export class AssetEntity implements IAsset {
+export class AssetEntity implements ICW721Asset {
 
 	@JsonProperty('_id', String, true)
 	_id = Config.DB_BLOCK.dialect === 'local' ? Types.ObjectId() : null;

@@ -76,12 +76,12 @@ IBlock
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		try {
-			let status = await this.broker.call('v1.code_id.checkStatus', {
+			let status = await this.broker.call('v1.codeid-manager.checkStatus', {
 				chain_id: ctx.params.chainId,
 				code_id: ctx.params.codeId,
 			});
 
-			this.logger.debug('code_id.checkStatus res', status);
+			this.logger.debug('codeid-manager.checkStatus res', status);
 
 			return (response = {
 				code: ErrorCode.SUCCESSFUL,
@@ -89,7 +89,7 @@ IBlock
 				data: { status },
 			});
 		} catch (error) {
-			this.logger.error('call code_id.checkStatus error', error);
+			this.logger.error('call codeid-manager.checkStatus error', error);
 			return (response = {
 				code: ErrorCode.WRONG,
 				message: ErrorMessage.WRONG,

@@ -76,7 +76,8 @@ export default class ConfigClass {
 	public static DB_USER: any;
 	public static DB_PRODUCT: any;
 	public static DB_TRANSACTION: any;
-	public static DB_ASSET: any;
+	public static DB_CW721_ASSET: any;
+	public static DB_CW20_ASSET: any;
 	public static DB_CODE_ID: any;
 	public static DB_BLOCK: any;
 	public static DB_PARAM: any;
@@ -112,7 +113,8 @@ export default class ConfigClass {
 		this.DB_VALIDATOR = genericDbInfo('VALIDATOR');
 		this.DB_POOL = genericDbInfo('POOL');
 		this.DB_COMMUNITY_POOL = genericDbInfo('COMMUNITY_POOL');
-		this.DB_ASSET = genericDbInfo('ASSET');
+		this.DB_CW721_ASSET = genericDbInfo('CW721_ASSET');
+		this.DB_CW20_ASSET = genericDbInfo('CW20_ASSET');
 		this.DB_CODE_ID = genericDbInfo('CODE_ID');
 		this.DB_INFLATION = genericDbInfo('INFLATION');
 		this.DB_ACCOUNT_BALANCES = genericDbInfo('ACCOUNT_BALANCES');
