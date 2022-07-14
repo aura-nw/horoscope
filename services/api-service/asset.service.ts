@@ -137,10 +137,10 @@ IBlock
 					});
 					registed = true;
 				}
-				this.logger.info('codeid-manager.registed:', registed);
+				this.logger.debug('codeid-manager.registed:', registed);
 				if (registed) {
 					const URL = await Utils.getUrlByChainIdAndType(chain_id, URL_TYPE_CONSTANTS.LCD);
-					this.broker.emit(`v1.${contract_type}.validate`, { URL, chain_id, code_id, contract_type });
+					this.broker.emit(`${contract_type}.validate`, { URL, chain_id, code_id, contract_type });
 				}
 				return (response = {
 					code: ErrorCode.SUCCESSFUL,
