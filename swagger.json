@@ -86,7 +86,7 @@
                 }
             }
         },
-        "/v1/asset/indexAsset": {
+        "/v1/asset/index": {
             "post": {
                 "tags": [
                     "Asset"
@@ -105,13 +105,25 @@
                         "name": "params",
                         "schema": {
                             "type": "object",
-                            "required": [
-                                "name"
-                            ],
                             "properties": {
-                                "code_id": {
+                                "codeId": {
+                                    "required": true,
                                     "type": "number",
-                                    "description": "code id"
+                                    "description": "Code id of stored contract"
+                                },
+                                "contractType": {
+                                    "required": true,
+                                    "type": "string",
+                                    "enum": [
+                                        "CW721"
+                                    ],
+                                    "description": "Type of contract want to register"
+                                },
+                                "chainId": {
+                                    "required": true,
+                                    "type": "string",
+                                    "example": "aura-devnet",
+                                    "description": "Chain Id of network"
                                 }
                             }
                         }
@@ -127,13 +139,13 @@
                 }
             }
         },
-        "/v1/asset/getByAddress": {
+        "/v1/asset/getByOwner": {
             "get": {
                 "tags": [
                     "Asset"
                 ],
-                "summary": "Get latest block",
-                "description": "Get latest block",
+                "summary": "Get asset by owner",
+                "description": "Get asset by owner",
                 "produces": [
                     "application/json"
                 ],
@@ -143,10 +155,57 @@
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "address",
+                        "name": "owner",
                         "required": true,
                         "type": "string",
-                        "description": "Address need to query"
+                        "description": "Owner address need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": false,
+                        "type": "string",
+                        "description": "Chain Id of network need to query(if null it will return asset on all chainid)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/asset/getByContractType": {
+            "get": {
+                "tags": [
+                    "Asset"
+                ],
+                "summary": "Get asset by contract type",
+                "description": "Get asset by contract type",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "contractType",
+                        "required": true,
+                        "type": "string",
+                        "description": "Contract type need to query"
                     },
                     {
                         "in": "query",
@@ -292,7 +351,7 @@
                 }
             }
         },
-        "/v1/codeid/{code_id}/checkStatus": {
+        "/v1/codeid/{chainId}/{codeId}/checkStatus": {
             "get": {
                 "tags": [
                     "CodeId"
@@ -308,7 +367,15 @@
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "code_id",
+                        "name": "chainId",
+                        "required": true,
+                        "type": "string",
+                        "example": "aura-devnet",
+                        "description": "Chain Id of network"
+                    },
+                    {
+                        "in": "path",
+                        "name": "codeId",
                         "required": true,
                         "type": "number",
                         "description": "Code Id of stored contract need to query"

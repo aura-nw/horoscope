@@ -23,17 +23,33 @@ export interface BlockHashParams {
 
 export interface GetBlockRequest
 	extends ChainIdParams,
-		PageLimit,
-		BlockHashParams,
-		BlockHeightParams {
+	PageLimit,
+	BlockHashParams,
+	BlockHeightParams {
 	operatorAddress: string;
 }
 
 export interface GetAssetByAddressRequest extends ChainIdParams, PageLimit {
 	address: string;
 }
+export interface GetAllAsset
+	extends ChainIdParams,
+	PageLimit { }
 
-export interface GetTxRequest extends ChainIdParams, PageLimit, BlockHeightParams, TxHashParams {}
+export interface GetAssetByOwnerAddressRequest
+	extends ChainIdParams,
+	PageLimit {
+	owner: string,
+}
+
+export interface GetAssetByContractTypeAddressRequest
+	extends ChainIdParams,
+	PageLimit {
+	contractType: any;
+	owner: string,
+}
+
+export interface GetTxRequest extends ChainIdParams, PageLimit, BlockHeightParams, TxHashParams { }
 
 export interface AccountInfoRequest {
 	address: string;

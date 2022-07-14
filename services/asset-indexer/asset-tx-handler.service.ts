@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import { dbAssetMixin } from '../../mixins/dbMixinMongoose';
+import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
@@ -11,7 +11,7 @@ import { URL_TYPE_CONSTANTS, EVENT_TYPE, ASSET_INDEXER_ACTION } from '../../comm
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
 import { Status } from '@Model';
-import { Common } from './common';
+import { Common } from './common.service';
 
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
@@ -20,12 +20,12 @@ const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const URL = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 export default class CrawlAccountInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
-	private dbAssetMixin = dbAssetMixin;
+	private dbAssetMixin = dbCW721AssetMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'handleAssetTx',
+			name: 'handle-asset-tx',
 			version: 1,
 			mixins: [
 				QueueService(
@@ -89,8 +89,8 @@ export default class CrawlAccountInfoService extends Service {
 							let code_id = await this.verifyAddressByCodeID(address);
 							if (code_id != null) {
 								let listTokenIDs: any = await this.broker.call(
-									ASSET_INDEXER_ACTION.ACTION_GET_TOKEN_LIST,
-									{ code_id, address },
+									ASSET_INDEXER_ACTION.CW721_ACTION_GET_TOKEN_LIST,
+									{ URL, code_id, address },
 									{ timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ },
 								);
 								this.logger.debug(`listTokenIDs ${JSON.stringify(listTokenIDs)}`);
@@ -98,12 +98,12 @@ export default class CrawlAccountInfoService extends Service {
 									const getInforPromises = await Promise.all(
 										listTokenIDs.data.tokens.map(async (token_id: String) => {
 											let tokenInfo: any = await this.broker.call(
-												ASSET_INDEXER_ACTION.ACTION_GET_TOKEN_INFOR,
-												{ code_id, address, token_id },
+												ASSET_INDEXER_ACTION.CW721_ACTION_GET_TOKEN_INFOR,
+												{ URL, code_id, address, token_id },
 												{ timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ },
 											);
 											if (tokenInfo != null) {
-												const asset = await Common.createAssetObject(
+												const asset = await Common.createCW721AssetObject(
 													code_id,
 													address,
 													token_id,

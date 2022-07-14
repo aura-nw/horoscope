@@ -1,25 +1,30 @@
+import { uniq } from 'lodash';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
+import { customInfoModel } from './custom-info.model';
 
 export interface ICodeID {
 	_id: ObjectIdNull;
 	code_id: String;
 	status: String;
+	contract_type: String;
 }
 export enum Status {
 	WAITING = "WAITING",
-	INDEXING = "INDEXING",
+	// INDEXING = "INDEXING",
 	COMPLETED = "COMPLETED",
 	REJECTED = "REJECTED",
 	TBD = "TBD",
 }
 const definition: definitionType<ICodeID> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	code_id: { type: String, index: true, unique: true },
+	code_id: { type: String },
 	status: {
 		type: String,
 		enum: Status
-	}
+	},
+	contract_type: { type: String, default: null},
+	custom_info: customInfoModel,
 })
 
 
@@ -35,5 +40,6 @@ export const codeidMongoModel = (collection: string): unknown => {
 		}
 		// strict: true
 	});
+	schema.index({ 'custom_info.chain_id': 1, 'code_id': 1 });
 	return models[collection] || model(collection, schema);
 };

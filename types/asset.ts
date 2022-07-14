@@ -1,3 +1,5 @@
 export interface AssetIndexParams {
-	code_id: string;
+	codeId: string;
+	contractType: string;
+	chainId: string;
 }
