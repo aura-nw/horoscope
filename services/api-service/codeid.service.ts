@@ -18,7 +18,7 @@ import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
 import { Status } from '../../model/codeid.model';
 import { Ok } from 'ts-results';
-import { LIST_NETWORK } from 'common/constant';
+import { CODEID_MANAGER_ACTION, LIST_NETWORK } from 'common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -76,7 +76,7 @@ IBlock
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		try {
-			let status = await this.broker.call('v1.codeid-manager.checkStatus', {
+			let status = await this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
 				chain_id: ctx.params.chainId,
 				code_id: ctx.params.codeId,
 			});

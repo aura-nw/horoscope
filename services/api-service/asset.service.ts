@@ -10,7 +10,6 @@ import {
 	Action,
 	Post,
 } from '@ourparentcenter/moleculer-decorators-extended';
-// import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
 	ErrorMessage,
@@ -25,11 +24,9 @@ import { AssetIndexParams } from '../../types/asset';
 import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
 import { Status } from '../../model/codeid.model';
-import { ICW721Asset } from '../../model/cw721-asset.model';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
-import { ASSET_INDEXER_ACTION, CONTRACT_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
-import { error, info } from 'console';
+import { CODEID_MANAGER_ACTION, CONTRACT_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Utils } from 'utils/utils';
 
 /**
@@ -102,7 +99,7 @@ IBlock
 		const chain_id = ctx.params.chainId;
 		const contract_type = ctx.params.contractType;
 		return await this.broker
-			.call('v1.codeid-manager.find', { query: { code_id, 'custom_info.chain_id': chain_id } })
+			.call(CODEID_MANAGER_ACTION.FIND, { query: { code_id, 'custom_info.chain_id': chain_id } })
 			.then(async (res: any) => {
 				this.logger.info('codeid-manager.find res', res);
 				if (res.length > 0) {
@@ -110,7 +107,7 @@ IBlock
 						case Status.REJECTED:
 							if (res[0].contract_type !== contract_type) {
 								const condition = { code_id: code_id, 'custom_info.chain_id': chain_id };
-								this.broker.call(ASSET_INDEXER_ACTION.CODEID_UPDATEMANY, {
+								this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
 									condition,
 									update: { status: Status.WAITING, contract_type },
 								});
@@ -376,21 +373,6 @@ IBlock
 			}
 
 			this.logger.info('query', query);
-			// @ts-ignore
-			// let [assets, count] = await Promise.all<any, any>([
-			// 	this.adapter.find({
-			// 		query: query,
-			// 		limit: ctx.params.pageLimit,
-			// 		offset: ctx.params.pageOffset,
-			// 		// @ts-ignore
-			// 		// sort: '-block.header.height',
-			// 	}),
-			// 	ctx.params.countTotal === true
-			// 		? this.adapter.count({
-			// 			query: query,
-			// 		})
-			// 		: 0,
-			// ]);
 
 			const assets: any[] = await this.broker.call(`v1.${ctx.params.contractType}.find`, {
 				query,

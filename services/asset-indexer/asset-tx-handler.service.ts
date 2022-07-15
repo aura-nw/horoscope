@@ -4,20 +4,20 @@
 
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { Service, ServiceBroker } from 'moleculer';
+import { CallingOptions, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
 import * as _ from 'lodash';
-import { URL_TYPE_CONSTANTS, EVENT_TYPE, ASSET_INDEXER_ACTION } from '../../common/constant';
+import { URL_TYPE_CONSTANTS, EVENT_TYPE, COMMON_ACTION,ENRICH_TYPE, CODEID_MANAGER_ACTION } from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
 import { Status } from '@Model';
-import { Common } from './common.service';
 
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
-const URL = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
+
 export default class CrawlAccountInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbAssetMixin = dbCW721AssetMixin;
@@ -42,8 +42,10 @@ export default class CrawlAccountInfoService extends Service {
 					concurrency: 1,
 					async process(job: Job) {
 						job.progress(10);
+						const URL = Utils.getUrlByChainIdAndType(job.data.chainId, URL_TYPE_CONSTANTS.LCD);
+
 						// @ts-ignore
-						await this.handleJob(job.data.listTx);
+						await this.handleJob(URL, job.data.listTx, job.data.chainId);
 						job.progress(100);
 						return true;
 					},
@@ -56,6 +58,7 @@ export default class CrawlAccountInfoService extends Service {
 							'asset.tx-handle',
 							{
 								listTx: ctx.params.listTx,
+								chainId: ctx.params.chainId,
 							},
 							{
 								removeOnComplete: true,
@@ -68,7 +71,7 @@ export default class CrawlAccountInfoService extends Service {
 		});
 	}
 
-	async handleJob(listTx: any[]): Promise<any[]> {
+	async handleJob(URL: string, listTx: any[], chainId: string): Promise<any[]> {
 		let contractListFromEvent: any[] = [];
 		try {
 			if (listTx.length > 0) {
@@ -85,45 +88,16 @@ export default class CrawlAccountInfoService extends Service {
 					contractList.map(async (address) => {
 						const processingFlag = await this.broker.cacher?.get(`contract_${address}`);
 						if (!processingFlag) {
-							await this.broker.cacher?.set(`contract_${address}`, true);
-							let code_id = await this.verifyAddressByCodeID(address);
-							if (code_id != null) {
-								let listTokenIDs: any = await this.broker.call(
-									ASSET_INDEXER_ACTION.CW721_ACTION_GET_TOKEN_LIST,
-									{ URL, code_id, address },
-									{ timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ },
+							await this.broker.cacher?.set(`contract_${chainId}_${address}`, true);
+							let [code_id, contract_type] = await this.verifyAddressByCodeID(URL, address, chainId);
+							if (code_id != "" && contract_type != "") {
+								await this.broker.call(
+									`v1.${contract_type}.enrichData`,
+									[{ URL, chain_id: chainId, code_id, address }, ENRICH_TYPE.UPSERT],
+									OPTs,
 								);
-								this.logger.debug(`listTokenIDs ${JSON.stringify(listTokenIDs)}`);
-								if (listTokenIDs != null) {
-									const getInforPromises = await Promise.all(
-										listTokenIDs.data.tokens.map(async (token_id: String) => {
-											let tokenInfo: any = await this.broker.call(
-												ASSET_INDEXER_ACTION.CW721_ACTION_GET_TOKEN_INFOR,
-												{ URL, code_id, address, token_id },
-												{ timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ },
-											);
-											if (tokenInfo != null) {
-												const asset = await Common.createCW721AssetObject(
-													code_id,
-													address,
-													token_id,
-													tokenInfo,
-												);
-												return await this.broker.call(
-													ASSET_INDEXER_ACTION.ASSET_MANAGER_UPSERT,
-													asset,
-													{
-														timeout: ACTION_TIMEOUT,
-														retries: MAX_RETRY_REQ,
-													},
-												);
-											}
-										}),
-									);
-									await getInforPromises;
-								}
 							}
-							await this.broker.cacher?.del(`contract_${address}`);
+							await this.broker.cacher?.del(`contract_${chainId}_${address}`);
 						}
 					}),
 				);
@@ -135,24 +109,22 @@ export default class CrawlAccountInfoService extends Service {
 		return [];
 	}
 
-	async verifyAddressByCodeID(address: string): Promise<any> {
+	async verifyAddressByCodeID(URL: string, address: string, chain_id: string): Promise<[string, string]> {
 		let urlGetContractInfo = `${CONTRACT_URI}${address}`;
 		let contractInfo = await this.callApiFromDomain(URL, urlGetContractInfo);
 		if (contractInfo?.contract_info?.code_id != undefined) {
-			return await this.broker
-				.call('v1.code_id.checkStatus', { code_id: contractInfo.contract_info.code_id })
-				.then((res) => {
-					if (res === Status.COMPLETED) {
-						return contractInfo.contract_info.code_id;
-					} else return null;
-				})
-				.catch((error) => {
-					this.logger.error('call code_id.checkStatus error', error);
-					return null;
-				});
+			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, { query: { code_id: contractInfo.contract_info.code_id, 'custom_info.chain_id': chain_id } });
+			this.logger.debug('codeid-manager.find res', res);
+			if (res.length > 0) {
+				if (res[0].status === Status.COMPLETED) {
+					return [contractInfo.contract_info.code_id, res[0].contract_type];
+				} else return ["", ""];
+			} else {
+				return ["", ""];
+			}
 		} else {
-			this.logger.error('Fail to get token info', urlGetContractInfo);
-			return null;
+			this.logger.error('verifyAddressByCodeID Fail to get token info', urlGetContractInfo);
+			return ["", ""];
 		}
 	}
 

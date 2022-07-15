@@ -12,6 +12,14 @@ import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 	],
 	version: 1,
 	actions: {
+		"insert": {
+			async handler(ctx: Context): Promise<any> {
+				// @ts-ignore
+				this.logger.debug(`ctx.params cw20-asset-manager insert ${JSON.stringify(ctx.params)}`);
+				// @ts-ignore
+				return await this.adapter.insert(ctx.params);
+			}
+		},
 		"count": {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
