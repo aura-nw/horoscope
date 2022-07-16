@@ -100,13 +100,19 @@ export default class HandleTransactionService extends Service {
 				try {
 					element.messages.forEach(async (item: IRedisStreamData) => {
 						this.logger.info(`Handling message ${item.id}`);
-						const transaction: TransactionEntity = new JsonConvert().deserializeObject(
-							JSON.parse(item.message.element.toString()),
-							TransactionEntity,
-						);
-						listTransactionNeedSaveToDb.push(transaction);
-						listMessageNeedAck.push(item.id);
-						this.lastId = item.id.toString();
+						try {
+							const transaction: TransactionEntity = new JsonConvert().deserializeObject(
+								JSON.parse(item.message.element.toString()),
+								TransactionEntity,
+							);
+							listTransactionNeedSaveToDb.push(transaction);
+							listMessageNeedAck.push(item.id);
+							this.lastId = item.id.toString();
+						} catch (error) {
+							this.logger.error("Error when handling message id: " + item.id);
+							this.logger.error(error);
+						}
+						
 					});
 
 					this.broker.emit('list-tx.upsert', {
