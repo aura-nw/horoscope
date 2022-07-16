@@ -37,7 +37,7 @@ export interface IData {
 	txs: String[];
 }
 export interface IEvidenceDetail {
-	evidence: String[];
+	evidence: Object[];
 }
 export interface IEvidence {
 	evidence: IEvidenceDetail;
@@ -129,8 +129,8 @@ export class BlockData implements IData {
 }
 @JsonObject('BlockDataEvidence')
 export class BlockDataEvidence implements IEvidenceDetail {
-	@JsonProperty('evidence', [String])
-	evidence: String[] = [];
+	@JsonProperty('evidence', [Object])
+	evidence: Object[] = [];
 }
 @JsonObject('Signatures')
 export class Signature implements ISignature {

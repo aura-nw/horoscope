@@ -42,7 +42,7 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 			txs: [String],
 		},
 		evidence: {
-			evidence: [String],
+			evidence: [Object],
 		},
 		last_commit: {
 			height: Number,
