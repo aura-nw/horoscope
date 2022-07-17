@@ -74,6 +74,7 @@ export default class CrawlValidatorService extends Service {
 		listValidator.forEach(async (validator) => {
 			let foundValidator = await this.adapter.findOne({
 				operator_address: `${validator.operator_address}`,
+				'custom_info.chain_id': Config.CHAIN_ID,
 			});
 			try {
 				if (foundValidator) {
