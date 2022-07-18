@@ -44,6 +44,7 @@ const genericDbInfo = (where: string): DBInfo => ({
 	port: +getDbInfo(where, 'PORT', '0'),
 	dbname: getDbInfo(where, 'DBNAME', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),
+	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false'),
 });
 
 export default class ConfigClass {
@@ -74,6 +75,22 @@ export default class ConfigClass {
 	// public static JWT_SECRET = process.env.JWT_SECRET || 'dummy-secret';
 	public static DB_USER: any;
 	public static DB_PRODUCT: any;
+	public static DB_TRANSACTION: any;
+	public static DB_CW721_ASSET: any;
+	public static DB_CW20_ASSET: any;
+	public static DB_CODE_ID: any;
+	public static DB_BLOCK: any;
+	public static DB_PARAM: any;
+	public static DB_SUPPLY: any;
+	public static DB_ACCOUNT_INFO: any;
+	public static DB_VALIDATOR: any;
+	public static DB_INFLATION: any;
+	public static DB_ACCOUNT_BALANCES: any;
+	public static DB_ACCOUNT_DELEGATIONS: any;
+	public static DB_ACCOUNT_AUTH: any;
+	public static DB_ACCOUNT_SPENDABLE_BALANCES: any;
+	public static DB_ACCOUNT_REDELEGATIONS: any;
+	public static DB_ACCOUNT_UNBONDS: any;
 
 	public constructor() {
 		Object.keys(configObj).forEach((key: string) => {
@@ -90,5 +107,23 @@ export default class ConfigClass {
 		this.DB_USER = genericDbInfo('USER');
 		this.DB_PRODUCT = genericDbInfo('PRODUCT');
 		this.DB_PROPOSAL = genericDbInfo('PROPOSAL');
+		this.DB_TRANSACTION = genericDbInfo('TRANSACTION');
+		this.DB_PARAM = genericDbInfo('PARAM');
+		this.DB_SUPPLY = genericDbInfo('SUPPLY');
+		this.DB_BLOCK = genericDbInfo('BLOCK');
+		this.DB_ACCOUNT_INFO = genericDbInfo('ACCOUNT_INFO');
+		this.DB_VALIDATOR = genericDbInfo('VALIDATOR');
+		this.DB_POOL = genericDbInfo('POOL');
+		this.DB_COMMUNITY_POOL = genericDbInfo('COMMUNITY_POOL');
+		this.DB_CW721_ASSET = genericDbInfo('CW721_ASSET');
+		this.DB_CW20_ASSET = genericDbInfo('CW20_ASSET');
+		this.DB_CODE_ID = genericDbInfo('CODE_ID');
+		this.DB_INFLATION = genericDbInfo('INFLATION');
+		this.DB_ACCOUNT_BALANCES = genericDbInfo('ACCOUNT_BALANCES');
+		this.DB_ACCOUNT_DELEGATIONS = genericDbInfo('ACCOUNT_DELEGATIONS');
+		this.DB_ACCOUNT_AUTH = genericDbInfo('ACCOUNT_AUTH');
+		this.DB_ACCOUNT_SPENDABLE_BALANCES = genericDbInfo('ACCOUNT_SPENDABLE_BALANCES');
+		this.DB_ACCOUNT_REDELEGATIONS = genericDbInfo('ACCOUNT_REDELEGATIONS');
+		this.DB_ACCOUNT_UNBONDS = genericDbInfo('ACCOUNT_UNBONDS');
 	}
 }

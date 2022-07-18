@@ -4,7 +4,7 @@
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
 		"esModuleInterop": true,
-		"noImplicitAny": false,
+		"noImplicitAny": true,
 		"noImplicitReturns": true,
 		"noImplicitThis": true,
 		"strict": true,
@@ -82,6 +82,9 @@
 			],
 			"@Meta": [
 				"meta"
+			],
+			"@Model": [
+				"model"
 			]
 		}
 	},

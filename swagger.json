@@ -1,43 +1,98 @@
 {
     "info": {
-        "title": "cameo-server API Documentation",
+        "title": "Horoscope API Documentation",
         "version": "1.0.0",
-        "description": "Moleculer JS Microservice Boilerplate with Typescript, TypeORM, CLI, Service Clients, Swagger, Jest, Docker, Eslint support and everything you will ever need to deploy rock solid projects.."
+        "description": "Indexer for multiple Cosmos Network"
     },
     "host": "localhost:3000",
     "basePath": "/api",
     "swagger": "2.0",
     "paths": {
-        "/v1/greeter/hello": {
+        "/v1/account-info": {
             "get": {
                 "tags": [
-                    "Greeter"
+                    "Account Info"
                 ],
-                "summary": "Say a 'Hello' action",
-                "description": "Say a 'Hello' action",
+                "summary": "Get information of an address",
+                "description": "Get information of an address",
                 "produces": [
                     "application/json"
                 ],
                 "consumes": [
                     "application/json"
                 ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "address",
+                        "required": true,
+                        "type": "string",
+                        "description": "Address of account"
+                    },
+                    {
+                        "in": "query",
+                        "name": "chainId",
+                        "required": true,
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Hello result"
+                        "description": "Register result"
                     },
-                    "403": {
-                        "description": "Server error"
+                    "422": {
+                        "description": "Missing parameters"
                     }
                 }
             }
         },
-        "/v1/greeter/welcome": {
+        "/v1/account-info/delegations": {
+            "get": {
+                "tags": [
+                    "Account Info"
+                ],
+                "summary": "Get delegation information of an address",
+                "description": "Get delegation information of an address",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "address",
+                        "required": true,
+                        "type": "string",
+                        "description": "Address of account"
+                    },
+                    {
+                        "in": "query",
+                        "name": "chainId",
+                        "required": true,
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/asset/index": {
             "post": {
                 "tags": [
-                    "Greeter"
+                    "Asset"
                 ],
-                "summary": "Welcome a username",
-                "description": "Welcome a username",
+                "summary": "Register asset with the code id",
+                "description": "Register asset with the code id",
                 "produces": [
                     "application/json"
                 ],
@@ -50,14 +105,25 @@
                         "name": "params",
                         "schema": {
                             "type": "object",
-                            "required": [
-                                "name"
-                            ],
                             "properties": {
-                                "name": {
+                                "codeId": {
+                                    "required": true,
+                                    "type": "number",
+                                    "description": "Code id of stored contract"
+                                },
+                                "contractType": {
+                                    "required": true,
                                     "type": "string",
-                                    "default": "John",
-                                    "description": "Name to be used"
+                                    "enum": [
+                                        "CW721"
+                                    ],
+                                    "description": "Type of contract want to register"
+                                },
+                                "chainId": {
+                                    "required": true,
+                                    "type": "string",
+                                    "example": "aura-devnet",
+                                    "description": "Chain Id of network"
                                 }
                             }
                         }
@@ -65,7 +131,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "welcome result"
+                        "description": "Register result"
                     },
                     "422": {
                         "description": "Missing parameters"
@@ -73,131 +139,13 @@
                 }
             }
         },
-        "/v1/products/{id}/quantity/increase": {
-            "put": {
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Increase the quantity of the product item",
-                "description": "Increase the quantity of the product item.",
-                "operationId": "increaseQuantity",
-                "produces": [
-                    "application/json"
-                ],
-                "consumes": [
-                    "application/json; charset=utf-8"
-                ],
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "description": "Id of product",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "params",
-                        "schema": {
-                            "type": "object",
-                            "required": [
-                                "value"
-                            ],
-                            "properties": {
-                                "value": {
-                                    "type": "number",
-                                    "description": "Quantity to increase"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Increased quantity result"
-                    },
-                    "422": {
-                        "description": "Missing parameters"
-                    }
-                }
-            }
-        },
-        "/v1/products/{id}/quantity/decrease": {
-            "put": {
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Decrease the quantity of the product item",
-                "description": "Decrease the quantity of the product item.",
-                "produces": [
-                    "application/json"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "description": "Id of product",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "params",
-                        "schema": {
-                            "type": "object",
-                            "required": [
-                                "value"
-                            ],
-                            "properties": {
-                                "value": {
-                                    "type": "number",
-                                    "description": "Quantity to decrease"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Decreased quantity result"
-                    },
-                    "422": {
-                        "description": "Missing parameters"
-                    }
-                }
-            }
-        },
-        "/v1/products": {
+        "/v1/asset/getByOwner": {
             "get": {
                 "tags": [
-                    "Products"
+                    "Asset"
                 ],
-                "summary": "Get all products (auto generated)",
-                "description": "Get all products",
-                "produces": [
-                    "application/json"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Products result"
-                    },
-                    "403": {
-                        "description": "Server error"
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Create a product (auto generated)",
-                "description": "Create a product",
+                "summary": "Get asset by owner",
+                "description": "Get asset by owner",
                 "produces": [
                     "application/json"
                 ],
@@ -206,32 +154,31 @@
                 ],
                 "parameters": [
                     {
-                        "in": "body",
-                        "name": "params",
-                        "schema": {
-                            "type": "object",
-                            "required": [
-                                "name",
-                                "price"
-                            ],
-                            "properties": {
-                                "name": {
-                                    "type": "string",
-                                    "default": "product name",
-                                    "description": "Name to be used"
-                                },
-                                "price": {
-                                    "type": "number",
-                                    "default": 99,
-                                    "description": "Price of product"
-                                }
-                            }
-                        }
+                        "in": "query",
+                        "name": "owner",
+                        "required": true,
+                        "type": "string",
+                        "description": "Owner address need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": false,
+                        "type": "string",
+                        "description": "Chain Id of network need to query(if null it will return asset on all chainid)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "welcome result"
+                        "description": "Register result"
                     },
                     "422": {
                         "description": "Missing parameters"
@@ -239,13 +186,13 @@
                 }
             }
         },
-        "/v1/products/{id}": {
+        "/v1/asset/getByContractType": {
             "get": {
                 "tags": [
-                    "Products"
+                    "Asset"
                 ],
-                "summary": "Get product by id (auto generated)",
-                "description": "Get product by id",
+                "summary": "Get asset by contract type",
+                "description": "Get asset by contract type",
                 "produces": [
                     "application/json"
                 ],
@@ -254,82 +201,163 @@
                 ],
                 "parameters": [
                     {
-                        "in": "path",
-                        "name": "id",
-                        "description": "Id of product",
+                        "in": "query",
+                        "name": "contractType",
                         "required": true,
-                        "type": "string"
+                        "type": "string",
+                        "description": "Contract type need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": false,
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Products result"
-                    },
-                    "403": {
-                        "description": "Server error"
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Update a product (auto generated)",
-                "description": "Update product.",
-                "produces": [
-                    "application/json"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "description": "Id of product",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "params",
-                        "schema": {
-                            "type": "object",
-                            "required": [
-                                "name",
-                                "Price"
-                            ],
-                            "properties": {
-                                "name": {
-                                    "type": "string",
-                                    "description": "Name of product"
-                                },
-                                "price": {
-                                    "type": "number",
-                                    "description": "Price of product"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Product update result"
-                    },
-                    "403": {
-                        "description": "Server error"
+                        "description": "Register result"
                     },
                     "422": {
                         "description": "Missing parameters"
                     }
                 }
-            },
-            "delete": {
+            }
+        },
+        "/v1/block": {
+            "get": {
                 "tags": [
-                    "Products"
+                    "Block"
                 ],
-                "summary": "Delete a product (auto generated)",
-                "description": "Delete product by id",
+                "summary": "Get latest block",
+                "description": "Get latest block",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "blockHeight",
+                        "required": false,
+                        "type": "string",
+                        "description": "Block height of transaction"
+                    },
+                    {
+                        "in": "query",
+                        "name": "blockHash",
+                        "required": false,
+                        "type": "string",
+                        "description": "Block hash"
+                    },
+                    {
+                        "in": "query",
+                        "name": "operatorAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "operator address who proposed this block"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/codeid/{chainId}/{codeId}/checkStatus": {
+            "get": {
+                "tags": [
+                    "CodeId"
+                ],
+                "summary": "Check status of code_id",
+                "description": "Check status of code_id",
                 "produces": [
                     "application/json"
                 ],
@@ -339,18 +367,311 @@
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "id",
-                        "description": "Id of product",
+                        "name": "chainId",
                         "required": true,
-                        "type": "string"
+                        "type": "string",
+                        "example": "aura-devnet",
+                        "description": "Chain Id of network"
+                    },
+                    {
+                        "in": "path",
+                        "name": "codeId",
+                        "required": true,
+                        "type": "number",
+                        "description": "Code Id of stored contract need to query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Delete result"
+                        "description": "Register result"
                     },
-                    "403": {
-                        "description": "Server error"
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/network/status": {
+            "get": {
+                "tags": [
+                    "Network"
+                ],
+                "summary": "Get status network",
+                "description": "Get status network",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
+                        "description": "Chain Id of network need to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/proposal": {
+            "get": {
+                "tags": [
+                    "Proposal"
+                ],
+                "summary": "Get latest proposal",
+                "description": "Get latest proposal",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "proposalId",
+                        "required": false,
+                        "type": "string",
+                        "description": "proposal Id"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/transaction": {
+            "get": {
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Get latest transaction",
+                "description": "Get latest transaction",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "blockHeight",
+                        "required": false,
+                        "type": "string",
+                        "description": "Block height of transaction"
+                    },
+                    {
+                        "in": "query",
+                        "name": "txHash",
+                        "required": false,
+                        "type": "string",
+                        "description": "Transaction hash"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/validator": {
+            "get": {
+                "tags": [
+                    "Validator"
+                ],
+                "summary": "Get validator",
+                "description": "Get validator",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "operatorAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "operator address"
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "BOND_STATUS_UNSPECIFIED",
+                            "BOND_STATUS_UNBONDED",
+                            "BOND_STATUS_UNBONDING",
+                            "BOND_STATUS_BONDED"
+                        ],
+                        "description": "status"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
                     }
                 }
             }

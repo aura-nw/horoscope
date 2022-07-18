@@ -51,7 +51,7 @@ RUN npm ci --silent
 COPY . .
 
 # Build and cleanup
-ENV NODE_ENV=production
+# ENV NODE_ENV=production
 
 # build
 RUN npm run build \

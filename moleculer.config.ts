@@ -3,7 +3,7 @@ import { inspect } from 'util';
 import { BrokerOptions, Errors, MetricRegistry } from 'moleculer';
 import 'reflect-metadata';
 import pick from 'lodash/pick';
-import ServiceGuard = require('./middlewares/ServiceGuard');
+// import ServiceGuard = require('./middlewares/ServiceGuard');
 import HotReloadMiddleware from './middlewares/HotReloadCHokidar';
 import { Config } from './common';
 import MoleculerRetryableError = Errors.MoleculerRetryableError;

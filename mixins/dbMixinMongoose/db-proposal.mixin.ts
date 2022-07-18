@@ -1,7 +1,6 @@
 'use strict';
 
 import { proposalMongoModel } from '../../model';
-import { Model } from 'mongoose';
 import { Config } from '../../common';
 import { DbBaseMixin } from './db-base.mixin';
 
