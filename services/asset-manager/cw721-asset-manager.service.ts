@@ -12,6 +12,14 @@ import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 	],
 	version: 1,
 	actions: {
+		"insert": {
+			async handler(ctx: Context): Promise<any> {
+				// @ts-ignore
+				this.logger.debug(`ctx.params cw721-asset-manager insert ${JSON.stringify(ctx.params)}`);
+				// @ts-ignore
+				return await this.adapter.insert(ctx.params);
+			}
+		},
 		"count": {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
@@ -49,10 +57,9 @@ import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 
 export default class CW721AssetManagerService extends moleculer.Service {
 	async upsert_handler(asset: any) {
-		this.logger.debug(`asset `, asset);
+		this.logger.debug(`upsert_handler asset `, asset);
 		let item = await this.adapter.findOne({ asset_id: asset.asset_id });
 		if (item) {
-			// this.logger.debug(`rs `, item._id);
 			asset._id = item._id;
 			await this.adapter.updateById(item._id, asset);
 		} else {

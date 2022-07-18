@@ -56,22 +56,39 @@ export const EVENT_KEY = {
 	CONTRACT_ADDRESS: '_contract_address',
 };
 
-export const ASSET_INDEXER_ACTION = {
-	COM_GET_CONTRACT_LIST: 'v1.asset-common.getContractListByCodeID',
-	CW721_GET_TOKEN_LIST: 'eyJhbGxfdG9rZW5zIjp7fX0=',
-	CW721_ACTION_GET_TOKEN_INFOR: 'v1.CW721.getTokenInfor',
-	CW721_ACTION_GET_TOKEN_LIST: 'v1.CW721.getTokenList',
-	CW20_GET_OWNER_LIST: 'eyJhbGxfYWNjb3VudHMiOiB7fX0=',
-	CW20_GET_TOKEN_INFO: 'eyJ0b2tlbl9pbmZvIjoge319',
-	CW20_ACTION_GET_OWNER_LIST: 'v1.CW20.getOwnerList',
-	CW20_ACTION_GET_BALANCE: 'v1.CW20.getBalance',
-	ASSET_MANAGER_UPSERT: 'v1.asset-manager.upsert',
-	CODEID_UPDATEMANY: 'v1.codeid-manager.updateMany',
+export const COMMON_ACTION = {
+	GET_CONTRACT_LIST: 'v1.asset-common.getContractListByCodeID',
+};
+
+export const CW20_ACTION = {
+	URL_GET_OWNER_LIST: 'eyJhbGxfYWNjb3VudHMiOiB7fX0=',
+	URL_GET_TOKEN_INFO: 'eyJ0b2tlbl9pbmZvIjoge319',
+	GET_OWNER_LIST: 'v1.CW20.getOwnerList',
+	GET_BALANCE: 'v1.CW20.getBalance',
+	ENRICH_DATA: 'v1.CW20.enrichData',
+};
+
+export const CODEID_MANAGER_ACTION = {
+	UPDATE_MANY: 'v1.codeid-manager.updateMany',
+	FIND: 'v1.codeid-manager.find',
+	CHECK_STATUS: 'v1.codeid-manager.checkStatus',
+};
+
+export const CW721_ACTION = {
+	URL_GET_TOKEN_LIST: 'eyJhbGxfdG9rZW5zIjp7fX0=',
+	GET_TOKEN_INFOR: 'v1.CW721.getTokenInfor',
+	GET_TOKEN_LIST: 'v1.CW721.getTokenList',
+	ENRICH_DATA: 'v1.CW721.enrichData',
 };
 
 export const CONTRACT_TYPE = {
 	CW721: 'CW721',
 	CW20: 'CW20',
+};
+
+export const ENRICH_TYPE = {
+	INSERT: 'insert',
+	UPSERT: 'upsert',
 };
 
 export const BOND_STATUS = {
