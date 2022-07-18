@@ -36,6 +36,17 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 	},
 	submit_time: Date,
 	deposit_end_time: Date,
+	deposit: [
+		{
+			depositor: String,
+			amount: [
+				{
+					denom: String,
+					amount: String,
+				},
+			],
+		},
+	],
 	total_deposit: [
 		{
 			denom: String,

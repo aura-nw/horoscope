@@ -76,9 +76,16 @@ export default class CrawlProposalService extends Service {
 				proposal_id: `${proposal.proposal_id}`,
 				'custom_info.chain_id': Config.CHAIN_ID,
 			});
+
+			if (proposal.proposal_id == 77) {
+				if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_DEPOSIT_PERIOD) {
+					this.broker.emit('proposal.depositing', { id: proposal.proposal_id });
+				}
+			}
+
 			// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
 			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
-				this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
+				this.broker.emit('proposal.voting', { id: proposal.proposal_id });
 			}
 			try {
 				if (foundProposal) {
