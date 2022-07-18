@@ -1,6 +1,6 @@
-# Aura Indexer
+# Horoscope
 
-Aura Indexer is an indexing service for Cosmos-based blockchain. It crawl data from the blockchain and index it into mongoDB. Based on the data, it can provide search functionality instead of querying data from LCD or RPC directly.
+Horoscope is an indexing service for Cosmos-based blockchain. It crawl data from the blockchain and index it into mongoDB. Based on the data, it can provide search functionality instead of querying data from LCD or RPC directly.
 
 Currently, it supports network builded by Cosmos SDK v0.45.1 or later. Supporting network:
 
@@ -9,7 +9,7 @@ Currently, it supports network builded by Cosmos SDK v0.45.1 or later. Supportin
 -   [Cosmos Hub](https://github.com/cosmos/gaia)
 -   [Evmos](https://github.com/evmos/evmos)
 
-Aura Indexer includes 2 main components:
+Horoscope includes 2 main components:
 
 -   Crawler: crawl data from the blockchain and index it into mongoDB
 -   Backend API: provide search functionality through RESTful API
