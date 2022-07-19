@@ -206,7 +206,7 @@ export default class BlockService extends MoleculerDBService<
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
-					blocks: result,
+					transactions: result,
 					count: count,
 					nextKey: ctx.params.txHash ? null : result[result.length - 1]?._id,
 				},
