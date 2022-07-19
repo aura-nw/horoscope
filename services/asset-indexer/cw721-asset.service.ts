@@ -8,7 +8,7 @@ import { Action, Get, Post, Service } from '@ourparentcenter/moleculer-decorator
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 import { Status } from '../../model/codeid.model';
 import { Config } from '../../common';
-import { CODEID_MANAGER_ACTION, COMMON_ACTION, CW721_ACTION, ENRICH_TYPE } from '../../common/constant';
+import { CODEID_MANAGER_ACTION, COMMON_ACTION, CW721_ACTION, ENRICH_TYPE, CONTRACT_TYPE } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 
 const CODE_ID_URI = Config.CODE_ID_URI;
@@ -32,12 +32,20 @@ const callApiMixin = new CallApiMixin().start();
 			async handler(ctx: Context<any>) {
 				const code_id = ctx.params.code_id;
 				const chain_id = ctx.params.chain_id;
-				const contract_type = ctx.params.contract_type;
+				// const contract_type = ctx.params.contract_type;
 				const URL = ctx.params.URL;
 				// @ts-ignore
-				this.logger.debug('ctx.params', code_id, chain_id, contract_type);
+				this.logger.debug('ctx.params', code_id, chain_id, CONTRACT_TYPE.CW721);
 				// @ts-ignore
-				this.checkIfContractImplementInterface(URL, chain_id, code_id);
+				const processingFlag = await this.broker.cacher?.get(`validate_codeid_${chain_id}_${code_id}`);
+				if (!processingFlag) {
+					// @ts-ignore
+					await this.broker.cacher?.set(`validate_codeid_${chain_id}_${code_id}`, true);
+					// @ts-ignore
+					await this.checkIfContractImplementInterface(URL, chain_id, code_id);
+					// @ts-ignore
+					await this.broker.cacher?.del(`validate_codeid_${chain_id}_${code_id}`);
+				}
 			}
 		},
 		'CW721.handle': {
@@ -46,16 +54,16 @@ const callApiMixin = new CallApiMixin().start();
 				const code_id = ctx.params.code_id;
 				const URL = ctx.params.URL;
 				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(`codeid_${chain_id}_${code_id}`);
+				const processingFlag = await this.broker.cacher?.get(`handle_codeid_${chain_id}_${code_id}`);
 				if (!processingFlag) {
 					// @ts-ignore
-					await this.broker.cacher?.set(`codeid_${chain_id}_${code_id}`, true);
+					await this.broker.cacher?.set(`handle_codeid_${chain_id}_${code_id}`, true);
 					// @ts-ignore
 					this.logger.debug('Asset handler registered', chain_id, code_id);
 					// @ts-ignore
 					await this.handleJob(URL, chain_id, code_id);
 					// @ts-ignore
-					await this.broker.cacher?.del(`codeid_${chain_id}_${code_id}`);
+					await this.broker.cacher?.del(`handle_codeid_${chain_id}_${code_id}`);
 				}
 				//TODO emit event index history of the NFT.
 			},
@@ -103,7 +111,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				}
 				path = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
 			} else {
-				this.logger.error('Call urlGetContractList unsatisfactory return', URL, path);
+				this.logger.warn('Call urlGetContractList unsatisfactory return', URL, path);
 			}
 		} while (next_key != null && cw721flag === null);
 		this.logger.debug(
