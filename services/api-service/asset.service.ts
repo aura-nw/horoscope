@@ -41,7 +41,7 @@ export default class BlockService extends MoleculerDBService<
 {
 	rest: 'v1/asset';
 },
-IBlock
+{}
 > {
 	/**
 	 *  @swagger
@@ -99,7 +99,7 @@ IBlock
 		const chain_id = ctx.params.chainId;
 		const contract_type = ctx.params.contractType;
 		return await this.broker
-			.call(CODEID_MANAGER_ACTION.FIND, { query: { code_id, 'custom_info.chain_id': chain_id } })
+			.call(CODEID_MANAGER_ACTION.FIND, { code_id, 'custom_info.chain_id': chain_id })
 			.then(async (res: any) => {
 				this.logger.info('codeid-manager.find res', res);
 				if (res.length > 0) {
