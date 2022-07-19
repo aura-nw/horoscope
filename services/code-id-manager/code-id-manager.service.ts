@@ -16,7 +16,7 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 				// @ts-ignore
 				this.logger.info(`ctx.params find ${JSON.stringify(ctx.params)}`);
 				// @ts-ignore
-				return await this.adapter.find(ctx.params);
+				return await this.adapter.find({query: ctx.params});
 			},
 		},
 		checkStatus: {
