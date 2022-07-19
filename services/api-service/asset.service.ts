@@ -137,7 +137,7 @@ IBlock
 				this.logger.debug('codeid-manager.registed:', registed);
 				if (registed) {
 					const URL = await Utils.getUrlByChainIdAndType(chain_id, URL_TYPE_CONSTANTS.LCD);
-					this.broker.emit(`${contract_type}.validate`, { URL, chain_id, code_id, contract_type });
+					this.broker.emit(`${contract_type}.validate`, { URL, chain_id, code_id });
 				}
 				return (response = {
 					code: ErrorCode.SUCCESSFUL,
