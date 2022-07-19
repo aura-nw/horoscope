@@ -54,7 +54,7 @@ export const openAPIMixin = (mixinOptions?: any) => {
 				try {
 					const swaggerDefinition = {
 						info: {
-							title: `Indexer API Documentation`, // Title of the documentation
+							title: `Horoscope API Documentation`, // Title of the documentation
 							version: pkg.version, // Version of the app
 							description:
 								// eslint-disable-next-line max-len

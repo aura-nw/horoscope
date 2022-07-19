@@ -550,6 +550,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "address",
+                        "required": false,
+                        "type": "string",
+                        "description": "Address in transaction"
+                    },
+                    {
+                        "in": "query",
                         "name": "pageOffset",
                         "required": false,
                         "default": 0,

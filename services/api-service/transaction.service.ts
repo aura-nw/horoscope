@@ -60,6 +60,11 @@ export default class BlockService extends MoleculerDBService<
 	 *          type: string
 	 *          description: "Transaction hash"
 	 *        - in: query
+	 *          name: address
+	 *          required: false
+	 *          type: string
+	 *          description: "Address in transaction"
+	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
 	 *          default: 0
@@ -102,6 +107,7 @@ export default class BlockService extends MoleculerDBService<
 			},
 			blockHeight: { type: 'number', optional: true, convert: true },
 			txHash: { type: 'string', optional: true },
+			address: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -152,6 +158,8 @@ export default class BlockService extends MoleculerDBService<
 
 		const blockHeight = ctx.params.blockHeight;
 		const txHash = ctx.params.txHash;
+		const address = ctx.params.address;
+
 		let query: QueryOptions = {
 			'custom_info.chain_id': ctx.params.chainid,
 		};
@@ -162,6 +170,11 @@ export default class BlockService extends MoleculerDBService<
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
 		}
+
+		if (address) {
+			query['tx_response.logs.events.attributes.value'] = address;
+		}
+
 		if (ctx.params.txHash) {
 			ctx.params.nextKey = undefined;
 			ctx.params.countTotal = false;
