@@ -21,6 +21,7 @@ export interface IProposal {
 }
 
 export interface IDeposit {
+	proposal_id: String;
 	depositor: String;
 	amount: ICoin[];
 }
@@ -61,6 +62,8 @@ export class Final_tally_result implements IFinal_tally_result {
 
 @JsonObject('Deposit')
 export class Deposit implements IDeposit {
+	@JsonProperty('proposal_id', String)
+	proposal_id: String = '';
 	@JsonProperty('depositor', String)
 	depositor: String = '';
 	@JsonProperty('amount', [Coin])

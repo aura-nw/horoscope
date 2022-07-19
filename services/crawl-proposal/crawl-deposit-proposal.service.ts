@@ -9,6 +9,8 @@ import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
+import { IDepositProposalResponseFromLCD } from 'types';
+import { IDeposit } from 'entities';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -66,9 +68,26 @@ export default class CrawlProposalService extends Service {
 		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/deposits`;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let result = await this.callApiFromDomain(url, path);
-		this.logger.debug(result);
-		let deposit = result.deposits.map((item: any) => ({
+		let done = false;
+		let resultCallApi: IDepositProposalResponseFromLCD;
+		let listDeposit: IDeposit[] = [];
+		while (!done) {
+			resultCallApi = await this.callApiFromDomain(url, path);
+
+			listDeposit.push(...resultCallApi.deposits);
+			if (resultCallApi.pagination.next_key === null) {
+				done = true;
+			} else {
+				path = `${path}&pagination.key=${encodeURIComponent(
+					resultCallApi.pagination.next_key.toString(),
+				)}`;
+			}
+		}
+		if (listDeposit.length == 0) {
+			return;
+		}
+		this.logger.debug(listDeposit);
+		let deposit = listDeposit.map((item: any) => ({
 			depositor: item.depositor,
 			amount: item.amount,
 		}));

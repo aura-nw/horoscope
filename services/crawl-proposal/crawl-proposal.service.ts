@@ -71,35 +71,66 @@ export default class CrawlProposalService extends Service {
 
 		this.logger.debug(`result: ${JSON.stringify(listProposal)}`);
 
-		listProposal.map(async (proposal) => {
-			let foundProposal: ProposalEntity = await this.adapter.findOne({
-				proposal_id: `${proposal.proposal_id}`,
+		let listProposalInDB: ProposalEntity[] = await this.adapter.find({
+			query: {
 				'custom_info.chain_id': Config.CHAIN_ID,
-			});
-
-			if (proposal.proposal_id == 77) {
+			},
+		});
+		let listPromise: Promise<any>[] = [];
+		let listIndexDelete: number[] = [];
+		await Promise.all(
+			listProposal.map(async (proposal) => {
+				if (proposal.proposal_id == undefined) {
+					this.logger.error(`proposal_id is undefined`);
+				}
 				if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_DEPOSIT_PERIOD) {
 					this.broker.emit('proposal.depositing', { id: proposal.proposal_id });
 				}
-			}
 
-			// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
-			if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
-				this.broker.emit('proposal.voting', { id: proposal.proposal_id });
-			}
-			try {
-				if (foundProposal) {
-					proposal._id = foundProposal._id;
-					await this.adapter.updateById(foundProposal._id, proposal);
-				} else {
-					const item: any = new JsonConvert().deserializeObject(proposal, ProposalEntity);
-					let id = await this.adapter.insert(item);
-					this.logger.info(`inserted: ${id}`);
+				// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
+				if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
+					this.broker.emit('proposal.voting', { id: proposal.proposal_id });
 				}
-			} catch (error) {
-				this.logger.error(error);
-			}
-		});
+				let foundProposal = listProposalInDB.find(
+					(item: ProposalEntity) => item.proposal_id == proposal.proposal_id,
+				);
+				let foundProposalIndex = listProposalInDB.findIndex(
+					(item: ProposalEntity) => item.proposal_id == proposal.proposal_id,
+				);
+
+				try {
+					if (foundProposal) {
+						proposal._id = foundProposal._id;
+						listPromise.push(this.adapter.updateById(foundProposal._id, proposal));
+					} else {
+						const item: any = new JsonConvert().deserializeObject(
+							proposal,
+							ProposalEntity,
+						);
+						listPromise.push(this.adapter.insert(item));
+					}
+					if (foundProposalIndex > -1 && foundProposal) {
+						listIndexDelete.push(foundProposalIndex);
+					}
+				} catch (error) {
+					this.logger.error(error);
+				}
+			}),
+		);
+		await Promise.all(
+			listIndexDelete.map((index) => {
+				delete listProposalInDB[index];
+			}),
+		);
+
+		await Promise.all(
+			listProposalInDB.map(async (proposal: ProposalEntity) => {
+				proposal.status = PROPOSAL_STATUS.PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT;
+				listPromise.push(this.adapter.updateById(proposal._id, proposal));
+			}),
+		);
+
+		await Promise.all(listPromise);
 	}
 
 	async _start() {
