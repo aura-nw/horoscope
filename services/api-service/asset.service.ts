@@ -122,7 +122,7 @@ export default class BlockService extends MoleculerDBService<
 							break;
 					}
 				} else {
-					this.broker.call(CODEID_MANAGER_ACTION.CREATE, {
+					this.broker.call(CODEID_MANAGER_ACTION.INSERT, {
 						_id: new Types.ObjectId(),
 						code_id,
 						status: Status.WAITING,

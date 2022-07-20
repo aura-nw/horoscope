@@ -7,10 +7,7 @@ import { Config } from "common";
 import { Types } from "mongoose";
 
 const CODE_ID_URI = Config.CODE_ID_URI;
-const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
-const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
-const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const callApiMixin = new CallApiMixin().start();
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import moleculer, { Context } from "moleculer";

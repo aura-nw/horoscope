@@ -11,12 +11,12 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 	mixins: [dbCodeIDMixin],
 	version: 1,
 	actions: {
-		'act-create': {
+		'act-insert': {
 			async handler(ctx: Context) {
 				// @ts-ignore
-				this.logger.debug(`ctx.params create ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(`ctx.params insert ${JSON.stringify(ctx.params)}`);
 				// @ts-ignore
-				return await this.adapter.create(ctx.params);
+				return await this.adapter.insert(ctx.params);
 			},
 		},
 		'act-find': {
