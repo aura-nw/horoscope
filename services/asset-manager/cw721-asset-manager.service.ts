@@ -6,13 +6,13 @@ import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 
 @Service({
-	name: 'cw721-asset-manager',
+	name: 'CW721-asset-manager',
 	mixins: [
 		dbCW721AssetMixin,
 	],
 	version: 1,
 	actions: {
-		'insert': {
+		'act-insert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw721-asset-manager insert ${JSON.stringify(ctx.params)}`);
@@ -20,7 +20,7 @@ import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 				return await this.adapter.insert(ctx.params);
 			}
 		},
-		'count': {
+		'act-count': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw721-asset-manager count ${JSON.stringify(ctx.params)}`);
@@ -28,7 +28,7 @@ import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 				return await this.adapter.count(ctx.params);
 			}
 		},
-		'find': {
+		'act-find': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw721-asset-manager find ${JSON.stringify(ctx.params)}`);
@@ -36,7 +36,7 @@ import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 				return await this.adapter.find(ctx.params);
 			}
 		},
-		'list': {
+		'act-list': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw721-asset-manager list ${JSON.stringify(ctx.params)}`);
@@ -44,7 +44,7 @@ import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 				return await this.adapter.list(ctx.params);
 			}
 		},
-		'upsert': {
+		'act-upsert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw721-asset-manager upsert ${JSON.stringify(ctx.params)}`);
