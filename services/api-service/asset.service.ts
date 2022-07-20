@@ -99,7 +99,7 @@ export default class BlockService extends MoleculerDBService<
 		const chain_id = ctx.params.chainId;
 		const contract_type = ctx.params.contractType;
 		return await this.broker
-			.call(CODEID_MANAGER_ACTION.FIND, { code_id, 'custom_info.chain_id': chain_id })
+			.call(CODEID_MANAGER_ACTION.FIND, { query: { code_id, 'custom_info.chain_id': chain_id } })
 			.then(async (res: any) => {
 				this.logger.info('codeid-manager.find res', res);
 				if (res.length > 0) {
@@ -122,7 +122,7 @@ export default class BlockService extends MoleculerDBService<
 							break;
 					}
 				} else {
-					this.broker.call('v1.codeid-manager.create', {
+					this.broker.call(CODEID_MANAGER_ACTION.CREATE, {
 						_id: new Types.ObjectId(),
 						code_id,
 						status: Status.WAITING,
@@ -217,18 +217,18 @@ export default class BlockService extends MoleculerDBService<
 			this.logger.debug('query', query);
 			let contractMap = Object.values(CONTRACT_TYPE);
 			let assetsMap: Map<any, any> = new Map();
-			const getData = Promise.all(contractMap.map(async (type: string) => {
-				const asset: any[] = await this.broker.call(`v1.${type}.find`, {
+			const getData = Promise.all(contractMap.map(async (contract_type: string) => {
+				const asset: any[] = await this.broker.call(`v1.${contract_type}-asset-manager.act-find`, {
 					query,
 				});
 				this.logger.info(`asset: ${JSON.stringify(asset)}`);
 				let count = 0;
 				if (ctx.params.countTotal === true) {
-					count = await this.broker.call(`v1.${type}.count`, {
+					count = await this.broker.call(`v1.${contract_type}-asset-manager.act-count`, {
 						query,
 					});
 				}
-				assetsMap.set(type, { asset, count });
+				assetsMap.set(contract_type, { asset, count });
 			}));
 			await getData;
 			const assetObj = Object.fromEntries(assetsMap);
@@ -374,14 +374,14 @@ export default class BlockService extends MoleculerDBService<
 
 			this.logger.info('query', query);
 
-			const assets: any[] = await this.broker.call(`v1.${ctx.params.contractType}.find`, {
+			const assets: any[] = await this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-find`, {
 				query,
 				limit: ctx.params.pageLimit,
 				offset: ctx.params.pageOffset,
 			});
 			let count = 0;
 			if (ctx.params.countTotal === true) {
-				count = await this.broker.call(`v1.${ctx.params.contractType}.count`, {
+				count = await this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-count`, {
 					query,
 				});
 			}
