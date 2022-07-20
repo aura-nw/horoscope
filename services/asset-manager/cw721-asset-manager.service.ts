@@ -6,7 +6,7 @@ import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 
 @Service({
-	name: 'cw721-asset-manager',
+	name: 'CW721-asset-manager',
 	mixins: [
 		dbCW721AssetMixin,
 	],
