@@ -74,7 +74,8 @@ export const CODEID_MANAGER_ACTION = {
 	FIND: 'v1.codeid-manager.act-find',
 	// FIND: 'v1.codeid-manager.findByCondition',
 	CHECK_STATUS: 'v1.codeid-manager.checkStatus',
-	CREATE: 'v1.codeid-manager.act-create',
+	// CREATE: 'v1.codeid-manager.act-create',
+	INSERT: 'v1.codeid-manager.act-insert',
 };
 
 export const CW20_MANAGER_ACTION = {
