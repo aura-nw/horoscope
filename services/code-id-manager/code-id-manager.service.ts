@@ -11,7 +11,7 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 	mixins: [dbCodeIDMixin],
 	version: 1,
 	actions: {
-		findByCondition: {
+		'find': {
 			async handler(ctx: Context) {
 				// @ts-ignore
 				this.logger.info(`ctx.params find ${JSON.stringify(ctx.params)}`);
@@ -19,7 +19,7 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 				return await this.adapter.find({query: ctx.params});
 			},
 		},
-		checkStatus: {
+		'checkStatus': {
 			async handler(ctx: Context) {
 				// @ts-ignore
 				let foundCodeID = await this.adapter.findOne({ code_id: ctx.params.code_id, 'custom_info.chain_id': ctx.params.chain_id });
@@ -32,7 +32,7 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 				}
 			},
 		},
-		updateMany: {
+		'updateMany': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params ${JSON.stringify(ctx.params.condition, ctx.params.update)}`);

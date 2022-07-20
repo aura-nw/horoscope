@@ -12,7 +12,7 @@ import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 	],
 	version: 1,
 	actions: {
-		"insert": {
+		'insert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw20-asset-manager insert ${JSON.stringify(ctx.params)}`);
@@ -20,7 +20,7 @@ import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 				return await this.adapter.insert(ctx.params);
 			}
 		},
-		"count": {
+		'count': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw20-asset-manager count ${JSON.stringify(ctx.params)}`);
@@ -28,7 +28,7 @@ import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 				return await this.adapter.count(ctx.params);
 			}
 		},
-		"find": {
+		'find': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw20-asset-manager find ${JSON.stringify(ctx.params)}`);
@@ -36,7 +36,7 @@ import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 				return await this.adapter.find(ctx.params);
 			}
 		},
-		"list": {
+		'list': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw20-asset-manager list ${JSON.stringify(ctx.params)}`);
@@ -44,7 +44,7 @@ import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 				return await this.adapter.list(ctx.params);
 			}
 		},
-		"upsert": {
+		'upsert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params cw20-asset-manager upsert ${JSON.stringify(ctx.params)}`);
