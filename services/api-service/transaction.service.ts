@@ -15,7 +15,7 @@ import { ITransaction, TransactionEntity } from '../../entities';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
 import { LIST_NETWORK } from '../../common/constant';
-
+import { fromBase64, toBase64, fromBech32, toBech32, fromUtf8, toUtf8 } from '@cosmjs/encoding';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -172,7 +172,8 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		if (address) {
-			query['tx_response.logs.events.attributes.value'] = address;
+			// query['tx_response.events.attributes.key'] = 'cmVjaXBpZW50';
+			query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
 		}
 
 		if (ctx.params.txHash) {
