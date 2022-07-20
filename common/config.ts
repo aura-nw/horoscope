@@ -45,6 +45,8 @@ const genericDbInfo = (where: string): DBInfo => ({
 	dbname: getDbInfo(where, 'DBNAME', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),
 	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false'),
+	replicaSet: getDbInfo(where, 'REPLICA_SET', ''),
+	readPreference: getDbInfo(where, 'READ_PREFERENCE', 'primary'),
 });
 
 export default class ConfigClass {
