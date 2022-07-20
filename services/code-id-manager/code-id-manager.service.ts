@@ -11,7 +11,7 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 	mixins: [dbCodeIDMixin],
 	version: 1,
 	actions: {
-		find: {
+		findByCondition: {
 			async handler(ctx: Context) {
 				// @ts-ignore
 				this.logger.info(`ctx.params find ${JSON.stringify(ctx.params)}`);
