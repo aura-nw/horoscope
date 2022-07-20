@@ -4,7 +4,7 @@
         "version": "1.0.0",
         "description": "Indexer for multiple Cosmos Network"
     },
-    "host": "localhost:3000",
+    "host": "localhost:3001",
     "basePath": "/api",
     "swagger": "2.0",
     "paths": {
