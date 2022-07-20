@@ -3,17 +3,18 @@
 'use strict';
 
 import CallApiMixin from "@Mixins/callApi/call-api.mixin";
+// import File from "typescript";
 import { Config } from "common";
 import { Types } from "mongoose";
+// import fetch from "node-fetch";
+import { fetch } from 'cross-fetch';
 
-const CODE_ID_URI = Config.CODE_ID_URI;
-const CONTRACT_URI = Config.CONTRACT_URI;
-const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
-const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
-const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
-const callApiMixin = new CallApiMixin().start();
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import moleculer, { Context } from "moleculer";
+
+const CODE_ID_URI = Config.CODE_ID_URI;
+const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
+const callApiMixin = new CallApiMixin().start();
 
 type CW721AssetInfo = {
     data: {
@@ -108,5 +109,14 @@ export class Common {
             balance: balanceInfo?.data?.balance,
             history: [],
         };
+    }
+    public static getFileFromUrl = async function (url: string, name: string, defaultType = 'image/jpeg') {
+        // const response = await fetch(url);
+        // const data = await response.blob();
+        let blob = await fetch(url).then(r => r.blob());
+        return blob;
+        // return new File([data], name, {
+        //     type: data.type || defaultType,
+        // });
     }
 }

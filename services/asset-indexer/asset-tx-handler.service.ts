@@ -77,10 +77,13 @@ export default class CrawlAccountInfoService extends Service {
 		try {
 			if (listTx.length > 0) {
 				for (const tx of listTx) {
-					let log = tx.tx_response.logs[0].events;
-					let attributes = log.find((x: any) => x.type == EVENT_TYPE.EXECUTE)?.attributes;
-					if (attributes) {
-						contractListFromEvent.push(...attributes);
+					const code = tx.tx_response.code;
+					if (code === 0) {
+						let log = tx.tx_response.logs[0].events;
+						const attributes = log.find((x: any) => x.type == EVENT_TYPE.EXECUTE)?.attributes;
+						if (attributes) {
+							contractListFromEvent.push(...attributes);
+						}
 					}
 				}
 			}
@@ -94,7 +97,6 @@ export default class CrawlAccountInfoService extends Service {
 							await this.broker.cacher?.set(`contract_${chainId}_${address}`, true);
 							let contractInfo = await this.verifyAddressByCodeID(URL, address, chainId);
 							if (contractInfo != null) {
-								this.logger.info('contractInfo', contractInfo);
 								switch (contractInfo.status) {
 									case Status.COMPLETED:
 										await this.broker.call(
@@ -104,7 +106,6 @@ export default class CrawlAccountInfoService extends Service {
 										);
 										break;
 									case Status.TBD:
-										this.logger.info('contractInfo TBD', contractInfo.status);
 										this.broker.emit(`${contractInfo.contract_type}.validate`, { URL, chain_id: chainId, code_id: contractInfo.code_id });
 										break;
 									default:

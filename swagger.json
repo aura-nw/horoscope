@@ -504,6 +504,37 @@
                 }
             }
         },
+        "/v1/test/url": {
+            "get": {
+                "tags": [
+                    "AAATest"
+                ],
+                "summary": "Check status of code_id",
+                "description": "Check status of code_id",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "url",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
         "/v1/transaction": {
             "get": {
                 "tags": [

@@ -10,36 +10,30 @@ import {
 	Action,
 	Post,
 } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import { ErrorCode, ErrorMessage, MoleculerDBService, ResponseDto, RestOptions } from '../../types';
 import { IBlock } from '../../entities';
-import { AssetIndexParams } from 'types/asset';
-import { Types } from 'mongoose';
-// import rateLimit from 'micro-ratelimit';
-import { Status } from '../../model/codeid.model';
-import { Ok } from 'ts-results';
-import { CODEID_MANAGER_ACTION, LIST_NETWORK } from 'common/constant';
+import { Common } from '@MicroServices/asset-indexer/common.service';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
-	name: 'codeid',
+	name: 'test',
 	version: 1,
-	mixins: [dbBlockMixin],
+	mixins: [],
 })
 export default class BlockService extends MoleculerDBService<
 {
-	rest: 'v1/codeid';
+	rest: 'v1/test';
 },
 {}
 > {
 	/**
 	 *  @swagger
-	 *  /v1/codeid/{chainId}/{codeId}/checkStatus:
+	 *  /v1/test/url:
 	 *    get:
 	 *      tags:
-	 *        - CodeId
+	 *        - AAATest
 	 *      summary: Check status of code_id
 	 *      description: Check status of code_id
 	 *      produces:
@@ -47,17 +41,10 @@ export default class BlockService extends MoleculerDBService<
 	 *      consumes:
 	 *        - application/json
 	 *      parameters:	 
-	 *        - in: path
-	 *          name: chainId
+	 *        - in: query
+	 *          name: url
 	 *          required: true
 	 *          type: string
-	 *          example: aura-devnet
-	 *          description: "Chain Id of network"
-	 *        - in: path
-	 *          name: codeId
-	 *          required: true
-	 *          type: number
-	 *          description: "Code Id of stored contract need to query"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -65,31 +52,27 @@ export default class BlockService extends MoleculerDBService<
 	 *          description: Missing parameters
 	 *
 	 */
-	@Get('/:chainId/:codeId/checkStatus', {
-		name: 'checkStatus',
+	@Get('/url', {
+		name: 'testxxx',
 		restricted: ['api'],
 		params: {
-			codeId: { type: 'number', convert: true },
-			chainId: { type: 'string', enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			url: { type: 'string' }
 		},
 	})
-	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
+	async test(ctx: Context<any, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		try {
-			let status = await this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
-				chain_id: ctx.params.chainId,
-				code_id: ctx.params.codeId,
-			});
-
-			this.logger.debug('codeid-manager.checkStatus res', status);
+			const url = ctx.params.url;
+			// const mess = "xxxxxxxxxxxxxxx";
+			let file = await Common.getFileFromUrl(url, "Moi-ban-doc-tai-ve-bo-hinh-nen-phi-hanh.png");
 
 			return (response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
-				data: { status },
+				data: { file }
 			});
 		} catch (error) {
-			this.logger.error('call codeid-manager.checkStatus error', error);
+			this.logger.error('call getFileFromUrl error', error);
 			return (response = {
 				code: ErrorCode.WRONG,
 				message: ErrorMessage.WRONG,
