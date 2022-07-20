@@ -21,17 +21,9 @@ export interface DBInfo {
 	port: number;
 	dbname: string;
 	collection: string;
-}
-
-export interface DBInfo {
-	dialect: DBDialog;
-	user: string;
-	password: string;
-	host: string;
-	port: number;
-	dbname: string;
-	collection: string;
 	retryWrites: string;
+	replicaSet: string;
+	readPreference: string;
 }
 
 export interface RouteSchemaOpts {

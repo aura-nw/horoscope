@@ -7,10 +7,11 @@ import { Config } from '../../common';
 import { CallingOptions, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
 import * as _ from 'lodash';
-import { URL_TYPE_CONSTANTS, EVENT_TYPE, COMMON_ACTION,ENRICH_TYPE, CODEID_MANAGER_ACTION } from '../../common/constant';
+import { URL_TYPE_CONSTANTS, EVENT_TYPE, COMMON_ACTION, ENRICH_TYPE, CODEID_MANAGER_ACTION } from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
 import { Status } from '@Model';
+import { info } from 'console';
 
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
@@ -77,8 +78,10 @@ export default class CrawlAccountInfoService extends Service {
 			if (listTx.length > 0) {
 				for (const tx of listTx) {
 					let log = tx.tx_response.logs[0].events;
-					let attributes = log.find((x: any) => x.type == EVENT_TYPE.EXECUTE).attributes;
-					contractListFromEvent.push(...attributes);
+					let attributes = log.find((x: any) => x.type == EVENT_TYPE.EXECUTE)?.attributes;
+					if (attributes) {
+						contractListFromEvent.push(...attributes);
+					}
 				}
 			}
 			let contractList = _.map(_.uniqBy(contractListFromEvent, 'value'), 'value');
@@ -89,14 +92,27 @@ export default class CrawlAccountInfoService extends Service {
 						const processingFlag = await this.broker.cacher?.get(`contract_${address}`);
 						if (!processingFlag) {
 							await this.broker.cacher?.set(`contract_${chainId}_${address}`, true);
-							let [code_id, contract_type] = await this.verifyAddressByCodeID(URL, address, chainId);
-							if (code_id != "" && contract_type != "") {
-								await this.broker.call(
-									`v1.${contract_type}.enrichData`,
-									[{ URL, chain_id: chainId, code_id, address }, ENRICH_TYPE.UPSERT],
-									OPTs,
-								);
+							let contractInfo = await this.verifyAddressByCodeID(URL, address, chainId);
+							if (contractInfo != null) {
+								this.logger.info('contractInfo', contractInfo);
+								switch (contractInfo.status) {
+									case Status.COMPLETED:
+										await this.broker.call(
+											`v1.${contractInfo.contract_type}.enrichData`,
+											[{ URL, chain_id: chainId, code_id: contractInfo.code_id, address }, ENRICH_TYPE.UPSERT],
+											OPTs,
+										);
+										break;
+									case Status.TBD:
+										this.logger.info('contractInfo TBD', contractInfo.status);
+										this.broker.emit(`${contractInfo.contract_type}.validate`, { URL, chain_id: chainId, code_id: contractInfo.code_id });
+										break;
+									default:
+										this.logger.error('handleJob tx fail, status does not match', contractInfo.status);
+										break;
+								}
 							}
+							// this.logger.debug(`Contract's type does not verify!`, address);
 							await this.broker.cacher?.del(`contract_${chainId}_${address}`);
 						}
 					}),
@@ -109,22 +125,22 @@ export default class CrawlAccountInfoService extends Service {
 		return [];
 	}
 
-	async verifyAddressByCodeID(URL: string, address: string, chain_id: string): Promise<[string, string]> {
+	async verifyAddressByCodeID(URL: string, address: string, chain_id: string) {
 		let urlGetContractInfo = `${CONTRACT_URI}${address}`;
 		let contractInfo = await this.callApiFromDomain(URL, urlGetContractInfo);
 		if (contractInfo?.contract_info?.code_id != undefined) {
 			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, { query: { code_id: contractInfo.contract_info.code_id, 'custom_info.chain_id': chain_id } });
 			this.logger.debug('codeid-manager.find res', res);
 			if (res.length > 0) {
-				if (res[0].status === Status.COMPLETED) {
-					return [contractInfo.contract_info.code_id, res[0].contract_type];
-				} else return ["", ""];
+				if (res[0].status === Status.COMPLETED || res[0].status === Status.TBD) {
+					return { code_id: contractInfo.contract_info.code_id, contract_type: res[0].contract_type, status: res[0].status };
+				} else return null;
 			} else {
-				return ["", ""];
+				return null;
 			}
 		} else {
 			this.logger.error('verifyAddressByCodeID Fail to get token info', urlGetContractInfo);
-			return ["", ""];
+			return null;
 		}
 	}
 

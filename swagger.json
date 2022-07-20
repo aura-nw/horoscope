@@ -4,7 +4,7 @@
         "version": "1.0.0",
         "description": "Indexer for multiple Cosmos Network"
     },
-    "host": "localhost:3000",
+    "host": "localhost:3001",
     "basePath": "/api",
     "swagger": "2.0",
     "paths": {
@@ -547,6 +547,13 @@
                         "required": false,
                         "type": "string",
                         "description": "Transaction hash"
+                    },
+                    {
+                        "in": "query",
+                        "name": "address",
+                        "required": false,
+                        "type": "string",
+                        "description": "Address in transaction"
                     },
                     {
                         "in": "query",

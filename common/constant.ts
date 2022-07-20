@@ -14,6 +14,7 @@ export const PROPOSAL_STATUS = {
 	PROPOSAL_STATUS_PASSED: 'PROPOSAL_STATUS_PASSED',
 	PROPOSAL_STATUS_REJECTED: 'PROPOSAL_STATUS_REJECTED',
 	PROPOSAL_STATUS_FAILED: 'PROPOSAL_STATUS_FAILED',
+	PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT: 'PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT',
 };
 
 export const CONST_CHAR = {
@@ -69,9 +70,28 @@ export const CW20_ACTION = {
 };
 
 export const CODEID_MANAGER_ACTION = {
-	UPDATE_MANY: 'v1.codeid-manager.updateMany',
-	FIND: 'v1.codeid-manager.find',
+	UPDATE_MANY: 'v1.codeid-manager.act-updateMany',
+	FIND: 'v1.codeid-manager.act-find',
+	// FIND: 'v1.codeid-manager.findByCondition',
 	CHECK_STATUS: 'v1.codeid-manager.checkStatus',
+	// CREATE: 'v1.codeid-manager.act-create',
+	INSERT: 'v1.codeid-manager.act-insert',
+};
+
+export const CW20_MANAGER_ACTION = {
+	FIND: 'v1.cw20-asset-manager.act-find',
+	COUNT: 'v1.cw20-asset-manager.act-count',
+	INSERT: 'v1.cw20-asset-manager.act-insert',
+	LIST: 'v1.cw20-asset-manager.act-list',
+	UPSERT: 'v1.cw20-asset-manager.act-upsert',
+};
+
+export const CW721_MANAGER_ACTION = {
+	FIND: 'v1.cw721-asset-manager.act-find',
+	COUNT: 'v1.cw721-asset-manager.act-count',
+	INSERT: 'v1.cw721-asset-manager.act-insert',
+	LIST: 'v1.cw721-asset-manager.act-list',
+	UPSERT: 'v1.cw721-asset-manager.act-upsert',
 };
 
 export const CW721_ACTION = {

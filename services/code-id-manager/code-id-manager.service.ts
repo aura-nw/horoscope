@@ -11,7 +11,23 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 	mixins: [dbCodeIDMixin],
 	version: 1,
 	actions: {
-		checkStatus: {
+		'act-insert': {
+			async handler(ctx: Context) {
+				// @ts-ignore
+				this.logger.debug(`ctx.params insert ${JSON.stringify(ctx.params)}`);
+				// @ts-ignore
+				return await this.adapter.insert(ctx.params);
+			},
+		},
+		'act-find': {
+			async handler(ctx: Context) {
+				// @ts-ignore
+				this.logger.debug(`ctx.params find ${JSON.stringify(ctx.params)}`);
+				// @ts-ignore
+				return await this.adapter.find(ctx.params);
+			},
+		},
+		'checkStatus': {
 			async handler(ctx: Context) {
 				// @ts-ignore
 				let foundCodeID = await this.adapter.findOne({ code_id: ctx.params.code_id, 'custom_info.chain_id': ctx.params.chain_id });
@@ -24,7 +40,7 @@ import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 				}
 			},
 		},
-		updateMany: {
+		'act-updateMany': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(`ctx.params ${JSON.stringify(ctx.params.condition, ctx.params.update)}`);

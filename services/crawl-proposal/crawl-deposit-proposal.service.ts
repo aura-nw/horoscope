@@ -9,6 +9,8 @@ import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
+import { IDepositProposalResponseFromLCD } from 'types';
+import { IDeposit } from 'entities';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -17,20 +19,20 @@ export default class CrawlProposalService extends Service {
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'crawlTallyProposal',
+			name: 'crawlDepositProposal',
 			version: 1,
 			mixins: [
 				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
-						prefix: 'crawl.tally.proposal',
+						prefix: 'crawl.deposit.proposal',
 					},
 				),
 				this.callApiMixin,
 				this.dbProposalMixin,
 			],
 			queues: {
-				'crawl.tally.proposal': {
+				'crawl.deposit.proposal': {
 					concurrency: 1,
 					async process(job: Job) {
 						job.progress(10);
@@ -42,12 +44,12 @@ export default class CrawlProposalService extends Service {
 				},
 			},
 			events: {
-				'proposal.voting': {
+				'proposal.depositing': {
 					handler: (ctx: any) => {
-						this.logger.debug(`Crawl tally by proposal: ${ctx.params.id}`);
+						this.logger.debug(`Crawl deposit by proposal: ${ctx.params.id}`);
 
 						this.createJob(
-							'crawl.tally.proposal',
+							'crawl.deposit.proposal',
 							{
 								id: ctx.params.id,
 							},
@@ -63,11 +65,32 @@ export default class CrawlProposalService extends Service {
 	}
 
 	async handleJob(proposalId: String) {
-		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/tally`;
+		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/deposits`;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let result = await this.callApiFromDomain(url, path);
-		this.logger.debug(result);
+		let done = false;
+		let resultCallApi: IDepositProposalResponseFromLCD;
+		let listDeposit: IDeposit[] = [];
+		while (!done) {
+			resultCallApi = await this.callApiFromDomain(url, path);
+
+			listDeposit.push(...resultCallApi.deposits);
+			if (resultCallApi.pagination.next_key === null) {
+				done = true;
+			} else {
+				path = `${path}&pagination.key=${encodeURIComponent(
+					resultCallApi.pagination.next_key.toString(),
+				)}`;
+			}
+		}
+		if (listDeposit.length == 0) {
+			return;
+		}
+		this.logger.debug(listDeposit);
+		let deposit = listDeposit.map((item: any) => ({
+			depositor: item.depositor,
+			amount: item.amount,
+		}));
 
 		let foundProposal = await this.adapter.findOne({
 			proposal_id: `${proposalId}`,
@@ -76,7 +99,7 @@ export default class CrawlProposalService extends Service {
 		if (foundProposal) {
 			try {
 				let res = await this.adapter.updateById(foundProposal._id, {
-					$set: { tally: result.tally },
+					$set: { deposit: deposit },
 				});
 				this.logger.debug(res);
 			} catch (error) {
@@ -85,13 +108,13 @@ export default class CrawlProposalService extends Service {
 		}
 	}
 	async _start() {
-		this.getQueue('crawl.tally.proposal').on('completed', (job: Job) => {
+		this.getQueue('crawl.deposit.proposal').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
-		this.getQueue('crawl.tally.proposal').on('failed', (job: Job) => {
+		this.getQueue('crawl.deposit.proposal').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
 		});
-		this.getQueue('crawl.tally.proposal').on('progress', (job: Job) => {
+		this.getQueue('crawl.deposit.proposal').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
 		return super._start();

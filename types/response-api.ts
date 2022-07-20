@@ -5,6 +5,7 @@ import {
 	CommunityPoolEntity,
 	IBlock,
 	ICommunityPool,
+	IDeposit,
 	IPool,
 	IProposal,
 	ISupply,
@@ -24,7 +25,10 @@ export interface IProposalResponseFromLCD {
 	proposals: IProposal[];
 	pagination: IPagingationResponseFromLCD;
 }
-
+export interface IDepositProposalResponseFromLCD {
+	deposits: IDeposit[];
+	pagination: IPagingationResponseFromLCD;
+}
 export interface IValidatorResponseFromLCD {
 	validators: IValidator[];
 	pagination: IPagingationResponseFromLCD;
