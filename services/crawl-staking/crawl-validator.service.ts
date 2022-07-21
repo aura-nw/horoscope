@@ -79,13 +79,18 @@ export default class CrawlValidatorService extends Service {
 			try {
 				if (foundValidator) {
 					validator._id = foundValidator._id;
+					validator.consensus_hex_address = Utils.pubkeyBase64ToHexAddress(
+						validator.consensus_pubkey.key.toString(),
+					);
 					let result = await this.adapter.updateById(foundValidator._id, validator);
 				} else {
 					const item: ValidatorEntity = new JsonConvert().deserializeObject(
 						validator,
 						ValidatorEntity,
 					);
-
+					item.consensus_hex_address = Utils.pubkeyBase64ToHexAddress(
+						item.consensus_pubkey.key.toString(),
+					);
 					let id = await this.adapter.insert(item);
 				}
 				// this.broker.emit('validator.upsert', { address: validator.operator_address });

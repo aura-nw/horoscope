@@ -31,6 +31,7 @@ export interface IValidator {
 	_id: ObjectIdNull;
 	operator_address: String;
 	consensus_pubkey: IConsensusPubkey;
+	consensus_hex_address: String;
 	jailed: Boolean;
 	status: String;
 	tokens: String;
@@ -120,6 +121,7 @@ export class ValidatorEntity implements IValidator {
 	@JsonProperty('min_self_delegation', String)
 	public min_self_delegation: String = '';
 
+	public consensus_hex_address: String = '';
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

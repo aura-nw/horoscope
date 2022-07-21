@@ -20,7 +20,7 @@ export class Utils {
 		return null;
 	}
 
-	public static getHexAddressFromPubkey(pubkey: string): string {
+	public static pubkeyBase64ToHexAddress(pubkey: string): string {
 		var bytes = Buffer.from(pubkey, 'base64');
 		return tmhash(bytes).slice(0, 20).toString('hex').toUpperCase();
 	}
