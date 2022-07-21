@@ -70,11 +70,16 @@ export default class CrawlValidatorService extends Service {
 		}
 
 		this.logger.debug(`result: ${JSON.stringify(listValidator)}`);
-
+		let listValidatorInDB: IValidator[] = await this.adapter.find({
+			query: { 'custom_info.chain_id': Config.CHAIN_ID },
+		});
 		listValidator.forEach(async (validator) => {
-			let foundValidator = await this.adapter.findOne({
-				operator_address: `${validator.operator_address}`,
-				'custom_info.chain_id': Config.CHAIN_ID,
+			// let foundValidator = await this.adapter.findOne({
+			// 	operator_address: `${validator.operator_address}`,
+			// 	'custom_info.chain_id': Config.CHAIN_ID,
+			// });
+			let foundValidator = listValidatorInDB.find((validatorInDB: IValidator) => {
+				return validatorInDB.operator_address === validator.operator_address;
 			});
 			try {
 				if (foundValidator) {
