@@ -71,6 +71,11 @@ export default class BlockService extends MoleculerDBService<
 	 *          type: string
 	 *          description: "operator address who proposed this block"
 	 *        - in: query
+	 *          name: consensusHexAddress
+	 *          required: false
+	 *          type: string
+	 *          description: "consensus hex address who proposed this block"
+	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
 	 *          default: 10
@@ -114,6 +119,7 @@ export default class BlockService extends MoleculerDBService<
 			blockHeight: { type: 'number', optional: true, convert: true },
 			blockHash: { type: 'string', optional: true },
 			operatorAddress: { type: 'string', optional: true },
+			consensusHexAddress: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -166,12 +172,15 @@ export default class BlockService extends MoleculerDBService<
 			const blockHeight = ctx.params.blockHeight;
 			const blockHash = ctx.params.blockHash;
 			const operatorAddress = ctx.params.operatorAddress;
+			const consensusHexAddress = ctx.params.consensusHexAddress;
 			let needNextKey = true;
 
 			if (operatorAddress) {
 				console.log(Utils.bech32ToHex(operatorAddress));
 			}
-
+			if (consensusHexAddress) {
+				query['block.header.proposer_address'] = consensusHexAddress;
+			}
 			if (blockHeight) {
 				query['block.header.height'] = blockHeight;
 				needNextKey = false;

@@ -310,6 +310,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "consensusHexAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "consensus hex address who proposed this block"
+                    },
+                    {
+                        "in": "query",
                         "name": "pageLimit",
                         "required": false,
                         "default": 10,

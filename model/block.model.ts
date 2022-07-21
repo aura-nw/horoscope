@@ -36,7 +36,7 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 			app_hash: String,
 			last_results_hash: String,
 			evidence_hash: String,
-			proposer_address: String,
+			proposer_address: { type: String, index: true },
 		},
 		data: {
 			txs: [String],

@@ -27,6 +27,7 @@ export interface GetBlockRequest
 		BlockHashParams,
 		BlockHeightParams {
 	operatorAddress: string;
+	consensusHexAddress: string;
 }
 
 export interface GetAssetByAddressRequest extends ChainIdParams, PageLimit {
