@@ -6,11 +6,11 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
-import { IDepositProposalResponseFromLCD } from 'types';
-import { IDeposit } from 'entities';
+import { IDepositProposalResponseFromLCD, ListTxCreatedParams } from 'types';
+import { IDeposit, IProposal, ITransaction } from 'entities';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -28,6 +28,12 @@ export default class CrawlProposalService extends Service {
 						prefix: 'crawl.deposit.proposal',
 					},
 				),
+				// QueueService(
+				// 	`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
+				// 	{
+				// 		prefix: 'crawl.deposit.tx',
+				// 	},
+				// ),
 				this.callApiMixin,
 				this.dbProposalMixin,
 			],
@@ -37,7 +43,17 @@ export default class CrawlProposalService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.id);
+						await this.handleJobDeposit(job.data.id);
+						job.progress(100);
+						return true;
+					},
+				},
+				'crawl.deposit.tx': {
+					concurrency: 1,
+					async process(job: Job) {
+						job.progress(10);
+						// @ts-ignore
+						await this.handleJobDepositTx(job.data.listTx);
 						job.progress(100);
 						return true;
 					},
@@ -60,11 +76,51 @@ export default class CrawlProposalService extends Service {
 						return;
 					},
 				},
+				'list-tx.upsert': {
+					handler: (ctx: Context<ListTxCreatedParams, Record<string, unknown>>) => {
+						this.logger.debug(`Crawl deposit by tx`);
+						this.createJob(
+							'crawl.deposit.tx',
+							{
+								listTx: ctx.params.listTx,
+							},
+							{
+								removeOnComplete: true,
+							},
+						);
+						return;
+					},
+				},
 			},
 		});
 	}
 
-	async handleJob(proposalId: String) {
+	async handleJobDepositTx(listTx: ITransaction[]) {
+		listTx.map(async (tx: ITransaction) => {
+			if (tx.tx_response.code == '0') {
+				let listMessage = tx.tx.body.messages;
+				listMessage.map(async (message: any) => {
+					if (message['@type'] == MSG_TYPE.MSG_DEPOSIT) {
+						let depositTx = {
+							depositor: message.depositor,
+							amount: message.amount,
+							txhash: tx.tx_response.txhash,
+						};
+						let foundProposal: IProposal = await this.adapter.findOne({
+							proposal_id: Number(message.proposal_id),
+							'custom_info.chain_id': Config.CHAIN_ID,
+						});
+						if (foundProposal) {
+							foundProposal.listTxDeposit.push(depositTx);
+							await this.adapter.updateById(foundProposal._id, foundProposal);
+						}
+					}
+				});
+			}
+		});
+	}
+
+	async handleJobDeposit(proposalId: String) {
 		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/deposits`;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
