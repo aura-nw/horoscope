@@ -82,16 +82,14 @@ export default class AccountUnbondsService extends MoleculerDBService<
 	})
 	async getByAddress(ctx: Context<GetAccountUnbondRequest, Record<string, unknown>>) {
 		// const params = await this.sanitizeParams(ctx, ctx.params);
-		let result = await this.adapter.findOne({
+		let data = await this.adapter.findOne({
 			address: ctx.params.address,
 			'custom_info.chain_id': ctx.params.chainid,
 		});
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
-			data: {
-				result,
-			},
+			data,
 		};
 		return response;
 	}
