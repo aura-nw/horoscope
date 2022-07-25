@@ -23,7 +23,6 @@ import {
 import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
 
-
 const tlBucket = 60000;
 const swMiddleware = swStats.getMiddleware({
 	name: 'swagger-stats',
@@ -104,6 +103,7 @@ const swMiddleware = swStats.getMiddleware({
 					// '**',
 					'v1.network.*',
 					'v1.account-info.*',
+					'v1.account-unbonds.getByAddress',
 					'v1.proposal.getByChain',
 					'v1.validator.getByChain',
 					'v1.block.getByChain',

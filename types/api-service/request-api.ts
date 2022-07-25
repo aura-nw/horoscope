@@ -73,3 +73,7 @@ export interface GetValidatorRequest extends ChainIdParams, PageLimit {
 	operatorAddress: string;
 	status: string;
 }
+
+export interface GetAccountUnbondRequest extends ChainIdParams, PageLimit {
+	address: string;
+}

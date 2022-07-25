@@ -26,8 +26,13 @@ import { Types } from 'mongoose';
 import { Status } from '../../model/codeid.model';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
-import { CODEID_MANAGER_ACTION, CONTRACT_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
-import { Utils } from 'utils/utils';
+import {
+	CODEID_MANAGER_ACTION,
+	CONTRACT_TYPE,
+	LIST_NETWORK,
+	URL_TYPE_CONSTANTS,
+} from '../../common/constant';
+import { Utils } from '../../utils/utils';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -38,10 +43,10 @@ import { Utils } from 'utils/utils';
 	// mixins: [dbCW721AssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
-{
-	rest: 'v1/asset';
-},
-{}
+	{
+		rest: 'v1/asset';
+	},
+	{}
 > {
 	/**
 	 *  @swagger
@@ -69,7 +74,7 @@ export default class BlockService extends MoleculerDBService<
 	 *              contractType:
 	 *                required: true
 	 *                type: string
-	 *                enum: 
+	 *                enum:
 	 *                - "CW721"
 	 *                description: "Type of contract want to register"
 	 *              chainId:
@@ -89,7 +94,13 @@ export default class BlockService extends MoleculerDBService<
 		params: {
 			codeId: ['number|integer|positive'],
 			contractType: { type: 'string', optional: false, enum: Object.values(CONTRACT_TYPE) },
-			chainId: { type: 'string', optional: false, enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			chainId: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
 		},
 	})
 	async index(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
@@ -99,14 +110,19 @@ export default class BlockService extends MoleculerDBService<
 		const chain_id = ctx.params.chainId;
 		const contract_type = ctx.params.contractType;
 		return await this.broker
-			.call(CODEID_MANAGER_ACTION.FIND, { query: { code_id, 'custom_info.chain_id': chain_id } })
+			.call(CODEID_MANAGER_ACTION.FIND, {
+				query: { code_id, 'custom_info.chain_id': chain_id },
+			})
 			.then(async (res: any) => {
 				this.logger.info('codeid-manager.find res', res);
 				if (res.length > 0) {
 					switch (res[0].status) {
 						case Status.REJECTED:
 							if (res[0].contract_type !== contract_type) {
-								const condition = { code_id: code_id, 'custom_info.chain_id': chain_id };
+								const condition = {
+									code_id: code_id,
+									'custom_info.chain_id': chain_id,
+								};
 								this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
 									condition,
 									update: { status: Status.WAITING, contract_type },
@@ -129,14 +145,17 @@ export default class BlockService extends MoleculerDBService<
 						contract_type,
 						custom_info: {
 							chain_id,
-							chain_name: LIST_NETWORK.find(x => x.chainId == chain_id)?.chainName,
-						}
+							chain_name: LIST_NETWORK.find((x) => x.chainId == chain_id)?.chainName,
+						},
 					});
 					registed = true;
 				}
 				this.logger.debug('codeid-manager.registed:', registed);
 				if (registed) {
-					const URL = await Utils.getUrlByChainIdAndType(chain_id, URL_TYPE_CONSTANTS.LCD);
+					const URL = await Utils.getUrlByChainIdAndType(
+						chain_id,
+						URL_TYPE_CONSTANTS.LCD,
+					);
 					this.broker.emit(`${contract_type}.validate`, { URL, chain_id, code_id });
 				}
 				return (response = {
@@ -195,7 +214,13 @@ export default class BlockService extends MoleculerDBService<
 		name: 'getByOwner',
 		params: {
 			owner: { type: 'string', optional: false },
-			chainid: { type: 'string', optional: true, enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			chainid: {
+				type: 'string',
+				optional: true,
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
 			countTotal: {
 				type: 'boolean',
 				optional: true,
@@ -217,19 +242,27 @@ export default class BlockService extends MoleculerDBService<
 			this.logger.debug('query', query);
 			let contractMap = Object.values(CONTRACT_TYPE);
 			let assetsMap: Map<any, any> = new Map();
-			const getData = Promise.all(contractMap.map(async (contract_type: string) => {
-				const asset: any[] = await this.broker.call(`v1.${contract_type}-asset-manager.act-find`, {
-					query,
-				});
-				this.logger.info(`asset: ${JSON.stringify(asset)}`);
-				let count = 0;
-				if (ctx.params.countTotal === true) {
-					count = await this.broker.call(`v1.${contract_type}-asset-manager.act-count`, {
-						query,
-					});
-				}
-				assetsMap.set(contract_type, { asset, count });
-			}));
+			const getData = Promise.all(
+				contractMap.map(async (contract_type: string) => {
+					const asset: any[] = await this.broker.call(
+						`v1.${contract_type}-asset-manager.act-find`,
+						{
+							query,
+						},
+					);
+					this.logger.info(`asset: ${JSON.stringify(asset)}`);
+					let count = 0;
+					if (ctx.params.countTotal === true) {
+						count = await this.broker.call(
+							`v1.${contract_type}-asset-manager.act-count`,
+							{
+								query,
+							},
+						);
+					}
+					assetsMap.set(contract_type, { asset, count });
+				}),
+			);
 			await getData;
 			const assetObj = Object.fromEntries(assetsMap);
 			this.logger.debug(`assetObj: ${JSON.stringify(assetObj)}`);
@@ -252,7 +285,6 @@ export default class BlockService extends MoleculerDBService<
 		}
 		return response;
 	}
-
 
 	/**
 	 *  @swagger
@@ -312,7 +344,13 @@ export default class BlockService extends MoleculerDBService<
 		name: 'getByContractType',
 		params: {
 			contractType: { type: 'string', optional: false },
-			chainid: { type: 'string', optional: true, enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			chainid: {
+				type: 'string',
+				optional: true,
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -345,7 +383,9 @@ export default class BlockService extends MoleculerDBService<
 			ttl: 10,
 		},
 	})
-	async getByContractType(ctx: Context<GetAssetByContractTypeAddressRequest, Record<string, unknown>>) {
+	async getByContractType(
+		ctx: Context<GetAssetByContractTypeAddressRequest, Record<string, unknown>>,
+	) {
 		let response: ResponseDto = {} as ResponseDto;
 		if (ctx.params.nextKey) {
 			try {
@@ -374,16 +414,22 @@ export default class BlockService extends MoleculerDBService<
 
 			this.logger.info('query', query);
 
-			const assets: any[] = await this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-find`, {
-				query,
-				limit: ctx.params.pageLimit,
-				offset: ctx.params.pageOffset,
-			});
+			const assets: any[] = await this.broker.call(
+				`v1.${ctx.params.contractType}-asset-manager.act-find`,
+				{
+					query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+				},
+			);
 			let count = 0;
 			if (ctx.params.countTotal === true) {
-				count = await this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-count`, {
-					query,
-				});
+				count = await this.broker.call(
+					`v1.${ctx.params.contractType}-asset-manager.act-count`,
+					{
+						query,
+					},
+				);
 			}
 			response = {
 				code: ErrorCode.SUCCESSFUL,

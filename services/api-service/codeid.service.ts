@@ -18,7 +18,7 @@ import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
 import { Status } from '../../model/codeid.model';
 import { Ok } from 'ts-results';
-import { CODEID_MANAGER_ACTION, LIST_NETWORK } from 'common/constant';
+import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -29,10 +29,10 @@ import { CODEID_MANAGER_ACTION, LIST_NETWORK } from 'common/constant';
 	mixins: [dbBlockMixin],
 })
 export default class BlockService extends MoleculerDBService<
-{
-	rest: 'v1/codeid';
-},
-IBlock
+	{
+		rest: 'v1/codeid';
+	},
+	IBlock
 > {
 	/**
 	 *  @swagger
@@ -46,7 +46,7 @@ IBlock
 	 *        - application/json
 	 *      consumes:
 	 *        - application/json
-	 *      parameters:	 
+	 *      parameters:
 	 *        - in: path
 	 *          name: chainId
 	 *          required: true
@@ -70,7 +70,12 @@ IBlock
 		restricted: ['api'],
 		params: {
 			codeId: { type: 'number', convert: true },
-			chainId: { type: 'string', enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			chainId: {
+				type: 'string',
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
 		},
 	})
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {

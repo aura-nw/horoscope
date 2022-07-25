@@ -4,7 +4,7 @@
         "version": "1.0.0",
         "description": "Indexer for multiple Cosmos Network"
     },
-    "host": "localhost:3001",
+    "host": "localhost:3000",
     "basePath": "/api",
     "swagger": "2.0",
     "paths": {
@@ -32,6 +32,15 @@
                     {
                         "in": "query",
                         "name": "chainId",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
                         "required": true,
                         "type": "string",
                         "description": "Chain Id of network need to query"
@@ -72,8 +81,65 @@
                         "in": "query",
                         "name": "chainId",
                         "required": true,
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
                         "type": "string",
                         "description": "Chain Id of network need to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/account-unbonds": {
+            "get": {
+                "tags": [
+                    "Account Info"
+                ],
+                "summary": "Get account undelegations",
+                "description": "Get account undelegations",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "address",
+                        "required": true,
+                        "type": "string",
+                        "description": "Address need to query"
                     }
                 ],
                 "responses": {
