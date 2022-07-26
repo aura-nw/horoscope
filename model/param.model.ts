@@ -1,10 +1,11 @@
+import { IParam } from '../entities';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
-export interface IParam {
-	_id: ObjectIdNull;
-}
+// export interface IParam {
+// 	_id: ObjectIdNull;
+// }
 
 const definition: definitionType<IParam> = (collection?: string) => ({
 	_id: Types.ObjectId,

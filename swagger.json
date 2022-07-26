@@ -505,6 +505,87 @@
                 }
             }
         },
+        "/v1/param": {
+            "get": {
+                "tags": [
+                    "Param"
+                ],
+                "summary": "Get param",
+                "description": "Get param",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "module",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "bank",
+                            "gov",
+                            "distribution",
+                            "staking",
+                            "slashing",
+                            "ibc-transfer",
+                            "mint"
+                        ],
+                        "description": "module need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
         "/v1/proposal": {
             "get": {
                 "tags": [

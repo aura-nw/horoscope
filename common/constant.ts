@@ -117,3 +117,13 @@ export const BOND_STATUS = {
 	BOND_STATUS_UNBONDING: 'BOND_STATUS_UNBONDING',
 	BOND_STATUS_BONDED: 'BOND_STATUS_BONDED',
 };
+
+export const MODULE_PARAM = {
+	BANK: 'bank',
+	GOVERNANCE: 'gov',
+	DISTRIBUTION: 'distribution',
+	STAKING: 'staking',
+	SLASHING: 'slashing',
+	IBC_TRANSFER: 'ibc-transfer',
+	MINT: 'mint',
+};

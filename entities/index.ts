@@ -16,3 +16,4 @@ export * from './account-unbonds.entity';
 export * from './account-spendable-balances.entity';
 export * from './account-spendable-balances.entity';
 export * from './supply.entity';
+export * from './param.entity';

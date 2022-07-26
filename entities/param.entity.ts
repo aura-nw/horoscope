@@ -1,37 +1,116 @@
-import { Coin } from './coin.entity';
+import { Coin, ICoin } from './coin.entity';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Config } from '../common';
 import { Types } from 'mongoose';
 
+export interface IParam {
+	module: String;
+	params:
+		| IBankParam
+		| IGovParam
+		| IDistributionParam
+		| ISlashingParam
+		| IStakingParam
+		| IIbcTransferParam
+		| IMintParam
+		| null;
+}
+
+export interface ISendEnabled {
+	denom: String;
+	enabled: Boolean;
+}
+
+export interface IBankParam {
+	send_enabled: ISendEnabled[];
+	default_send_enabled: Boolean;
+}
+
+export interface IGovVotingParam {
+	votingPeriod: String;
+}
+
+export interface IGovDepositParam {
+	min_deposit: ICoin[];
+	max_deposit_period: String;
+}
+export interface IGovTallyParam {
+	quorum: String;
+	threshold: String;
+	vetoThreshold: String;
+}
+
+export interface IGovParam {
+	voting_param: IGovVotingParam;
+	deposit_param: IGovDepositParam;
+	tally_param: IGovTallyParam;
+}
+
+export interface IDistributionParam {
+	community_tax: String;
+	base_proposer_reward: String;
+	bonus_proposer_reward: String;
+	withdraw_addr_enabled: String;
+}
+
+export interface ISlashingParam {
+	signed_blocks_window: String;
+	min_signed_per_window: String;
+	downtime_jail_duration: String;
+	slash_fraction_double_sign: String;
+	slash_fraction_downtime: String;
+}
+
+export interface IStakingParam {
+	unbonding_time: String;
+	max_validators: Number;
+	max_entries: Number;
+	historical_entries: Number;
+	bond_denom: String;
+}
+
+export interface IIbcTransferParam {
+	send_enabled: Boolean;
+	receive_enabled: Boolean;
+}
+
+export interface IMintParam {
+	mint_denom: String;
+	inflation_rate_change: String;
+	inflation_max: String;
+	inflation_min: String;
+	goal_bonded: String;
+	blocks_per_year: String;
+}
 @JsonObject('SendEnabled')
-export class SendEnabled {
+export class SendEnabled implements ISendEnabled {
 	@JsonProperty('denom', Boolean)
-	denom: Boolean = true;
+	denom: String = '';
 	@JsonProperty('enabled', Boolean)
 	enabled: Boolean = true;
 }
 @JsonObject('BankParam')
-export class BankParam {
+export class BankParam implements IBankParam {
 	@JsonProperty('send_enabled', [SendEnabled])
-	sendEnabled: SendEnabled[] = [];
+	send_enabled: SendEnabled[] = [];
 	@JsonProperty('default_send_enabled', Boolean)
-	defaultSendEnabled: Boolean = true;
+	default_send_enabled: Boolean = true;
 }
 
 @JsonObject('GovVotingParam')
-export class GovVotingParam {
+export class GovVotingParam implements IGovVotingParam {
 	@JsonProperty('voting_period', String)
 	votingPeriod: String = '';
 }
 @JsonObject('GovDepositParam')
-export class GovDepositParam {
+export class GovDepositParam implements IGovDepositParam {
 	@JsonProperty('min_deposit', [Coin])
-	votingPeriod: Coin[] = [];
+	min_deposit: Coin[] = [];
 	@JsonProperty('max_deposit_period', String)
-	maxDepositPeriod: String = '';
+	max_deposit_period: String = '';
 }
 @JsonObject('GovTallyParam')
-export class GovTallyParam {
+export class GovTallyParam implements IGovTallyParam {
 	@JsonProperty('quorum', String)
 	quorum: String = '';
 	@JsonProperty('threshold', String)
@@ -41,65 +120,65 @@ export class GovTallyParam {
 }
 
 @JsonObject('GovParam')
-export class GovParam {
+export class GovParam implements IGovParam {
 	@JsonProperty('voting_params', GovVotingParam)
-	votingParams: GovVotingParam = new GovVotingParam();
+	voting_param: GovVotingParam = new GovVotingParam();
 	@JsonProperty('deposit_params', GovDepositParam)
-	depositParams: GovDepositParam = new GovDepositParam();
+	deposit_param: GovDepositParam = new GovDepositParam();
 	@JsonProperty('tally_params', GovTallyParam)
-	tallyParams: GovTallyParam = new GovTallyParam();
+	tally_param: GovTallyParam = new GovTallyParam();
 }
 
 @JsonObject('DistributionParam')
-export class DistributionParam {
+export class DistributionParam implements IDistributionParam {
 	@JsonProperty('community_tax', String)
-	communityTax: String = '';
+	community_tax: String = '';
 	@JsonProperty('base_proposer_reward', String)
-	baseProposerReward: String = '';
+	base_proposer_reward: String = '';
 	@JsonProperty('bonus_proposer_reward', String)
-	bonusProposerReward: String = '';
+	bonus_proposer_reward: String = '';
 	@JsonProperty('withdraw_addr_enabled', Boolean)
-	defaultSendEnabled: Boolean = true;
+	withdraw_addr_enabled: String = '';
 }
 
 @JsonObject('SlashingParam')
-export class SlashingParam {
+export class SlashingParam implements ISlashingParam {
 	@JsonProperty('signed_blocks_window', String)
-	signedBlocksWindow: String = '';
+	signed_blocks_window: String = '';
 	@JsonProperty('min_signed_per_window', String)
-	mintSignedPerWindow: String = '';
+	min_signed_per_window: String = '';
 	@JsonProperty('downtime_jail_duration', String)
-	downtimeJailDuration: String = '';
+	downtime_jail_duration: String = '';
 	@JsonProperty('slash_fraction_double_sign', String)
-	slashFractionDoubleSign: String = '';
+	slash_fraction_double_sign: String = '';
 	@JsonProperty('slash_fraction_downtime', String)
-	slashFractionDowntime: String = '';
+	slash_fraction_downtime: String = '';
 }
 
 @JsonObject('StakingParam')
-export class StakingParam {
+export class StakingParam implements IStakingParam {
 	@JsonProperty('unbonding_time', String)
-	unbondingTime: String = '';
+	unbonding_time: String = '';
 	@JsonProperty('max_validators', Number)
-	maxValidators: Number = 0;
+	max_validators: Number = 0;
 	@JsonProperty('max_entries', Number)
-	maxEntries: Number = 0;
+	max_entries: Number = 0;
 	@JsonProperty('historical_entries', Number)
-	historicalEntries: Number = 0;
+	historical_entries: Number = 0;
 	@JsonProperty('bond_denom', String)
-	bondDenom: String = '';
+	bond_denom: String = '';
 }
 
 @JsonObject('IbcTransferParam')
-export class IbcTransferParam {
+export class IbcTransferParam implements IIbcTransferParam {
 	@JsonProperty('send_enabled', Boolean)
-	sendEnabled: Boolean = true;
+	send_enabled: Boolean = true;
 	@JsonProperty('receive_enabled', Boolean)
-	receiveEnabled: Boolean = true;
+	receive_enabled: Boolean = true;
 }
 
 @JsonObject('MintParam')
-export class MintParam {
+export class MintParam implements IMintParam {
 	@JsonProperty('mint_denom', String)
 	mint_denom: String = '';
 	@JsonProperty('inflation_rate_change', String)
@@ -115,7 +194,7 @@ export class MintParam {
 }
 
 @JsonObject('Param')
-export class ParamEntity {
+export class ParamEntity implements IParam {
 	@JsonProperty('_id', String, true)
 	_id = Config.DB_PARAM.dialect === 'local' ? Types.ObjectId() : null;
 	@JsonProperty('module', String)
