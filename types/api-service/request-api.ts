@@ -53,7 +53,12 @@ export interface GetTxRequest
 		PageLimit,
 		BlockHeightParams,
 		TxHashParams,
-		AddressParams {}
+		AddressParams {
+	searchType: string;
+	searchKey: string;
+	searchValue: string;
+	query: string;
+}
 
 export interface AccountInfoRequest {
 	address: string;

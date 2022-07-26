@@ -711,6 +711,48 @@
                     },
                     {
                         "in": "query",
+                        "name": "searchType",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "proposal_deposit",
+                            "proposal_vote",
+                            "delegate",
+                            "redelegate",
+                            "instantiate",
+                            "execute"
+                        ],
+                        "description": "Search type event"
+                    },
+                    {
+                        "in": "query",
+                        "name": "searchKey",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "proposal_id",
+                            "validator",
+                            "destination_validator",
+                            "_contract_address"
+                        ],
+                        "description": "Search key event"
+                    },
+                    {
+                        "in": "query",
+                        "name": "searchValue",
+                        "required": false,
+                        "type": "string",
+                        "description": "Search value event"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "required": false,
+                        "type": "string",
+                        "description": "Search query with format A.B=C,D.E=F"
+                    },
+                    {
+                        "in": "query",
                         "name": "pageOffset",
                         "required": false,
                         "default": 0,
