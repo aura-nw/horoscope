@@ -274,7 +274,7 @@ export default class BlockService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-tx_response.height',
+					sort: '-_id',
 				}),
 				ctx.params.countTotal === true
 					? this.adapter.count({

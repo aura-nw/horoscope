@@ -153,7 +153,7 @@ export default class ProposalService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-proposal_id',
+					sort: '-_id',
 				}),
 				this.adapter.count({
 					query: query,

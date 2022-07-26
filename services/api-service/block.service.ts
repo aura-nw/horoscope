@@ -148,9 +148,9 @@ export default class BlockService extends MoleculerDBService<
 				default: null,
 			},
 		},
-		cache: {
-			ttl: 10,
-		},
+		// cache: {
+		// 	ttl: 10,
+		// },
 	})
 	async getByChain(ctx: Context<GetBlockRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
@@ -202,7 +202,8 @@ export default class BlockService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-block.header.height',
+					// sort: '-block.header.height',
+					sort: '-_id',
 				}),
 				ctx.params.countTotal === true
 					? this.adapter.find({
@@ -210,7 +211,7 @@ export default class BlockService extends MoleculerDBService<
 							limit: 1,
 							offset: 0,
 							// @ts-ignore
-							sort: '-block.header.height',
+							sort: '-_id',
 					  })
 					: 0,
 			]);
