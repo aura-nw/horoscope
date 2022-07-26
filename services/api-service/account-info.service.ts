@@ -79,7 +79,9 @@ export default class AccountInfoService extends MoleculerDBService<
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
-		const [
+		let accountAuth, accountBalances, accountDelegations, accountRedelegations, accountSpendableBalances,
+			accountUnbonds: any, accountRewards;
+		[
 			accountAuth,
 			accountBalances,
 			accountDelegations,
@@ -120,7 +122,7 @@ export default class AccountInfoService extends MoleculerDBService<
 				account_delegations: accountDelegations,
 				account_redelegations: accountRedelegations,
 				account_spendable_balances: accountSpendableBalances,
-				account_unbonds: accountUnbonds,
+				account_unbonds: accountUnbonds.data,
 				account_auth: accountAuth,
 				account_delegate_rewards: accountRewards,
 			};
