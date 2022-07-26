@@ -104,14 +104,14 @@ export default class CrawlProposalService extends Service {
 							'custom_info.chain_id': Config.CHAIN_ID,
 						});
 						if (foundProposal) {
-							let foundVoterIndex = foundProposal.listTxVote.findIndex(
+							let foundVoterIndex = foundProposal.list_tx_vote.findIndex(
 								(voter: IVoteTx) => voter.voter == voteTx.voter,
 							);
 							if (foundVoterIndex != -1) {
-								foundProposal.listTxVote[foundVoterIndex].option = voteTx.option;
-								foundProposal.listTxVote[foundVoterIndex].txhash = voteTx.txhash;
+								foundProposal.list_tx_vote[foundVoterIndex].option = voteTx.option;
+								foundProposal.list_tx_vote[foundVoterIndex].txhash = voteTx.txhash;
 							} else {
-								foundProposal.listTxVote.push(voteTx);
+								foundProposal.list_tx_vote.push(voteTx);
 							}
 							await this.adapter.updateById(foundProposal._id, foundProposal);
 						}

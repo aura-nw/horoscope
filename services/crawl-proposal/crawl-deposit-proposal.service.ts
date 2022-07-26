@@ -111,7 +111,7 @@ export default class CrawlProposalService extends Service {
 							'custom_info.chain_id': Config.CHAIN_ID,
 						});
 						if (foundProposal) {
-							foundProposal.listTxDeposit.push(depositTx);
+							foundProposal.list_tx_deposit.push(depositTx);
 							await this.adapter.updateById(foundProposal._id, foundProposal);
 						}
 					}
