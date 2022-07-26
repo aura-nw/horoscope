@@ -1,0 +1,475 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// DB models
+model account_auth {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  address     String     @db.String
+  account     Account?
+  custom_info CustomInfo
+}
+
+model account_balances {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  address     String     @db.String
+  balances    Coin[]
+  custom_info CustomInfo
+}
+
+model account_delegations {
+  id                   String               @id @default(auto()) @map("_id") @db.ObjectId
+  address              String               @db.String
+  delegation_responses DelegationResponse[]
+  custom_info          CustomInfo
+}
+
+model account_redelegations {
+  id                     String                 @id @default(auto()) @map("_id") @db.ObjectId
+  address                String                 @db.String
+  redelegation_responses RedelegationResponse[]
+  custom_info            CustomInfo
+}
+
+model account_spendable_balances {
+  id                 String     @id @default(auto()) @map("_id") @db.ObjectId
+  address            String     @db.String
+  spendable_balances Coin[]
+  custom_info        CustomInfo
+}
+
+model account_unbonds {
+  id                  String              @id @default(auto()) @map("_id") @db.ObjectId
+  address             String              @db.String
+  unbonding_responses UnbondingResponse[]
+  custom_info         CustomInfo
+}
+
+model block {
+  id       String       @id @default(auto()) @map("_id") @db.ObjectId
+  block_id BlockId?
+  block    BlockDetail?
+}
+
+model code_id {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  code_id       String     @db.String
+  status        String?    @db.String
+  contract_type String?    @db.String
+  createdAt     DateTime?  @db.Timestamp
+  updatedAt     DateTime?  @db.Timestamp
+  custom_info   CustomInfo
+}
+
+model community_pool {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  pool        Coin[]
+  custom_info CustomInfo
+}
+
+model cw20_asset {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  asset_id          String?    @db.String
+  code_id           String?    @db.String
+  asset_info        Json?      @db.Json
+  constract_address String?    @db.String
+  token_id          String?    @db.String
+  owner             String?    @db.String
+  balance           String?    @db.String
+  history           String[]   @db.String
+  createdAt         DateTime?  @db.Timestamp
+  updatedAt         DateTime?  @db.Timestamp
+  custom_info       CustomInfo
+}
+
+model cw721_asset {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  asset_id          String?    @db.String
+  code_id           String?    @db.String
+  asset_info        Json?      @db.Json
+  constract_address String?    @db.String
+  token_id          String?    @db.String
+  owner             String?    @db.String
+  history           String[]   @db.String
+  createdAt         DateTime?  @db.Timestamp
+  updatedAt         DateTime?  @db.Timestamp
+  custom_info       CustomInfo
+}
+
+model inflation {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  inflation   String?    @db.String
+  custom_info CustomInfo
+}
+
+model param {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  module      String?    @db.String
+  params      Json?      @db.Json
+  custom_info CustomInfo
+}
+
+model pool {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  not_bonded_tokens String?    @db.String
+  bonded_tokens     String?    @db.String
+  custom_info       CustomInfo
+}
+
+model proposal {
+  id                 String            @id @default(auto()) @map("_id") @db.ObjectId
+  proposal_id        Int?              @db.Int
+  content            Content?
+  status             String?           @db.String
+  final_tally_result FinalTallyResult?
+  submit_time        DateTime?         @db.Timestamp
+  deposit_end_time   DateTime?         @db.Timestamp
+  total_deposit      Coin[]
+  voting_start_time  DateTime?         @db.Timestamp
+  voting_end_time    DateTime?         @db.Timestamp
+  tally              FinalTallyResult?
+  deposit            Deposit[]
+  list_tx_deposit    DepositTx[]
+  list_tx_vote       VoteTx[]
+  custom_info        CustomInfo
+}
+
+model supply {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  supply      Coin[]
+  custom_info CustomInfo
+}
+
+model transaction {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  tx          TxInput?
+  tx_response TxResponse?
+  custom_info CustomInfo
+}
+
+model validator {
+  id                    String           @id @default(auto()) @map("_id") @db.ObjectId
+  operator_address      String?          @db.String
+  consensus_pubkey      ConsensusPubkey?
+  jailed                Boolean?         @db.Bool
+  status                String?          @db.String
+  tokens                String?          @db.String
+  delegator_shares      String?          @db.String
+  description           Description?
+  unbonding_height      String?          @db.String
+  unbonding_time        String?          @db.String
+  commission            Commission?
+  min_self_delegation   String?          @db.String
+  consensus_hex_address String?          @db.String
+  custom_info           CustomInfo
+}
+
+// AccountAuth type
+type Account {
+  height String?        @db.String
+  result AccountResult?
+}
+
+type AccountResult {
+  type  String?       @db.String
+  value AccountValue?
+}
+
+type AccountValue {
+  address        String?        @db.String
+  public_key     AccountPubKey?
+  account_number String?        @db.String
+  sequence       String?        @db.String
+}
+
+type AccountPubKey {
+  type  String? @db.String
+  value String? @db.String
+}
+
+// AccountDelegations type
+type Delegation {
+  delegator_address String? @db.String
+  validator_address String? @db.String
+  shares            String? @db.String
+}
+
+type DelegationResponse {
+  delegation Delegation?
+  balance    Coin?
+}
+
+// AccountRedelegations type
+type RedelegationEntry {
+  creation_height String? @db.String
+  completion_time String? @db.String
+  initial_balance String? @db.String
+  shares_dst      String? @db.String
+}
+
+type RedelegateEntry {
+  redelegation_entry RedelegationEntry?
+  balance            String?            @db.String
+}
+
+type Redelegation {
+  delegator_address     String?           @db.String
+  validator_src_address String?           @db.String
+  validator_dst_address String?           @db.String
+  entries               RedelegateEntry[]
+}
+
+type RedelegationResponse {
+  redelegation Redelegation?
+  entries      RedelegateEntry[]
+}
+
+// AccountUnbonds type
+type UndelegateEntry {
+  creation_height String? @db.String
+  completion_time String? @db.String
+  initial_balance String? @db.String
+  balance         String? @db.String
+}
+
+type UnbondingResponse {
+  delegator_address String?           @db.String
+  validator_address String?           @db.String
+  entries           UndelegateEntry[]
+}
+
+// Block type
+type BlockIdPart {
+  total Int?    @db.Int
+  hash  String? @db.String
+}
+
+type BlockId {
+  hash  String?      @db.String
+  parts BlockIdPart?
+}
+
+type BlockHeaderVersion {
+  block Int? @db.Int
+}
+
+type BlockHeader {
+  version              BlockHeaderVersion?
+  chain_id             String?             @db.String
+  height               Int?                @db.Int
+  time                 DateTime?           @db.Timestamp
+  last_block_id        BlockId?
+  last_commit_hash     String?             @db.String
+  data_hash            String?             @db.String
+  validators_hash      String?             @db.String
+  next_validators_hash String?             @db.String
+  consensus_hash       String?             @db.String
+  app_hash             String?             @db.String
+  last_results_hash    String?             @db.String
+  evidence_hash        String?             @db.String
+  proposer_address     String?             @db.String
+}
+
+type BlockData {
+  txs String[] @db.String
+}
+
+type BlockDataEvidence {
+  evidence Json[] @db.Json
+}
+
+type Signature {
+  block_id_flag     Int?    @db.Int
+  validator_address String? @db.String
+  timestamp         String? @db.String
+  signature         String? @db.String
+}
+
+type BlockLastCommit {
+  height     Int?        @db.Int
+  round      Int?        @db.Int
+  block_id   BlockId?
+  signatures Signature[]
+}
+
+type BlockDetail {
+  header      BlockHeader?
+  data        BlockData?
+  evidence    BlockDataEvidence?
+  last_commit BlockLastCommit?
+}
+
+// Proposal type
+type Changes {
+  subspace String? @db.String
+  key      String? @db.String
+  value    String? @db.String
+}
+
+type FinalTallyResult {
+  yes          String? @db.String
+  no           String? @db.String
+  abstain      String? @db.String
+  no_with_veto String? @db.String
+}
+
+type Deposit {
+  proposal_id String? @db.String
+  depositor   String? @db.String
+  amount      Coin[]
+}
+
+type Content {
+  type        String?   @map("@type") @db.String
+  title       String?   @db.String
+  description String?   @db.String
+  changes     Changes[]
+  recipient   String?   @db.String
+  amount      Coin[]
+}
+
+type DepositTx {
+  depositor String? @db.String
+  txhash    String? @db.String
+  amount    Coin[]
+}
+
+type VoteTx {
+  voter  String? @db.String
+  txhash String? @db.String
+  option String? @db.String
+}
+
+// Transaction type
+type PublicKey {
+  type String? @map("@type") @db.String
+  key  String? @db.String
+}
+
+type Mode {
+  mode String? @db.String
+}
+
+type ModeInfo {
+  single Mode?
+}
+
+type Body {
+  messages                       Json?   @db.Json
+  memo                           String? @db.String
+  timeout_height                 String? @db.String
+  extension_options              Json?   @db.Json
+  non_critical_extension_options Json?   @db.Json
+}
+
+type SignerInfo {
+  public_key PublicKey?
+  mode_info  ModeInfo?
+  sequence   String?    @db.String
+}
+
+type Fee {
+  amount    Coin[]
+  gas_limit String? @db.String
+  payer     String? @db.String
+  granter   String? @db.String
+}
+
+type AuthInfo {
+  signer_infos SignerInfo[]
+  fee          Fee?
+}
+
+type TxInput {
+  body       Body?
+  auth_info  AuthInfo?
+  signatures String[]  @db.String
+}
+
+type Attribute {
+  key   String?  @db.String
+  value String?  @db.String
+  index Boolean? @db.Bool
+}
+
+type Event {
+  type       String?     @db.String
+  attributes Attribute[]
+}
+
+type Log {
+  msg_index Int?    @db.Int
+  log       String? @db.String
+  events    Event[]
+}
+
+type TxResponse {
+  height     Int?      @db.Int
+  txhash     String?   @db.String
+  codespace  String?   @db.String
+  code       String?   @db.String
+  data       String?   @db.String
+  raw_log    String?   @db.String
+  logs       Log[]
+  info       String?   @db.String
+  gas_wanted String?   @db.String
+  gas_used   String?   @db.String
+  tx         Json?     @db.Json
+  timestamp  DateTime? @db.Timestamp
+  events     Event[]
+}
+
+type TxResult {
+  code       Int?        @db.Int
+  data       String?     @db.String
+  log        String?     @db.String
+  info       String?     @db.String
+  gas_wanted String?     @db.String
+  gas_used   String?     @db.String
+  events     Attribute[]
+  codespace  String?     @db.String
+}
+
+// Validator type
+type ConsensusPubkey {
+  type String? @map("@type") @db.String
+  key  String? @db.String
+}
+
+type Description {
+  moniker          String? @db.String
+  identity         String? @db.String
+  website          String? @db.String
+  details          String? @db.String
+  security_contact String? @db.String
+}
+
+type CommissionRate {
+  rate            String? @db.String
+  max_rate        String? @db.String
+  max_change_rate String? @db.String
+}
+
+type Commission {
+  commission_rates CommissionRate?
+  update_time      String?         @db.String
+}
+
+// Common type
+type CustomInfo {
+  chain_id   String @db.String
+  chain_name String @db.String
+}
+
+type Coin {
+  amount String? @db.String
+  denom  String? @db.String
+}

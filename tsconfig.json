@@ -18,7 +18,12 @@
 			"jest",
 			"node"
 		],
-		"target": "es6",
+		"lib": [
+			"es2018",
+			"esnext.asynciterable"
+		],
+		"target": "es2018",
+		"rootDir": ".",
 		"outDir": "dist",
 		"allowJs": true,
 		"baseUrl": ".",
