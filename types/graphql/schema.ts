@@ -13,18 +13,18 @@ type Query {
     accountDelegations(address: String, chain_id: String, skip: Int, take: Int): AccountDelegationsResponse
     accountRedelegations(address: String, chain_id: String, skip: Int, take: Int): AccountRedelegationsResponse
     accountUnbonds(address: String, chain_id: String, skip: Int, take: Int): AccountUnbondsResponse
-    block: [Block]
-    codeId: [CodeId]
+    block(hash: String, chain_id: String, skip: Int, take: Int): [Block]
+    codeId(code_id: String, contract_type: String, status: String, chain_id: String, skip: Int, take: Int): [CodeId]
     communityPool(chain_id: String): CommunityPool
-    cw20Asset: [CW20Asset]
-    cw721Asset: [CW721Asset]
+    cw20Asset(code_id: String, contract_address: String, owner: String, chain_id: String, skip: Int, take: Int): [CW20Asset]
+    cw721Asset(code_id: String, contract_address: String, owner: String, chain_id: String, skip: Int, take: Int): [CW721Asset]
     inflation(chain_id: String): Inflation
-    param: [Param]
+    param(module: String, chain_id: String, skip: Int, take: Int): [Param]
     pool(chain_id: String): Pool
-    proposal: [Proposal]
+    proposal(proposal_id: String, status: String, chain_id: String, skip: Int, take: Int): [Proposal]
     supply(chain_id: String): Supply
-    transaction: [Transaction]
-    validator: [Validator]
+    transaction(type: String, hash: String, chain_id: String, skip: Int, take: Int): [Transaction]
+    validator(operator_address: String, status: String, jailed: Boolean, chain_id: String, skip: Int, take: Int): [Validator]
 }
 
 # Common type
