@@ -193,7 +193,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							tokenInfo,
 						);
 						await this.broker.call(
-							`v1.cw721-asset-manager.act-${typeEnrich}`,
+							`v1.CW721-asset-manager.act-${typeEnrich}`,
 							asset,
 							OPTs,
 						);
