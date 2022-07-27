@@ -137,8 +137,6 @@ model proposal {
   voting_end_time    DateTime?         @db.Timestamp
   tally              FinalTallyResult?
   deposit            Deposit[]
-  list_tx_deposit    DepositTx[]
-  list_tx_vote       VoteTx[]
   custom_info        CustomInfo
 }
 
@@ -334,18 +332,6 @@ type Content {
   changes     Changes[]
   recipient   String?   @db.String
   amount      Coin[]
-}
-
-type DepositTx {
-  depositor String? @db.String
-  txhash    String? @db.String
-  amount    Coin[]
-}
-
-type VoteTx {
-  voter  String? @db.String
-  txhash String? @db.String
-  option String? @db.String
 }
 
 // Transaction type
