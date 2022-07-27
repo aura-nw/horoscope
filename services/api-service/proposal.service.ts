@@ -105,6 +105,7 @@ export default class ProposalService extends MoleculerDBService<
 				default: 10,
 				integer: true,
 				convert: true,
+				min: 1,
 				max: 100,
 			},
 			pageOffset: {
@@ -113,6 +114,7 @@ export default class ProposalService extends MoleculerDBService<
 				default: 0,
 				integer: true,
 				convert: true,
+				min: 0,
 				max: 100,
 			},
 			nextKey: {
