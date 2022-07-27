@@ -1,7 +1,7 @@
 import { Config } from "../common";
 import { JsonObject, JsonProperty } from "json2typescript";
 import { Types } from "mongoose";
-import { Coin } from "./coin.entity";
+import { Coin, ICoin } from "./coin.entity";
 import { CustomInfo } from "./custom-info.entity";
 
 export interface IAccountDelegations {
@@ -11,7 +11,18 @@ export interface IAccountDelegations {
     custom_info: CustomInfo;
 }
 
-export class Delegation {
+export interface IDelegation {
+    delegator_address: String;
+    validator_address: String;
+    shares: String;
+}
+
+export interface IDelegationResponse {
+    delegation: IDelegation;
+    balance: ICoin;
+}
+
+export class Delegation implements IDelegation {
     @JsonProperty('delegator_address', String)
     delegator_address: String = '';
     @JsonProperty('validator_address', String)
@@ -20,7 +31,7 @@ export class Delegation {
     shares: String = '';
 }
 
-export class DelegationResponse {
+export class DelegationResponse implements IDelegationResponse {
     @JsonProperty('delegation', Delegation)
     delegation = {} as Delegation;
     @JsonProperty('JsonProperty', Coin)
