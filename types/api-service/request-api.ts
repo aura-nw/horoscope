@@ -3,6 +3,7 @@ export interface PageLimit {
 	pageLimit: number;
 	countTotal?: boolean;
 	nextKey?: string;
+	reverse?: boolean;
 }
 
 export interface ChainIdParams {

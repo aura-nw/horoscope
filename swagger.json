@@ -409,9 +409,20 @@
                         "in": "query",
                         "name": "nextKey",
                         "required": false,
-                        "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
                     }
                 ],
                 "responses": {
@@ -646,6 +657,18 @@
                         "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
                     }
                 ],
                 "responses": {
@@ -782,6 +805,18 @@
                         "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
                     }
                 ],
                 "responses": {

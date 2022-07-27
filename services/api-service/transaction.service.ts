@@ -112,6 +112,13 @@ export default class BlockService extends MoleculerDBService<
 	 *          default:
 	 *          type: string
 	 *          description: "key for next page"
+	 *        - in: query
+	 *          name: reverse
+	 *          required: false
+	 *          enum: ["true","false"]
+	 *          default: false
+	 *          type: string
+	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -185,6 +192,12 @@ export default class BlockService extends MoleculerDBService<
 				optional: true,
 				default: null,
 			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
 		},
 		cache: {
 			ttl: 10,
@@ -213,7 +226,7 @@ export default class BlockService extends MoleculerDBService<
 		const searchKey = ctx.params.searchKey;
 		const searchValue = ctx.params.searchValue;
 		const queryParam = ctx.params.query;
-
+		const sort = ctx.params.reverse ? 'tx_response.height' : '-_id';
 		let query: QueryOptions = {
 			'custom_info.chain_id': ctx.params.chainid,
 		};
@@ -274,7 +287,7 @@ export default class BlockService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-_id',
+					sort: sort,
 				}),
 				ctx.params.countTotal === true
 					? this.adapter.count({

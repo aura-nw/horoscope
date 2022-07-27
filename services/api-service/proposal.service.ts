@@ -74,6 +74,13 @@ export default class ProposalService extends MoleculerDBService<
 	 *          default:
 	 *          type: string
 	 *          description: "key for next page"
+	 *        - in: query
+	 *          name: reverse
+	 *          required: false
+	 *          enum: ["true","false"]
+	 *          default: false
+	 *          type: string
+	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -113,6 +120,12 @@ export default class ProposalService extends MoleculerDBService<
 				optional: true,
 				default: null,
 			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
 		},
 		cache: {
 			ttl: 5,
@@ -135,6 +148,7 @@ export default class ProposalService extends MoleculerDBService<
 		}
 		try {
 			const proposalId = ctx.params.proposalId;
+			const sort = ctx.params.reverse ? '-_id' : '_id';
 			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
 			let needNextKey = true;
 			if (proposalId) {
@@ -153,7 +167,7 @@ export default class ProposalService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-_id',
+					sort: sort,
 				}),
 				this.adapter.count({
 					query: query,
