@@ -15,14 +15,14 @@ type Query {
     accountUnbonds(address: String, chain_id: String, skip: Int, take: Int): AccountUnbondsResponse
     block(hash: String, chain_id: String, skip: Int, take: Int): [Block]
     codeId(code_id: String, contract_type: String, status: String, chain_id: String, skip: Int, take: Int): [CodeId]
-    communityPool(chain_id: String): CommunityPool
+    communityPool(chain_id: String): [CommunityPool]
     cw20Asset(code_id: String, contract_address: String, owner: String, chain_id: String, skip: Int, take: Int): [CW20Asset]
     cw721Asset(code_id: String, contract_address: String, owner: String, chain_id: String, skip: Int, take: Int): [CW721Asset]
-    inflation(chain_id: String): Inflation
+    inflation(chain_id: String): [Inflation]
     param(module: String, chain_id: String, skip: Int, take: Int): [Param]
-    pool(chain_id: String): Pool
+    pool(chain_id: String): [Pool]
     proposal(proposal_id: String, status: String, chain_id: String, skip: Int, take: Int): [Proposal]
-    supply(chain_id: String): Supply
+    supply(chain_id: String): [Supply]
     transaction(type: String, hash: String, chain_id: String, skip: Int, take: Int): [Transaction]
     validator(operator_address: String, status: String, jailed: Boolean, chain_id: String, skip: Int, take: Int): [Validator]
 }
@@ -322,16 +322,6 @@ type Content {
     recipient:   String
     amount:      [Coin]
 }
-type DepositTx {
-    depositor: String
-    txhash:    String
-    amount:    [Coin]
-}
-type VoteTx {
-    voter:  String
-    txhash: String
-    option: String
-}
 type Proposal {
     id: String
     proposal_id: Int
@@ -345,8 +335,6 @@ type Proposal {
     voting_end_time: DateTime
     tally: FinalTallyResult
     deposit: [Deposit]
-    list_tx_deposit: [DepositTx]
-    list_tx_vote: [VoteTx]
     custom_info: CustomInfo
 }
 
@@ -502,17 +490,15 @@ export const Resolvers = {
     Query: {
         hello() { return "Hello world!"; },
         accountAuth: (_parent: any, args: any, context: any, info: any) => {
-            const where = {
-                address: args.address,
-                // custom_info: {
-                //     chain_id: args.chain_id,
-                // },
-            };
-            const skip = (args.skip !== 0 && args.take !== 0) ? args.skip * args.take : 0;
+            const where: any = {};
+            if (args.address !== '') where.address = args.address;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_auth.findMany({
-                where,
+                // where,
                 skip,
-                take: args.take,
+                take,
             });
             const total = prisma.account_auth.count({
                 // where,
@@ -523,17 +509,15 @@ export const Resolvers = {
             }
         },
         accountBalances: (_parent: any, args: any, context: any, info: any) => {
-            const where = {
-                address: args.address,
-                // custom_info: {
-                //     chain_id: args.chain_id,
-                // },
-            };
-            const skip = (args.skip !== 0 && args.take !== 0) ? args.skip * args.take : 0;
+            const where: any = {};
+            if (args.address !== '') where.address = args.address;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_balances.findMany({
                 // where,
                 skip,
-                take: args.take,
+                take,
             });
             const total = prisma.account_balances.count({
                 // where,
@@ -544,17 +528,15 @@ export const Resolvers = {
             }
         },
         accountSpendableBalances: (_parent: any, args: any, context: any, info: any) => {
-            const where = {
-                address: args.address,
-                // custom_info: {
-                //     chain_id: args.chain_id,
-                // },
-            };
-            const skip = (args.skip !== 0 && args.take !== 0) ? args.skip * args.take : 0;
+            const where: any = {};
+            if (args.address !== '') where.address = args.address;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_spendable_balances.findMany({
                 // where,
                 skip,
-                take: args.take,
+                take,
             });
             const total = prisma.account_spendable_balances.count({
                 // where,
@@ -565,17 +547,15 @@ export const Resolvers = {
             }
         },
         accountDelegations: (_parent: any, args: any, context: any, info: any) => {
-            const where = {
-                address: args.address,
-                // custom_info: {
-                //     chain_id: args.chain_id,
-                // },
-            };
-            const skip = (args.skip !== 0 && args.take !== 0) ? args.skip * args.take : 0;
+            const where: any = {};
+            if (args.address !== '') where.address = args.address;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_delegations.findMany({
                 // where,
                 skip,
-                take: args.take,
+                take,
             });
             const total = prisma.account_delegations.count({
                 // where,
@@ -586,17 +566,15 @@ export const Resolvers = {
             }
         },
         accountRedelegations: (_parent: any, args: any, context: any, info: any) => {
-            const where = {
-                address: args.address,
-                // custom_info: {
-                //     chain_id: args.chain_id,
-                // },
-            };
-            const skip = (args.skip !== 0 && args.take !== 0) ? args.skip * args.take : 0;
+            const where: any = {};
+            if (args.address !== '') where.address = args.address;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_redelegations.findMany({
                 // where,
                 skip,
-                take: args.take,
+                take,
             });
             const total = prisma.account_redelegations.count({
                 // where,
@@ -607,17 +585,15 @@ export const Resolvers = {
             }
         },
         accountUnbonds: (_parent: any, args: any, context: any, info: any) => {
-            const where = {
-                address: args.address,
-                // custom_info: {
-                //     chain_id: args.chain_id,
-                // },
-            };
-            const skip = (args.skip !== 0 && args.take !== 0) ? args.skip * args.take : 0;
+            const where: any = {};
+            if (args.address !== '') where.address = args.address;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_unbonds.findMany({
                 // where,
                 skip,
-                take: args.take,
+                take,
             });
             const total = prisma.account_unbonds.count({
                 // where,
@@ -628,54 +604,128 @@ export const Resolvers = {
             }
         },
         block: (_parent: any, args: any, context: any, info: any) => {
-            return [prisma.block.findFirst({
-                where: {
-                    block_id: {
-                        hash: "8835EAACD23DF8048B67C8FCB6F7F129A10908CA54FF5BCDE502DD28146B5FB4"
-                    },
-                },
-            })];
+            const where: any = {};
+            if (args.hash !== '') where.block_id.hash = args.hash;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
+            return prisma.block.findMany({
+                // where,
+                skip,
+                take,
+            });
         },
         codeId: (_parent: any, args: any, context: any, info: any) => {
-            return [prisma.code_id.findFirst()];
+            const where: any = {};
+            if (args.code_id !== '') where.code_id = args.code_id;
+            if (args.contract_type !== '') where.contract_type = args.contract_type;
+            if (args.status !== '') where.status = args.status;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
+            return prisma.code_id.findMany({
+                // where,
+                skip,
+                take,
+            });
         },
         communityPool: (_parent: any, args: any, context: any, info: any) => {
-            return prisma.community_pool.findFirst();
+            const where: any = {};
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            return prisma.community_pool.findMany({
+                // where,
+            });
         },
         cw20Asset: (_parent: any, args: any, context: any, info: any) => {
-            return [prisma.cw20_asset.findFirst()];
+            const where: any = {};
+            if (args.code_id !== '') where.code_id = args.code_id;
+            if (args.contract_address !== '') where.constract_address = args.contract_address;
+            if (args.owner !== '') where.owner = args.owner;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
+            return prisma.cw20_asset.findMany({
+                // where,
+                skip,
+                take,
+            });
         },
         cw721Asset: (_parent: any, args: any, context: any, info: any) => {
-            return [prisma.cw721_asset.findFirst()];
+            const where: any = {};
+            if (args.code_id !== '') where.code_id = args.code_id;
+            if (args.contract_address !== '') where.constract_address = args.contract_address;
+            if (args.owner !== '') where.owner = args.owner;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
+            return prisma.cw721_asset.findMany({
+                // where,
+                skip,
+                take,
+            });
         },
         inflation: (_parent: any, args: any, context: any, info: any) => {
-            return prisma.inflation.findFirst();
+            const where: any = {};
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            return prisma.inflation.findMany({
+                // where,
+            });
         },
         param: (_parent: any, args: any, context: any, info: any) => {
-            return [prisma.param.findFirst()];
+            const where: any = {};
+            if (args.module !== '') where.module = args.module;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
+            return prisma.param.findMany({
+                // where,
+                skip,
+                take,
+            });
         },
         pool: (_parent: any, args: any, context: any, info: any) => {
-            return prisma.pool.findFirst();
+            const where: any = {};
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            return prisma.pool.findMany({
+                // where,
+            });
         },
         proposal: (_parent: any, args: any, context: any, info: any) => {
             return [prisma.proposal.findFirst()];
         },
         supply: (_parent: any, args: any, context: any, info: any) => {
+            const where: any = {};
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
             return prisma.supply.findFirst({
-                // where: {
-                //     custom_info: {
-                //         is: {
-                //             chain_id: args.chain_id,
-                //         }
-                //     }
-                // },
+                // where,
             });
         },
         transaction: (_parent: any, args: any, context: any, info: any) => {
-            return [prisma.transaction.findFirst()];
+            const where: any = {};
+            if (args.type !== '') where['tx.body.messages.@type'] = args.type;
+            if (args.hash !== '') where.tx_response.txhash = args.hash;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
+            return prisma.transaction.findMany({
+                // where,
+                skip,
+                take,
+            });
         },
         validator: (_parent: any, args: any, context: any, info: any) => {
-            return [prisma.validator.findFirst()];
+            const where: any = {};
+            if (args.operator_address !== '') where.operator_address = args.operator_address;
+            if (args.status !== '') where.status = args.status;
+            if (args.jailed !== '') where.jailed = args.jailed;
+            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
+            return prisma.validator.findMany({
+                // where,
+                skip,
+                take,
+            });
         },
     },
 };
