@@ -70,10 +70,15 @@ export interface ApiGatewayMeta {
 	$location?: string;
 }
 
-export interface NetworkInfo {
+export interface INetworkInfo {
 	chainName: string;
 	chainId: string;
 	RPC: string[];
 	LCD: string[];
 	prefixAddress: string;
+}
+
+export interface ISearchTxQuery {
+	type: string;
+	key: string;
 }

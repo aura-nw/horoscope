@@ -1,4 +1,4 @@
-import { NetworkInfo } from 'types';
+import { INetworkInfo } from 'types';
 
 // export const networkFile:
 
@@ -46,7 +46,7 @@ export const MSG_TYPE = {
 	MSG_UNDELEGATE: '/cosmos.staking.v1beta1.MsgUndelegate',
 };
 
-export const LIST_NETWORK: NetworkInfo[] = require('../network.json');
+export const LIST_NETWORK: INetworkInfo[] = require('../network.json');
 
 export const EVENT_TYPE = {
 	WASM: 'wasm',
@@ -116,4 +116,46 @@ export const BOND_STATUS = {
 	BOND_STATUS_UNBONDED: 'BOND_STATUS_UNBONDED',
 	BOND_STATUS_UNBONDING: 'BOND_STATUS_UNBONDING',
 	BOND_STATUS_BONDED: 'BOND_STATUS_BONDED',
+};
+
+export const MODULE_PARAM = {
+	BANK: 'bank',
+	GOVERNANCE: 'gov',
+	DISTRIBUTION: 'distribution',
+	STAKING: 'staking',
+	SLASHING: 'slashing',
+	IBC_TRANSFER: 'ibc-transfer',
+	MINT: 'mint',
+};
+
+export const BASE_64_ENCODE = {
+	RECIPIENT: 'cmVjaXBpZW50',
+	SENDER: 'c2VuZGVy',
+};
+
+export const SEARCH_TX_QUERY = {
+	PROPOSAL_VOTE: {
+		type: 'proposal_vote',
+		key: 'proposal_id',
+	},
+	PROPOSAL_DEPOSIT: {
+		type: 'proposal_deposit',
+		key: 'proposal_id',
+	},
+	DELEGATE_TO_VALIDATOR: {
+		type: 'delegate',
+		key: 'validator',
+	},
+	REDELEGATE_TO_VALIDATOR: {
+		type: 'redelegate',
+		key: 'destination_validator',
+	},
+	INSTANTIATE_CONTRACT: {
+		type: 'instantiate',
+		key: '_contract_address',
+	},
+	EXECUTE_CONTRACT: {
+		type: 'execute',
+		key: '_contract_address',
+	},
 };

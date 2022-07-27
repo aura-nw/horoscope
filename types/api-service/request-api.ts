@@ -3,6 +3,7 @@ export interface PageLimit {
 	pageLimit: number;
 	countTotal?: boolean;
 	nextKey?: string;
+	reverse?: boolean;
 }
 
 export interface ChainIdParams {
@@ -53,7 +54,12 @@ export interface GetTxRequest
 		PageLimit,
 		BlockHeightParams,
 		TxHashParams,
-		AddressParams {}
+		AddressParams {
+	searchType: string;
+	searchKey: string;
+	searchValue: string;
+	query: string;
+}
 
 export interface AccountInfoRequest {
 	address: string;
@@ -76,4 +82,7 @@ export interface GetValidatorRequest extends ChainIdParams, PageLimit {
 
 export interface GetAccountUnbondRequest extends ChainIdParams, PageLimit {
 	address: string;
+}
+export interface GetParamRequest extends ChainIdParams, PageLimit {
+	module: string;
 }

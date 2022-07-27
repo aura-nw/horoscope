@@ -41,7 +41,7 @@ export interface IFee {
 	granter: String;
 }
 export interface IAuthInfo {
-	signer_infos: ISignerInfo;
+	signer_infos: ISignerInfo[];
 	fee: IFee;
 }
 export interface ITxInput {
@@ -126,7 +126,7 @@ export class Fee implements IFee {
 }
 export class AuthInfo implements IAuthInfo {
 	@JsonProperty('signer_infos', [SignerInfo])
-	signer_infos: SignerInfo = {} as SignerInfo;
+	signer_infos: SignerInfo[] = [];
 	@JsonProperty('fee', Fee)
 	fee: Fee = {} as Fee;
 }

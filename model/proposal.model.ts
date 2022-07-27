@@ -47,7 +47,7 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 			],
 		},
 	],
-	listTxDeposit: [
+	list_tx_deposit: [
 		{
 			depositor: String,
 			txhash: String,
@@ -59,7 +59,7 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 			],
 		},
 	],
-	listTxVote: [
+	list_tx_vote: [
 		{
 			voter: String,
 			txhash: String,

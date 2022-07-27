@@ -36,4 +36,26 @@ export class Utils {
 			.toString('hex')
 			.toUpperCase();
 	}
+
+	public static formatSearchQueryInTxSearch(query: string) {
+		let queryArray = query.split(',');
+		let queryObject: any[] = [];
+		queryArray.forEach((element) => {
+			let keyValueList = element.split('=');
+			if (keyValueList.length === 2) {
+				let value = keyValueList[1];
+				let typeKeyList = keyValueList[0].split('.');
+				if (typeKeyList.length === 2) {
+					let type = typeKeyList[0];
+					let key = typeKeyList[1];
+					queryObject.push({
+						type: type,
+						key: key,
+						value: value,
+					});
+				}
+			}
+		});
+		return queryObject;
+	}
 }

@@ -409,9 +409,20 @@
                         "in": "query",
                         "name": "nextKey",
                         "required": false,
-                        "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
                     }
                 ],
                 "responses": {
@@ -505,6 +516,87 @@
                 }
             }
         },
+        "/v1/param": {
+            "get": {
+                "tags": [
+                    "Param"
+                ],
+                "summary": "Get param",
+                "description": "Get param",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "module",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "bank",
+                            "gov",
+                            "distribution",
+                            "staking",
+                            "slashing",
+                            "ibc-transfer",
+                            "mint"
+                        ],
+                        "description": "module need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
         "/v1/proposal": {
             "get": {
                 "tags": [
@@ -565,6 +657,18 @@
                         "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
                     }
                 ],
                 "responses": {
@@ -630,6 +734,48 @@
                     },
                     {
                         "in": "query",
+                        "name": "searchType",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "proposal_deposit",
+                            "proposal_vote",
+                            "delegate",
+                            "redelegate",
+                            "instantiate",
+                            "execute"
+                        ],
+                        "description": "Search type event"
+                    },
+                    {
+                        "in": "query",
+                        "name": "searchKey",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "proposal_id",
+                            "validator",
+                            "destination_validator",
+                            "_contract_address"
+                        ],
+                        "description": "Search key event"
+                    },
+                    {
+                        "in": "query",
+                        "name": "searchValue",
+                        "required": false,
+                        "type": "string",
+                        "description": "Search value event"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "required": false,
+                        "type": "string",
+                        "description": "Search query with format A.B=C,D.E=F"
+                    },
+                    {
+                        "in": "query",
                         "name": "pageOffset",
                         "required": false,
                         "default": 0,
@@ -659,6 +805,18 @@
                         "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
                     }
                 ],
                 "responses": {

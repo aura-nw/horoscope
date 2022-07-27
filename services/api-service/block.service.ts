@@ -96,9 +96,15 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: nextKey
 	 *          required: false
-	 *          default:
 	 *          type: string
 	 *          description: "key for next page"
+	 *        - in: query
+	 *          name: reverse
+	 *          required: false
+	 *          enum: ["true","false"]
+	 *          default: false
+	 *          type: string
+	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -147,10 +153,16 @@ export default class BlockService extends MoleculerDBService<
 				optional: true,
 				default: null,
 			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
 		},
-		cache: {
-			ttl: 10,
-		},
+		// cache: {
+		// 	ttl: 10,
+		// },
 	})
 	async getByChain(ctx: Context<GetBlockRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
@@ -173,6 +185,7 @@ export default class BlockService extends MoleculerDBService<
 			const blockHash = ctx.params.blockHash;
 			const operatorAddress = ctx.params.operatorAddress;
 			const consensusHexAddress = ctx.params.consensusHexAddress;
+			const sort = ctx.params.reverse ? 'block.header.height' : '-_id';
 			let needNextKey = true;
 
 			if (operatorAddress) {
@@ -202,7 +215,8 @@ export default class BlockService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-block.header.height',
+					// sort: '-block.header.height',
+					sort: sort,
 				}),
 				ctx.params.countTotal === true
 					? this.adapter.find({
@@ -210,7 +224,7 @@ export default class BlockService extends MoleculerDBService<
 							limit: 1,
 							offset: 0,
 							// @ts-ignore
-							sort: '-block.header.height',
+							sort: sort,
 					  })
 					: 0,
 			]);

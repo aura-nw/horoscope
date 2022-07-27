@@ -3,43 +3,41 @@
 'use strict';
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
+import { dbParamMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
 	ErrorMessage,
-	getActionConfig,
-	GetProposalRequest,
+	GetParamRequest,
 	MoleculerDBService,
 	ResponseDto,
-	RestOptions,
 } from '../../types';
-import { DbContextParameters, QueryOptions } from 'moleculer-db';
-import { IProposal, ProposalEntity } from '../../entities';
-import { LIST_NETWORK } from '../../common/constant';
+import { QueryOptions } from 'moleculer-db';
+import { IParam } from '../../entities';
+import { LIST_NETWORK, MODULE_PARAM } from '../../common/constant';
 import { ObjectId } from 'bson';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
-	name: 'proposal',
+	name: 'param',
 	version: 1,
-	mixins: [dbProposalMixin],
+	mixins: [dbParamMixin],
 })
-export default class ProposalService extends MoleculerDBService<
+export default class ParamService extends MoleculerDBService<
 	{
-		rest: 'v1/proposal';
+		rest: 'v1/param';
 	},
-	IProposal
+	IParam
 > {
 	/**
 	 *  @swagger
-	 *  /v1/proposal:
+	 *  /v1/param:
 	 *    get:
 	 *      tags:
-	 *        - Proposal
-	 *      summary: Get latest proposal
-	 *      description: Get latest proposal
+	 *        - Param
+	 *      summary: Get param
+	 *      description: Get param
 	 *      produces:
 	 *        - application/json
 	 *      consumes:
@@ -52,10 +50,11 @@ export default class ProposalService extends MoleculerDBService<
 	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
-	 *          name: proposalId
+	 *          name: module
 	 *          required: false
 	 *          type: string
-	 *          description: "proposal Id"
+	 *          enum: ["bank", "gov", "distribution", "staking", "slashing", "ibc-transfer", "mint"]
+	 *          description: "module need to query"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
@@ -74,13 +73,6 @@ export default class ProposalService extends MoleculerDBService<
 	 *          default:
 	 *          type: string
 	 *          description: "key for next page"
-	 *        - in: query
-	 *          name: reverse
-	 *          required: false
-	 *          enum: ["true","false"]
-	 *          default: false
-	 *          type: string
-	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -98,7 +90,12 @@ export default class ProposalService extends MoleculerDBService<
 					return e.chainId;
 				}),
 			},
-			proposalId: { type: 'string', optional: true, default: null },
+			module: {
+				type: 'string',
+				optional: true,
+				default: null,
+				enum: Object.values(MODULE_PARAM),
+			},
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -120,18 +117,12 @@ export default class ProposalService extends MoleculerDBService<
 				optional: true,
 				default: null,
 			},
-			reverse: {
-				type: 'boolean',
-				optional: true,
-				default: false,
-				convert: true,
-			},
 		},
 		cache: {
-			ttl: 5,
+			ttl: 10,
 		},
 	})
-	async getByChain(ctx: Context<GetProposalRequest, Record<string, unknown>>) {
+	async getByChain(ctx: Context<GetParamRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		if (ctx.params.nextKey) {
 			try {
@@ -147,38 +138,36 @@ export default class ProposalService extends MoleculerDBService<
 			}
 		}
 		try {
-			const proposalId = ctx.params.proposalId;
-			const sort = ctx.params.reverse ? '-_id' : '_id';
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			const module = ctx.params.module;
 			let needNextKey = true;
-			if (proposalId) {
-				query['proposal_id'] = proposalId;
+			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			if (module) {
+				query['module'] = module;
 				needNextKey = false;
 			}
+
 			if (ctx.params.nextKey) {
-				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
 			}
-
 			let [result, count]: [any[], number] = await Promise.all([
 				this.adapter.find({
 					query: query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: sort,
+					sort: '_id',
 				}),
 				this.adapter.count({
 					query: query,
 				}),
 			]);
-
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
-					proposals: result,
+					result: result,
 					count: count,
 					nextKey: needNextKey && result.length ? result[result.length - 1]._id : null,
 				},

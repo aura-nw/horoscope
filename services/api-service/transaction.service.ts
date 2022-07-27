@@ -8,14 +8,16 @@ import {
 	ErrorCode,
 	ErrorMessage,
 	GetTxRequest,
+	ISearchTxQuery,
 	MoleculerDBService,
 	ResponseDto,
 } from '../../types';
 import { ITransaction, TransactionEntity } from '../../entities';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
-import { LIST_NETWORK } from '../../common/constant';
+import { BASE_64_ENCODE, LIST_NETWORK, SEARCH_TX_QUERY } from '../../common/constant';
 import { fromBase64, toBase64, fromBech32, toBech32, fromUtf8, toUtf8 } from '@cosmjs/encoding';
+import { Utils } from '../../utils/utils';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -65,6 +67,28 @@ export default class BlockService extends MoleculerDBService<
 	 *          type: string
 	 *          description: "Address in transaction"
 	 *        - in: query
+	 *          name: searchType
+	 *          required: false
+	 *          type: string
+	 *          enum: ["proposal_deposit", "proposal_vote", "delegate", "redelegate", "instantiate", "execute"]
+	 *          description: "Search type event"
+	 *        - in: query
+	 *          name: searchKey
+	 *          required: false
+	 *          type: string
+	 *          enum: ["proposal_id", "validator", "destination_validator", "_contract_address"]
+	 *          description: "Search key event"
+	 *        - in: query
+	 *          name: searchValue
+	 *          required: false
+	 *          type: string
+	 *          description: "Search value event"
+	 *        - in: query
+	 *          name: query
+	 *          required: false
+	 *          type: string
+	 *          description: "Search query with format A.B=C,D.E=F"
+	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
 	 *          default: 0
@@ -88,6 +112,13 @@ export default class BlockService extends MoleculerDBService<
 	 *          default:
 	 *          type: string
 	 *          description: "key for next page"
+	 *        - in: query
+	 *          name: reverse
+	 *          required: false
+	 *          enum: ["true","false"]
+	 *          default: false
+	 *          type: string
+	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -116,6 +147,32 @@ export default class BlockService extends MoleculerDBService<
 				convert: true,
 				max: 100,
 			},
+			searchType: {
+				type: 'string',
+				optional: true,
+				default: null,
+				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => {
+					return e.type;
+				}),
+			},
+			searchKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => {
+					return e.key;
+				}),
+			},
+			searchValue: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+			query: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
 			pageOffset: {
 				type: 'number',
 				optional: true,
@@ -134,6 +191,12 @@ export default class BlockService extends MoleculerDBService<
 				type: 'string',
 				optional: true,
 				default: null,
+			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
 			},
 		},
 		cache: {
@@ -159,7 +222,11 @@ export default class BlockService extends MoleculerDBService<
 		const blockHeight = ctx.params.blockHeight;
 		const txHash = ctx.params.txHash;
 		const address = ctx.params.address;
-
+		const searchType = ctx.params.searchType;
+		const searchKey = ctx.params.searchKey;
+		const searchValue = ctx.params.searchValue;
+		const queryParam = ctx.params.query;
+		const sort = ctx.params.reverse ? 'tx_response.height' : '-_id';
 		let query: QueryOptions = {
 			'custom_info.chain_id': ctx.params.chainid,
 		};
@@ -173,7 +240,32 @@ export default class BlockService extends MoleculerDBService<
 
 		if (address) {
 			// query['tx_response.events.attributes.key'] = 'cmVjaXBpZW50';
+			query['$or'] = [
+				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			];
 			query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
+		}
+
+		if (searchType && searchKey && searchValue) {
+			query['tx_response.events.type'] = searchType;
+			query['tx_response.events.attributes.key'] = toBase64(toUtf8(searchKey));
+			query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
+		}
+
+		if (queryParam) {
+			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
+			// this.logger.info('queryParam: ', JSON.stringify(queryParamFormat));
+			let queryAnd: any[] = [];
+			queryParamFormat.forEach((e: any) => {
+				let tempQuery = {
+					'tx_response.events.type': e.type,
+					'tx_response.events.attributes.key': toBase64(toUtf8(e.key)),
+					'tx_response.events.attributes.value': toBase64(toUtf8(e.value)),
+				};
+				queryAnd.push(tempQuery);
+			});
+			query['$and'] = queryAnd;
 		}
 
 		if (ctx.params.txHash) {
@@ -195,7 +287,7 @@ export default class BlockService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-tx_response.height',
+					sort: sort,
 				}),
 				ctx.params.countTotal === true
 					? this.adapter.count({
