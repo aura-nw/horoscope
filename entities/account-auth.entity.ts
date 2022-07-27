@@ -10,14 +10,36 @@ export interface IAccountAuth {
     custom_info: CustomInfo;
 }
 
-export class AccountPubKey {
+export interface IAccountPubKey {
+    type: String;
+    value: String;
+}
+
+export interface IAccountValue {
+    address: String;
+    public_key: IAccountPubKey;
+    account_number: String;
+    sequence: String;
+}
+
+export interface IAccountResult {
+    type: String;
+    value: IAccountValue;
+}
+
+export interface IAccount {
+    height: String;
+    result: IAccountResult;
+}
+
+export class AccountPubKey implements IAccountPubKey {
     @JsonProperty('type', String)
     type: String = '';
     @JsonProperty('value', String)
     value: String = '';
 }
 
-export class AccountValue {
+export class AccountValue implements IAccountValue {
     @JsonProperty('address', String)
     address: String = '';
     @JsonProperty('public_key', AccountPubKey, true)
@@ -28,14 +50,14 @@ export class AccountValue {
     sequence: String = '';
 }
 
-export class AccountResult {
+export class AccountResult implements IAccountResult {
     @JsonProperty('type', String)
     type: String = '';
     @JsonProperty('value', AccountValue, true)
     value= {} as AccountValue;
 }
 
-export class Account {
+export class Account implements IAccount {
     @JsonProperty('height', String)
     height: String = '';
     @JsonProperty('result', AccountResult)
