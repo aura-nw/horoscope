@@ -53,6 +53,9 @@ COPY . .
 # Build and cleanup
 # ENV NODE_ENV=production
 
+# Generate prisma
+RUN npm run graphql:generate
+
 # build
 RUN npm run build \
 	&& npm prune
