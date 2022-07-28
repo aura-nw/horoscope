@@ -381,7 +381,7 @@ type AuthInfo {
 type TxInput {
     body:       Body
     auth_info:  AuthInfo
-    signatures: String
+    signatures: String # TODO: change to String[]? (currently error due to findMany)
 }
 type Attribute {
     key:   String
@@ -398,7 +398,7 @@ type Log {
     events:    [Event]
 }
 type TxResponse {
-    height:     String
+    height:     String # TODO: change to Int? (currently error due to findMany)
     txhash:     String
     codespace:  String
     code:       String
@@ -409,7 +409,7 @@ type TxResponse {
     gas_wanted: String
     gas_used:   String
     tx:         Json
-    timestamp:  String
+    timestamp:  String # TODO: change to DateTime? (currently error due to findMany)
     events:     [Event]
 }
 type TxResult {
@@ -706,7 +706,7 @@ export const Resolvers = {
         supply: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
             if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
-            return prisma.supply.findFirst({
+            return prisma.supply.findMany({
                 // where,
             });
         },
