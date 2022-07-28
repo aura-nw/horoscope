@@ -357,11 +357,11 @@ type ModeInfo {
     single: Mode
 }
 type Body {
-    messages:                       Json
+    messages:                       [Json]
     memo:                           String
     timeout_height:                 String
-    extension_options:              Json
-    non_critical_extension_options: Json
+    extension_options:              [Json]
+    non_critical_extension_options: [Json]
 }
 type SignerInfo {
     public_key: PublicKey
@@ -381,7 +381,7 @@ type AuthInfo {
 type TxInput {
     body:       Body
     auth_info:  AuthInfo
-    signatures: [String]
+    signatures: String # TODO: change to String[]? (currently error due to findMany)
 }
 type Attribute {
     key:   String
@@ -398,7 +398,7 @@ type Log {
     events:    [Event]
 }
 type TxResponse {
-    height:     Int
+    height:     String # TODO: change to Int? (currently error due to findMany)
     txhash:     String
     codespace:  String
     code:       String
@@ -409,7 +409,7 @@ type TxResponse {
     gas_wanted: String
     gas_used:   String
     tx:         Json
-    timestamp:  DateTime
+    timestamp:  String # TODO: change to DateTime? (currently error due to findMany)
     events:     [Event]
 }
 type TxResult {
@@ -492,7 +492,7 @@ export const Resolvers = {
         accountAuth: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
             if (args.address !== '') where.address = args.address;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_auth.findMany({
@@ -511,7 +511,7 @@ export const Resolvers = {
         accountBalances: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
             if (args.address !== '') where.address = args.address;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_balances.findMany({
@@ -530,7 +530,7 @@ export const Resolvers = {
         accountSpendableBalances: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
             if (args.address !== '') where.address = args.address;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_spendable_balances.findMany({
@@ -549,7 +549,7 @@ export const Resolvers = {
         accountDelegations: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
             if (args.address !== '') where.address = args.address;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_delegations.findMany({
@@ -568,7 +568,7 @@ export const Resolvers = {
         accountRedelegations: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
             if (args.address !== '') where.address = args.address;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_redelegations.findMany({
@@ -587,7 +587,7 @@ export const Resolvers = {
         accountUnbonds: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
             if (args.address !== '') where.address = args.address;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             const result = prisma.account_unbonds.findMany({
@@ -605,8 +605,8 @@ export const Resolvers = {
         },
         block: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
-            if (args.hash !== '') where.block_id.hash = args.hash;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.hash !== '') where.block_id = { hash: args.hash };
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             return prisma.block.findMany({
@@ -620,7 +620,7 @@ export const Resolvers = {
             if (args.code_id !== '') where.code_id = args.code_id;
             if (args.contract_type !== '') where.contract_type = args.contract_type;
             if (args.status !== '') where.status = args.status;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             return prisma.code_id.findMany({
@@ -631,7 +631,7 @@ export const Resolvers = {
         },
         communityPool: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             return prisma.community_pool.findMany({
                 // where,
             });
@@ -641,7 +641,7 @@ export const Resolvers = {
             if (args.code_id !== '') where.code_id = args.code_id;
             if (args.contract_address !== '') where.constract_address = args.contract_address;
             if (args.owner !== '') where.owner = args.owner;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             return prisma.cw20_asset.findMany({
@@ -655,7 +655,7 @@ export const Resolvers = {
             if (args.code_id !== '') where.code_id = args.code_id;
             if (args.contract_address !== '') where.constract_address = args.contract_address;
             if (args.owner !== '') where.owner = args.owner;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             return prisma.cw721_asset.findMany({
@@ -666,7 +666,7 @@ export const Resolvers = {
         },
         inflation: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             return prisma.inflation.findMany({
                 // where,
             });
@@ -674,7 +674,7 @@ export const Resolvers = {
         param: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
             if (args.module !== '') where.module = args.module;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             return prisma.param.findMany({
@@ -685,26 +685,36 @@ export const Resolvers = {
         },
         pool: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             return prisma.pool.findMany({
                 // where,
             });
         },
         proposal: (_parent: any, args: any, context: any, info: any) => {
-            return [prisma.proposal.findFirst()];
+            const where: any = {};
+            if (args.proposal_id !== '') where.proposal_id = args.proposal_id;
+            if (args.status !== '') where.status = args.status;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+            const take = args.take || 20;
+            const skip = (args.skip !== 0) ? args.skip * take : 0;
+            return prisma.proposal.findMany({
+                // where,
+                skip,
+                take,
+            });
         },
         supply: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
-            return prisma.supply.findFirst({
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+            return prisma.supply.findMany({
                 // where,
             });
         },
         transaction: (_parent: any, args: any, context: any, info: any) => {
             const where: any = {};
-            if (args.type !== '') where['tx.body.messages.@type'] = args.type;
-            if (args.hash !== '') where.tx_response.txhash = args.hash;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.type !== '') where.tx = { body: { messages: { '@type': args.type } } };
+            if (args.hash !== '') where.tx_response = { txhash: args.hash };
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             return prisma.transaction.findMany({
@@ -718,7 +728,7 @@ export const Resolvers = {
             if (args.operator_address !== '') where.operator_address = args.operator_address;
             if (args.status !== '') where.status = args.status;
             if (args.jailed !== '') where.jailed = args.jailed;
-            if (args.chain_id !== '') where.custom_info.chain_id = args.chain_id;
+            if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
             const take = args.take || 20;
             const skip = (args.skip !== 0) ? args.skip * take : 0;
             return prisma.validator.findMany({

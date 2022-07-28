@@ -84,7 +84,7 @@ model cw20_asset {
   token_id          String?    @db.String
   owner             String?    @db.String
   balance           String?    @db.String
-  history           String[]   @db.String
+  history           String[]
   createdAt         DateTime?  @db.Timestamp
   updatedAt         DateTime?  @db.Timestamp
   custom_info       CustomInfo
@@ -98,7 +98,7 @@ model cw721_asset {
   constract_address String?    @db.String
   token_id          String?    @db.String
   owner             String?    @db.String
-  history           String[]   @db.String
+  history           String[]
   createdAt         DateTime?  @db.Timestamp
   updatedAt         DateTime?  @db.Timestamp
   custom_info       CustomInfo
@@ -277,7 +277,7 @@ type BlockHeader {
 }
 
 type BlockData {
-  txs String[] @db.String
+  txs String[]
 }
 
 type BlockDataEvidence {
@@ -349,11 +349,11 @@ type ModeInfo {
 }
 
 type Body {
-  messages                       Json?   @db.Json
+  messages                       Json[]  @db.Json
   memo                           String? @db.String
   timeout_height                 String? @db.String
-  extension_options              Json?   @db.Json
-  non_critical_extension_options Json?   @db.Json
+  extension_options              Json[]  @db.Json
+  non_critical_extension_options Json[]  @db.Json
 }
 
 type SignerInfo {
@@ -377,7 +377,7 @@ type AuthInfo {
 type TxInput {
   body       Body?
   auth_info  AuthInfo?
-  signatures String[]  @db.String
+  signatures String // TODO: change to String[]? (currently error due to findMany)
 }
 
 type Attribute {
@@ -398,18 +398,18 @@ type Log {
 }
 
 type TxResponse {
-  height     Int?      @db.Int
-  txhash     String?   @db.String
-  codespace  String?   @db.String
-  code       String?   @db.String
-  data       String?   @db.String
-  raw_log    String?   @db.String
+  height     String? @db.String // TODO: change to Int? (currently error due to findMany)
+  txhash     String? @db.String
+  codespace  String? @db.String
+  code       String? @db.String
+  data       String? @db.String
+  raw_log    String? @db.String
   logs       Log[]
-  info       String?   @db.String
-  gas_wanted String?   @db.String
-  gas_used   String?   @db.String
-  tx         Json?     @db.Json
-  timestamp  DateTime? @db.Timestamp
+  info       String? @db.String
+  gas_wanted String? @db.String
+  gas_used   String? @db.String
+  tx         Json?   @db.Json
+  timestamp  String? @db.String // TODO: change to DateTime? (currently error due to findMany)
   events     Event[]
 }
 
