@@ -12,3 +12,6 @@ export interface ListTxCreatedParams {
 export interface ListValidatorAddress {
 	listAddress: string[];
 }
+export interface TransactionHashParam {
+	txHash: string;
+}
