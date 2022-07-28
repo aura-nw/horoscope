@@ -1,4 +1,5 @@
 export interface IMessage {
+	source?: String;
 	element: String;
 }
 

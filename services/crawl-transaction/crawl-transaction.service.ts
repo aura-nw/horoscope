@@ -77,6 +77,8 @@ export default class CrawlTransactionService extends Service {
 					'XADD',
 					Config.REDIS_STREAM_TRANSACTION_NAME,
 					'*',
+					'source',
+					txHash,
 					'element',
 					JSON.stringify(result),
 				]);
