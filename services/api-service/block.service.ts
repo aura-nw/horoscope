@@ -14,7 +14,7 @@ import {
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { BlockEntity, IBlock } from '../../entities';
+import { BlockEntity, IBlock, IValidator } from '../../entities';
 import { JsonConvert } from 'json2typescript';
 import { FilterOptions, QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
@@ -191,7 +191,16 @@ export default class BlockService extends MoleculerDBService<
 			let needNextKey = true;
 
 			if (operatorAddress) {
-				console.log(Utils.bech32ToHex(operatorAddress));
+				// console.log(Utils.bech32ToHex(operatorAddress));
+				let operatorList: IValidator[] = await this.broker.call('v1.validator.find', {
+					query: {
+						'custom_info.chain_id': ctx.params.chainid,
+						operator_address: operatorAddress,
+					},
+				});
+				if (operatorList.length > 0) {
+					query['block.header.proposer_address'] = operatorList[0].consensus_hex_address;
+				}
 			}
 			if (consensusHexAddress) {
 				query['block.header.proposer_address'] = consensusHexAddress;
