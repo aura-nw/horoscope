@@ -86,3 +86,8 @@ export interface GetAccountUnbondRequest extends ChainIdParams, PageLimit {
 export interface GetParamRequest extends ChainIdParams, PageLimit {
 	module: string;
 }
+
+export interface GetHolderRequest extends ChainIdParams, PageLimit {
+	contractAddress: string;
+	contractType: string;
+}

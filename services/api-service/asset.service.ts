@@ -15,6 +15,7 @@ import {
 	ErrorMessage,
 	GetAssetByContractTypeAddressRequest,
 	GetAssetByOwnerAddressRequest,
+	GetHolderRequest,
 	MoleculerDBService,
 	ResponseDto,
 	RestOptions,
@@ -442,6 +443,188 @@ export default class BlockService extends MoleculerDBService<
 					assets,
 					count,
 					nextKey: needNextKey ? assets[assets.length - 1]?._id : null,
+				},
+			};
+		} catch (error) {
+			response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					error,
+				},
+			};
+		}
+		return response;
+	}
+
+	/**
+	 *  @swagger
+	 *  /v1/asset/holder:
+	 *    get:
+	 *      tags:
+	 *        - Asset
+	 *      summary: Get holder by asset
+	 *      description: Get holder by asset
+	 *      produces:
+	 *        - application/json
+	 *      consumes:
+	 *        - application/json
+	 *      parameters:
+	 *        - in: query
+	 *          name: chainid
+	 *          required: true
+	 *          type: string
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          description: "Chain Id of network need to query"
+	 *        - in: query
+	 *          name: contractType
+	 *          required: true
+	 *          type: string
+	 *          enum: ["CW721", "CW20"]
+	 *          description: "Contract type need to query"
+	 *        - in: query
+	 *          name: contractAddress
+	 *          required: false
+	 *          type: string
+	 *          description: "asset/contract address need to query"
+	 *        - in: query
+	 *          name: pageLimit
+	 *          required: false
+	 *          default: 10
+	 *          type: number
+	 *          description: "number record return in a page"
+	 *        - in: query
+	 *          name: pageOffset
+	 *          required: false
+	 *          default: 0
+	 *          type: number
+	 *          description: "Page number, start at 0"
+	 *        - in: query
+	 *          name: countTotal
+	 *          required: false
+	 *          default: false
+	 *          type: boolean
+	 *          description: "count total record"
+	 *        - in: query
+	 *          name: nextKey
+	 *          required: false
+	 *          default:
+	 *          type: string
+	 *          description: "key for next page"
+	 *      responses:
+	 *        '200':
+	 *          description: Register result
+	 *        '422':
+	 *          description: Missing parameters
+	 *
+	 */
+	@Get('/holder', {
+		name: 'holder',
+		params: {
+			contractType: {
+				type: 'string',
+				optional: false,
+				enum: Object.keys(CONTRACT_TYPE),
+				default: null,
+			},
+			chainid: {
+				type: 'string',
+				optional: true,
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+			countTotal: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+		},
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getHolderByAddress(ctx: Context<GetHolderRequest, Record<string, unknown>>) {
+		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
+
+		try {
+			let query: QueryOptions = {};
+			const sort = ctx.params.reverse ? '_id' : '-_id';
+			if (ctx.params.chainid) {
+				query['custom_info.chain_id'] = ctx.params.chainid;
+			}
+			let needNextKey = true;
+			if (ctx.params.nextKey) {
+				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				ctx.params.pageOffset = 0;
+				ctx.params.countTotal = false;
+			}
+			if (ctx.params.contractAddress) {
+				query['contract_address'] = ctx.params.contractAddress;
+			}
+
+			let [resultAsset, resultCount] = await Promise.all([
+				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.find`, {
+					query: query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					sort: sort,
+				}),
+				ctx.params.countTotal === true
+					? this.broker.call(`v1.${ctx.params.contractType}-asset-manager.count`, {
+							query: query,
+					  })
+					: 0,
+			]);
+
+			response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					resultAsset,
+					resultCount,
+					nextKey:
+						needNextKey && resultAsset
+							? //@ts-ignore
+							  resultAsset[resultAsset.length - 1]?._id
+							: null,
 				},
 			};
 		} catch (error) {

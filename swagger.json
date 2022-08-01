@@ -341,6 +341,97 @@
                 }
             }
         },
+        "/v1/asset/holder": {
+            "get": {
+                "tags": [
+                    "Asset"
+                ],
+                "summary": "Get holder",
+                "description": "Get holder",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1"
+                        ],
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "contractType",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "CW721",
+                            "CW20"
+                        ],
+                        "description": "Contract type need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "contractAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "asset/contract address need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
         "/v1/block": {
             "get": {
                 "tags": [
