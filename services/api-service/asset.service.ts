@@ -196,7 +196,7 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: chainid
 	 *          required: false
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          type: string
 	 *          description: "Chain Id of network need to query(if null it will return asset on all chainid)"
 	 *        - in: query
@@ -305,12 +305,13 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: contractType
 	 *          required: true
 	 *          type: string
+	 *          enum: ["CW721", "CW20"]
 	 *          description: "Contract type need to query"
 	 *        - in: query
 	 *          name: chainid
 	 *          required: false
 	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: pageLimit
@@ -346,7 +347,7 @@ export default class BlockService extends MoleculerDBService<
 	@Get('/getByContractType', {
 		name: 'getByContractType',
 		params: {
-			contractType: { type: 'string', optional: false },
+			contractType: { type: 'string', optional: false, enum: Object.values(CONTRACT_TYPE) },
 			chainid: {
 				type: 'string',
 				optional: true,
@@ -425,6 +426,7 @@ export default class BlockService extends MoleculerDBService<
 					query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
+					sort: '-_id',
 				},
 			);
 			let count = 0;
@@ -474,7 +476,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: chainid
 	 *          required: true
 	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: contractType

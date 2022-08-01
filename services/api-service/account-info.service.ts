@@ -52,7 +52,7 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *          description: "Address of account"
 	 *        - in: query
 	 *          name: chainId
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          required: true
 	 *          type: string
 	 *          description: "Chain Id of network need to query"
@@ -79,8 +79,13 @@ export default class AccountInfoService extends MoleculerDBService<
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
-		let accountAuth, accountBalances, accountDelegations, accountRedelegations, accountSpendableBalances,
-			accountUnbonds: any, accountRewards;
+		let accountAuth,
+			accountBalances,
+			accountDelegations,
+			accountRedelegations,
+			accountSpendableBalances,
+			accountUnbonds: any,
+			accountRewards;
 		[
 			accountAuth,
 			accountBalances,
@@ -177,7 +182,7 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: chainId
 	 *          required: true
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          type: string
 	 *          description: "Chain Id of network need to query"
 	 *      responses:

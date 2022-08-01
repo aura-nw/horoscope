@@ -39,7 +39,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "required": true,
                         "type": "string",
@@ -88,7 +89,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "type": "string",
                         "description": "Chain Id of network need to query"
@@ -129,7 +131,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "type": "string",
                         "description": "Chain Id of network need to query"
@@ -237,7 +240,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "type": "string",
                         "description": "Chain Id of network need to query(if null it will return asset on all chainid)"
@@ -280,6 +284,10 @@
                         "name": "contractType",
                         "required": true,
                         "type": "string",
+                        "enum": [
+                            "CW721",
+                            "CW20"
+                        ],
                         "description": "Contract type need to query"
                     },
                     {
@@ -294,7 +302,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     },
@@ -346,8 +355,8 @@
                 "tags": [
                     "Asset"
                 ],
-                "summary": "Get holder",
-                "description": "Get holder",
+                "summary": "Get holder by asset",
+                "description": "Get holder by asset",
                 "produces": [
                     "application/json"
                 ],
@@ -367,7 +376,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     },
@@ -457,7 +467,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "type": "string",
                         "description": "Chain Id of network need to query"
@@ -610,7 +621,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     }
@@ -651,7 +663,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     },
@@ -732,7 +745,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     },
@@ -816,7 +830,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     },
@@ -964,7 +979,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     },
