@@ -876,7 +876,8 @@
                             "delegate",
                             "redelegate",
                             "instantiate",
-                            "execute"
+                            "execute",
+                            "wasm"
                         ],
                         "description": "Search type event"
                     },

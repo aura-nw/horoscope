@@ -158,4 +158,8 @@ export const SEARCH_TX_QUERY = {
 		type: 'execute',
 		key: '_contract_address',
 	},
+	WASM_CONTRACT_ADDRESS: {
+		type: 'wasm',
+		key: '_contract_address',
+	},
 };

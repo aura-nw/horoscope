@@ -70,7 +70,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: searchType
 	 *          required: false
 	 *          type: string
-	 *          enum: ["proposal_deposit", "proposal_vote", "delegate", "redelegate", "instantiate", "execute"]
+	 *          enum: ["proposal_deposit", "proposal_vote", "delegate", "redelegate", "instantiate", "execute", "wasm"]
 	 *          description: "Search type event"
 	 *        - in: query
 	 *          name: searchKey
@@ -228,6 +228,10 @@ export default class BlockService extends MoleculerDBService<
 		const searchKey = ctx.params.searchKey;
 		const searchValue = ctx.params.searchValue;
 		const queryParam = ctx.params.query;
+
+		//TODO: fix slow when count in query
+		// const countTotal = ctx.params.countTotal;
+		ctx.params.countTotal = false;
 		const sort = ctx.params.reverse ? 'tx_response.height' : '-_id';
 		let query: QueryOptions = {
 			'custom_info.chain_id': ctx.params.chainid,
@@ -242,11 +246,22 @@ export default class BlockService extends MoleculerDBService<
 
 		if (address) {
 			// query['tx_response.events.attributes.key'] = 'cmVjaXBpZW50';
-			query['$or'] = [
-				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			query['$and'] = [
+				{
+					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
+				},
+				{
+					$or: [
+						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+					],
+				},
 			];
-			query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
+			// query['$or'] = [
+			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			// ];
+			// query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
 		}
 
 		if (searchType && searchKey && searchValue) {
@@ -291,6 +306,7 @@ export default class BlockService extends MoleculerDBService<
 					// @ts-ignore
 					sort: sort,
 				}),
+				//@ts-ignore
 				ctx.params.countTotal === true
 					? this.adapter.count({
 							query: query,
