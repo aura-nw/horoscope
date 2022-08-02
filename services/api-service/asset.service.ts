@@ -529,6 +529,11 @@ export default class BlockService extends MoleculerDBService<
 				enum: Object.keys(CONTRACT_TYPE),
 				default: null,
 			},
+			contractAddress: {
+				type: 'string',
+				optional: false,
+				default: null,
+			},
 			chainid: {
 				type: 'string',
 				optional: true,
