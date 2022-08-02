@@ -531,7 +531,7 @@ export default class BlockService extends MoleculerDBService<
 			},
 			contractAddress: {
 				type: 'string',
-				optional: false,
+				optional: true,
 				default: null,
 			},
 			chainid: {
@@ -593,7 +593,17 @@ export default class BlockService extends MoleculerDBService<
 
 		try {
 			let query: QueryOptions = {};
-			const sort = ctx.params.reverse ? '_id' : '-_id';
+			let sort = ctx.params.reverse ? '_id' : '-_id';
+			switch (ctx.params.contractType) {
+				case CONTRACT_TYPE.CW721:
+					sort = ctx.params.reverse ? '_id' : '-_id';
+					break;
+				case CONTRACT_TYPE.CW20:
+					sort = ctx.params.reverse ? '-balance' : 'balance';
+					break;
+				default:
+					break;
+			}
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
