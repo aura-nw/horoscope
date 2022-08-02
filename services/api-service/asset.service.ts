@@ -599,7 +599,7 @@ export default class BlockService extends MoleculerDBService<
 					sort = ctx.params.reverse ? '_id' : '-_id';
 					break;
 				case CONTRACT_TYPE.CW20:
-					sort = ctx.params.reverse ? '-balance' : 'balance';
+					sort = ctx.params.reverse ? '-percent_hold' : 'percent_hold';
 					break;
 				default:
 					break;
