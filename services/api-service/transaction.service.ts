@@ -232,7 +232,7 @@ export default class BlockService extends MoleculerDBService<
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
 		ctx.params.countTotal = false;
-		const sort = ctx.params.reverse ? 'tx_response.height' : '-_id';
+		const sort = ctx.params.reverse ? '_id' : '-_id';
 		let query: QueryOptions = {
 			'custom_info.chain_id': ctx.params.chainid,
 		};
@@ -256,6 +256,7 @@ export default class BlockService extends MoleculerDBService<
 			// 		],
 			// 	},
 			// ];
+			query['tx_response.events.type'] = 'transfer';
 			query['$or'] = [
 				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
 				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
