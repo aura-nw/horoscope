@@ -92,7 +92,7 @@ export class Common {
 			asset_id: `${address}_${id}`,
 			code_id: code_id,
 			asset_info: tokenInfo,
-			constract_address: address,
+			contract_address: address,
 			token_id: id,
 			owner: tokenInfo.data.access.owner,
 			history: [],
@@ -110,7 +110,7 @@ export class Common {
 			asset_id: `${address}_${owner}`,
 			code_id: code_id,
 			asset_info: tokenInfo,
-			constract_address: address,
+			contract_address: address,
 			owner: owner,
 			balance: balanceInfo?.data?.balance,
 			percent_hold:

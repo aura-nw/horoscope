@@ -80,7 +80,7 @@ model cw20_asset {
   asset_id          String?    @db.String
   code_id           String?    @db.String
   asset_info        Json?      @db.Json
-  constract_address String?    @db.String
+  contract_address String?    @db.String
   token_id          String?    @db.String
   owner             String?    @db.String
   balance           String?    @db.String
@@ -95,7 +95,7 @@ model cw721_asset {
   asset_id          String?    @db.String
   code_id           String?    @db.String
   asset_info        Json?      @db.Json
-  constract_address String?    @db.String
+  contract_address String?    @db.String
   token_id          String?    @db.String
   owner             String?    @db.String
   history           String[]

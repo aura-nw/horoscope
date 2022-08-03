@@ -7,7 +7,7 @@ export interface ICW20Asset {
 	asset_id: String;
 	code_id: String;
 	asset_info: Object;
-	constract_address: String;
+	contract_address: String;
 	token_id: String;
 	owner: String;
 	balance: String;
@@ -30,7 +30,7 @@ const definition: definitionType<ICW20Asset> = (collection?: string) => ({
 			total_supply: String,
 		},
 	},
-	constract_address: String,
+	contract_address: String,
 	token_id: String,
 	balance: String,
 	owner: {

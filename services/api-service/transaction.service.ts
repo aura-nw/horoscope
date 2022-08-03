@@ -245,23 +245,22 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		if (address) {
-			// query['tx_response.events.attributes.key'] = 'cmVjaXBpZW50';
-			query['$and'] = [
-				{
-					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
-				},
-				{
-					$or: [
-						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
-					],
-				},
-			];
-			// query['$or'] = [
-			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			// query['$and'] = [
+			// 	{
+			// 		'tx_response.events.attributes.value': toBase64(toUtf8(address)),
+			// 	},
+			// 	{
+			// 		$or: [
+			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			// 		],
+			// 	},
 			// ];
-			// query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
+			query['$or'] = [
+				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			];
+			query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
 		}
 
 		if (searchType && searchKey && searchValue) {
@@ -295,7 +294,7 @@ export default class BlockService extends MoleculerDBService<
 			ctx.params.pageOffset = 0;
 			ctx.params.countTotal = false;
 		}
-
+		this.logger.info('query: ', JSON.stringify(query));
 		try {
 			// @ts-ignore
 			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
