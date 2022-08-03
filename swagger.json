@@ -871,6 +871,7 @@
                         "required": false,
                         "type": "string",
                         "enum": [
+                            "transfer",
                             "proposal_deposit",
                             "proposal_vote",
                             "delegate",
@@ -887,6 +888,8 @@
                         "required": false,
                         "type": "string",
                         "enum": [
+                            "sender",
+                            "recipient",
                             "proposal_id",
                             "validator",
                             "destination_validator",

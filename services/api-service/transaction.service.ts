@@ -70,13 +70,13 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: searchType
 	 *          required: false
 	 *          type: string
-	 *          enum: ["proposal_deposit", "proposal_vote", "delegate", "redelegate", "instantiate", "execute", "wasm"]
+	 *          enum: ["transfer","proposal_deposit", "proposal_vote", "delegate", "redelegate", "instantiate", "execute", "wasm"]
 	 *          description: "Search type event"
 	 *        - in: query
 	 *          name: searchKey
 	 *          required: false
 	 *          type: string
-	 *          enum: ["proposal_id", "validator", "destination_validator", "_contract_address"]
+	 *          enum: ["sender","recipient","proposal_id", "validator", "destination_validator", "_contract_address"]
 	 *          description: "Search key event"
 	 *        - in: query
 	 *          name: searchValue
@@ -245,23 +245,23 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		if (address) {
-			// query['$and'] = [
-			// 	{
-			// 		'tx_response.events.attributes.value': toBase64(toUtf8(address)),
-			// 	},
-			// 	{
-			// 		$or: [
-			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
-			// 		],
-			// 	},
-			// ];
-			query['tx_response.events.type'] = 'transfer';
-			query['$or'] = [
-				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			query['$and'] = [
+				{
+					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
+				},
+				{
+					$or: [
+						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+					],
+				},
 			];
-			query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
+			// query['tx_response.events.type'] = 'transfer';
+			// query['$or'] = [
+			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			// ];
+			// query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
 		}
 
 		if (searchType && searchKey && searchValue) {

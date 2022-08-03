@@ -283,7 +283,7 @@ export class TxResult {
 
 @JsonObject('Transaction')
 export class TransactionEntity implements ITransaction {
-	@JsonProperty('_id', String, true)
+	@JsonProperty('_id', Object, true)
 	public _id = Config.DB_TRANSACTION.dialect === 'local' ? Types.ObjectId() : null;
 
 	// @JsonProperty('hash', String)
