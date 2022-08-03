@@ -264,8 +264,10 @@ export default class BlockService extends MoleculerDBService<
 			// query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
 		}
 
-		if (searchType && searchKey && searchValue) {
+		if (searchType) {
 			query['tx_response.events.type'] = searchType;
+		}
+		if (searchKey && searchValue) {
 			query['tx_response.events.attributes.key'] = toBase64(toUtf8(searchKey));
 			query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
 		}
