@@ -319,33 +319,33 @@ export default class BlockService extends MoleculerDBService<
 				offset: ctx.params.pageOffset,
 			}),
 		];
-		if (ctx.params.nextKey) {
-			this.logger.info('ok');
-		} else {
-			this.logger.info('not ok');
-			listPromise.push(
-				Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
-					// this.logger.info(array);
-					let listTxHash: any[] = [];
-					array.map((res: ResponseFromRPC) => {
-						listTxHash.push(
-							...res.result.txs.map((e: any) => {
-								return e.hash;
-							}),
-						);
-					});
-					return this.adapter.find({
-						query: {
-							'tx_response.txhash': { $in: listTxHash },
-						},
-						// @ts-ignore
-						sort: sort,
-						limit: ctx.params.pageLimit,
-						offset: ctx.params.pageOffset,
-					});
-				}),
-			);
-		}
+		// if (ctx.params.nextKey) {
+		// 	this.logger.info('ok');
+		// } else {
+		// 	this.logger.info('not ok');
+		// 	listPromise.push(
+		// 		Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
+		// 			// this.logger.info(array);
+		// 			let listTxHash: any[] = [];
+		// 			array.map((res: ResponseFromRPC) => {
+		// 				listTxHash.push(
+		// 					...res.result.txs.map((e: any) => {
+		// 						return e.hash;
+		// 					}),
+		// 				);
+		// 			});
+		// 			return this.adapter.find({
+		// 				query: {
+		// 					'tx_response.txhash': { $in: listTxHash },
+		// 				},
+		// 				// @ts-ignore
+		// 				sort: sort,
+		// 				limit: ctx.params.pageLimit,
+		// 				offset: ctx.params.pageOffset,
+		// 			});
+		// 		}),
+		// 	);
+		// }
 		try {
 			// @ts-ignore
 			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
