@@ -243,11 +243,18 @@ export default class BlockService extends MoleculerDBService<
 		ctx.params.countTotal = false;
 		// const sort = ctx.params.reverse ? '_id' : '-_id';
 		const sort = '-_id';
-
-		let query: QueryOptions = {
-			'custom_info.chain_id': ctx.params.chainid,
-		};
-
+		let query: QueryOptions = {};
+		if (ctx.params.txHash) {
+			ctx.params.nextKey = undefined;
+			ctx.params.countTotal = false;
+			ctx.params.pageOffset = 0;
+		}
+		if (ctx.params.nextKey) {
+			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+			ctx.params.pageOffset = 0;
+			ctx.params.countTotal = false;
+		}
+		query['custom_info.chain_id'] = ctx.params.chainid;
 		if (blockHeight) {
 			query['tx_response.height'] = blockHeight;
 		}
@@ -299,16 +306,6 @@ export default class BlockService extends MoleculerDBService<
 			query['$and'] = queryAnd;
 		}
 
-		if (ctx.params.txHash) {
-			ctx.params.nextKey = undefined;
-			ctx.params.countTotal = false;
-			ctx.params.pageOffset = 0;
-		}
-		if (ctx.params.nextKey) {
-			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
-			ctx.params.pageOffset = 0;
-			ctx.params.countTotal = false;
-		}
 		this.logger.info('query: ', JSON.stringify(query));
 		let listPromise = [];
 		if (ctx.params.nextKey) {
