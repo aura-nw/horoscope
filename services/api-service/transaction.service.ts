@@ -310,42 +310,43 @@ export default class BlockService extends MoleculerDBService<
 			ctx.params.countTotal = false;
 		}
 		this.logger.info('query: ', JSON.stringify(query));
-		let listPromise = [
-			this.adapter.find({
-				query: query,
-				// @ts-ignore
-				sort: sort,
-				limit: ctx.params.pageLimit,
-				offset: ctx.params.pageOffset,
-			}),
-		];
-		// if (ctx.params.nextKey) {
-		// 	this.logger.info('ok');
-		// } else {
-		// 	this.logger.info('not ok');
-		// 	listPromise.push(
-		// 		Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
-		// 			// this.logger.info(array);
-		// 			let listTxHash: any[] = [];
-		// 			array.map((res: ResponseFromRPC) => {
-		// 				listTxHash.push(
-		// 					...res.result.txs.map((e: any) => {
-		// 						return e.hash;
-		// 					}),
-		// 				);
-		// 			});
-		// 			return this.adapter.find({
-		// 				query: {
-		// 					'tx_response.txhash': { $in: listTxHash },
-		// 				},
-		// 				// @ts-ignore
-		// 				sort: sort,
-		// 				limit: ctx.params.pageLimit,
-		// 				offset: ctx.params.pageOffset,
-		// 			});
-		// 		}),
-		// 	);
-		// }
+		let listPromise = [];
+		if (ctx.params.nextKey) {
+			this.logger.info('ok');
+			listPromise.push(
+				this.adapter.find({
+					query: query,
+					// @ts-ignore
+					sort: sort,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+				}),
+			);
+		} else {
+			this.logger.info('not ok');
+			listPromise.push(
+				Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
+					// this.logger.info(array);
+					let listTxHash: any[] = [];
+					array.map((res: ResponseFromRPC) => {
+						listTxHash.push(
+							...res.result.txs.map((e: any) => {
+								return e.hash;
+							}),
+						);
+					});
+					return this.adapter.find({
+						query: {
+							'tx_response.txhash': { $in: listTxHash },
+						},
+						// @ts-ignore
+						sort: sort,
+						limit: ctx.params.pageLimit,
+						offset: ctx.params.pageOffset,
+					});
+				}),
+			);
+		}
 		try {
 			// @ts-ignore
 			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
