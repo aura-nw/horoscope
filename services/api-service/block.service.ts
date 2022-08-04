@@ -14,7 +14,7 @@ import {
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { BlockEntity, IBlock } from '../../entities';
+import { BlockEntity, IBlock, IValidator } from '../../entities';
 import { JsonConvert } from 'json2typescript';
 import { FilterOptions, QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
@@ -52,7 +52,7 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: chainid
 	 *          required: true
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          type: string
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
@@ -132,6 +132,7 @@ export default class BlockService extends MoleculerDBService<
 				default: 10,
 				integer: true,
 				convert: true,
+				min: 1,
 				max: 100,
 			},
 			pageOffset: {
@@ -140,6 +141,7 @@ export default class BlockService extends MoleculerDBService<
 				default: 0,
 				integer: true,
 				convert: true,
+				min: 0,
 				max: 100,
 			},
 			countTotal: {
@@ -189,7 +191,16 @@ export default class BlockService extends MoleculerDBService<
 			let needNextKey = true;
 
 			if (operatorAddress) {
-				console.log(Utils.bech32ToHex(operatorAddress));
+				// console.log(Utils.bech32ToHex(operatorAddress));
+				let operatorList: IValidator[] = await this.broker.call('v1.validator.find', {
+					query: {
+						'custom_info.chain_id': ctx.params.chainid,
+						operator_address: operatorAddress,
+					},
+				});
+				if (operatorList.length > 0) {
+					query['block.header.proposer_address'] = operatorList[0].consensus_hex_address;
+				}
 			}
 			if (consensusHexAddress) {
 				query['block.header.proposer_address'] = consensusHexAddress;

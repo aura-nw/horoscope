@@ -96,10 +96,12 @@ export default class CrawlSigningInfoService extends Service {
 					path,
 				);
 				this.logger.info(result);
-				let res = await this.adapter.updateById(foundValidator._id, {
-					$set: { val_signing_info: result.val_signing_info },
-				});
-				this.logger.info(res);
+				if (result.val_signing_info) {
+					let res = await this.adapter.updateById(foundValidator._id, {
+						$set: { val_signing_info: result.val_signing_info },
+					});
+					this.logger.info(res);
+				}
 			} catch (error) {
 				this.logger.error(error);
 			}

@@ -49,7 +49,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: chainid
 	 *          required: true
 	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: blockHeight
@@ -70,13 +70,13 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: searchType
 	 *          required: false
 	 *          type: string
-	 *          enum: ["proposal_deposit", "proposal_vote", "delegate", "redelegate", "instantiate", "execute"]
+	 *          enum: ["transfer","proposal_deposit", "proposal_vote", "delegate", "redelegate", "instantiate", "execute", "wasm"]
 	 *          description: "Search type event"
 	 *        - in: query
 	 *          name: searchKey
 	 *          required: false
 	 *          type: string
-	 *          enum: ["proposal_id", "validator", "destination_validator", "_contract_address"]
+	 *          enum: ["sender","recipient","proposal_id", "validator", "destination_validator", "_contract_address"]
 	 *          description: "Search key event"
 	 *        - in: query
 	 *          name: searchValue
@@ -145,6 +145,7 @@ export default class BlockService extends MoleculerDBService<
 				default: 10,
 				integer: true,
 				convert: true,
+				min: 1,
 				max: 100,
 			},
 			searchType: {
@@ -179,6 +180,7 @@ export default class BlockService extends MoleculerDBService<
 				default: 0,
 				integer: true,
 				convert: true,
+				min: 0,
 				max: 100,
 			},
 			countTotal: {
@@ -226,7 +228,11 @@ export default class BlockService extends MoleculerDBService<
 		const searchKey = ctx.params.searchKey;
 		const searchValue = ctx.params.searchValue;
 		const queryParam = ctx.params.query;
-		const sort = ctx.params.reverse ? 'tx_response.height' : '-_id';
+
+		//TODO: fix slow when count in query
+		// const countTotal = ctx.params.countTotal;
+		ctx.params.countTotal = false;
+		const sort = ctx.params.reverse ? '_id' : '-_id';
 		let query: QueryOptions = {
 			'custom_info.chain_id': ctx.params.chainid,
 		};
@@ -239,16 +245,29 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		if (address) {
-			// query['tx_response.events.attributes.key'] = 'cmVjaXBpZW50';
-			query['$or'] = [
-				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-				{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			query['$and'] = [
+				{
+					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
+				},
+				{
+					$or: [
+						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+					],
+				},
 			];
-			query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
+			// query['tx_response.events.type'] = 'transfer';
+			// query['$or'] = [
+			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			// ];
+			// query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
 		}
 
-		if (searchType && searchKey && searchValue) {
+		if (searchType) {
 			query['tx_response.events.type'] = searchType;
+		}
+		if (searchKey && searchValue) {
 			query['tx_response.events.attributes.key'] = toBase64(toUtf8(searchKey));
 			query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
 		}
@@ -278,7 +297,7 @@ export default class BlockService extends MoleculerDBService<
 			ctx.params.pageOffset = 0;
 			ctx.params.countTotal = false;
 		}
-
+		this.logger.info('query: ', JSON.stringify(query));
 		try {
 			// @ts-ignore
 			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
@@ -289,6 +308,7 @@ export default class BlockService extends MoleculerDBService<
 					// @ts-ignore
 					sort: sort,
 				}),
+				//@ts-ignore
 				ctx.params.countTotal === true
 					? this.adapter.count({
 							query: query,

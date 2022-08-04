@@ -202,7 +202,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							balanceInfo,
 						);
 						await this.broker.call(
-							`v1.cw20-asset-manager.act-${typeEnrich}`,
+							`v1.CW20-asset-manager.act-${typeEnrich}`,
 							asset,
 							OPTs,
 						);

@@ -47,7 +47,7 @@ export default class ParamService extends MoleculerDBService<
 	 *          name: chainid
 	 *          required: true
 	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: module
@@ -102,6 +102,7 @@ export default class ParamService extends MoleculerDBService<
 				default: 10,
 				integer: true,
 				convert: true,
+				min: 1,
 				max: 100,
 			},
 			pageOffset: {
@@ -110,6 +111,7 @@ export default class ParamService extends MoleculerDBService<
 				default: 0,
 				integer: true,
 				convert: true,
+				min: 0,
 				max: 100,
 			},
 			nextKey: {

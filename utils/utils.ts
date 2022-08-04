@@ -32,9 +32,7 @@ export class Utils {
 
 	public static bech32ToHex(address: string) {
 		let decodedAddress = bech32.decode(address);
-		return Buffer.from(new Uint8Array(bech32.fromWords(decodedAddress.words)))
-			.toString('hex')
-			.toUpperCase();
+		return Buffer.from(new Uint8Array(decodedAddress.words)).toString('hex').toUpperCase();
 	}
 
 	public static formatSearchQueryInTxSearch(query: string) {

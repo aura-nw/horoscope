@@ -134,6 +134,14 @@ export const BASE_64_ENCODE = {
 };
 
 export const SEARCH_TX_QUERY = {
+	TRANSFER_SENDER: {
+		type: 'transfer',
+		key: 'sender',
+	},
+	TRANSFER_RECIPIENT: {
+		type: 'transfer',
+		key: 'recipient',
+	},
 	PROPOSAL_VOTE: {
 		type: 'proposal_vote',
 		key: 'proposal_id',
@@ -156,6 +164,10 @@ export const SEARCH_TX_QUERY = {
 	},
 	EXECUTE_CONTRACT: {
 		type: 'execute',
+		key: '_contract_address',
+	},
+	WASM_CONTRACT_ADDRESS: {
+		type: 'wasm',
 		key: '_contract_address',
 	},
 };

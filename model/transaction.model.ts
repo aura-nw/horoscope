@@ -100,7 +100,13 @@ export const transactionMongoModel = (collection: string): unknown => {
 		collection: collection,
 	});
 	schema.index({ 'tx_response.height': -1, 'custom_info.chain_id': 1 });
+	schema.index({
+		'custom_info.chain_id': 1,
+		'tx_response.events.type': 1,
+		'tx_response.events.attributes.key': 1,
+	});
+
 	// schema.index({ 'tx_response.logs.events.attributes.value': 1 });
-	schema.index({ 'tx_response.events.attributes.value': 1 });
+	// schema.index({ 'tx_response.events.attributes.value': 1 });
 	return models[collection] || model(collection, schema);
 };

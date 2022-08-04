@@ -10,7 +10,12 @@ import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { ITransaction, TransactionEntity } from '../../entities';
 import { CONST_CHAR } from '../../common/constant';
-import { IRedisStreamData, IRedisStreamResponse, ListTxCreatedParams } from '../../types';
+import {
+	IRedisStreamData,
+	IRedisStreamResponse,
+	ListTxCreatedParams,
+	TransactionHashParam,
+} from '../../types';
 
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -101,18 +106,25 @@ export default class HandleTransactionService extends Service {
 					element.messages.forEach(async (item: IRedisStreamData) => {
 						this.logger.info(`Handling message ${item.id}`);
 						try {
-							const transaction: TransactionEntity = new JsonConvert().deserializeObject(
-								JSON.parse(item.message.element.toString()),
-								TransactionEntity,
-							);
+							const transaction: TransactionEntity =
+								new JsonConvert().deserializeObject(
+									JSON.parse(item.message.element.toString()),
+									TransactionEntity,
+								);
 							listTransactionNeedSaveToDb.push(transaction);
 							listMessageNeedAck.push(item.id);
 							this.lastId = item.id.toString();
 						} catch (error) {
-							this.logger.error("Error when handling message id: " + item.id);
+							this.logger.error('Error when handling message id: ' + item.id);
+							this.logger.error(JSON.stringify(item));
+							if (item.message.source) {
+								this.broker.emit('crawl-transaction-hash.retry', {
+									txHash: item.message.source,
+								} as TransactionHashParam);
+								listMessageNeedAck.push(item.id);
+							}
 							this.logger.error(error);
 						}
-						
 					});
 
 					this.broker.emit('list-tx.upsert', {

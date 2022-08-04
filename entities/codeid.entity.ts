@@ -10,13 +10,12 @@ export interface ICoin {
 
 @JsonObject('Asset')
 export class AssetEntity implements ICW721Asset {
-
 	@JsonProperty('_id', String, true)
 	_id = Config.DB_BLOCK.dialect === 'local' ? Types.ObjectId() : null;
 	// @JsonProperty('asset_id', String)
 	code_id: String = '';
 	asset_id: String = '';
-	constract_address: String = '';
+	contract_address: String = '';
 	token_id: String = '';
 	owner: String = '';
 	history: String[] = [];

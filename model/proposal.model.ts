@@ -47,25 +47,6 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 			],
 		},
 	],
-	list_tx_deposit: [
-		{
-			depositor: String,
-			txhash: String,
-			amount: [
-				{
-					denom: String,
-					amount: String,
-				},
-			],
-		},
-	],
-	list_tx_vote: [
-		{
-			voter: String,
-			txhash: String,
-			option: String,
-		},
-	],
 	total_deposit: [
 		{
 			denom: String,

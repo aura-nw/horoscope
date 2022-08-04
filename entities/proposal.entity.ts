@@ -18,8 +18,6 @@ export interface IProposal {
 	total_deposit: ICoin[];
 	voting_start_time: Date | null;
 	voting_end_time: Date | null;
-	list_tx_deposit: IDepositTx[];
-	list_tx_vote: IVoteTx[];
 }
 
 export interface IDepositTx {
@@ -132,8 +130,6 @@ export class ProposalEntity implements IProposal {
 
 	tally: IFinalTallyResult = {} as IFinalTallyResult;
 	deposit: IDeposit = {} as IDeposit;
-	list_tx_deposit: IDepositTx[] = [];
-	list_tx_vote: IVoteTx[] = [];
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle
