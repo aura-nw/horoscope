@@ -234,63 +234,64 @@ export const TypeDefs = gql`
 		total: Int
 	}
 
-	# Block type
-	type BlockIdPart {
-		total: Int
-		hash: String
-	}
-	type BlockId {
-		hash: String
-		parts: BlockIdPart
-	}
-	type BlockHeaderVersion {
-		block: Int
-	}
-	type BlockHeader {
-		version: BlockHeaderVersion
-		chain_id: String
-		height: Int
-		time: DateTime
-		last_block_id: BlockId
-		last_commit_hash: String
-		data_hash: String
-		validators_hash: String
-		next_validators_hash: String
-		consensus_hash: String
-		app_hash: String
-		last_results_hash: String
-		evidence_hash: String
-		proposer_address: String
-	}
-	type BlockData {
-		txs: [String]
-	}
-	type BlockDataEvidence {
-		evidence: [Json]
-	}
-	type Signature {
-		block_id_flag: Int
-		validator_address: String
-		timestamp: String
-		signature: String
-	}
-	type BlockLastCommit {
-		height: Int
-		round: Int
-		block_id: BlockId
-		signatures: [Signature]
-	}
-	type BlockDetail {
-		header: BlockHeader
-		data: BlockData
-		evidence: BlockDataEvidence
-		last_commit: BlockLastCommit
-	}
-	type Block {
-		id: String
-		block_id: BlockId
-		block: BlockDetail
-	}
+# Block type
+type BlockIdPart {
+    total: Int
+    hash:  String
+}
+type BlockId {
+    hash:  String
+    parts: BlockIdPart
+}
+type BlockHeaderVersion {
+    block: Int
+}
+type BlockHeader {
+    version:              BlockHeaderVersion
+    chain_id:             String
+    height:               Int
+    time:                 DateTime
+    last_block_id:        BlockId
+    last_commit_hash:     String
+    data_hash:            String
+    validators_hash:      String
+    next_validators_hash: String
+    consensus_hash:       String
+    app_hash:             String
+    last_results_hash:    String
+    evidence_hash:        String
+    proposer_address:     String
+}
+type BlockData {
+    txs: [String]
+}
+type BlockDataEvidence {
+    evidence: [Json]
+}
+type Signature {
+    block_id_flag:     Int
+    validator_address: String
+    timestamp:         String
+    signature:         String
+}
+type BlockLastCommit {
+    height:     Int
+    round:      Int
+    block_id:   BlockId
+    signatures: [Signature]
+}
+type BlockDetail {
+    header:      BlockHeader
+    data:        BlockData
+    evidence:    BlockDataEvidence
+    last_commit: BlockLastCommit
+}
+type Block {
+    id:          String
+    block_id:    BlockId
+    block:       BlockDetail
+    custom_info: CustomInfo
+}
 
 	# CodeId type
 	type CodeId {
