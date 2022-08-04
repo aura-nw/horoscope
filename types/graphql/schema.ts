@@ -222,9 +222,10 @@ type BlockDetail {
     last_commit: BlockLastCommit
 }
 type Block {
-    id:       String
-    block_id: BlockId
-    block:    BlockDetail
+    id:          String
+    block_id:    BlockId
+    block:       BlockDetail
+    custom_info: CustomInfo
 }
 
 # CodeId type

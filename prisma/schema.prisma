@@ -54,9 +54,10 @@ model account_unbonds {
 }
 
 model block {
-  id       String       @id @default(auto()) @map("_id") @db.ObjectId
-  block_id BlockId?
-  block    BlockDetail?
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  block_id    BlockId?
+  block       BlockDetail?
+  custom_info CustomInfo
 }
 
 model code_id {
