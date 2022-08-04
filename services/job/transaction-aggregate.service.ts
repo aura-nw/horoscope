@@ -6,36 +6,67 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { Job } from 'bull';
 import { dbTransactionAggregateMixin } from '../../mixins/dbMixinMongoose';
+import { ITransaction } from 'entities';
 
 export default class MoveTxService extends Service {
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'transaction-aggregate',
+			name: 'transactionAggregate',
 			version: 1,
 			mixins: [
 				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
-						prefix: 'tx.aggregate',
+						prefix: 'listtx.create',
 					},
 				),
 				dbTransactionAggregateMixin,
 			],
+			queues: {
+				'listtx.insert': {
+					concurrency: 10,
+					process(job: Job) {
+						job.progress(10);
+						// @ts-ignore
+						this.handleJob(job.data.listTx);
+						job.progress(100);
+						return true;
+					},
+				},
+			},
+			events: {
+				'job.movetx': {
+					handler: (ctx: any) => {
+						this.createJob(
+							'listtx.insert',
+							{
+								listTx: ctx.params.listTx,
+							},
+							{
+								removeOnComplete: true,
+							},
+						);
+						return;
+					},
+				},
+			},
 		});
 	}
 
 	async initEnv() {}
-	async handleJob() {}
+	async handleJob(listTx: ITransaction[]) {
+		await this.adapter.insertMany(listTx);
+	}
 
 	async _start() {
-		this.getQueue('tx.aggregate').on('completed', (job: Job) => {
+		this.getQueue('listtx.insert').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('tx.aggregate').on('failed', (job: Job) => {
+		this.getQueue('listtx.insert').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('tx.aggregate').on('progress', (job: Job) => {
+		this.getQueue('listtx.insert').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();

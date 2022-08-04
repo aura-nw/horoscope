@@ -11,20 +11,29 @@ import {
 	ISearchTxQuery,
 	MoleculerDBService,
 	ResponseDto,
+	ResponseFromRPC,
 } from '../../types';
 import { ITransaction, TransactionEntity } from '../../entities';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
-import { BASE_64_ENCODE, LIST_NETWORK, SEARCH_TX_QUERY } from '../../common/constant';
+import {
+	BASE_64_ENCODE,
+	LIST_NETWORK,
+	SEARCH_TX_QUERY,
+	URL_TYPE_CONSTANTS,
+} from '../../common/constant';
 import { fromBase64, toBase64, fromBech32, toBech32, fromUtf8, toUtf8 } from '@cosmjs/encoding';
 import { Utils } from '../../utils/utils';
+import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
+import { Config } from '../../common';
+import { flatten } from 'lodash';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
 	name: 'transaction',
 	version: 1,
-	mixins: [dbTransactionMixin],
+	mixins: [dbTransactionMixin, callApiMixin],
 })
 export default class BlockService extends MoleculerDBService<
 	{
@@ -232,7 +241,9 @@ export default class BlockService extends MoleculerDBService<
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
 		ctx.params.countTotal = false;
-		const sort = ctx.params.reverse ? '_id' : '-_id';
+		// const sort = ctx.params.reverse ? '_id' : '-_id';
+		const sort = '-_id';
+
 		let query: QueryOptions = {
 			'custom_info.chain_id': ctx.params.chainid,
 		};
@@ -246,14 +257,15 @@ export default class BlockService extends MoleculerDBService<
 
 		if (address) {
 			query['$and'] = [
-				{
-					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
-				},
+				{ 'tx_response.events.type': 'transfer' },
 				{
 					$or: [
 						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
 						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
 					],
+				},
+				{
+					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
 				},
 			];
 			// query['tx_response.events.type'] = 'transfer';
@@ -298,16 +310,46 @@ export default class BlockService extends MoleculerDBService<
 			ctx.params.countTotal = false;
 		}
 		this.logger.info('query: ', JSON.stringify(query));
+		let listPromise = [
+			this.adapter.find({
+				query: query,
+				// @ts-ignore
+				sort: sort,
+				limit: ctx.params.pageLimit,
+				offset: ctx.params.pageOffset,
+			}),
+		];
+		if (ctx.params.nextKey) {
+			this.logger.info('ok');
+		} else {
+			this.logger.info('not ok');
+			listPromise.push(
+				Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
+					// this.logger.info(array);
+					let listTxHash: any[] = [];
+					array.map((res: ResponseFromRPC) => {
+						listTxHash.push(
+							...res.result.txs.map((e: any) => {
+								return e.hash;
+							}),
+						);
+					});
+					return this.adapter.find({
+						query: {
+							'tx_response.txhash': { $in: listTxHash },
+						},
+						// @ts-ignore
+						sort: sort,
+						limit: ctx.params.pageLimit,
+						offset: ctx.params.pageOffset,
+					});
+				}),
+			);
+		}
 		try {
 			// @ts-ignore
 			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
-				this.adapter.find({
-					query: query,
-					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset,
-					// @ts-ignore
-					sort: sort,
-				}),
+				Promise.race(listPromise),
 				//@ts-ignore
 				ctx.params.countTotal === true
 					? this.adapter.count({
@@ -335,5 +377,63 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		return response;
+	}
+
+	findTxFromLcd(ctx: Context<GetTxRequest, Record<string, unknown>>): any[] {
+		const blockHeight = ctx.params.blockHeight;
+		const txHash = ctx.params.txHash;
+		const address = ctx.params.address;
+		const searchType = ctx.params.searchType;
+		const searchKey = ctx.params.searchKey;
+		const searchValue = ctx.params.searchValue;
+		const queryParam = ctx.params.query;
+		const pageOffset = ctx.params.pageOffset;
+		const pageLimit = ctx.params.pageLimit;
+		const url = Utils.getUrlByChainIdAndType(ctx.params.chainid, URL_TYPE_CONSTANTS.RPC);
+		let listPromise = [];
+		let query = [];
+		if (blockHeight) {
+			query.push(`tx.height=${blockHeight}`);
+		}
+		if (txHash) {
+			query.push(`tx.hash='${txHash}'`);
+		}
+		if (searchKey && searchValue && searchType) {
+			query.push(`${searchType}.${searchKey}='${searchValue}'`);
+		}
+
+		if (queryParam) {
+			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
+			queryParamFormat.forEach((e: any) => {
+				query.push(`${e.type}.${e.key}=${e.value}`);
+			});
+		}
+		if (address) {
+			const querySender = [...query, `transfer.sender='${address}'`];
+			const queryRecipient = [...query, `transfer.recipient='${address}'`];
+			listPromise.push(
+				this.callApiFromDomain(
+					url,
+					`${Config.GET_TX_SEARCH}?query="${querySender.join(
+						' AND ',
+					)}"&page=1&per_page=${pageLimit}`,
+				),
+				this.callApiFromDomain(
+					url,
+					`${Config.GET_TX_SEARCH}?query="${queryRecipient.join(
+						' AND ',
+					)}"&page=1&per_page=${pageLimit}`,
+				),
+			);
+			// return Promise.all([, ,]).then((array) => [...flatten(array)]);
+		} else {
+			listPromise.push(
+				this.callApiFromDomain(
+					url,
+					`${Config.GET_TX_SEARCH}?query="${query.join(' AND ')}"&page=1&per_page=1`,
+				),
+			);
+		}
+		return listPromise;
 	}
 }

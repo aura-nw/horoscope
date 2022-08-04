@@ -5,19 +5,15 @@ import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
 
 const QueueService = require('moleculer-bull');
-// import createService from 'moleculer-bull';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import RedisMixin from '../../mixins/redis/redis.mixin';
-import { RedisClientType } from '@redis/client';
-import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
-import { Utils } from '../../utils/utils';
-import { BlockResponseFromLCD, ResponseFromRPC } from '../../types';
 import { IBlock, ITransaction, TransactionEntity } from '../../entities';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
+import { ObjectId } from 'bson';
+import { Types } from 'mongoose';
 
 export default class MoveTxService extends Service {
+	// private lastId: string = '0';
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -34,13 +30,11 @@ export default class MoveTxService extends Service {
 			],
 			queues: {
 				'move.tx': {
-					concurrency: 1,
-					async process(job: Job) {
+					concurrency: 10,
+					process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.initEnv();
-						// @ts-ignore
-						await this.handleJob();
+						this.handleJob(job.data.lastId);
 						job.progress(100);
 						return true;
 					},
@@ -49,42 +43,84 @@ export default class MoveTxService extends Service {
 		});
 	}
 
-	async initEnv() {}
-	async handleJob() {
-		const listTx: any[] = await this.adapter.find({
-			// query: ,
-			limit: 1,
+	// async initEnv() {
+	// 	if this.lastId === null {
+	// }
+	async handleJob(lastId: string) {
+		let txLastId: any = null;
+		if (lastId == '0') {
+			const lastestTxAggregate: ITransaction[] = await this.adapter.find({
+				sort: '_id',
+				limit: 1,
+				skip: 0,
+			});
+			if (lastestTxAggregate.length && lastestTxAggregate[0]._id) {
+				txLastId = lastestTxAggregate[0];
+				let timestampObjectId = new ObjectId(
+					lastestTxAggregate[0]._id.toString(),
+				).getTimestamp();
+
+				timestampObjectId.setDate(timestampObjectId.getDate() + 2);
+
+				if (timestampObjectId >= new Date()) {
+					return;
+				}
+
+				lastId = lastestTxAggregate[0]._id.toString();
+			}
+		}
+		// let objectId;
+		// if (lastId == '0') {
+		// 	objectId = '0';
+		// } else {
+		// 	objectId = new ObjectId(lastId);
+		// }
+		let listTx: any[] = await this.adapter.find({
+			query: {
+				_id: { $gt: new ObjectId(lastId) },
+			},
+			limit: 100,
 			offset: 0,
-			// @ts-ignore
-			// sort: '-block.header.height',
-			sort: { _id: 1 },
+			sort: '_id',
 		});
+		if (txLastId) {
+			listTx.unshift(txLastId);
+		}
 		let jsonConvert = new JsonConvert();
 		const listTxEntity: ITransaction[] = jsonConvert.deserializeArray(
 			listTx,
 			TransactionEntity,
 		);
-		const listId = listTxEntity.map((tx: ITransaction) => tx._id);
-		try {
-			let resultInsert = await this.broker.call('v1.transaction-aggregate.insert', {
-				entities: listTxEntity,
-			});
+		if (listTxEntity.length > 0) {
+			try {
+				this.createJob(
+					'move.tx',
+					{
+						//@ts-ignore
+						lastId: listTxEntity[listTxEntity.length - 1]._id.toString(),
+					},
+					{
+						removeOnComplete: true,
+					},
+				);
 
-			listTxEntity.map((tx: ITransaction) => {
-				this.adapter.removeMany({ _id: tx._id });
-			});
-			// listId.map((_id) => {
-			// 	this.adapter.removeById(_id);
-			// });
-			// let resultRemove = await this.adapter.removeMany({
-			// 	id: {
-			// 		$in: listId,
-			// 	},
-			// });
-			this.logger.info(`resultInsert: ${JSON.stringify(resultInsert)}`);
-			// this.logger.info(`resultRemove: ${JSON.stringify(resultRemove)}`);
-		} catch (error) {
-			this.logger.error(`error: ${JSON.stringify(error)}`);
+				this.broker.emit('job.movetx', { listTx: listTxEntity });
+
+				let listPromise = listTxEntity.map(async (tx: ITransaction) => {
+					return this.adapter.removeById(tx._id);
+				});
+				await Promise.all(listPromise);
+
+				if (listTxEntity) {
+					//@ts-ignore
+					this.lastId = listTxEntity[listTxEntity.length - 1]._id.toString();
+				}
+				this.broker.emit('move.tx.success', {
+					listTx: listTxEntity,
+				});
+			} catch (error) {
+				this.logger.error(`error: ${error}`);
+			}
 		}
 	}
 
@@ -92,13 +128,10 @@ export default class MoveTxService extends Service {
 		this.createJob(
 			'move.tx',
 			{
-				param: `param`,
+				lastId: '0',
 			},
 			{
 				removeOnComplete: true,
-				repeat: {
-					every: parseInt(Config.MILISECOND_MOVE_TX, 10),
-				},
 			},
 		);
 		this.getQueue('move.tx').on('completed', (job: Job) => {

@@ -99,6 +99,7 @@ export const transactionMongoModel = (collection: string): unknown => {
 		// strict: false,
 		collection: collection,
 	});
+	schema.index({ 'tx_response.height': 1, 'custom_info.chain_id': 1 });
 	schema.index({ 'tx_response.height': -1, 'custom_info.chain_id': 1 });
 	schema.index({
 		'custom_info.chain_id': 1,
