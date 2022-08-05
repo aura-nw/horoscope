@@ -308,8 +308,10 @@ export default class BlockService extends MoleculerDBService<
 
 		this.logger.info('query: ', JSON.stringify(query));
 		let listPromise = [];
-		if (ctx.params.nextKey) {
-			this.logger.info('ok');
+
+		// find all from db
+		if (Object.keys(query).length == 1 && query['custom_info.chain_id'] != undefined) {
+			this.logger.debug('query all tx');
 			listPromise.push(
 				this.adapter.find({
 					query: query,
@@ -319,8 +321,22 @@ export default class BlockService extends MoleculerDBService<
 					offset: ctx.params.pageOffset,
 				}),
 			);
+		}
+		if (ctx.params.nextKey) {
+			this.logger.debug('get tx from db');
+			if (listPromise.length == 0) {
+				listPromise.push(
+					this.adapter.find({
+						query: query,
+						// @ts-ignore
+						sort: sort,
+						limit: ctx.params.pageLimit,
+						offset: ctx.params.pageOffset,
+					}),
+				);
+			}
 		} else {
-			this.logger.info('not ok');
+			this.logger.debug('get tx hash from lcd');
 			listPromise.push(
 				Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
 					// this.logger.info(array);
@@ -338,8 +354,6 @@ export default class BlockService extends MoleculerDBService<
 						},
 						// @ts-ignore
 						sort: sort,
-						limit: ctx.params.pageLimit,
-						offset: ctx.params.pageOffset,
 					});
 				}),
 			);
@@ -385,7 +399,7 @@ export default class BlockService extends MoleculerDBService<
 		const searchKey = ctx.params.searchKey;
 		const searchValue = ctx.params.searchValue;
 		const queryParam = ctx.params.query;
-		const pageOffset = ctx.params.pageOffset;
+		const pageOffset = ctx.params.pageOffset + 1;
 		const pageLimit = ctx.params.pageLimit;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainid, URL_TYPE_CONSTANTS.RPC);
 		let listPromise = [];
@@ -423,12 +437,13 @@ export default class BlockService extends MoleculerDBService<
 					)}"&page=1&per_page=${pageLimit}`,
 				),
 			);
-			// return Promise.all([, ,]).then((array) => [...flatten(array)]);
 		} else {
 			listPromise.push(
 				this.callApiFromDomain(
 					url,
-					`${Config.GET_TX_SEARCH}?query="${query.join(' AND ')}"&page=1&per_page=1`,
+					`${Config.GET_TX_SEARCH}?query="${query.join(
+						' AND ',
+					)}"&page=${pageOffset}&per_page=${pageLimit}`,
 				),
 			);
 		}
