@@ -401,6 +401,7 @@ export default class BlockService extends MoleculerDBService<
 		const queryParam = ctx.params.query;
 		const pageOffset = ctx.params.pageOffset + 1;
 		const pageLimit = ctx.params.pageLimit;
+		const sort = ctx.params.reverse === true ? 'asc' : 'desc';
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainid, URL_TYPE_CONSTANTS.RPC);
 		let listPromise = [];
 		let query = [];
@@ -428,13 +429,13 @@ export default class BlockService extends MoleculerDBService<
 					url,
 					`${Config.GET_TX_SEARCH}?query="${querySender.join(
 						' AND ',
-					)}"&page=1&per_page=${pageLimit}`,
+					)}"&page=1&per_page=${pageLimit}&order_by="${sort}"`,
 				),
 				this.callApiFromDomain(
 					url,
 					`${Config.GET_TX_SEARCH}?query="${queryRecipient.join(
 						' AND ',
-					)}"&page=1&per_page=${pageLimit}`,
+					)}"&page=1&per_page=${pageLimit}&order_by="${sort}"`,
 				),
 			);
 		} else {
@@ -443,7 +444,7 @@ export default class BlockService extends MoleculerDBService<
 					url,
 					`${Config.GET_TX_SEARCH}?query="${query.join(
 						' AND ',
-					)}"&page=${pageOffset}&per_page=${pageLimit}`,
+					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
 				),
 			);
 		}
