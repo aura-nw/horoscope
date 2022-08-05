@@ -9,8 +9,9 @@ import request from "request-promise";
 // import File from "typescript";
 import CID from 'cids';
 const fetch = require("node-fetch");
+
 // const fileTypeFromBuffer = require ("file-type");
-// import fileTypeFromFile from 'file-type';
+// import fileTypeFromBuffer from 'file-type';
 // import fileTypeFromBuffer, { fileType, FileTypeResult } from "file-type";
 // import fileTypeFromFile from "file-type";
 // import * as FileType from "file-type";
@@ -28,6 +29,9 @@ const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
 const BUCKET = Config.BUCKET;
 const callApiMixin = new CallApiMixin().start();
+const s3Client = new S3Service().connectS3();
+const IPFS_GATEWAY = "https://ipfs.io/ipfs/";
+const IPFS_PREFIX = "ipfs";
 
 type CW721AssetInfo = {
     data: {
@@ -96,7 +100,7 @@ export default class CommonService extends moleculer.Service {
         } while (next_key != null);
         return contractList;
     }
-    
+
     private async getFile(ctx: Context<TokenInfo>) {
         // const URL = ctx.params.URL;
         // const code_id = ctx.params.code_id;
@@ -105,19 +109,19 @@ export default class CommonService extends moleculer.Service {
         // let path = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
         // let next_key = null;
         // do {
-            // @ts-ignore
-            let resultCallApi = await this.callApiFromDomain("ipfs.io/", "api/v0/file/ls?arg=QmUpd48SunBdGRgYEdCMgwDY4NdnSTmt5UnNcEqbDytZWt");
-            this.logger.info('Call resultCallApi return ', resultCallApi);
-            // if (resultCallApi?.contracts?.length > 0) {
-            //     contractList.push(...resultCallApi.contracts);
-            //     next_key = resultCallApi.pagination.next_key;
-            //     if (next_key === null) {
-            //         break;
-            //     }
-            //     path = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
-            // } else {
-            //     // @ts-ignore
-            // }
+        // @ts-ignore
+        let resultCallApi = await this.callApiFromDomain("ipfs.io/", "api/v0/file/ls?arg=QmUpd48SunBdGRgYEdCMgwDY4NdnSTmt5UnNcEqbDytZWt");
+        this.logger.info('Call resultCallApi return ', resultCallApi);
+        // if (resultCallApi?.contracts?.length > 0) {
+        //     contractList.push(...resultCallApi.contracts);
+        //     next_key = resultCallApi.pagination.next_key;
+        //     if (next_key === null) {
+        //         break;
+        //     }
+        //     path = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
+        // } else {
+        //     // @ts-ignore
+        // }
         // } while (next_key != null);
         return "";
     }
@@ -148,107 +152,41 @@ export class Common {
             history: [],
         };
     }
-    // public static loadIpfs = async function () {
-    //     // const { create } = await import('ipfs-core');
-    //     const node = await IPFS.create();
-    //     return node
-    // }
-    public static getFileFromUrl = async function (url: string, name: string, defaultType = 'image/jpeg') {
-        // const response = await fetch(url);
-        // const data = await response.blob();
-        // let blob = await fetch(url).then(r => r.blob());
-        // return blob;
-        // return new File([data], name, {
-        //     type: data.type || defaultType,
-        // });
-        // const file = fs.createWriteStream("file.jpg");
-        // await http.get("http://i3.ytimg.com/vi/J---aiyznGQ/mqdefault.jpg", function (response) {
-        //     response.pipe(file);
 
-        //     // after download completed close filestream
-        //     file.on("finish", () => {
-        //         file.close();
-        //         console.log("Download Completed");
-        //     });
-        // });
-        // //Upload S3
-        // const type = file.originalname.substr(file.originalname.indexOf('.') + 1);
-        // const s3FileName = nftImage.cid.toString().concat('.').concat(type);
-
-        const s3Client = new S3Service().connectS3();
-
-        // const uploadFile = {
-        //     Bucket: BUCKET,
-        //     Key: s3FileName,
-        //     Body: file.buffer,
-        //     ContentType: file.mimetype,
-        // };
-
-        // await s3Client.upload(uploadFile, async (error, data) => {
-        //     if (error) {
-        //         throw new CustomError(ErrorMap.INSERT_COLLECTION_ASSET_FAILED);
-        //     }
-        // }).promise();
-        const urlx = "ipfs://QmUpd48SunBdGRgYEdCMgwDY4NdnSTmt5UnNcEqbDytZWt/104"
-        let parsed = parse(urlx);
+    public static getFileFromUrl = async function (url: string) {
+        let parsed = parse(url);
         console.log(parsed);
-        const cidBase32 = new CID(parsed.host).toV1().toString('base32');
-        // const ipfs = await Common.loadIpfs();
-        // console.log(ipfs.ls(cidBase32));
-        // const uri = `https://dweb.link/ipfs/${cidBase32}`;
-        const uri = `https://dweb.link/ipfs/bafybeidakcbv2uxivbtrf53nabui6bcw2mdkbuwwlyr4qfev7cid3irtxu`;
-        console.log(`https://dweb.link/ipfs/${cidBase32}`);
-        var options = {
-            uri,
-            // uri: url,
-            encoding: null
-        };
+        if (parsed.protocol === IPFS_PREFIX) {
+            const cid = parsed.host;
+            const cidBase32 = new CID(cid).toV1().toString('base32');
+            const uri = `${IPFS_GATEWAY}${cidBase32}`;
+            var options = {
+                uri,
+                encoding: null,
+            };
+            request(options, async function (error: any, response: any, body: any) {
+                if (error || response.statusCode !== 200) {
+                    console.log("failed to get image");
+                    console.log(error);
+                } else {
+                    s3Client.putObject({
+                        Body: body,
+                        Key: cid,
+                        Bucket: BUCKET,
+                        ContentType: response.headers['content-type'],
+                    }, function (error: any) {
+                        if (error) {
+                            console.log("error downloading image to s3", error);
+                            return "";
+                        } else {
+                            const linkS3 = `https://${BUCKET}.s3.amazonaws.com/${cid}`
+                            console.log("success uploading to s3", linkS3);
+                            return linkS3;
+                        }
+                    });
+                }
+            });
+        }
 
-        // parsed.set('protocol', 'https');
-        // parsed.set('host', 'ipfs.io/ipfs');
-        // console.log(parsed);
-        // console.log(options.uri);
-        // let URL = new Url(options.uri,false);
-        // console.log(URL);
-        // console.log(URL.origin);
-        // URL.set('protocol', 'https:');
-        // const cid = URL.host;
-        // URL.set('host',  "ipfs.io/ipfs");
-        // console.log(cid);
-        // URL.set('pathname', "CID");
-        // console.log(URL);
-        // console.log(URL.protocol=="ipfs:");
-        // console.log(URL.host);
-        // var req = await fetch(uri, { method: 'HEAD' });
-        // console.log(req.headers);
-        // console.log(req.headers.get('content-type'));
-        request(options, async function (error: any, response: { statusCode: number; }, body: any) {
-            console.log("request get image");
-            if (error || response.statusCode !== 200) {
-                console.log("failed to get image");
-                console.log(error);
-            } else {
-                console.log("request get image ok");
-                // let rs = await fileTypeFromFile(body);
-                // console.log( fileTypeFromBuffer(body));
-                // const { ext, mime } = await FileType.fromBuffer(body) as FileTypeResult;
-
-                // var ext = fileName.substr(fileName.lastIndexOf('.') + 1);
-                // const type = await fileTypeFromFile(body);
-                // const type = await FileType.fileTypeFromFile(body);
-                // const node = await IPFS.connectIPFS();
-                s3Client.putObject({
-                    Body: body,
-                    Key: "e1.png",
-                    Bucket: BUCKET,
-                }, function (error: any, data: any) {
-                    if (error) {
-                        console.log("error downloading image to s3", error);
-                    } else {
-                        console.log("success uploading to s3", data);
-                    }
-                });
-            }
-        });
     }
 }
