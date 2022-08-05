@@ -14,12 +14,11 @@ import {
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { BlockEntity, IBlock, IValidator } from '../../entities';
-import { JsonConvert } from 'json2typescript';
-import { FilterOptions, QueryOptions } from 'moleculer-db';
+import { IBlock, IValidator } from '../../entities';
+import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
 import { LIST_NETWORK } from '../../common/constant';
-import { Utils } from '../../utils/utils';
+import { redisMixin } from '../../mixins/redis/redis.mixin';
 const { performance } = require('perf_hooks');
 
 /**
@@ -28,7 +27,7 @@ const { performance } = require('perf_hooks');
 @Service({
 	name: 'block',
 	version: 1,
-	mixins: [dbBlockMixin],
+	mixins: [dbBlockMixin, redisMixin],
 })
 export default class BlockService extends MoleculerDBService<
 	{
@@ -168,9 +167,11 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<GetBlockRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
+		let blockFindNextKey = null;
 		if (ctx.params.nextKey) {
 			try {
 				new ObjectId(ctx.params.nextKey);
+				// blockFindNextKey = await this.adapter.findById(ctx.params.nextKey);
 			} catch (error) {
 				return (response = {
 					code: ErrorCode.WRONG,
@@ -180,18 +181,35 @@ export default class BlockService extends MoleculerDBService<
 					},
 				});
 			}
+		} else {
+			// let redisClient = await this.getRedisClient();
+			// let handledBlockRedis = await redisClient.get(Config.REDIS_KEY_CURRENT_BLOCK);
+			// blockFindNextKey = await this.adapter.find({
+			// 	query: {
+			// 		'custom_info.chain_id': ctx.params.chainid,
+			// 	},
+			// 	//@ts-ignore
+			// 	sort: '-_id',
+			// 	limit: 1,
+			// });
 		}
 		try {
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			let query: QueryOptions = {};
+			const chainId = ctx.params.chainid;
 			const blockHeight = ctx.params.blockHeight;
 			const blockHash = ctx.params.blockHash;
 			const operatorAddress = ctx.params.operatorAddress;
 			const consensusHexAddress = ctx.params.consensusHexAddress;
-			const sort = ctx.params.reverse ? 'block.header.height' : '-_id';
+			const sort = ctx.params.reverse ? 'block.header.height' : '-block.header.height';
 			let needNextKey = true;
-
+			if (blockHeight) {
+				query['block.header.height'] = blockHeight;
+				needNextKey = false;
+			}
+			if (chainId) {
+				query['custom_info.chain_id'] = ctx.params.chainid;
+			}
 			if (operatorAddress) {
-				// console.log(Utils.bech32ToHex(operatorAddress));
 				let operatorList: IValidator[] = await this.broker.call('v1.validator.find', {
 					query: {
 						'custom_info.chain_id': ctx.params.chainid,
@@ -205,10 +223,7 @@ export default class BlockService extends MoleculerDBService<
 			if (consensusHexAddress) {
 				query['block.header.proposer_address'] = consensusHexAddress;
 			}
-			if (blockHeight) {
-				query['block.header.height'] = blockHeight;
-				needNextKey = false;
-			}
+
 			if (blockHash) {
 				query['block_id.hash'] = blockHash;
 				needNextKey = false;

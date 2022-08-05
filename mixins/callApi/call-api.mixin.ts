@@ -1,13 +1,7 @@
-import { Method } from '@ourparentcenter/moleculer-decorators-extended';
-import { Axios } from 'axios';
-import { defaultMaxListeners } from 'events';
-import { Context, Service, ServiceBroker, ServiceSchema } from 'moleculer';
+import { Service, ServiceSchema } from 'moleculer';
 const axios = require('axios').default;
 const Resilient = require('resilient');
-
-// import { Resilient as Resilient } from 'resilient';
 import { Config } from '../../common';
-import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Service> {
 	private schema: Partial<ServiceSchema> & ThisType<Service>;
 	public constructor() {
@@ -24,7 +18,9 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 						});
 						callApiClient = axiosClient;
 					} else {
-						let resilientClient = Resilient({ service: { basePath: '/', retry: Infinity } });
+						let resilientClient = Resilient({
+							service: { basePath: '/', retry: Infinity },
+						});
 						resilientClient.setServers(domain);
 						callApiClient = resilientClient;
 					}
