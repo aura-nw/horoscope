@@ -170,4 +170,8 @@ export const SEARCH_TX_QUERY = {
 		type: 'wasm',
 		key: '_contract_address',
 	},
+	WASM_TOKEN_ID: {
+		type: 'wasm',
+		key: 'token_id',
+	},
 };

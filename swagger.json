@@ -893,7 +893,8 @@
                             "proposal_id",
                             "validator",
                             "destination_validator",
-                            "_contract_address"
+                            "_contract_address",
+                            "token_id"
                         ],
                         "description": "Search key event"
                     },

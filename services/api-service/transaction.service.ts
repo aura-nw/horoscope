@@ -85,7 +85,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: searchKey
 	 *          required: false
 	 *          type: string
-	 *          enum: ["sender","recipient","proposal_id", "validator", "destination_validator", "_contract_address"]
+	 *          enum: ["sender","recipient","proposal_id", "validator", "destination_validator", "_contract_address", "token_id"]
 	 *          description: "Search key event"
 	 *        - in: query
 	 *          name: searchValue
