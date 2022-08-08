@@ -75,7 +75,7 @@ export default class MoveTxService extends Service {
 		// } else {
 		// 	objectId = new ObjectId(lastId);
 		// }
-		let listTx: any[] = await this.adapter.find({
+		let listTx: ITransaction[] = await this.adapter.find({
 			query: {
 				_id: { $gt: new ObjectId(lastId) },
 			},
@@ -86,37 +86,32 @@ export default class MoveTxService extends Service {
 		if (txLastId) {
 			listTx.unshift(txLastId);
 		}
-		let jsonConvert = new JsonConvert();
-		const listTxEntity: ITransaction[] = jsonConvert.deserializeArray(
-			listTx,
-			TransactionEntity,
-		);
-		if (listTxEntity.length > 0) {
+		if (listTx.length > 0) {
 			try {
 				this.createJob(
 					'move.tx',
 					{
 						//@ts-ignore
-						lastId: listTxEntity[listTxEntity.length - 1]._id.toString(),
+						lastId: listTx[listTx.length - 1]._id.toString(),
 					},
 					{
 						removeOnComplete: true,
 					},
 				);
 
-				this.broker.emit('job.movetx', { listTx: listTxEntity });
+				this.broker.emit('job.movetx', { listTx: listTx });
 
-				let listPromise = listTxEntity.map(async (tx: ITransaction) => {
+				let listPromise = listTx.map(async (tx: ITransaction) => {
 					return this.adapter.removeById(tx._id);
 				});
 				await Promise.all(listPromise);
 
-				if (listTxEntity) {
+				if (listTx) {
 					//@ts-ignore
-					this.lastId = listTxEntity[listTxEntity.length - 1]._id.toString();
+					this.lastId = listTx[listTx.length - 1]._id.toString();
 				}
 				this.broker.emit('move.tx.success', {
-					listTx: listTxEntity,
+					listTx: listTx,
 				});
 			} catch (error) {
 				this.logger.error(`error: ${error}`);
