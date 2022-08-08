@@ -1,0 +1,32 @@
+import { model, models, Schema, Types } from 'mongoose';
+import { definitionType, ObjectIdNull } from '../types';
+
+export interface ICW721Media {
+	_id: ObjectIdNull;
+	cid: String;
+	media_link: String,
+}
+
+const definition: definitionType<ICW721Media> = (collection?: string) => ({
+	_id: Types.ObjectId,
+	cid: {
+		type: String, unique: true, index: true
+	},
+	media_link: String,
+})
+
+
+export const cw721MediaMongoModel = (collection: string): unknown => {
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	const schema = new Schema<ICW721Media>(definition(collection), {
+		autoIndex: true,
+		collection: collection,
+		timestamps: {
+			createdAt: true,
+			updatedAt: true
+		}
+		// strict: true
+	});
+	return models[collection] || model(collection, schema);
+};

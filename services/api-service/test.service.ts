@@ -64,7 +64,7 @@ export default class BlockService extends MoleculerDBService<
 		try {
 			const url = ctx.params.url;
 			// const mess = "xxxxxxxxxxxxxxx";
-			let file = await Common.getFileFromUrl(url, "Moi-ban-doc-tai-ve-bo-hinh-nen-phi-hanh.png");
+			let file = await Common.getFileFromUrl(url);
 
 			return (response = {
 				code: ErrorCode.SUCCESSFUL,

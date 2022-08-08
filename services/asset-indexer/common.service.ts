@@ -152,41 +152,57 @@ export class Common {
             history: [],
         };
     }
-
+    public static checkFileTypeInvalid = function (type: string) {
+        return (type.match("text/*") || type.match("image/*") || type.match("video/*")) ? true : false;
+    }
     public static getFileFromUrl = async function (url: string) {
         let parsed = parse(url);
-        console.log(parsed);
+        let uri = "";
+        let key = "";
         if (parsed.protocol === IPFS_PREFIX) {
             const cid = parsed.host;
             const cidBase32 = new CID(cid).toV1().toString('base32');
-            const uri = `${IPFS_GATEWAY}${cidBase32}`;
-            var options = {
-                uri,
-                encoding: null,
-            };
-            request(options, async function (error: any, response: any, body: any) {
-                if (error || response.statusCode !== 200) {
-                    console.log("failed to get image");
-                    console.log(error);
-                } else {
-                    s3Client.putObject({
-                        Body: body,
-                        Key: cid,
-                        Bucket: BUCKET,
-                        ContentType: response.headers['content-type'],
-                    }, function (error: any) {
-                        if (error) {
-                            console.log("error downloading image to s3", error);
-                            return "";
-                        } else {
-                            const linkS3 = `https://${BUCKET}.s3.amazonaws.com/${cid}`
-                            console.log("success uploading to s3", linkS3);
-                            return linkS3;
-                        }
-                    });
-                }
-            });
+            uri = `${IPFS_GATEWAY}${cidBase32}`;
+            key = cid;
+        } else {
+            uri = url;
+            key = url.replace(/^.*[\\\/]/, '');
         }
 
+        var options = {
+            uri,
+            encoding: null,
+        };
+        let linkS3 = "";
+        return new Promise(async (resolve, reject) => {
+            request(options, async function (error: any, response: any, body: any) {
+                if (error || response.statusCode !== 200) {
+                    // @ts-ignore
+                    this.logger.error(error);
+                    reject(error);
+                } else {
+                    const contentType = response.headers['content-type'];
+                    if (Common.checkFileTypeInvalid(contentType)) {
+                        s3Client.putObject({
+                            Body: body,
+                            Key: key,
+                            Bucket: BUCKET,
+                            ContentType: contentType,
+                        }, function (error: any) {
+                            if (error) {
+                                // @ts-ignore
+                                this.logger.error(error);
+                                reject(error);
+                            } else {
+                                linkS3 = `https://${BUCKET}.s3.amazonaws.com/${key}`;
+                                // @ts-ignore
+                                this.logger.debug(linkS3);
+                                resolve(linkS3);
+                            }
+                        });
+                    }
+                }
+            });
+        });
     }
 }
