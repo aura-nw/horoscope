@@ -60,6 +60,32 @@ export default class MoveTxService extends Service {
 	}
 
 	async _start() {
+		this.adapter
+			.aggregate([
+				{
+					$match: {
+						'tx_response.txhash': {
+							$eq: '34EED4766E15AE86E1F0FD8BFC99BB1CE999682E52FB13F2604E2231C5F179F4',
+						},
+					},
+				},
+				{
+					$group: {
+						_id: { txhash: '$tx_response.txhash' },
+						count: { $sum: 1 },
+					},
+				},
+			])
+			.then((result: any) => {
+				console.log(result);
+			})
+			.catch((err: any) => {
+				console.log(err);
+			})
+			.finally(() => {
+				console.log('done');
+			});
+
 		this.getQueue('listtx.insert').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
@@ -69,6 +95,7 @@ export default class MoveTxService extends Service {
 		this.getQueue('listtx.insert').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+
 		return super._start();
 	}
 }

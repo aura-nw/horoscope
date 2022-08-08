@@ -322,42 +322,64 @@ export default class BlockService extends MoleculerDBService<
 				}),
 			);
 		}
-		if (ctx.params.nextKey) {
-			this.logger.debug('get tx from db');
-			if (listPromise.length == 0) {
-				listPromise.push(
-					this.adapter.find({
-						query: query,
-						// @ts-ignore
-						sort: sort,
-						limit: ctx.params.pageLimit,
-						offset: ctx.params.pageOffset,
-					}),
-				);
-			}
-		} else {
-			this.logger.debug('get tx hash from lcd');
-			listPromise.push(
-				Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
-					// this.logger.info(array);
-					let listTxHash: any[] = [];
-					array.map((res: ResponseFromRPC) => {
+		listPromise.push(
+			Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
+				let listTxHash: any[] = [];
+
+				array.map((res: ResponseFromRPC) => {
+					if (res) {
 						listTxHash.push(
 							...res.result.txs.map((e: any) => {
 								return e.hash;
 							}),
 						);
-					});
-					return this.adapter.find({
-						query: {
-							'tx_response.txhash': { $in: listTxHash },
-						},
-						// @ts-ignore
-						sort: sort,
-					});
-				}),
-			);
-		}
+					}
+				});
+				return this.adapter.find({
+					query: {
+						'tx_response.txhash': { $in: listTxHash },
+					},
+					// @ts-ignore
+					sort: sort,
+				});
+			}),
+		);
+		// if (ctx.params.nextKey) {
+		// 	this.logger.debug('get tx from db');
+		// 	if (listPromise.length == 0) {
+		// 		listPromise.push(
+		// 			this.adapter.find({
+		// 				query: query,
+		// 				// @ts-ignore
+		// 				sort: sort,
+		// 				limit: ctx.params.pageLimit,
+		// 				offset: ctx.params.pageOffset,
+		// 			}),
+		// 		);
+		// 	}
+		// } else {
+		// 	this.logger.debug('get tx hash from lcd');
+		// 	listPromise.push(
+		// 		Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
+		// 			// this.logger.info(array);
+		// 			let listTxHash: any[] = [];
+		// 			array.map((res: ResponseFromRPC) => {
+		// 				listTxHash.push(
+		// 					...res.result.txs.map((e: any) => {
+		// 						return e.hash;
+		// 					}),
+		// 				);
+		// 			});
+		// 			return this.adapter.find({
+		// 				query: {
+		// 					'tx_response.txhash': { $in: listTxHash },
+		// 				},
+		// 				// @ts-ignore
+		// 				sort: sort,
+		// 			});
+		// 		}),
+		// 	);
+		// }
 		try {
 			// @ts-ignore
 			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
@@ -424,18 +446,30 @@ export default class BlockService extends MoleculerDBService<
 		if (address) {
 			const querySender = [...query, `transfer.sender='${address}'`];
 			const queryRecipient = [...query, `transfer.recipient='${address}'`];
+			this.logger.debug(
+				`${Config.GET_TX_SEARCH}?query="${querySender.join(
+					' AND ',
+				)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+			);
+			this.logger.debug(
+				`${Config.GET_TX_SEARCH}?query="${queryRecipient.join(
+					' AND ',
+				)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+			);
 			listPromise.push(
 				this.callApiFromDomain(
 					url,
 					`${Config.GET_TX_SEARCH}?query="${querySender.join(
 						' AND ',
-					)}"&page=1&per_page=${pageLimit}&order_by="${sort}"`,
+					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+					0,
 				),
 				this.callApiFromDomain(
 					url,
 					`${Config.GET_TX_SEARCH}?query="${queryRecipient.join(
 						' AND ',
-					)}"&page=1&per_page=${pageLimit}&order_by="${sort}"`,
+					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+					0,
 				),
 			);
 		} else {
@@ -445,6 +479,7 @@ export default class BlockService extends MoleculerDBService<
 					`${Config.GET_TX_SEARCH}?query="${query.join(
 						' AND ',
 					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+					0,
 				),
 			);
 		}
