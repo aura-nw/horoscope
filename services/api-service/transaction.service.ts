@@ -22,7 +22,7 @@ import {
 	SEARCH_TX_QUERY,
 	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
-import { fromBase64, toBase64, fromBech32, toBech32, fromUtf8, toUtf8 } from '@cosmjs/encoding';
+import { toBase64, toUtf8 } from '@cosmjs/encoding';
 import { Utils } from '../../utils/utils';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Config } from '../../common';

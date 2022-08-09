@@ -16,7 +16,7 @@ import {
 	CONTRACT_TYPE,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
-
+import { toBase64, toUtf8 } from '@cosmjs/encoding';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
@@ -188,7 +188,7 @@ export default class CrawlAssetService extends moleculer.Service {
 
 		if (listTokenIDs != null) {
 			const getInforPromises = await Promise.all(
-				listTokenIDs.data.tokens.map(async (token_id: String) => {
+				listTokenIDs.map(async (token_id: String) => {
 					let tokenInfo: any = await this.broker.call(
 						CW721_ACTION.GET_TOKEN_INFOR,
 						{ URL, code_id, address, token_id },
@@ -218,15 +218,42 @@ export default class CrawlAssetService extends moleculer.Service {
 	private async getTokenList(ctx: Context<TokenInfo>) {
 		const URL = ctx.params.URL;
 		const address = ctx.params.address;
+		// const URL = ['https://lcd.dev.aura.network'];
+		// const address = 'aura1dgevllptugd0gt64nc6nmmat23zwrks4txzl0mxqlfhkhjauguusl8trdp';
 		try {
-			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${CW721_ACTION.URL_GET_TOKEN_LIST}`;
-			let listTokenIDs = await this.callApiFromDomain(URL, urlGetListToken);
-			if (listTokenIDs?.data?.tokens !== undefined && listTokenIDs.data.tokens.length > 0) {
-				return listTokenIDs;
-			} else return null;
+			// let urlGetListToken = `${CONTRACT_URI}${address}/smart/${CW721_ACTION.URL_GET_TOKEN_LIST}`;
+			// let listTokenIDs = await this.callApiFromDomain(URL, urlGetListToken);
+			// if (listTokenIDs?.data?.tokens !== undefined && listTokenIDs.data.tokens.length > 0) {
+			// 	return listTokenIDs;
+			// } else return null;
+
+			let doneLoop = false;
+			let listTokenId = [];
+			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
+				toUtf8(`{"all_tokens":{"limit":100}}`),
+			)}`;
+			while (!doneLoop) {
+				let resultCallApi = await this.callApiFromDomain(URL, urlGetListToken);
+				this.logger.debug('Call urlGetListToken', urlGetListToken);
+				this.logger.debug('Call listTokenIDs', JSON.stringify(resultCallApi));
+				if (resultCallApi?.data?.tokens && resultCallApi.data.tokens.length > 0) {
+					listTokenId.push(...resultCallApi.data.tokens);
+					const lastTokenId =
+						resultCallApi.data.tokens[resultCallApi.data.tokens.length - 1];
+					urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
+						toUtf8(`{"all_tokens":{"limit":100, "start_after":"${lastTokenId}"}}`),
+					)}`;
+				} else {
+					doneLoop = true;
+				}
+			}
+			if (listTokenId.length > 0) {
+				return listTokenId;
+			}
 		} catch (error) {
 			this.logger.error('getTokenList error', error);
 		}
+		return null;
 	}
 
 	@Action()
