@@ -7,7 +7,13 @@ import moleculer, { CallingOptions, Context, ServiceBroker } from 'moleculer';
 import { Action, Get, Post, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { Status } from '../../model/codeid.model';
 import { Config } from '../../common';
-import { CODEID_MANAGER_ACTION, COMMON_ACTION, CONTRACT_TYPE, CW20_ACTION, ENRICH_TYPE } from '../../common/constant';
+import {
+	CODEID_MANAGER_ACTION,
+	COMMON_ACTION,
+	CONTRACT_TYPE,
+	CW20_ACTION,
+	ENRICH_TYPE,
+} from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 
 const CODE_ID_URI = Config.CODE_ID_URI;
@@ -36,7 +42,9 @@ const callApiMixin = new CallApiMixin().start();
 				// @ts-ignore
 				this.logger.debug('ctx.params', code_id, chain_id, CONTRACT_TYPE.CW20);
 				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(`validate_codeid_${chain_id}_${code_id}`);
+				const processingFlag = await this.broker.cacher?.get(
+					`validate_codeid_${chain_id}_${code_id}`,
+				);
 				if (!processingFlag) {
 					// @ts-ignore
 					await this.broker.cacher?.set(`validate_codeid_${chain_id}_${code_id}`, true);
@@ -45,7 +53,7 @@ const callApiMixin = new CallApiMixin().start();
 					// @ts-ignore
 					await this.broker.cacher?.del(`validate_codeid_${chain_id}_${code_id}`);
 				}
-			}
+			},
 		},
 		'CW20.handle': {
 			async handler(ctx: Context<any>) {
@@ -53,7 +61,9 @@ const callApiMixin = new CallApiMixin().start();
 				const code_id = ctx.params.code_id;
 				const URL = ctx.params.URL;
 				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(`handle_codeid_${chain_id}_${code_id}`);
+				const processingFlag = await this.broker.cacher?.get(
+					`handle_codeid_${chain_id}_${code_id}`,
+				);
 				if (!processingFlag) {
 					// @ts-ignore
 					await this.broker.cacher?.set(`handle_codeid_${chain_id}_${code_id}`, true);
@@ -84,10 +94,11 @@ export default class CrawlAssetService extends moleculer.Service {
 					let address = resultCallApi.contracts[i];
 					let urlGetTokenInfo = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_TOKEN_INFO}`;
 					let tokenInfo = await this.callApiFromDomain(URL, urlGetTokenInfo);
-					if (tokenInfo?.data?.name === undefined
-						|| tokenInfo?.data?.symbol === undefined
-						|| tokenInfo?.data?.decimals === undefined
-						|| tokenInfo?.data?.total_supply === undefined
+					if (
+						tokenInfo?.data?.name === undefined ||
+						tokenInfo?.data?.symbol === undefined ||
+						tokenInfo?.data?.decimals === undefined ||
+						tokenInfo?.data?.total_supply === undefined
 					) {
 						cw20flag = false;
 						break;
@@ -163,7 +174,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
 					OPTs,
 				);
-			})
+			}),
 		);
 		await insertInforPromises;
 		this.logger.debug('Asset handler DONE!', contractList.length);
@@ -175,7 +186,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		const address = ctx.params[0].address;
 		const code_id = ctx.params[0].code_id;
 		const typeEnrich = ctx.params[1];
-
+		const chain_id = ctx.params[0].chain_id;
 		const urlGetTokenInfo = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_TOKEN_INFO}`;
 		const tokenInfo = await this.callApiFromDomain(URL, urlGetTokenInfo);
 
@@ -200,6 +211,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							owner,
 							tokenInfo,
 							balanceInfo,
+							chain_id,
 						);
 						await this.broker.call(
 							`v1.CW20-asset-manager.act-${typeEnrich}`,
@@ -221,9 +233,12 @@ export default class CrawlAssetService extends moleculer.Service {
 		try {
 			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_OWNER_LIST}`;
 			let listOwnerAddress = await this.callApiFromDomain(URL, urlGetListToken);
-			if (listOwnerAddress?.data?.accounts !== undefined && listOwnerAddress.data.accounts.length > 0) {
+			if (
+				listOwnerAddress?.data?.accounts !== undefined &&
+				listOwnerAddress.data.accounts.length > 0
+			) {
 				return listOwnerAddress;
-			} else return null
+			} else return null;
 		} catch (error) {
 			this.logger.error('getOwnerList error', error);
 		}
@@ -244,5 +259,4 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.error('getBalance error', error);
 		}
 	}
-
 }

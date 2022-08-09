@@ -7,10 +7,16 @@ import { Config } from '../../common';
 import { CallingOptions, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
 import * as _ from 'lodash';
-import { URL_TYPE_CONSTANTS, EVENT_TYPE, COMMON_ACTION, ENRICH_TYPE, CODEID_MANAGER_ACTION } from '../../common/constant';
+import {
+	URL_TYPE_CONSTANTS,
+	EVENT_TYPE,
+	COMMON_ACTION,
+	ENRICH_TYPE,
+	CODEID_MANAGER_ACTION,
+} from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
-import { Status } from '@Model';
+import { Status } from '../../model';
 import { info } from 'console';
 
 const QueueService = require('moleculer-bull');
@@ -43,7 +49,10 @@ export default class CrawlAccountInfoService extends Service {
 					concurrency: 1,
 					async process(job: Job) {
 						job.progress(10);
-						const URL = Utils.getUrlByChainIdAndType(job.data.chainId, URL_TYPE_CONSTANTS.LCD);
+						const URL = Utils.getUrlByChainIdAndType(
+							job.data.chainId,
+							URL_TYPE_CONSTANTS.LCD,
+						);
 
 						// @ts-ignore
 						await this.handleJob(URL, job.data.listTx, job.data.chainId);
@@ -92,23 +101,42 @@ export default class CrawlAccountInfoService extends Service {
 						const processingFlag = await this.broker.cacher?.get(`contract_${address}`);
 						if (!processingFlag) {
 							await this.broker.cacher?.set(`contract_${chainId}_${address}`, true);
-							let contractInfo = await this.verifyAddressByCodeID(URL, address, chainId);
+							let contractInfo = await this.verifyAddressByCodeID(
+								URL,
+								address,
+								chainId,
+							);
 							if (contractInfo != null) {
 								this.logger.info('contractInfo', contractInfo);
 								switch (contractInfo.status) {
 									case Status.COMPLETED:
 										await this.broker.call(
 											`v1.${contractInfo.contract_type}.enrichData`,
-											[{ URL, chain_id: chainId, code_id: contractInfo.code_id, address }, ENRICH_TYPE.UPSERT],
+											[
+												{
+													URL,
+													chain_id: chainId,
+													code_id: contractInfo.code_id,
+													address,
+												},
+												ENRICH_TYPE.UPSERT,
+											],
 											OPTs,
 										);
 										break;
 									case Status.TBD:
 										this.logger.info('contractInfo TBD', contractInfo.status);
-										this.broker.emit(`${contractInfo.contract_type}.validate`, { URL, chain_id: chainId, code_id: contractInfo.code_id });
+										this.broker.emit(`${contractInfo.contract_type}.validate`, {
+											URL,
+											chain_id: chainId,
+											code_id: contractInfo.code_id,
+										});
 										break;
 									default:
-										this.logger.error('handleJob tx fail, status does not match', contractInfo.status);
+										this.logger.error(
+											'handleJob tx fail, status does not match',
+											contractInfo.status,
+										);
 										break;
 								}
 							}
@@ -129,11 +157,20 @@ export default class CrawlAccountInfoService extends Service {
 		let urlGetContractInfo = `${CONTRACT_URI}${address}`;
 		let contractInfo = await this.callApiFromDomain(URL, urlGetContractInfo);
 		if (contractInfo?.contract_info?.code_id != undefined) {
-			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, { query: { code_id: contractInfo.contract_info.code_id, 'custom_info.chain_id': chain_id } });
+			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, {
+				query: {
+					code_id: contractInfo.contract_info.code_id,
+					'custom_info.chain_id': chain_id,
+				},
+			});
 			this.logger.debug('codeid-manager.find res', res);
 			if (res.length > 0) {
 				if (res[0].status === Status.COMPLETED || res[0].status === Status.TBD) {
-					return { code_id: contractInfo.contract_info.code_id, contract_type: res[0].contract_type, status: res[0].status };
+					return {
+						code_id: contractInfo.contract_info.code_id,
+						contract_type: res[0].contract_type,
+						status: res[0].status,
+					};
 				} else return null;
 			} else {
 				return null;

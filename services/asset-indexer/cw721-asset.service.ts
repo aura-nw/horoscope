@@ -8,7 +8,13 @@ import { Action, Get, Post, Service } from '@ourparentcenter/moleculer-decorator
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 import { Status } from '../../model/codeid.model';
 import { Config } from '../../common';
-import { CODEID_MANAGER_ACTION, COMMON_ACTION, CW721_ACTION, ENRICH_TYPE, CONTRACT_TYPE } from '../../common/constant';
+import {
+	CODEID_MANAGER_ACTION,
+	COMMON_ACTION,
+	CW721_ACTION,
+	ENRICH_TYPE,
+	CONTRACT_TYPE,
+} from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 
 const CODE_ID_URI = Config.CODE_ID_URI;
@@ -37,7 +43,9 @@ const callApiMixin = new CallApiMixin().start();
 				// @ts-ignore
 				this.logger.debug('ctx.params', code_id, chain_id, CONTRACT_TYPE.CW721);
 				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(`validate_codeid_${chain_id}_${code_id}`);
+				const processingFlag = await this.broker.cacher?.get(
+					`validate_codeid_${chain_id}_${code_id}`,
+				);
 				if (!processingFlag) {
 					// @ts-ignore
 					await this.broker.cacher?.set(`validate_codeid_${chain_id}_${code_id}`, true);
@@ -46,7 +54,7 @@ const callApiMixin = new CallApiMixin().start();
 					// @ts-ignore
 					await this.broker.cacher?.del(`validate_codeid_${chain_id}_${code_id}`);
 				}
-			}
+			},
 		},
 		'CW721.handle': {
 			async handler(ctx: Context<any>) {
@@ -54,7 +62,9 @@ const callApiMixin = new CallApiMixin().start();
 				const code_id = ctx.params.code_id;
 				const URL = ctx.params.URL;
 				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(`handle_codeid_${chain_id}_${code_id}`);
+				const processingFlag = await this.broker.cacher?.get(
+					`handle_codeid_${chain_id}_${code_id}`,
+				);
 				if (!processingFlag) {
 					// @ts-ignore
 					await this.broker.cacher?.set(`handle_codeid_${chain_id}_${code_id}`, true);
@@ -157,8 +167,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
 					OPTs,
 				);
-
-			})
+			}),
 		);
 		await insertInforPromises;
 		this.logger.debug('Asset handler DONE!', contractList.length);
@@ -170,7 +179,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		const address = ctx.params[0].address;
 		const code_id = ctx.params[0].code_id;
 		const typeEnrich = ctx.params[1];
-
+		const chain_id = ctx.params[0].chain_id;
 		let listTokenIDs: any = await this.broker.call(
 			CW721_ACTION.GET_TOKEN_LIST,
 			{ URL, code_id, address },
@@ -191,6 +200,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							address,
 							token_id,
 							tokenInfo,
+							chain_id,
 						);
 						await this.broker.call(
 							`v1.CW721-asset-manager.act-${typeEnrich}`,
@@ -213,7 +223,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			let listTokenIDs = await this.callApiFromDomain(URL, urlGetListToken);
 			if (listTokenIDs?.data?.tokens !== undefined && listTokenIDs.data.tokens.length > 0) {
 				return listTokenIDs;
-			} else return null
+			} else return null;
 		} catch (error) {
 			this.logger.error('getTokenList error', error);
 		}

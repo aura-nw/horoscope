@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import CallApiMixin from '@Mixins/callApi/call-api.mixin';
-import { Config } from 'common';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
+import { Config } from '../../common';
 import { Types } from 'mongoose';
 
 const CODE_ID_URI = Config.CODE_ID_URI;
@@ -11,6 +11,7 @@ const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
 const callApiMixin = new CallApiMixin().start();
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import moleculer, { Context } from 'moleculer';
+import { LIST_NETWORK } from '../../common/constant';
 
 type CW721AssetInfo = {
 	data: {
@@ -86,7 +87,9 @@ export class Common {
 		address: String,
 		id: String,
 		tokenInfo: CW721AssetInfo,
+		chain_id: String,
 	) {
+		let network = LIST_NETWORK.find((item) => item.chainId === chain_id);
 		return {
 			_id: new Types.ObjectId(),
 			asset_id: `${address}_${id}`,
@@ -96,6 +99,10 @@ export class Common {
 			token_id: id,
 			owner: tokenInfo.data.access.owner,
 			history: [],
+			custom_info: {
+				chain_id: network?.chainId,
+				chain_name: network?.chainName,
+			},
 		};
 	};
 	public static createCW20AssetObject = function (
@@ -104,7 +111,9 @@ export class Common {
 		owner: String,
 		tokenInfo: CW20AssetInfo,
 		balanceInfo: CW20BalanceInfo,
+		chain_id: String,
 	) {
+		let network = LIST_NETWORK.find((item) => item.chainId === chain_id);
 		return {
 			_id: new Types.ObjectId(),
 			asset_id: `${address}_${owner}`,
@@ -119,6 +128,10 @@ export class Common {
 						BigInt(tokenInfo?.data?.total_supply),
 				) / 1000000,
 			history: [],
+			custom_info: {
+				chain_id: network?.chainId,
+				chain_name: network?.chainName,
+			},
 		};
 	};
 }
