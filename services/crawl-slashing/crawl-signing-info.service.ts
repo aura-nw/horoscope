@@ -6,10 +6,10 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { LIST_NETWORK, MODULE_PARAM, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { ISigningInfoEntityResponseFromLCD, ListValidatorAddress } from '../../types';
-import { ValidatorEntity } from 'entities';
+import { IParam, ParamEntity, SlashingParam, ValidatorEntity } from '../../entities';
 const tmhash = require('tendermint/lib/hash');
 import { bech32 } from 'bech32';
 import { Utils } from '../../utils/utils';
@@ -81,8 +81,10 @@ export default class CrawlSigningInfoService extends Service {
 		listFoundValidator.map(async (foundValidator: ValidatorEntity) => {
 			try {
 				let consensusPubkey = foundValidator.consensus_pubkey;
-				this.logger.info(`Found validator with address ${foundValidator.operator_address}`);
-				this.logger.info(`Found validator with consensusPubkey ${consensusPubkey}`);
+				this.logger.debug(
+					`Found validator with address ${foundValidator.operator_address}`,
+				);
+				this.logger.debug(`Found validator with consensusPubkey ${consensusPubkey}`);
 
 				const pubkey = this.getAddressHexFromPubkey(consensusPubkey.key.toString());
 				const consensusAddress = this.hexToBech32(
@@ -91,16 +93,39 @@ export default class CrawlSigningInfoService extends Service {
 				);
 				let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
 
+				this.logger.info(path);
 				let result: ISigningInfoEntityResponseFromLCD = await this.callApiFromDomain(
 					url,
 					path,
 				);
-				this.logger.info(result);
+				this.logger.debug(result);
+
 				if (result.val_signing_info) {
+					let paramSlashing: ParamEntity[] = await this.broker.call(
+						'v1.crawlparam.find',
+						{
+							query: {
+								'custom_info.chain_id': Config.CHAIN_ID,
+								module: MODULE_PARAM.SLASHING,
+							},
+						},
+					);
+					let uptime: Number = 0;
+					if (paramSlashing.length > 0) {
+						//@ts-ignore
+						const blockWindow = paramSlashing[0].params.signed_blocks_window.toString();
+						const missedBlock =
+							result.val_signing_info.missed_blocks_counter.toString();
+						uptime =
+							Number(
+								((BigInt(blockWindow) - BigInt(missedBlock)) * BigInt(100000000)) /
+									BigInt(blockWindow),
+							) / 1000000;
+					}
 					let res = await this.adapter.updateById(foundValidator._id, {
-						$set: { val_signing_info: result.val_signing_info },
+						$set: { val_signing_info: result.val_signing_info, uptime: uptime },
 					});
-					this.logger.info(res);
+					this.logger.debug(res);
 				}
 			} catch (error) {
 				this.logger.error(error);

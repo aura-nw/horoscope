@@ -106,8 +106,5 @@ export const transactionMongoModel = (collection: string): unknown => {
 		'tx_response.events.type': 1,
 		'tx_response.events.attributes.key': 1,
 	});
-
-	// schema.index({ 'tx_response.logs.events.attributes.value': 1 });
-	// schema.index({ 'tx_response.events.attributes.value': 1 });
 	return models[collection] || model(collection, schema);
 };

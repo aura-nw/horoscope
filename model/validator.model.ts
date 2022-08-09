@@ -25,7 +25,7 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 	unbonding_height: String,
 	unbonding_time: String,
 	commission: {
-		commision_rates: {
+		commission_rates: {
 			rate: String,
 			max_rate: String,
 			max_change_rate: String,
@@ -41,6 +41,11 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 		tombstoned: Boolean,
 		missed_blocks_counter: String,
 	},
+	self_delegation_balance: {
+		denom: String,
+		amount: String,
+	},
+	uptime: Number,
 	custom_info: customInfoModel,
 });
 

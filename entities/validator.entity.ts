@@ -2,6 +2,7 @@ import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
 import { ObjectIdNull } from 'types';
+import { Coin, ICoin } from './coin.entity';
 
 export interface IConsensusPubkey {
 	'@type': String;
@@ -23,7 +24,7 @@ export interface ICommissionRate {
 }
 
 export interface ICommission {
-	commision_rates: ICommissionRate;
+	commission_rates: ICommissionRate;
 	update_time: String;
 }
 
@@ -41,6 +42,8 @@ export interface IValidator {
 	unbonding_time: String;
 	commission: ICommission;
 	min_self_delegation: String;
+	self_delegation_balance: ICoin;
+	uptime: Number;
 }
 
 @JsonObject('ConsensusPubkey')
@@ -78,7 +81,7 @@ export class CommissionRate implements ICommissionRate {
 @JsonObject('Commission')
 export class Commission implements ICommission {
 	@JsonProperty('commission_rates', CommissionRate)
-	commision_rates: CommissionRate = {} as CommissionRate;
+	commission_rates: CommissionRate = {} as CommissionRate;
 	@JsonProperty('update_time', String)
 	update_time: String = '';
 }
@@ -122,6 +125,8 @@ export class ValidatorEntity implements IValidator {
 	public min_self_delegation: String = '';
 
 	public consensus_hex_address: String = '';
+	public self_delegation_balance: Coin = {} as Coin;
+	public uptime: Number = 0;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

@@ -35,6 +35,13 @@ export class Utils {
 		return Buffer.from(new Uint8Array(decodedAddress.words)).toString('hex').toUpperCase();
 	}
 
+	public static operatorAddressToAddress(operatorAddress: string, prefix: string) {
+		const operator_address = operatorAddress;
+		const decodeAcc = bech32.decode(operator_address.toString());
+		const wordsByte = bech32.fromWords(decodeAcc.words);
+		return bech32.encode(prefix, bech32.toWords(wordsByte));
+	}
+
 	public static formatSearchQueryInTxSearch(query: string) {
 		let queryArray = query.split(',');
 		let queryObject: any[] = [];
