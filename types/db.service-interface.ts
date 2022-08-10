@@ -1,4 +1,5 @@
 /* eslint-disable no-shadow */
+import { IDbAdapterCustom } from '../mixins/customMongoose/IDBAdapterCustom';
 import moleculer, { Context } from 'moleculer';
 import { DbAdapter, DbContextParameters } from 'moleculer-db';
 
@@ -67,7 +68,7 @@ export class MoleculerDBService<T, R> extends moleculer.Service<T> {
 		$version: string;
 		$repo?: string;
 	};
-	public adapter!: DbAdapter;
+	public adapter!: IDbAdapterCustom;
 
 	public connect!: () => Promise<void>;
 

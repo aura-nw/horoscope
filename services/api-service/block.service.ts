@@ -200,7 +200,7 @@ export default class BlockService extends MoleculerDBService<
 			const blockHash = ctx.params.blockHash;
 			const operatorAddress = ctx.params.operatorAddress;
 			const consensusHexAddress = ctx.params.consensusHexAddress;
-			const sort = ctx.params.reverse ? 'block.header.height' : '-block.header.height';
+			const sort = ctx.params.reverse ? '_id' : '-_id';
 			let needNextKey = true;
 			if (blockHeight) {
 				query['block.header.height'] = blockHeight;

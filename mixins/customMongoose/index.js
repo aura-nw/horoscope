@@ -8,6 +8,11 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
     hydrate(doc){
         return this.model.hydrate(doc);
     }
+
+    countWithSkipLimit(query){
+        let cursor = this.createCursor(query).count(true);
+        return cursor.exec();
+    }
 }
 
 module.exports = CustomMongooseDbAdapter;

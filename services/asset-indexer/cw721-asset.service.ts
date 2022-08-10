@@ -271,4 +271,16 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.error('getTokenInfor error', error);
 		}
 	}
+
+	// async _start(): Promise<void> {
+	// 	let result = await this.adapter.aggregate([
+	// 		{
+	// 			$group: {
+	// 				_id: { contract_address: '$contract_address' },
+	// 			},
+	// 		},
+	// 	]);
+	// 	this.logger.info('_start', result);
+	// 	return super._start();
+	// }
 }

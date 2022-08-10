@@ -15,7 +15,7 @@ import {
 	ENRICH_TYPE,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
-
+import { toBase64, toUtf8 } from '@cosmjs/encoding';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
@@ -231,17 +231,32 @@ export default class CrawlAssetService extends moleculer.Service {
 		const URL = ctx.params.URL;
 		const address = ctx.params.address;
 		try {
-			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_OWNER_LIST}`;
-			let listOwnerAddress = await this.callApiFromDomain(URL, urlGetListToken);
-			if (
-				listOwnerAddress?.data?.accounts !== undefined &&
-				listOwnerAddress.data.accounts.length > 0
-			) {
+			let doneLoop = false;
+			let listOwnerAddress = [];
+			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
+				toUtf8(`{"all_accounts": {"limit":100}}`),
+			)}`;
+			while (!doneLoop) {
+				let resultCallApi = await this.callApiFromDomain(URL, urlGetListToken);
+				if (resultCallApi.data.accounts && resultCallApi.data.accounts.length > 0) {
+					listOwnerAddress.push(...resultCallApi.data.accounts);
+					const lastAddress =
+						resultCallApi.data.accounts[resultCallApi.data.accounts.length - 1];
+
+					urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
+						toUtf8(`{"all_accounts": {"limit":100, "start_after":"${lastAddress}"}}`),
+					)}`;
+				} else {
+					doneLoop = true;
+				}
+			}
+			if (listOwnerAddress.length > 0) {
 				return listOwnerAddress;
-			} else return null;
+			}
 		} catch (error) {
 			this.logger.error('getOwnerList error', error);
 		}
+		return null;
 	}
 
 	@Action()

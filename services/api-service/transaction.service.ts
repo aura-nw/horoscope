@@ -240,7 +240,7 @@ export default class BlockService extends MoleculerDBService<
 
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
-		ctx.params.countTotal = false;
+		// ctx.params.countTotal = false;
 		// const sort = ctx.params.reverse ? '_id' : '-_id';
 		const sort = '-_id';
 		let query: QueryOptions = {};
@@ -309,41 +309,53 @@ export default class BlockService extends MoleculerDBService<
 		this.logger.info('query: ', JSON.stringify(query));
 		let listPromise = [];
 
-		// find all from db
-		if (Object.keys(query).length == 1 && query['custom_info.chain_id'] != undefined) {
-			this.logger.debug('query all tx');
-			listPromise.push(
-				this.adapter.find({
-					query: query,
-					// @ts-ignore
-					sort: sort,
-					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset,
-				}),
-			);
-		}
 		listPromise.push(
-			Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
-				let listTxHash: any[] = [];
-
-				array.map((res: ResponseFromRPC) => {
-					if (res) {
-						listTxHash.push(
-							...res.result.txs.map((e: any) => {
-								return e.hash;
-							}),
-						);
-					}
-				});
-				return this.adapter.find({
-					query: {
-						'tx_response.txhash': { $in: listTxHash },
-					},
-					// @ts-ignore
-					sort: sort,
-				});
+			this.adapter.find({
+				query: query,
+				// @ts-ignore
+				sort: sort,
+				limit: ctx.params.pageLimit,
+				offset: ctx.params.pageOffset,
 			}),
 		);
+
+		// find all from db
+		// if (Object.keys(query).length == 1 && query['custom_info.chain_id'] != undefined) {
+		// 	this.logger.debug('query all tx');
+		// 	listPromise.push(
+		// 		this.adapter.find({
+		// 			query: query,
+		// 			// @ts-ignore
+		// 			sort: sort,
+		// 			limit: ctx.params.pageLimit,
+		// 			offset: ctx.params.pageOffset,
+		// 		}),
+		// 	);
+		// }
+
+		// listPromise.push(
+		// 	Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
+		// 		let listTxHash: any[] = [];
+
+		// 		array.map((res: ResponseFromRPC) => {
+		// 			if (res) {
+		// 				listTxHash.push(
+		// 					...res.result.txs.map((e: any) => {
+		// 						return e.hash;
+		// 					}),
+		// 				);
+		// 			}
+		// 		});
+		// 		return this.adapter.find({
+		// 			query: {
+		// 				'tx_response.txhash': { $in: listTxHash },
+		// 			},
+		// 			// @ts-ignore
+		// 			sort: sort,
+		// 		});
+		// 	}),
+		// );
+
 		// if (ctx.params.nextKey) {
 		// 	this.logger.debug('get tx from db');
 		// 	if (listPromise.length == 0) {
@@ -386,8 +398,10 @@ export default class BlockService extends MoleculerDBService<
 				Promise.race(listPromise),
 				//@ts-ignore
 				ctx.params.countTotal === true
-					? this.adapter.count({
+					? this.adapter.countWithSkipLimit({
 							query: query,
+							skip: 0,
+							limit: ctx.params.pageLimit * 10,
 					  })
 					: 0,
 			]);
