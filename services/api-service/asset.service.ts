@@ -570,7 +570,7 @@ export default class BlockService extends MoleculerDBService<
 			},
 			chainid: {
 				type: 'string',
-				optional: true,
+				optional: false,
 				enum: LIST_NETWORK.map(function (e) {
 					return e.chainId;
 				}),
@@ -634,6 +634,9 @@ export default class BlockService extends MoleculerDBService<
 					break;
 				case CONTRACT_TYPE.CW20:
 					sort = ctx.params.reverse ? '-percent_hold' : 'percent_hold';
+					query['balance'] = {
+						$ne: '0',
+					};
 					break;
 				default:
 					break;
