@@ -10,8 +10,7 @@ import * as _ from 'lodash';
 import { URL_TYPE_CONSTANTS, EVENT_TYPE, COMMON_ACTION, ENRICH_TYPE, CODEID_MANAGER_ACTION } from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
-import { Status } from '@Model';
-import { info } from 'console';
+import { CodeIDStatus } from '../../model/codeid.model';
 
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
@@ -98,14 +97,14 @@ export default class CrawlAccountInfoService extends Service {
 							let contractInfo = await this.verifyAddressByCodeID(URL, address, chainId);
 							if (contractInfo != null) {
 								switch (contractInfo.status) {
-									case Status.COMPLETED:
+									case CodeIDStatus.COMPLETED:
 										await this.broker.call(
 											`v1.${contractInfo.contract_type}.enrichData`,
 											[{ URL, chain_id: chainId, code_id: contractInfo.code_id, address }, ENRICH_TYPE.UPSERT],
 											OPTs,
 										);
 										break;
-									case Status.TBD:
+									case CodeIDStatus.TBD:
 										this.broker.emit(`${contractInfo.contract_type}.validate`, { URL, chain_id: chainId, code_id: contractInfo.code_id });
 										break;
 									default:
@@ -133,7 +132,7 @@ export default class CrawlAccountInfoService extends Service {
 			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, { query: { code_id: contractInfo.contract_info.code_id, 'custom_info.chain_id': chain_id } });
 			this.logger.debug('codeid-manager.find res', res);
 			if (res.length > 0) {
-				if (res[0].status === Status.COMPLETED || res[0].status === Status.TBD) {
+				if (res[0].status === CodeIDStatus.COMPLETED || res[0].status === CodeIDStatus.TBD) {
 					return { code_id: contractInfo.contract_info.code_id, contract_type: res[0].contract_type, status: res[0].status };
 				} else return null;
 			} else {

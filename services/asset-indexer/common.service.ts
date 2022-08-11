@@ -1,33 +1,22 @@
 'use strict';
 
 import CallApiMixin from "@Mixins/callApi/call-api.mixin";
-// import http, { request } from "http";
 import request from "request-promise";
-// import fs from "fs";
-// import parse from "url-parse";
-// import Url from "url-parse";
-// import File from "typescript";
 import CID from 'cids';
 const fetch = require("node-fetch");
-
-// const fileTypeFromBuffer = require ("file-type");
-// import fileTypeFromBuffer from 'file-type';
-// import fileTypeFromBuffer, { fileType, FileTypeResult } from "file-type";
-// import fileTypeFromFile from "file-type";
-// import * as FileType from "file-type";
 import parse from "parse-uri";
 import { Config } from "common";
 import { Types } from "mongoose";
-// import fetch from "node-fetch";
-// import { fetch } from 'cross-fetch';
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import moleculer, { Context } from "moleculer";
 import { S3Service } from '../../utils/s3';
-// import { IPFS } from '../../utils/ipfs';
+const { createHash } = require('crypto');
+const errors = require('request-promise/errors');
 
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
 const BUCKET = Config.BUCKET;
+const FILE_TYPE_VALID = Config.FILE_TYPE_VALID;
 const callApiMixin = new CallApiMixin().start();
 const s3Client = new S3Service().connectS3();
 const IPFS_GATEWAY = "https://ipfs.io/ipfs/";
@@ -36,7 +25,12 @@ const IPFS_PREFIX = "ipfs";
 type CW721AssetInfo = {
     data: {
         access: {
-            owner: String;
+            approvals: [];
+            owner: string;
+        };
+        info: {
+            token_uri: string;
+            extension: string;
         };
     };
 };
@@ -94,41 +88,34 @@ export default class CommonService extends moleculer.Service {
                 }
                 path = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
             } else {
-                // @ts-ignore
                 this.logger.error('Call urlGetContractList return error', path);
             }
         } while (next_key != null);
         return contractList;
     }
-
-    private async getFile(ctx: Context<TokenInfo>) {
-        // const URL = ctx.params.URL;
-        // const code_id = ctx.params.code_id;
-        // let contractList: any[] = [];
-        // const urlGetContractList = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
-        // let path = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
-        // let next_key = null;
-        // do {
-        // @ts-ignore
-        let resultCallApi = await this.callApiFromDomain("ipfs.io/", "api/v0/file/ls?arg=QmUpd48SunBdGRgYEdCMgwDY4NdnSTmt5UnNcEqbDytZWt");
-        this.logger.info('Call resultCallApi return ', resultCallApi);
-        // if (resultCallApi?.contracts?.length > 0) {
-        //     contractList.push(...resultCallApi.contracts);
-        //     next_key = resultCallApi.pagination.next_key;
-        //     if (next_key === null) {
-        //         break;
-        //     }
-        //     path = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
-        // } else {
-        //     // @ts-ignore
-        // }
-        // } while (next_key != null);
-        return "";
-    }
 }
 
 export class Common {
-    public static createCW721AssetObject = function (code_id: Number, address: String, id: String, tokenInfo: CW721AssetInfo) {
+    public static getKeyFromUri(uri: string) {
+        let parsed = parse(uri);
+        let uri_handled = "";
+        let file_name = "";
+        let media_link_key = "";
+        if (parsed.protocol === IPFS_PREFIX) {
+            const cid = parsed.host;
+            const cidBase32 = new CID(cid).toV1().toString('base32');
+            uri_handled = `${IPFS_GATEWAY}${cidBase32}`;
+            file_name = cid;
+            media_link_key = cid;
+        } else {
+            uri_handled = uri;
+            file_name = uri.replace(/^.*[\\\/]/, '');
+            media_link_key = Common.hash(uri);
+        }
+        return [uri_handled, file_name, media_link_key];
+    }
+
+    public static createCW721AssetObject = function (code_id: Number, address: String, id: String, media_link_key: string, tokenInfo: CW721AssetInfo) {
         return {
             _id: new Types.ObjectId(),
             asset_id: `${address}_${id}`,
@@ -137,6 +124,7 @@ export class Common {
             constract_address: address,
             token_id: id,
             owner: tokenInfo.data.access.owner,
+            media_link: media_link_key,
             history: [],
         };
     }
@@ -153,56 +141,67 @@ export class Common {
         };
     }
     public static checkFileTypeInvalid = function (type: string) {
-        return (type.match("text/*") || type.match("image/*") || type.match("video/*")) ? true : false;
+        // return (type.match("text/*") || type.match("image/*") || type.match("video/*")) ? true : false;
+        return type.match(FILE_TYPE_VALID) ? true : false;
     }
-    public static getFileFromUrl = async function (url: string) {
-        let parsed = parse(url);
-        let uri = "";
-        let key = "";
-        if (parsed.protocol === IPFS_PREFIX) {
-            const cid = parsed.host;
-            const cidBase32 = new CID(cid).toV1().toString('base32');
-            uri = `${IPFS_GATEWAY}${cidBase32}`;
-            key = cid;
-        } else {
-            uri = url;
-            key = url.replace(/^.*[\\\/]/, '');
-        }
 
-        var options = {
-            uri,
-            encoding: null,
-        };
-        let linkS3 = "";
-        return new Promise(async (resolve, reject) => {
-            request(options, async function (error: any, response: any, body: any) {
-                if (error || response.statusCode !== 200) {
-                    // @ts-ignore
-                    this.logger.error(error);
-                    reject(error);
-                } else {
-                    const contentType = response.headers['content-type'];
-                    if (Common.checkFileTypeInvalid(contentType)) {
-                        s3Client.putObject({
-                            Body: body,
-                            Key: key,
-                            Bucket: BUCKET,
-                            ContentType: contentType,
-                        }, function (error: any) {
-                            if (error) {
-                                // @ts-ignore
-                                this.logger.error(error);
-                                reject(error);
-                            } else {
-                                linkS3 = `https://${BUCKET}.s3.amazonaws.com/${key}`;
-                                // @ts-ignore
-                                this.logger.debug(linkS3);
-                                resolve(linkS3);
-                            }
-                        });
-                    }
-                }
+
+    public static hash(str: string) {
+        return createHash('sha256').update(str).digest('hex');
+    }
+
+    public static handleUri = async (uri: string, file_name: string) => {
+        let errcode = 0;
+        if (Common.validURI(uri)) {
+            var _include_headers = function (body: any, response: { headers: any; }, resolveWithFullResponse: any) {
+                return { 'headers': response.headers, 'data': body };
+            };
+            var options = {
+                uri,
+                encoding: null,
+                json: true,
+                transform: _include_headers,
+                resolveWithFullResponse: true,
+                timeout: 100000
+            };
+            const rs = new Promise(async (resolve, reject) => {
+                request(options)
+                    .then(function (response: any) {
+                        const contentType = response.headers['content-type'];
+                        if (Common.checkFileTypeInvalid(contentType)) {
+                            s3Client.putObject({
+                                Body: response.data,
+                                Key: file_name,
+                                Bucket: BUCKET,
+                                ContentType: contentType,
+                            }, function (error) {
+                                if (error) {
+                                    reject(error);
+                                } else {
+                                    const linkS3 = `https://${BUCKET}.s3.amazonaws.com/${file_name}`;
+                                    resolve(linkS3);
+                                }
+                            });
+                        }
+                    })
+                    .catch(function (err) {
+                        errcode = err.error.code;
+                        reject(err);
+                    });
             });
-        });
+            return rs;
+        } else {
+            throw new Error("InvalidURI");
+        }
+    }
+
+    public static validURI(str: string) {
+        var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+            '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+            '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+            '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+        return !!pattern.test(str);
     }
 }

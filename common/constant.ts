@@ -74,6 +74,18 @@ export const CODEID_MANAGER_ACTION = {
 	CHECK_STATUS: 'v1.codeid-manager.checkStatus',
 };
 
+export const CW721_MEDIA_MANAGER_ACTION = {
+	FIND: 'v1.CW721-asset-media-manager.act-find',
+	INSERT: 'v1.CW721-asset-media-manager.act-insert',
+	UPSERT: 'v1.CW721-asset-media-manager.act-upsert',
+	UPDATE_MANY: 'v1.CW721-asset-media-manager.act-updateMany',
+	UPDATE_MEDIA_LINK: 'v1.CW721-asset-media-manager.update-media-link',
+};
+
+export const CW721_MEDIA = {
+	FIND: 'v1.CW721-media.act-find',
+};
+
 export const CW721_ACTION = {
 	URL_GET_TOKEN_LIST: 'eyJhbGxfdG9rZW5zIjp7fX0=',
 	GET_TOKEN_INFOR: 'v1.CW721.getTokenInfor',

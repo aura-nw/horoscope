@@ -16,7 +16,7 @@ import { IBlock } from '../../entities';
 import { AssetIndexParams } from 'types/asset';
 import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
-import { Status } from '../../model/codeid.model';
+import { CodeIDStatus } from '../../model/codeid.model';
 import { Ok } from 'ts-results';
 import { CODEID_MANAGER_ACTION, LIST_NETWORK } from 'common/constant';
 

@@ -3,16 +3,28 @@ import { definitionType, ObjectIdNull } from '../types';
 
 export interface ICW721Media {
 	_id: ObjectIdNull;
-	cid: String;
+	key: String;
 	media_link: String,
+	status: String,
+}
+
+export enum MediaStatus {
+	PENDING = "PENDING",
+	COMPLETED = "COMPLETED",
+	ERROR = "ERROR",
+	HANDLING = "HANDLING",
 }
 
 const definition: definitionType<ICW721Media> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	cid: {
+	key: {
 		type: String, unique: true, index: true
 	},
 	media_link: String,
+	status: {
+		type: String,
+		enum: MediaStatus
+	},
 })
 
 
