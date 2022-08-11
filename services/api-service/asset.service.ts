@@ -200,6 +200,21 @@ export default class BlockService extends MoleculerDBService<
 	 *          type: string
 	 *          description: "Chain Id of network need to query(if null it will return asset on all chainid)"
 	 *        - in: query
+	 *          name: tokenName
+	 *          required: false
+	 *          type: string
+	 *          description: "Token name need to query"
+	 *        - in: query
+	 *          name: tokenId
+	 *          required: false
+	 *          type: string
+	 *          description: "Token id need to query"
+	 *        - in: query
+	 *          name: contractAddress
+	 *          required: false
+	 *          type: string
+	 *          description: "Contract address need to query"
+	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
 	 *          default: false
@@ -223,6 +238,9 @@ export default class BlockService extends MoleculerDBService<
 					return e.chainId;
 				}),
 			},
+			tokenName: { type: 'string', optional: true },
+			tokenId: { type: 'string', optional: true },
+			contractAddress: { type: 'string', optional: true },
 			countTotal: {
 				type: 'boolean',
 				optional: true,
@@ -240,6 +258,22 @@ export default class BlockService extends MoleculerDBService<
 			let query: QueryOptions = { owner: ctx.params.owner };
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
+			}
+			if (ctx.params.tokenId) {
+				query['token_id'] = ctx.params.tokenId;
+			}
+			if (ctx.params.contractAddress) {
+				query['contract_address'] = ctx.params.contractAddress;
+			}
+			if (ctx.params.tokenName) {
+				query['$or'] = [
+					{
+						token_id: ctx.params.tokenName,
+					},
+					{
+						'asset_info.data.name': ctx.params.tokenName,
+					},
+				];
 			}
 			this.logger.debug('query', query);
 			let contractMap = Object.values(CONTRACT_TYPE);

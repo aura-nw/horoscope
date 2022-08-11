@@ -248,6 +248,27 @@
                     },
                     {
                         "in": "query",
+                        "name": "tokenName",
+                        "required": false,
+                        "type": "string",
+                        "description": "Token name need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "tokenId",
+                        "required": false,
+                        "type": "string",
+                        "description": "Token id need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "contractAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "Contract address need to query"
+                    },
+                    {
+                        "in": "query",
                         "name": "countTotal",
                         "required": false,
                         "default": false,
