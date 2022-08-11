@@ -48,7 +48,7 @@ export default class CrawlAccountInfoService extends Service {
 			queues: {
 				'asset.tx-handle': {
 					concurrency: parseInt(Config.CONCURRENCY_ASSET_TX_HANDLER, 10),
-					async process(job: Job) {
+					process(job: Job) {
 						job.progress(10);
 						const URL = Utils.getUrlByChainIdAndType(
 							job.data.chainId,
@@ -56,7 +56,7 @@ export default class CrawlAccountInfoService extends Service {
 						);
 
 						// @ts-ignore
-						await this.handleJob(URL, job.data.listTx, job.data.chainId);
+						this.handleJob(URL, job.data.listTx, job.data.chainId);
 						job.progress(100);
 						return true;
 					},
