@@ -167,7 +167,7 @@ export class DbBaseMixin {
 		// );
 		return {
 			...schema,
-			adapter: new MongooseDbAdapter(this.getDBUri(), {
+			adapter: new CustomMongooseDbAdapter(this.getDBUri(), {
 				useUnifiedTopology: true,
 				authSource: 'admin',
 				dbName: this.dbInfo.dbname,
