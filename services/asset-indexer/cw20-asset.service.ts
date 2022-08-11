@@ -198,7 +198,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		this.logger.debug(`Cw20 listOwnerAddress ${JSON.stringify(listOwnerAddress)}`);
 		if (listOwnerAddress != null) {
 			const getInforPromises = await Promise.all(
-				listOwnerAddress.data.accounts.map(async (owner: String) => {
+				listOwnerAddress.map(async (owner: String) => {
 					let balanceInfo: any = await this.broker.call(
 						CW20_ACTION.GET_BALANCE,
 						{ URL, code_id, address, owner },
