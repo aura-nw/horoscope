@@ -7,54 +7,70 @@ import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 
 @Service({
 	name: 'CW20-asset-manager',
-	mixins: [
-		dbCW20AssetMixin,
-	],
+	mixins: [dbCW20AssetMixin],
 	version: 1,
 	actions: {
 		'act-insert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.logger.debug(`ctx.params cw20-asset-manager insert ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(
+					`ctx.params cw20-asset-manager insert ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.adapter.insert(ctx.params);
-			}
+			},
 		},
 		'act-count': {
+			cache: {
+				ttl: 10,
+			},
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.logger.debug(`ctx.params cw20-asset-manager count ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(
+					`ctx.params cw20-asset-manager count ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.adapter.count(ctx.params);
-			}
+			},
 		},
 		'act-find': {
+			cache: {
+				ttl: 10,
+			},
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.logger.debug(`ctx.params cw20-asset-manager find ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(
+					`ctx.params cw20-asset-manager find ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.adapter.find(ctx.params);
-			}
+			},
 		},
 		'act-list': {
+			cache: {
+				ttl: 10,
+			},
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.logger.debug(`ctx.params cw20-asset-manager list ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(
+					`ctx.params cw20-asset-manager list ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.adapter.list(ctx.params);
-			}
+			},
 		},
 		'act-upsert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.logger.debug(`ctx.params cw20-asset-manager upsert ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(
+					`ctx.params cw20-asset-manager upsert ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.upsert_handler(ctx.params);
-			}
-		}
+			},
+		},
 	},
 })
-
 export default class CW20AssetManagerService extends moleculer.Service {
 	async upsert_handler(asset: any) {
 		this.logger.debug(`asset `, asset);
@@ -67,5 +83,5 @@ export default class CW20AssetManagerService extends moleculer.Service {
 			await this.adapter.insert(asset);
 		}
 		return asset._id;
-	};
+	}
 }

@@ -652,14 +652,14 @@ export default class BlockService extends MoleculerDBService<
 			}
 
 			let [resultAsset, resultCount] = await Promise.all([
-				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.find`, {
+				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-find`, {
 					query: query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					sort: sort,
 				}),
 				ctx.params.countTotal === true
-					? this.broker.call(`v1.${ctx.params.contractType}-asset-manager.count`, {
+					? this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-count`, {
 							query: query,
 					  })
 					: 0,
