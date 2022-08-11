@@ -18,6 +18,7 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
 import { Status } from '../../model';
 import { info } from 'console';
+import { ITransaction } from 'entities';
 
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
@@ -81,15 +82,21 @@ export default class CrawlAccountInfoService extends Service {
 		});
 	}
 
-	async handleJob(URL: string, listTx: any[], chainId: string): Promise<any[]> {
+	async handleJob(URL: string, listTx: ITransaction[], chainId: string): Promise<any[]> {
 		let contractListFromEvent: any[] = [];
 		try {
 			if (listTx.length > 0) {
 				for (const tx of listTx) {
-					let log = tx.tx_response.logs[0].events;
-					let attributes = log.find((x: any) => x.type == EVENT_TYPE.EXECUTE)?.attributes;
-					if (attributes) {
-						contractListFromEvent.push(...attributes);
+					this.logger.debug('tx', JSON.stringify(tx));
+					let log = tx.tx_response.logs[0];
+					if (log && log.events) {
+						let events = log.events;
+						let attributes = events.find(
+							(x: any) => x.type == EVENT_TYPE.EXECUTE,
+						)?.attributes;
+						if (attributes) {
+							contractListFromEvent.push(...attributes);
+						}
 					}
 				}
 			}
