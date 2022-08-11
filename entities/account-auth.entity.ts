@@ -24,7 +24,7 @@ export interface IAccountValue {
 
 export interface IAccountResult {
     type: String;
-    value: IAccountValue;
+    value: Object;
 }
 
 export interface IAccount {
@@ -53,8 +53,8 @@ export class AccountValue implements IAccountValue {
 export class AccountResult implements IAccountResult {
     @JsonProperty('type', String)
     type: String = '';
-    @JsonProperty('value', AccountValue, true)
-    value= {} as AccountValue;
+    @JsonProperty('value', Object, true)
+    value= {} as Object;
 }
 
 export class Account implements IAccount {
