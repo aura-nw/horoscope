@@ -56,7 +56,7 @@ export class Utils {
 					queryObject.push({
 						type: type,
 						key: key,
-						value: value,
+						value: value.replace(/(^'|'$)/g, ''),
 					});
 				}
 			}
