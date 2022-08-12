@@ -2,8 +2,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import moleculer, { Context } from 'moleculer';
-import { Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
+import { CursorOptions } from 'moleculer-db';
 
 @Service({
 	name: 'CW20-asset-manager',
@@ -83,5 +84,15 @@ export default class CW20AssetManagerService extends moleculer.Service {
 			await this.adapter.insert(asset);
 		}
 		return asset._id;
+	}
+
+	@Action()
+	async getHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
+		return await this.adapter.find(ctx.params);
+	}
+
+	@Action()
+	async countHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
+		return await this.adapter.count(ctx.params);
 	}
 }

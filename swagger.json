@@ -451,6 +451,18 @@
                         "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the by percent hold cw20, default is false"
                     }
                 ],
                 "responses": {

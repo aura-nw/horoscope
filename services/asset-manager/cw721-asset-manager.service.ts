@@ -2,8 +2,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import moleculer, { Context } from 'moleculer';
-import { Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { Action, Method, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
+import { GetHolderRequest } from 'types';
+import { CursorOptions, FilterOptions } from 'moleculer-db';
+import _ from 'lodash';
 
 @Service({
 	name: 'CW721-asset-manager',
@@ -82,5 +85,57 @@ export default class CW721AssetManagerService extends moleculer.Service {
 			await this.adapter.insert(asset);
 		}
 		return asset._id;
+	}
+
+	@Action()
+	async getHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
+		let result = await this.adapter.aggregate([
+			{
+				$match: ctx.params.query,
+			},
+			{
+				$group: {
+					_id: {
+						chain_id: '$custom_info.chain_id',
+						contract_address: '$contract_address',
+						owner: '$owner',
+					},
+					quantity: { $sum: 1 },
+				},
+			},
+			{
+				$sort: ctx.params.sort,
+			},
+			{
+				$limit: ctx.params.limit,
+			},
+			{
+				$skip: ctx.params.offset,
+			},
+		]);
+		return result;
+	}
+
+	@Action()
+	async countHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
+		let result = await this.adapter.aggregate([
+			{
+				$match: ctx.params.query,
+			},
+			{
+				$group: {
+					_id: {
+						chain_id: '$custom_info.chain_id',
+						contract_address: '$contract_address',
+						owner: '$owner',
+					},
+					quantity: { $sum: 1 },
+				},
+			},
+			{
+				$count: 'count',
+			},
+		]);
+		return result[0].count;
 	}
 }

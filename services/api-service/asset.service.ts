@@ -520,7 +520,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          description: "Contract type need to query"
 	 *        - in: query
 	 *          name: contractAddress
-	 *          required: false
+	 *          required: true
 	 *          type: string
 	 *          description: "asset/contract address need to query"
 	 *        - in: query
@@ -547,6 +547,13 @@ export default class BlockService extends MoleculerDBService<
 	 *          default:
 	 *          type: string
 	 *          description: "key for next page"
+	 *        - in: query
+	 *          name: reverse
+	 *          required: false
+	 *          enum: ["true","false"]
+	 *          default: false
+	 *          type: string
+	 *          description: "reverse is true if you want to get the by percent hold cw20, default is false"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -565,7 +572,7 @@ export default class BlockService extends MoleculerDBService<
 			},
 			contractAddress: {
 				type: 'string',
-				optional: true,
+				optional: false,
 				default: null,
 			},
 			chainid: {
@@ -604,6 +611,12 @@ export default class BlockService extends MoleculerDBService<
 				optional: true,
 				default: null,
 			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
 		},
 		cache: {
 			ttl: 10,
@@ -627,13 +640,17 @@ export default class BlockService extends MoleculerDBService<
 
 		try {
 			let query: QueryOptions = {};
-			let sort = ctx.params.reverse ? '_id' : '-_id';
+			let sort = {};
 			switch (ctx.params.contractType) {
 				case CONTRACT_TYPE.CW721:
-					sort = ctx.params.reverse ? '_id' : '-_id';
+					sort = ctx.params.reverse
+						? { quantity: 1, updatedAt: 1 }
+						: { quantity: -1, updatedAt: -1 };
 					break;
 				case CONTRACT_TYPE.CW20:
-					sort = ctx.params.reverse ? '-percent_hold' : 'percent_hold';
+					sort = ctx.params.reverse
+						? { percent_hold: -1, updatedAt: 1 }
+						: { percent_hold: 1, updatedAt: -1 };
 					query['balance'] = {
 						$ne: '0',
 					};
@@ -655,16 +672,19 @@ export default class BlockService extends MoleculerDBService<
 			}
 
 			let [resultAsset, resultCount] = await Promise.all([
-				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-find`, {
+				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.getHolderByAddress`, {
 					query: query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					sort: sort,
 				}),
 				ctx.params.countTotal === true
-					? this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-count`, {
-							query: query,
-					  })
+					? this.broker.call(
+							`v1.${ctx.params.contractType}-asset-manager.countHolderByAddress`,
+							{
+								query: query,
+							},
+					  )
 					: 0,
 			]);
 
@@ -674,11 +694,6 @@ export default class BlockService extends MoleculerDBService<
 				data: {
 					resultAsset,
 					resultCount,
-					nextKey:
-						needNextKey && resultAsset
-							? //@ts-ignore
-							  resultAsset[resultAsset.length - 1]?._id
-							: null,
 				},
 			};
 		} catch (error) {
