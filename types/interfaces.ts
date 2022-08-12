@@ -21,17 +21,9 @@ export interface DBInfo {
 	port: number;
 	dbname: string;
 	collection: string;
-}
-
-export interface DBInfo {
-	dialect: DBDialog;
-	user: string;
-	password: string;
-	host: string;
-	port: number;
-	dbname: string;
-	collection: string;
 	retryWrites: string;
+	replicaSet: string;
+	readPreference: string;
 }
 
 export interface RouteSchemaOpts {
@@ -78,10 +70,15 @@ export interface ApiGatewayMeta {
 	$location?: string;
 }
 
-export interface NetworkInfo {
+export interface INetworkInfo {
 	chainName: string;
 	chainId: string;
 	RPC: string[];
 	LCD: string[];
 	prefixAddress: string;
+}
+
+export interface ISearchTxQuery {
+	type: string;
+	key: string;
 }

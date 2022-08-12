@@ -1,4 +1,4 @@
-import { NetworkInfo } from 'types';
+import { INetworkInfo } from 'types';
 
 // export const networkFile:
 
@@ -14,6 +14,7 @@ export const PROPOSAL_STATUS = {
 	PROPOSAL_STATUS_PASSED: 'PROPOSAL_STATUS_PASSED',
 	PROPOSAL_STATUS_REJECTED: 'PROPOSAL_STATUS_REJECTED',
 	PROPOSAL_STATUS_FAILED: 'PROPOSAL_STATUS_FAILED',
+	PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT: 'PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT',
 };
 
 export const CONST_CHAR = {
@@ -45,7 +46,7 @@ export const MSG_TYPE = {
 	MSG_UNDELEGATE: '/cosmos.staking.v1beta1.MsgUndelegate',
 };
 
-export const LIST_NETWORK: NetworkInfo[] = require('../network.json');
+export const LIST_NETWORK: INetworkInfo[] = require('../network.json');
 
 export const EVENT_TYPE = {
 	WASM: 'wasm',
@@ -69,9 +70,28 @@ export const CW20_ACTION = {
 };
 
 export const CODEID_MANAGER_ACTION = {
-	UPDATE_MANY: 'v1.codeid-manager.updateMany',
-	FIND: 'v1.codeid-manager.findByCondition',
+	UPDATE_MANY: 'v1.codeid-manager.act-updateMany',
+	FIND: 'v1.codeid-manager.act-find',
+	// FIND: 'v1.codeid-manager.findByCondition',
 	CHECK_STATUS: 'v1.codeid-manager.checkStatus',
+	// CREATE: 'v1.codeid-manager.act-create',
+	INSERT: 'v1.codeid-manager.act-insert',
+};
+
+export const CW20_MANAGER_ACTION = {
+	FIND: 'v1.cw20-asset-manager.act-find',
+	COUNT: 'v1.cw20-asset-manager.act-count',
+	INSERT: 'v1.cw20-asset-manager.act-insert',
+	LIST: 'v1.cw20-asset-manager.act-list',
+	UPSERT: 'v1.cw20-asset-manager.act-upsert',
+};
+
+export const CW721_MANAGER_ACTION = {
+	FIND: 'v1.cw721-asset-manager.act-find',
+	COUNT: 'v1.cw721-asset-manager.act-count',
+	INSERT: 'v1.cw721-asset-manager.act-insert',
+	LIST: 'v1.cw721-asset-manager.act-list',
+	UPSERT: 'v1.cw721-asset-manager.act-upsert',
 };
 
 export const CW721_MEDIA_MANAGER_ACTION = {
@@ -108,4 +128,62 @@ export const BOND_STATUS = {
 	BOND_STATUS_UNBONDED: 'BOND_STATUS_UNBONDED',
 	BOND_STATUS_UNBONDING: 'BOND_STATUS_UNBONDING',
 	BOND_STATUS_BONDED: 'BOND_STATUS_BONDED',
+};
+
+export const MODULE_PARAM = {
+	BANK: 'bank',
+	GOVERNANCE: 'gov',
+	DISTRIBUTION: 'distribution',
+	STAKING: 'staking',
+	SLASHING: 'slashing',
+	IBC_TRANSFER: 'ibc-transfer',
+	MINT: 'mint',
+};
+
+export const BASE_64_ENCODE = {
+	RECIPIENT: 'cmVjaXBpZW50',
+	SENDER: 'c2VuZGVy',
+};
+
+export const SEARCH_TX_QUERY = {
+	TRANSFER_SENDER: {
+		type: 'transfer',
+		key: 'sender',
+	},
+	TRANSFER_RECIPIENT: {
+		type: 'transfer',
+		key: 'recipient',
+	},
+	PROPOSAL_VOTE: {
+		type: 'proposal_vote',
+		key: 'proposal_id',
+	},
+	PROPOSAL_DEPOSIT: {
+		type: 'proposal_deposit',
+		key: 'proposal_id',
+	},
+	DELEGATE_TO_VALIDATOR: {
+		type: 'delegate',
+		key: 'validator',
+	},
+	REDELEGATE_TO_VALIDATOR: {
+		type: 'redelegate',
+		key: 'destination_validator',
+	},
+	INSTANTIATE_CONTRACT: {
+		type: 'instantiate',
+		key: '_contract_address',
+	},
+	EXECUTE_CONTRACT: {
+		type: 'execute',
+		key: '_contract_address',
+	},
+	WASM_CONTRACT_ADDRESS: {
+		type: 'wasm',
+		key: '_contract_address',
+	},
+	WASM_TOKEN_ID: {
+		type: 'wasm',
+		key: 'token_id',
+	},
 };

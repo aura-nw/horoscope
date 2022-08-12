@@ -49,7 +49,7 @@ export default class ProposalService extends MoleculerDBService<
 	 *          name: chainid
 	 *          required: true
 	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: proposalId
@@ -74,6 +74,13 @@ export default class ProposalService extends MoleculerDBService<
 	 *          default:
 	 *          type: string
 	 *          description: "key for next page"
+	 *        - in: query
+	 *          name: reverse
+	 *          required: false
+	 *          enum: ["true","false"]
+	 *          default: false
+	 *          type: string
+	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -98,6 +105,7 @@ export default class ProposalService extends MoleculerDBService<
 				default: 10,
 				integer: true,
 				convert: true,
+				min: 1,
 				max: 100,
 			},
 			pageOffset: {
@@ -106,12 +114,19 @@ export default class ProposalService extends MoleculerDBService<
 				default: 0,
 				integer: true,
 				convert: true,
+				min: 0,
 				max: 100,
 			},
 			nextKey: {
 				type: 'string',
 				optional: true,
 				default: null,
+			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
 			},
 		},
 		cache: {
@@ -135,6 +150,7 @@ export default class ProposalService extends MoleculerDBService<
 		}
 		try {
 			const proposalId = ctx.params.proposalId;
+			const sort = ctx.params.reverse ? '-_id' : '_id';
 			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
 			let needNextKey = true;
 			if (proposalId) {
@@ -153,7 +169,7 @@ export default class ProposalService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-proposal_id',
+					sort: sort,
 				}),
 				this.adapter.count({
 					query: query,

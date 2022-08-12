@@ -45,6 +45,8 @@ const genericDbInfo = (where: string): DBInfo => ({
 	dbname: getDbInfo(where, 'DBNAME', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),
 	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false'),
+	replicaSet: getDbInfo(where, 'REPLICA_SET', ''),
+	readPreference: getDbInfo(where, 'READ_PREFERENCE', 'primary'),
 });
 
 export default class ConfigClass {
@@ -92,6 +94,7 @@ export default class ConfigClass {
 	public static DB_ACCOUNT_SPENDABLE_BALANCES: any;
 	public static DB_ACCOUNT_REDELEGATIONS: any;
 	public static DB_ACCOUNT_UNBONDS: any;
+	public static DB_TRANSACTION_AGGREGATE: any;
 
 	public constructor() {
 		Object.keys(configObj).forEach((key: string) => {
@@ -127,5 +130,6 @@ export default class ConfigClass {
 		this.DB_ACCOUNT_SPENDABLE_BALANCES = genericDbInfo('ACCOUNT_SPENDABLE_BALANCES');
 		this.DB_ACCOUNT_REDELEGATIONS = genericDbInfo('ACCOUNT_REDELEGATIONS');
 		this.DB_ACCOUNT_UNBONDS = genericDbInfo('ACCOUNT_UNBONDS');
+		this.DB_TRANSACTION_AGGREGATE = genericDbInfo('TRANSACTION_AGGREGATE');
 	}
 }

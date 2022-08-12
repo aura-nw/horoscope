@@ -10,15 +10,7 @@ const definition: definitionType<IAccountAuth> = (collection?: string) => ({
 		height: String,
 		result: {
 			type: { type: String },
-			value: {
-				address: String,
-				public_key: {
-					type: { type: String },
-					value: String,
-				},
-				account_number: String,
-				sequence: String,
-			}
+			value: Object,
 		}
 	},
 	custom_info: {

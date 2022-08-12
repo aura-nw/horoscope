@@ -23,7 +23,6 @@ import {
 import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
 
-
 const tlBucket = 60000;
 const swMiddleware = swStats.getMiddleware({
 	name: 'swagger-stats',
@@ -107,10 +106,19 @@ const swMiddleware = swStats.getMiddleware({
 					// 'v1.proposal.getByChain',
 					// 'v1.validator.getByChain',
 					// 'v1.block.getByChain',
-					'v1.asset.*',
 					// 'v1.codeid.*',
 					// 'v1.transaction.getByChain',
 					'v1.test.*',
+					'v1.account-info.*',
+					'v1.account-unbonds.getByAddress',
+					'v1.proposal.getByChain',
+					'v1.validator.getByChain',
+					'v1.block.getByChain',
+					// 'v1.asset.index',
+					'v1.asset.*',
+					'v1.codeid.*',
+					'v1.transaction.getByChain',
+					'v1.param.getByChain',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 				use: [swMiddleware],

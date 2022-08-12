@@ -17,3 +17,4 @@ export * from './db-account-auth.mixin';
 export * from './db-account-redelegations.mixin';
 export * from './db-account-unbonds.mixin';
 export * from './db-supply.mixin';
+export * from './db-transaction-aggregate.mixin';

@@ -36,3 +36,5 @@ export default class RedisMixin implements Partial<ServiceSchema>, ThisType<Serv
 		return this.schema;
 	}
 }
+
+export const redisMixin = new RedisMixin().start();

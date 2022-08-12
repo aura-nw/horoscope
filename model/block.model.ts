@@ -36,7 +36,7 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 			app_hash: String,
 			last_results_hash: String,
 			evidence_hash: String,
-			proposer_address: String,
+			proposer_address: { type: String, index: true },
 		},
 		data: {
 			txs: [String],
@@ -75,6 +75,6 @@ export const blockMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection: collection,
 	});
-	schema.index({ 'block.header.height': 1, 'custom_info.chain_id': 1 });
+	schema.index({ 'block.header.height': -1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

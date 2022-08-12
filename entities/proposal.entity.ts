@@ -1,7 +1,7 @@
 import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
-import { Coin } from './coin.entity';
+import { Coin, ICoin } from './coin.entity';
 import { NumericConverter } from './converters/numeric.converter';
 import { DateConverter } from './converters/date.converter';
 
@@ -10,16 +10,47 @@ export interface IProposal {
 	proposal_id: Number | null;
 	content: Content;
 	status: String;
-	final_tally_result: Final_tally_result;
+	tally: IFinalTallyResult;
+	final_tally_result: IFinalTallyResult;
 	submit_time: Date | null;
 	deposit_end_time: Date | null;
-	total_deposit: Deposit[];
+	deposit: IDeposit;
+	total_deposit: ICoin[];
 	voting_start_time: Date | null;
 	voting_end_time: Date | null;
 }
 
+export interface IDepositTx {
+	depositor: String;
+	txhash: String;
+	amount: ICoin[];
+}
+
+export interface IVoteTx {
+	voter: String;
+	txhash: String;
+	option: String;
+}
+export interface IDeposit {
+	proposal_id: String;
+	depositor: String;
+	amount: ICoin[];
+}
+
+export interface IChanges {
+	subspace: String;
+	key: String;
+	value: String;
+}
+
+export interface IFinalTallyResult {
+	yes: String;
+	no: String;
+	abstain: String;
+	no_with_veto: String;
+}
 @JsonObject('Changes')
-export class Changes {
+export class Changes implements IChanges {
 	@JsonProperty('subspace', String)
 	subspace: String = '';
 	@JsonProperty('key', String)
@@ -29,7 +60,7 @@ export class Changes {
 }
 
 @JsonObject('Final_tally_result')
-export class Final_tally_result {
+export class FinalTallyResult implements IFinalTallyResult {
 	@JsonProperty('yes', String)
 	yes: String = '';
 	@JsonProperty('no', String)
@@ -41,15 +72,25 @@ export class Final_tally_result {
 }
 
 @JsonObject('Deposit')
-export class Deposit {
-	@JsonProperty('denom', String)
-	denom: String = '';
-	@JsonProperty('amount', String)
-	amount: String = '';
+export class Deposit implements IDeposit {
+	@JsonProperty('proposal_id', String)
+	proposal_id: String = '';
+	@JsonProperty('depositor', String)
+	depositor: String = '';
+	@JsonProperty('amount', [Coin])
+	amount: Coin[] = [];
 }
 
+export interface IContent {
+	type: String;
+	title: String;
+	description: String;
+	changes: Changes[];
+	recipient: String;
+	amount: Coin[];
+}
 @JsonObject('content')
-export class Content {
+export class Content implements IContent {
 	@JsonProperty('@type', String)
 	type: String = '';
 	@JsonProperty('title', String)
@@ -74,19 +115,21 @@ export class ProposalEntity implements IProposal {
 	content = {} as Content;
 	@JsonProperty('status', String)
 	status: String = '';
-	@JsonProperty('final_tally_result', Final_tally_result)
-	final_tally_result: Final_tally_result = {} as Final_tally_result;
+	@JsonProperty('final_tally_result', FinalTallyResult)
+	final_tally_result: FinalTallyResult = {} as FinalTallyResult;
 	@JsonProperty('submit_time', DateConverter)
 	submit_time = null;
 	@JsonProperty('deposit_end_time', DateConverter)
 	deposit_end_time = null;
-	@JsonProperty('total_deposit', [Deposit])
-	total_deposit: Deposit[] = [];
+	@JsonProperty('total_deposit', [Coin])
+	total_deposit: Coin[] = [];
 	@JsonProperty('voting_start_time', DateConverter)
 	voting_start_time = null;
 	@JsonProperty('voting_end_time', DateConverter)
 	voting_end_time = null;
 
+	tally: IFinalTallyResult = {} as IFinalTallyResult;
+	deposit: IDeposit = {} as IDeposit;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

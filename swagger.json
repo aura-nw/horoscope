@@ -1,6 +1,6 @@
 {
     "info": {
-        "title": "Indexer API Documentation",
+        "title": "Horoscope API Documentation",
         "version": "1.0.0",
         "description": "Indexer for multiple Cosmos Network"
     },
@@ -32,6 +32,16 @@
                     {
                         "in": "query",
                         "name": "chainId",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1",
+                            "cosmoshub-4"
+                        ],
                         "required": true,
                         "type": "string",
                         "description": "Chain Id of network need to query"
@@ -72,8 +82,67 @@
                         "in": "query",
                         "name": "chainId",
                         "required": true,
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1",
+                            "cosmoshub-4"
+                        ],
                         "type": "string",
                         "description": "Chain Id of network need to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/account-unbonds": {
+            "get": {
+                "tags": [
+                    "Account Info"
+                ],
+                "summary": "Get account undelegations",
+                "description": "Get account undelegations",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1",
+                            "cosmoshub-4"
+                        ],
+                        "type": "string",
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "address",
+                        "required": true,
+                        "type": "string",
+                        "description": "Address need to query"
                     }
                 ],
                 "responses": {
@@ -164,8 +233,39 @@
                         "in": "query",
                         "name": "chainid",
                         "required": false,
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1",
+                            "cosmoshub-4"
+                        ],
                         "type": "string",
                         "description": "Chain Id of network need to query(if null it will return asset on all chainid)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "tokenName",
+                        "required": false,
+                        "type": "string",
+                        "description": "Token name need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "tokenId",
+                        "required": false,
+                        "type": "string",
+                        "description": "Token id need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "contractAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "Contract address need to query"
                     },
                     {
                         "in": "query",
@@ -205,6 +305,10 @@
                         "name": "contractType",
                         "required": true,
                         "type": "string",
+                        "enum": [
+                            "CW721",
+                            "CW20"
+                        ],
                         "description": "Contract type need to query"
                     },
                     {
@@ -212,7 +316,109 @@
                         "name": "chainid",
                         "required": false,
                         "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1",
+                            "cosmoshub-4"
+                        ],
                         "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "countTotal",
+                        "required": false,
+                        "default": false,
+                        "type": "boolean",
+                        "description": "count total record"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/asset/holder": {
+            "get": {
+                "tags": [
+                    "Asset"
+                ],
+                "summary": "Get holder by asset",
+                "description": "Get holder by asset",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1",
+                            "cosmoshub-4"
+                        ],
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "contractType",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "CW721",
+                            "CW20"
+                        ],
+                        "description": "Contract type need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "contractAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "asset/contract address need to query"
                     },
                     {
                         "in": "query",
@@ -282,7 +488,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "type": "string",
                         "description": "Chain Id of network need to query"
@@ -307,6 +514,13 @@
                         "required": false,
                         "type": "string",
                         "description": "operator address who proposed this block"
+                    },
+                    {
+                        "in": "query",
+                        "name": "consensusHexAddress",
+                        "required": false,
+                        "type": "string",
+                        "description": "consensus hex address who proposed this block"
                     },
                     {
                         "in": "query",
@@ -336,9 +550,20 @@
                         "in": "query",
                         "name": "nextKey",
                         "required": false,
-                        "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
                     }
                 ],
                 "responses": {
@@ -370,7 +595,16 @@
                         "name": "chainId",
                         "required": true,
                         "type": "string",
-                        "example": "aura-devnet",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1",
+                            "cosmoshub-4"
+                        ],
                         "description": "Chain Id of network"
                     },
                     {
@@ -417,9 +651,92 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register result"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
+        "/v1/param": {
+            "get": {
+                "tags": [
+                    "Param"
+                ],
+                "summary": "Get param",
+                "description": "Get param",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "aura-testnet",
+                            "serenity-testnet-001",
+                            "halo-testnet-001",
+                            "theta-testnet-001",
+                            "osmo-test-4",
+                            "evmos_9000-4",
+                            "euphoria-1",
+                            "cosmoshub-4"
+                        ],
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "module",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "bank",
+                            "gov",
+                            "distribution",
+                            "staking",
+                            "slashing",
+                            "ibc-transfer",
+                            "mint"
+                        ],
+                        "description": "module need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "default": 10,
+                        "type": "number",
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "default": 0,
+                        "type": "number",
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "default": null,
+                        "type": "string",
+                        "description": "key for next page"
                     }
                 ],
                 "responses": {
@@ -458,7 +775,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     },
@@ -492,6 +810,18 @@
                         "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
                     }
                 ],
                 "responses": {
@@ -561,7 +891,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     },
@@ -578,6 +909,60 @@
                         "required": false,
                         "type": "string",
                         "description": "Transaction hash"
+                    },
+                    {
+                        "in": "query",
+                        "name": "address",
+                        "required": false,
+                        "type": "string",
+                        "description": "Address in transaction"
+                    },
+                    {
+                        "in": "query",
+                        "name": "searchType",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "transfer",
+                            "proposal_deposit",
+                            "proposal_vote",
+                            "delegate",
+                            "redelegate",
+                            "instantiate",
+                            "execute",
+                            "wasm"
+                        ],
+                        "description": "Search type event"
+                    },
+                    {
+                        "in": "query",
+                        "name": "searchKey",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "sender",
+                            "recipient",
+                            "proposal_id",
+                            "validator",
+                            "destination_validator",
+                            "_contract_address",
+                            "token_id"
+                        ],
+                        "description": "Search key event"
+                    },
+                    {
+                        "in": "query",
+                        "name": "searchValue",
+                        "required": false,
+                        "type": "string",
+                        "description": "Search value event"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "required": false,
+                        "type": "string",
+                        "description": "Search query with format A.B=C,D.E=F"
                     },
                     {
                         "in": "query",
@@ -610,6 +995,18 @@
                         "default": null,
                         "type": "string",
                         "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "enum": [
+                            "true",
+                            "false"
+                        ],
+                        "default": false,
+                        "type": "string",
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
                     }
                 ],
                 "responses": {
@@ -648,7 +1045,8 @@
                             "theta-testnet-001",
                             "osmo-test-4",
                             "evmos_9000-4",
-                            "euphoria-1"
+                            "euphoria-1",
+                            "cosmoshub-4"
                         ],
                         "description": "Chain Id of network need to query"
                     },

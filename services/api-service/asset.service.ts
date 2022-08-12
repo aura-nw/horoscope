@@ -15,6 +15,7 @@ import {
 	ErrorMessage,
 	GetAssetByContractTypeAddressRequest,
 	GetAssetByOwnerAddressRequest,
+	GetHolderRequest,
 	MoleculerDBService,
 	ResponseDto,
 	RestOptions,
@@ -26,8 +27,13 @@ import { Types } from 'mongoose';
 import { CodeIDStatus } from '../../model/codeid.model';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
-import { CODEID_MANAGER_ACTION, CONTRACT_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
-import { Utils } from 'utils/utils';
+import {
+	CODEID_MANAGER_ACTION,
+	CONTRACT_TYPE,
+	LIST_NETWORK,
+	URL_TYPE_CONSTANTS,
+} from '../../common/constant';
+import { Utils } from '../../utils/utils';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -38,10 +44,10 @@ import { Utils } from 'utils/utils';
 	// mixins: [dbCW721AssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
-{
-	rest: 'v1/asset';
-},
-{}
+	{
+		rest: 'v1/asset';
+	},
+	{}
 > {
 	/**
 	 *  @swagger
@@ -69,7 +75,7 @@ export default class BlockService extends MoleculerDBService<
 	 *              contractType:
 	 *                required: true
 	 *                type: string
-	 *                enum: 
+	 *                enum:
 	 *                - "CW721"
 	 *                description: "Type of contract want to register"
 	 *              chainId:
@@ -89,7 +95,13 @@ export default class BlockService extends MoleculerDBService<
 		params: {
 			codeId: ['number|integer|positive'],
 			contractType: { type: 'string', optional: false, enum: Object.values(CONTRACT_TYPE) },
-			chainId: { type: 'string', optional: false, enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			chainId: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
 		},
 	})
 	async index(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
@@ -99,14 +111,19 @@ export default class BlockService extends MoleculerDBService<
 		const chain_id = ctx.params.chainId;
 		const contract_type = ctx.params.contractType;
 		return await this.broker
-			.call(CODEID_MANAGER_ACTION.FIND, { code_id, 'custom_info.chain_id': chain_id })
+			.call(CODEID_MANAGER_ACTION.FIND, {
+				query: { code_id, 'custom_info.chain_id': chain_id },
+			})
 			.then(async (res: any) => {
 				this.logger.info('codeid-manager.find res', res);
 				if (res.length > 0) {
 					switch (res[0].status) {
 						case CodeIDStatus.REJECTED:
 							if (res[0].contract_type !== contract_type) {
-								const condition = { code_id: code_id, 'custom_info.chain_id': chain_id };
+								const condition = {
+									code_id: code_id,
+									'custom_info.chain_id': chain_id,
+								};
 								this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
 									condition,
 									update: { status: CodeIDStatus.WAITING, contract_type },
@@ -122,21 +139,24 @@ export default class BlockService extends MoleculerDBService<
 							break;
 					}
 				} else {
-					this.broker.call('v1.codeid-manager.create', {
+					this.broker.call(CODEID_MANAGER_ACTION.INSERT, {
 						_id: new Types.ObjectId(),
 						code_id,
 						status: CodeIDStatus.WAITING,
 						contract_type,
 						custom_info: {
 							chain_id,
-							chain_name: LIST_NETWORK.find(x => x.chainId == chain_id)?.chainName,
-						}
+							chain_name: LIST_NETWORK.find((x) => x.chainId == chain_id)?.chainName,
+						},
 					});
 					registed = true;
 				}
 				this.logger.debug('codeid-manager.registed:', registed);
 				if (registed) {
-					const URL = await Utils.getUrlByChainIdAndType(chain_id, URL_TYPE_CONSTANTS.LCD);
+					const URL = await Utils.getUrlByChainIdAndType(
+						chain_id,
+						URL_TYPE_CONSTANTS.LCD,
+					);
 					this.broker.emit(`${contract_type}.validate`, { URL, chain_id, code_id });
 				}
 				return (response = {
@@ -176,8 +196,24 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: chainid
 	 *          required: false
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          type: string
 	 *          description: "Chain Id of network need to query(if null it will return asset on all chainid)"
+	 *        - in: query
+	 *          name: tokenName
+	 *          required: false
+	 *          type: string
+	 *          description: "Token name need to query"
+	 *        - in: query
+	 *          name: tokenId
+	 *          required: false
+	 *          type: string
+	 *          description: "Token id need to query"
+	 *        - in: query
+	 *          name: contractAddress
+	 *          required: false
+	 *          type: string
+	 *          description: "Contract address need to query"
 	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
@@ -195,7 +231,16 @@ export default class BlockService extends MoleculerDBService<
 		name: 'getByOwner',
 		params: {
 			owner: { type: 'string', optional: false },
-			chainid: { type: 'string', optional: true, enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			chainid: {
+				type: 'string',
+				optional: true,
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
+			tokenName: { type: 'string', optional: true },
+			tokenId: { type: 'string', optional: true },
+			contractAddress: { type: 'string', optional: true },
 			countTotal: {
 				type: 'boolean',
 				optional: true,
@@ -214,22 +259,46 @@ export default class BlockService extends MoleculerDBService<
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
+			if (ctx.params.tokenId) {
+				query['token_id'] = ctx.params.tokenId;
+			}
+			if (ctx.params.contractAddress) {
+				query['contract_address'] = ctx.params.contractAddress;
+			}
+			if (ctx.params.tokenName) {
+				query['$or'] = [
+					{
+						token_id: ctx.params.tokenName,
+					},
+					{
+						'asset_info.data.name': ctx.params.tokenName,
+					},
+				];
+			}
 			this.logger.debug('query', query);
 			let contractMap = Object.values(CONTRACT_TYPE);
 			let assetsMap: Map<any, any> = new Map();
-			const getData = Promise.all(contractMap.map(async (type: string) => {
-				const asset: any[] = await this.broker.call(`v1.${type}.find`, {
-					query,
-				});
-				this.logger.info(`asset: ${JSON.stringify(asset)}`);
-				let count = 0;
-				if (ctx.params.countTotal === true) {
-					count = await this.broker.call(`v1.${type}.count`, {
-						query,
-					});
-				}
-				assetsMap.set(type, { asset, count });
-			}));
+			const getData = Promise.all(
+				contractMap.map(async (contract_type: string) => {
+					const asset: any[] = await this.broker.call(
+						`v1.${contract_type}-asset-manager.act-find`,
+						{
+							query,
+						},
+					);
+					this.logger.info(`asset: ${JSON.stringify(asset)}`);
+					let count = 0;
+					if (ctx.params.countTotal === true) {
+						count = await this.broker.call(
+							`v1.${contract_type}-asset-manager.act-count`,
+							{
+								query,
+							},
+						);
+					}
+					assetsMap.set(contract_type, { asset, count });
+				}),
+			);
 			await getData;
 			const assetObj = Object.fromEntries(assetsMap);
 			this.logger.debug(`assetObj: ${JSON.stringify(assetObj)}`);
@@ -253,7 +322,6 @@ export default class BlockService extends MoleculerDBService<
 		return response;
 	}
 
-
 	/**
 	 *  @swagger
 	 *  /v1/asset/getByContractType:
@@ -271,11 +339,13 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: contractType
 	 *          required: true
 	 *          type: string
+	 *          enum: ["CW721", "CW20"]
 	 *          description: "Contract type need to query"
 	 *        - in: query
 	 *          name: chainid
 	 *          required: false
 	 *          type: string
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: pageLimit
@@ -311,14 +381,21 @@ export default class BlockService extends MoleculerDBService<
 	@Get('/getByContractType', {
 		name: 'getByContractType',
 		params: {
-			contractType: { type: 'string', optional: false },
-			chainid: { type: 'string', optional: true, enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			contractType: { type: 'string', optional: false, enum: Object.values(CONTRACT_TYPE) },
+			chainid: {
+				type: 'string',
+				optional: true,
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
 			pageLimit: {
 				type: 'number',
 				optional: true,
 				default: 10,
 				integer: true,
 				convert: true,
+				min: 1,
 				max: 100,
 			},
 			pageOffset: {
@@ -327,6 +404,7 @@ export default class BlockService extends MoleculerDBService<
 				default: 0,
 				integer: true,
 				convert: true,
+				min: 0,
 				max: 100,
 			},
 			countTotal: {
@@ -345,7 +423,9 @@ export default class BlockService extends MoleculerDBService<
 			ttl: 10,
 		},
 	})
-	async getByContractType(ctx: Context<GetAssetByContractTypeAddressRequest, Record<string, unknown>>) {
+	async getByContractType(
+		ctx: Context<GetAssetByContractTypeAddressRequest, Record<string, unknown>>,
+	) {
 		let response: ResponseDto = {} as ResponseDto;
 		if (ctx.params.nextKey) {
 			try {
@@ -374,16 +454,23 @@ export default class BlockService extends MoleculerDBService<
 
 			this.logger.info('query', query);
 
-			const assets: any[] = await this.broker.call(`v1.${ctx.params.contractType}.find`, {
-				query,
-				limit: ctx.params.pageLimit,
-				offset: ctx.params.pageOffset,
-			});
+			const assets: any[] = await this.broker.call(
+				`v1.${ctx.params.contractType}-asset-manager.act-find`,
+				{
+					query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					sort: '-_id',
+				},
+			);
 			let count = 0;
 			if (ctx.params.countTotal === true) {
-				count = await this.broker.call(`v1.${ctx.params.contractType}.count`, {
-					query,
-				});
+				count = await this.broker.call(
+					`v1.${ctx.params.contractType}-asset-manager.act-count`,
+					{
+						query,
+					},
+				);
 			}
 			response = {
 				code: ErrorCode.SUCCESSFUL,
@@ -392,6 +479,206 @@ export default class BlockService extends MoleculerDBService<
 					assets,
 					count,
 					nextKey: needNextKey ? assets[assets.length - 1]?._id : null,
+				},
+			};
+		} catch (error) {
+			response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					error,
+				},
+			};
+		}
+		return response;
+	}
+
+	/**
+	 *  @swagger
+	 *  /v1/asset/holder:
+	 *    get:
+	 *      tags:
+	 *        - Asset
+	 *      summary: Get holder by asset
+	 *      description: Get holder by asset
+	 *      produces:
+	 *        - application/json
+	 *      consumes:
+	 *        - application/json
+	 *      parameters:
+	 *        - in: query
+	 *          name: chainid
+	 *          required: true
+	 *          type: string
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          description: "Chain Id of network need to query"
+	 *        - in: query
+	 *          name: contractType
+	 *          required: true
+	 *          type: string
+	 *          enum: ["CW721", "CW20"]
+	 *          description: "Contract type need to query"
+	 *        - in: query
+	 *          name: contractAddress
+	 *          required: false
+	 *          type: string
+	 *          description: "asset/contract address need to query"
+	 *        - in: query
+	 *          name: pageLimit
+	 *          required: false
+	 *          default: 10
+	 *          type: number
+	 *          description: "number record return in a page"
+	 *        - in: query
+	 *          name: pageOffset
+	 *          required: false
+	 *          default: 0
+	 *          type: number
+	 *          description: "Page number, start at 0"
+	 *        - in: query
+	 *          name: countTotal
+	 *          required: false
+	 *          default: false
+	 *          type: boolean
+	 *          description: "count total record"
+	 *        - in: query
+	 *          name: nextKey
+	 *          required: false
+	 *          default:
+	 *          type: string
+	 *          description: "key for next page"
+	 *      responses:
+	 *        '200':
+	 *          description: Register result
+	 *        '422':
+	 *          description: Missing parameters
+	 *
+	 */
+	@Get('/holder', {
+		name: 'holder',
+		params: {
+			contractType: {
+				type: 'string',
+				optional: false,
+				enum: Object.keys(CONTRACT_TYPE),
+				default: null,
+			},
+			contractAddress: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+			countTotal: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+		},
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getHolderByAddress(ctx: Context<GetHolderRequest, Record<string, unknown>>) {
+		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
+
+		try {
+			let query: QueryOptions = {};
+			let sort = ctx.params.reverse ? '_id' : '-_id';
+			switch (ctx.params.contractType) {
+				case CONTRACT_TYPE.CW721:
+					sort = ctx.params.reverse ? '_id' : '-_id';
+					break;
+				case CONTRACT_TYPE.CW20:
+					sort = ctx.params.reverse ? '-percent_hold' : 'percent_hold';
+					query['balance'] = {
+						$ne: '0',
+					};
+					break;
+				default:
+					break;
+			}
+			if (ctx.params.chainid) {
+				query['custom_info.chain_id'] = ctx.params.chainid;
+			}
+			let needNextKey = true;
+			if (ctx.params.nextKey) {
+				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				ctx.params.pageOffset = 0;
+				ctx.params.countTotal = false;
+			}
+			if (ctx.params.contractAddress) {
+				query['contract_address'] = ctx.params.contractAddress;
+			}
+
+			let [resultAsset, resultCount] = await Promise.all([
+				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-find`, {
+					query: query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					sort: sort,
+				}),
+				ctx.params.countTotal === true
+					? this.broker.call(`v1.${ctx.params.contractType}-asset-manager.act-count`, {
+							query: query,
+					  })
+					: 0,
+			]);
+
+			response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					resultAsset,
+					resultCount,
+					nextKey:
+						needNextKey && resultAsset
+							? //@ts-ignore
+							  resultAsset[resultAsset.length - 1]?._id
+							: null,
 				},
 			};
 		} catch (error) {

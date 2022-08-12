@@ -18,7 +18,7 @@ import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
 import { CodeIDStatus } from '../../model/codeid.model';
 import { Ok } from 'ts-results';
-import { CODEID_MANAGER_ACTION, LIST_NETWORK } from 'common/constant';
+import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -29,10 +29,10 @@ import { CODEID_MANAGER_ACTION, LIST_NETWORK } from 'common/constant';
 	mixins: [dbBlockMixin],
 })
 export default class BlockService extends MoleculerDBService<
-{
-	rest: 'v1/codeid';
-},
-{}
+	{
+		rest: 'v1/codeid';
+	},
+	{}
 > {
 	/**
 	 *  @swagger
@@ -46,12 +46,12 @@ export default class BlockService extends MoleculerDBService<
 	 *        - application/json
 	 *      consumes:
 	 *        - application/json
-	 *      parameters:	 
+	 *      parameters:
 	 *        - in: path
 	 *          name: chainId
 	 *          required: true
 	 *          type: string
-	 *          example: aura-devnet
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network"
 	 *        - in: path
 	 *          name: codeId
@@ -70,7 +70,12 @@ export default class BlockService extends MoleculerDBService<
 		restricted: ['api'],
 		params: {
 			codeId: { type: 'number', convert: true },
-			chainId: { type: 'string', enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			chainId: {
+				type: 'string',
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
 		},
 	})
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {

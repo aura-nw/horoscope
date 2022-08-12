@@ -10,7 +10,31 @@ export interface IAccountRedelegations {
     custom_info: CustomInfo;
 }
 
-export class RedelegationEntry {
+export interface IRedelegationEntry {
+    creation_height: String;
+    completion_time: String;
+    initial_balance: String;
+    shares_dst: String;
+}
+
+export interface IRedelegateEntry {
+    redelegation_entry: IRedelegationEntry;
+    balance: String;
+}
+
+export interface IRedelegation {
+    delegator_address: String;
+    validator_src_address: String;
+    validator_dst_address: String;
+    entries: IRedelegateEntry[];
+}
+
+export interface IRedelegationResponse {
+    redelegation: IRedelegation;
+    entries: IRedelegateEntry[];
+}
+
+export class RedelegationEntry implements IRedelegationEntry {
     @JsonProperty('creation_height', String)
     creation_height: String = '';
     @JsonProperty('completion_time', String)
@@ -21,14 +45,14 @@ export class RedelegationEntry {
     shares_dst: String = '';
 }
 
-export class RedelegateEntry {
+export class RedelegateEntry implements IRedelegateEntry {
     @JsonProperty('redelegation_entry', RedelegationEntry)
     redelegation_entry = {} as RedelegationEntry;
     @JsonProperty('balance', String)
     balance: String = '';
 }
 
-export class Redelegation {
+export class Redelegation implements IRedelegation {
     @JsonProperty('delegator_address', String)
     delegator_address: String = '';
     @JsonProperty('validator_src_address', String)
@@ -39,7 +63,7 @@ export class Redelegation {
     entries: RedelegateEntry[] = [];
 }
 
-export class RedelegationResponse {
+export class RedelegationResponse implements IRedelegationResponse {
     @JsonProperty('redelegation', Redelegation)
     redelegation = {} as Redelegation;
     @JsonProperty('entries', [RedelegateEntry])

@@ -5,10 +5,6 @@ import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<IPool> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	pool: {
-		not_bonded_tokens: String,
-		bonded_tokens: String,
-	},
 	not_bonded_tokens: String,
 	bonded_tokens: String,
 	custom_info: customInfoModel,

@@ -70,8 +70,12 @@ export default class HandleAddressService extends Service {
 			for (const element of listTx) {
 				let message;
 				if (source == CONST_CHAR.CRAWL) {
-					if (element.tx_response.code !== 0) continue;
-					message = element.tx.body.messages[0]['@type'];
+					try {
+						message = element.tx.body.messages[0]['@type'];
+					} catch (error) {
+						this.logger.error(`Error when get message type: ${error}`);
+						continue;
+					}
 				} else if (source == CONST_CHAR.API) {
 					listAddresses.push(element.address);
 				}

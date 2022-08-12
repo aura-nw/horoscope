@@ -14,12 +14,11 @@ import {
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { BlockEntity, IBlock } from '../../entities';
-import { JsonConvert } from 'json2typescript';
-import { FilterOptions, QueryOptions } from 'moleculer-db';
+import { IBlock, IValidator } from '../../entities';
+import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
 import { LIST_NETWORK } from '../../common/constant';
-import { Utils } from '../../utils/utils';
+import { redisMixin } from '../../mixins/redis/redis.mixin';
 const { performance } = require('perf_hooks');
 
 /**
@@ -28,7 +27,7 @@ const { performance } = require('perf_hooks');
 @Service({
 	name: 'block',
 	version: 1,
-	mixins: [dbBlockMixin],
+	mixins: [dbBlockMixin, redisMixin],
 })
 export default class BlockService extends MoleculerDBService<
 	{
@@ -52,7 +51,7 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: chainid
 	 *          required: true
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
+	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          type: string
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
@@ -70,6 +69,11 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: false
 	 *          type: string
 	 *          description: "operator address who proposed this block"
+	 *        - in: query
+	 *          name: consensusHexAddress
+	 *          required: false
+	 *          type: string
+	 *          description: "consensus hex address who proposed this block"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
@@ -91,9 +95,15 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: nextKey
 	 *          required: false
-	 *          default:
 	 *          type: string
 	 *          description: "key for next page"
+	 *        - in: query
+	 *          name: reverse
+	 *          required: false
+	 *          enum: ["true","false"]
+	 *          default: false
+	 *          type: string
+	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
 	 *          description: Register result
@@ -114,12 +124,14 @@ export default class BlockService extends MoleculerDBService<
 			blockHeight: { type: 'number', optional: true, convert: true },
 			blockHash: { type: 'string', optional: true },
 			operatorAddress: { type: 'string', optional: true },
+			consensusHexAddress: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
 				default: 10,
 				integer: true,
 				convert: true,
+				min: 1,
 				max: 100,
 			},
 			pageOffset: {
@@ -128,6 +140,7 @@ export default class BlockService extends MoleculerDBService<
 				default: 0,
 				integer: true,
 				convert: true,
+				min: 0,
 				max: 100,
 			},
 			countTotal: {
@@ -141,6 +154,12 @@ export default class BlockService extends MoleculerDBService<
 				optional: true,
 				default: null,
 			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
 		},
 		cache: {
 			ttl: 10,
@@ -148,9 +167,11 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<GetBlockRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
+		let blockFindNextKey = null;
 		if (ctx.params.nextKey) {
 			try {
 				new ObjectId(ctx.params.nextKey);
+				// blockFindNextKey = await this.adapter.findById(ctx.params.nextKey);
 			} catch (error) {
 				return (response = {
 					code: ErrorCode.WRONG,
@@ -160,22 +181,49 @@ export default class BlockService extends MoleculerDBService<
 					},
 				});
 			}
+		} else {
+			// let redisClient = await this.getRedisClient();
+			// let handledBlockRedis = await redisClient.get(Config.REDIS_KEY_CURRENT_BLOCK);
+			// blockFindNextKey = await this.adapter.find({
+			// 	query: {
+			// 		'custom_info.chain_id': ctx.params.chainid,
+			// 	},
+			// 	//@ts-ignore
+			// 	sort: '-_id',
+			// 	limit: 1,
+			// });
 		}
 		try {
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			let query: QueryOptions = {};
+			const chainId = ctx.params.chainid;
 			const blockHeight = ctx.params.blockHeight;
 			const blockHash = ctx.params.blockHash;
 			const operatorAddress = ctx.params.operatorAddress;
+			const consensusHexAddress = ctx.params.consensusHexAddress;
+			const sort = ctx.params.reverse ? '_id' : '-_id';
 			let needNextKey = true;
-
-			if (operatorAddress) {
-				console.log(Utils.bech32ToHex(operatorAddress));
-			}
-
 			if (blockHeight) {
 				query['block.header.height'] = blockHeight;
 				needNextKey = false;
 			}
+			if (chainId) {
+				query['custom_info.chain_id'] = ctx.params.chainid;
+			}
+			if (operatorAddress) {
+				let operatorList: IValidator[] = await this.broker.call('v1.validator.find', {
+					query: {
+						'custom_info.chain_id': ctx.params.chainid,
+						operator_address: operatorAddress,
+					},
+				});
+				if (operatorList.length > 0) {
+					query['block.header.proposer_address'] = operatorList[0].consensus_hex_address;
+				}
+			}
+			if (consensusHexAddress) {
+				query['block.header.proposer_address'] = consensusHexAddress;
+			}
+
 			if (blockHash) {
 				query['block_id.hash'] = blockHash;
 				needNextKey = false;
@@ -193,7 +241,8 @@ export default class BlockService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '-block.header.height',
+					// sort: '-block.header.height',
+					sort: sort,
 				}),
 				ctx.params.countTotal === true
 					? this.adapter.find({
@@ -201,7 +250,7 @@ export default class BlockService extends MoleculerDBService<
 							limit: 1,
 							offset: 0,
 							// @ts-ignore
-							sort: '-block.header.height',
+							sort: sort,
 					  })
 					: 0,
 			]);

@@ -98,5 +98,16 @@
 		   "https://lcd.euphoria.aura.network"
 		],
 		"prefixAddress":"aura"
+	},
+	{
+		"chainName":"Cosmos Mainnet",
+		"chainId":"cosmoshub-4",
+		"RPC":[
+		   "https://rpc-cosmoshub.whispernode.com"
+		],
+		"LCD":[
+		   "https://lcd-cosmoshub.whispernode.com"
+		],
+		"prefixAddress":"cosmos"
 	}
 ]

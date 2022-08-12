@@ -10,7 +10,20 @@ export interface IAccountUnbonds {
     custom_info: CustomInfo;
 }
 
-export class UndelegateEntry {
+export interface IUndelegateEntry {
+    creation_height: String;
+    completion_time: String;
+    initial_balance: String;
+    balance: String;
+}
+
+export interface IUnbondingResponse {
+    delegator_address: String;
+    validator_address: String;
+    entries: IUndelegateEntry[];
+}
+
+export class UndelegateEntry implements IUndelegateEntry {
     @JsonProperty('creation_height', String)
     creation_height: String = '';
     @JsonProperty('completion_time', String)
@@ -21,7 +34,7 @@ export class UndelegateEntry {
     balance: String = '';
 }
 
-export class UnbondingResponse {
+export class UnbondingResponse implements IUnbondingResponse {
     @JsonProperty('delegator_address', String)
     delegator_address: String = '';
     @JsonProperty('validator_address', String)

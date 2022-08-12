@@ -90,17 +90,21 @@ export default class CrawlBlockService extends Service {
 		try {
 			let listPromise = [];
 			for (let i = startBlock; i <= endBlock; i++) {
-				listPromise.push(this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`));
+				listPromise.push(
+					this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`),
+				);
 			}
-			let resultListPromise : ResponseFromRPC[] = await Promise.all(listPromise);
-			
-			let data : ResponseFromRPC = {
+			let resultListPromise: ResponseFromRPC[] = await Promise.all(listPromise);
+
+			let data: ResponseFromRPC = {
 				id: '',
 				jsonrpc: '',
 				result: {
-					blocks: resultListPromise.map( item => {return item.result}),
-				}
-			}
+					blocks: resultListPromise.map((item) => {
+						return item.result;
+					}),
+				},
+			};
 			// this.logger.info(data);
 			// let data: ResponseFromRPC = await this.callApiFromDomain(
 			// 	url,
@@ -128,6 +132,8 @@ export default class CrawlBlockService extends Service {
 				'XADD',
 				Config.REDIS_STREAM_BLOCK_NAME,
 				'*',
+				'source',
+				block.block?.header?.height,
 				'element',
 				JSON.stringify(block),
 			]);

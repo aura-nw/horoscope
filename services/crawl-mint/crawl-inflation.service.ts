@@ -10,7 +10,7 @@ import { dbInflationMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { InflationEntity, ParamEntity } from '../../entities';
-import { MintInflationResponseFromLCD } from 'types';
+import { IMintInflationResponseFromLCD } from 'types';
 import { Utils } from '../../utils/utils';
 export default class CrawlInflationService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -48,7 +48,7 @@ export default class CrawlInflationService extends Service {
 	async handleJob(param: any) {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let resultCallApi: MintInflationResponseFromLCD = await this.callApiFromDomain(
+		let resultCallApi: IMintInflationResponseFromLCD = await this.callApiFromDomain(
 			url,
 			param.url,
 		);

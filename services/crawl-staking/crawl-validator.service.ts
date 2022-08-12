@@ -7,10 +7,10 @@ const QueueService = require('moleculer-bull');
 import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
-import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { IValidatorResponseFromLCD } from '../../types';
+import { MODULE_PARAM, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { IDelegationResponseFromLCD, IValidatorResponseFromLCD } from '../../types';
 import { Job } from 'bull';
-import { IValidator, ValidatorEntity } from '../../entities';
+import { IParam, ISlashingParam, IValidator, SlashingParam, ValidatorEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 
 export default class CrawlValidatorService extends Service {
@@ -70,22 +70,28 @@ export default class CrawlValidatorService extends Service {
 		}
 
 		this.logger.debug(`result: ${JSON.stringify(listValidator)}`);
-
+		let listValidatorInDB: IValidator[] = await this.adapter.find({
+			query: { 'custom_info.chain_id': Config.CHAIN_ID },
+		});
 		listValidator.forEach(async (validator) => {
-			let foundValidator = await this.adapter.findOne({
-				operator_address: `${validator.operator_address}`,
-				'custom_info.chain_id': Config.CHAIN_ID,
+			// let foundValidator = await this.adapter.findOne({
+			// 	operator_address: `${validator.operator_address}`,
+			// 	'custom_info.chain_id': Config.CHAIN_ID,
+			// });
+			let foundValidator = listValidatorInDB.find((validatorInDB: IValidator) => {
+				return validatorInDB.operator_address === validator.operator_address;
 			});
 			try {
 				if (foundValidator) {
 					validator._id = foundValidator._id;
+					validator = await this.loadCustomInfo(validator);
 					let result = await this.adapter.updateById(foundValidator._id, validator);
 				} else {
 					const item: ValidatorEntity = new JsonConvert().deserializeObject(
 						validator,
 						ValidatorEntity,
 					);
-
+					validator = await this.loadCustomInfo(validator);
 					let id = await this.adapter.insert(item);
 				}
 				// this.broker.emit('validator.upsert', { address: validator.operator_address });
@@ -97,6 +103,40 @@ export default class CrawlValidatorService extends Service {
 		if (listAddress.length > 0) {
 			this.broker.emit('validator.upsert', { listAddress: listAddress });
 		}
+	}
+
+	async loadCustomInfo(validator: IValidator): Promise<IValidator> {
+		try {
+			const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+			validator.consensus_hex_address = Utils.pubkeyBase64ToHexAddress(
+				validator.consensus_pubkey.key.toString(),
+			);
+			let address = Utils.operatorAddressToAddress(
+				validator.operator_address.toString(),
+				Config.NETWORK_PREFIX_ADDRESS,
+			);
+			let pathDelegation = `${
+				Config.GET_ALL_VALIDATOR
+			}/${validator.operator_address.toString()}/delegations/${address}`;
+			let resultCallApiDelegation: IDelegationResponseFromLCD = await this.callApiFromDomain(
+				url,
+				pathDelegation,
+			);
+			if (
+				resultCallApiDelegation &&
+				resultCallApiDelegation.delegation_response &&
+				resultCallApiDelegation.delegation_response.balance
+			) {
+				validator.self_delegation_balance =
+					resultCallApiDelegation.delegation_response.balance;
+			}
+
+			this.logger.debug(`result: ${JSON.stringify(resultCallApiDelegation)}`);
+		} catch (error) {
+			this.logger.error(error);
+		}
+
+		return validator;
 	}
 
 	async _start() {

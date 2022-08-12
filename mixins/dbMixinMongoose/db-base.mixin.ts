@@ -9,6 +9,7 @@ import { Config } from '../../common';
 import { DBInfo } from '../../types';
 // import { MongooseDbAdapter } from 'moleculer-db-adapter-mongoose';
 import MongooseDbAdapter = require('moleculer-db-adapter-mongoose');
+import CustomMongooseDbAdapter = require('../customMongoose');
 export interface BaseMixinConfig {
 	name: string;
 	model: Model<any>;
@@ -134,6 +135,9 @@ export class DbBaseMixin {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private getDBUri() {
 		let uri = `${this.dbInfo.dialect}://${this.dbInfo.user}:${this.dbInfo.password}@${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`;
+		if (this.dbInfo.replicaSet != '') {
+			uri = `${uri}&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`;
+		}
 		return uri;
 	}
 
@@ -163,7 +167,7 @@ export class DbBaseMixin {
 		// );
 		return {
 			...schema,
-			adapter: new MongooseDbAdapter(this.getDBUri(), {
+			adapter: new CustomMongooseDbAdapter(this.getDBUri(), {
 				useUnifiedTopology: true,
 				authSource: 'admin',
 				dbName: this.dbInfo.dbname,
