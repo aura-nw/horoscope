@@ -112,6 +112,20 @@ export default class CW721AssetManagerService extends moleculer.Service {
 			{
 				$skip: ctx.params.offset,
 			},
+			{
+				$addFields: {
+					chain_id: '$_id.chain_id',
+					contract_address: '$_id.contract_address',
+					owner: '$_id.owner',
+				},
+			},
+			{
+				$project: {
+					'_id.contract_address': 0,
+					'_id.chain_id': 0,
+					'_id.owner': 0,
+				},
+			},
 		]);
 		return result;
 	}
