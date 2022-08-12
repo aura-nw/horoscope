@@ -15,28 +15,19 @@ import {
 	ENRICH_TYPE,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
-import { toBase64, toUtf8 } from '@cosmjs/encoding';
+
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
+const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
+const VALIDATE_CODEID_PREFIX = "validate_codeid";
+const HANDLE_CODEID_PREFIX = "handle_codeid";
+
 const callApiMixin = new CallApiMixin().start();
-
-const broker = new ServiceBroker({
-	cacher: {
-		type: 'Redis',
-		options: {
-			// Prefix for keys
-			prefix: 'cw20',
-			// set Time-to-live to 120sec.
-			ttl: 120,
-		},
-	},
-});
-
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -54,16 +45,14 @@ const broker = new ServiceBroker({
 				// @ts-ignore
 				this.logger.debug('ctx.params', code_id, chain_id, CONTRACT_TYPE.CW20);
 				// @ts-ignore
-				const processingFlag = await broker.cacher?.get(
-					`validate_codeid_${chain_id}_${code_id}`,
-				);
+				const processingFlag = await this.broker.cacher?.get(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
 				if (!processingFlag) {
 					// @ts-ignore
-					await broker.cacher?.set(`validate_codeid_${chain_id}_${code_id}`, true);
+					await this.broker.cacher?.set(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`, true, CACHER_INDEXER_TTL);
 					// @ts-ignore
 					this.checkIfContractImplementInterface(URL, chain_id, code_id);
 					// @ts-ignore
-					await broker.cacher?.del(`validate_codeid_${chain_id}_${code_id}`);
+					await this.broker.cacher?.del(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
 				}
 			},
 		},
@@ -73,18 +62,16 @@ const broker = new ServiceBroker({
 				const code_id = ctx.params.code_id;
 				const URL = ctx.params.URL;
 				// @ts-ignore
-				const processingFlag = await broker.cacher?.get(
-					`handle_codeid_${chain_id}_${code_id}`,
-				);
+				const processingFlag = await this.broker.cacher?.get(`${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`);
 				if (!processingFlag) {
 					// @ts-ignore
-					await broker.cacher?.set(`handle_codeid_${chain_id}_${code_id}`, true);
+					await this.broker.cacher?.set(`${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`, true,CACHER_INDEXER_TTL);
 					// @ts-ignore
 					this.logger.debug('Asset handler registered', chain_id, code_id);
 					// @ts-ignore
 					await this.handleJob(URL, chain_id, code_id);
 					// @ts-ignore
-					await broker.cacher?.del(`handle_codeid_${chain_id}_${code_id}`);
+					await this.broker.cacher?.del(`${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`);
 				}
 				//TODO emit event index history of the NFT.
 			},
@@ -107,11 +94,10 @@ export default class CrawlAssetService extends moleculer.Service {
 						let address = resultCallApi.contracts[i];
 						let urlGetTokenInfo = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_TOKEN_INFO}`;
 						let tokenInfo = await this.callApiFromDomain(URL, urlGetTokenInfo);
-						if (
-							tokenInfo?.data?.name === undefined ||
-							tokenInfo?.data?.symbol === undefined ||
-							tokenInfo?.data?.decimals === undefined ||
-							tokenInfo?.data?.total_supply === undefined
+						if (tokenInfo?.data?.name === undefined
+							|| tokenInfo?.data?.symbol === undefined
+							|| tokenInfo?.data?.decimals === undefined
+							|| tokenInfo?.data?.total_supply === undefined
 						) {
 							cw20flag = false;
 							break;
@@ -176,6 +162,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.error(err);
 			await broker.cacher?.del(`validate_codeid_${chain_id}_${code_id}`);
 		}
+
 	}
 
 	async handleJob(URL: string, chain_id: string, code_id: Number) {
@@ -192,13 +179,13 @@ export default class CrawlAssetService extends moleculer.Service {
 						[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
 						OPTs,
 					);
-				}),
+				})
 			);
 			await insertInforPromises;
 			this.logger.debug('Asset handler DONE!', contractList.length);
 		} catch (err) {
 			this.logger.error(err);
-			await broker.cacher?.del(`handle_codeid_${chain_id}_${code_id}`);
+			await this.broker.cacher?.del(`${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`);
 		}
 	}
 
@@ -274,7 +261,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			}
 			if (listOwnerAddress.length > 0) {
 				return listOwnerAddress;
-			}
+			} else return null
 		} catch (error) {
 			this.logger.error('getOwnerList error', error);
 		}
@@ -296,4 +283,5 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.error('getBalance error', error);
 		}
 	}
+
 }

@@ -17,19 +17,10 @@ import { QueryOptions } from 'moleculer-db';
 const callApiMixin = new CallApiMixin().start();
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
+const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
-const broker = new ServiceBroker({
-	cacher: {
-		type: "Redis",
-		options: {
-			// Prefix for keys
-			prefix: "get-media-link",
-			// set Time-to-live to 120sec.
-			ttl: 120,
-		}
-	}
-});
+const GET_MEDIA_LINK_PREFIX = "get_media_link";
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -47,14 +38,14 @@ const broker = new ServiceBroker({
 				// @ts-ignore
 				this.logger.info('get-media-link ctx.params', uri, media_link_key, CONTRACT_TYPE.CW721);
 				// @ts-ignore
-				const processingFlag = await broker.cacher?.get(`${media_link_key}`);
+				const processingFlag = await this.broker.cacher?.get(`${GET_MEDIA_LINK_PREFIX}_${media_link_key}`);
 				if (!processingFlag) {
 					// @ts-ignore
-					await broker.cacher?.set(`${media_link_key}`, true);
+					await this.broker.cacher?.set(`${GET_MEDIA_LINK_PREFIX}_${media_link_key}`, true, CACHER_INDEXER_TTL);
 					// @ts-ignore
 					await this.getMediaLink(uri, file_name, media_link_key);
 					// @ts-ignore
-					await broker.cacher?.del(`${media_link_key}`);
+					await this.broker.cacher?.del(`${GET_MEDIA_LINK_PREFIX}_${media_link_key}`);
 				}
 			}
 		},
@@ -75,11 +66,11 @@ export default class CrawlAssetService extends moleculer.Service {
 					media_link: "",
 					status: MediaStatus.HANDLING
 				});
-				await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK, { uri, file_name, key },OPTs);
+				await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK, { uri, file_name, key }, OPTs);
 			} else {
 				switch (media[0].status) {
 					case MediaStatus.PENDING: {
-						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK, { uri, file_name, key },OPTs);
+						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK, { uri, file_name, key }, OPTs);
 						break;
 					}
 					case MediaStatus.COMPLETED:
@@ -95,7 +86,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			}
 		} catch (error) {
 			this.logger.error(error);
-			await broker.cacher?.del(`${key}`);
+			await this.broker.cacher?.del(`${GET_MEDIA_LINK_PREFIX}_${key}`);
 		}
 	}
 }
