@@ -1,13 +1,18 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import moleculer, { Context } from 'moleculer';
+import moleculer, { CallingOptions, Context } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
 import { Common } from '@MicroServices/asset-indexer/common.service';
 import { MediaStatus } from 'model/cw721-asset-media.model';
 import { CW721_MEDIA_MANAGER_ACTION } from '../../common/constant';
-import { info } from 'console';
+import { Config } from '../../common';
+
+const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
+const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
+// const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
+const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
 @Service({
 	name: 'CW721-asset-media-manager',
@@ -15,6 +20,7 @@ import { info } from 'console';
 		dbCW721MediaLinkMixin,
 	],
 	version: 1,
+	broker:{},
 	actions: {
 		'act-insert': {
 			async handler(ctx: Context): Promise<any> {
@@ -33,6 +39,7 @@ import { info } from 'console';
 		// 	}
 		// },
 		'act-find': {
+			cache: { ttl: 10 },
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.logger.info(`ctx.params CW721-asset-media-manager find ${JSON.stringify(ctx.params)}`);
@@ -105,14 +112,14 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 						key,
 						media_link: "",
 						status: MediaStatus.PENDING
-					});
+					}, OPTs);
 					break;
 				default:
 					await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
 						key,
 						media_link: "",
 						status: MediaStatus.ERROR
-					});
+					}, OPTs);
 					break;
 			}
 		}

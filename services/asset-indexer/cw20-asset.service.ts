@@ -15,7 +15,7 @@ import {
 	ENRICH_TYPE,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
-
+import { toBase64, toUtf8 } from '@cosmjs/encoding';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
@@ -160,7 +160,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			}
 		} catch (err) {
 			this.logger.error(err);
-			await broker.cacher?.del(`validate_codeid_${chain_id}_${code_id}`);
+			await this.broker.cacher?.del(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
 		}
 
 	}
