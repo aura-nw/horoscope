@@ -22,6 +22,7 @@ export class AssetEntity implements ICW721Asset {
 	// @JsonProperty('asset_info', Object)
 	asset_info: Object = {};
 
+	is_burned: Boolean = true;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle
