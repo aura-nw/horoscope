@@ -184,6 +184,7 @@ export default class CrawlAccountInfoService extends Service {
 					this.logger.info(`${fromUtf8(fromBase64(contract_address))}`);
 					this.logger.info(`${fromUtf8(fromBase64(tokenId))}`);
 					this.broker.call('v1.CW721.addBurnedToAsset', {
+						chainid: chainId,
 						contractAddress: `${fromUtf8(fromBase64(contract_address))}`,
 						tokenId: `${fromUtf8(fromBase64(tokenId))}`,
 					});

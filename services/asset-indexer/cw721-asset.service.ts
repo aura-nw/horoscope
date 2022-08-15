@@ -275,6 +275,7 @@ export default class CrawlAssetService extends moleculer.Service {
 	@Action()
 	private async addBurnedToAsset(ctx: Context<AddBurnedToAsset>) {
 		const asset = await this.adapter.findOne({
+			'custom_info.chain_id': ctx.params.chainid,
 			contract_address: ctx.params.contractAddress,
 			token_id: ctx.params.tokenId,
 		});
