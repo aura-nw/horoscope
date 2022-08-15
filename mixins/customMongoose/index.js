@@ -13,6 +13,14 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
         let cursor = this.createCursor(query).count(true);
         return cursor.exec();
     }
+
+    findByIdAndUpdate(query){
+        return this.model.findByIdAndUpdate(query.id, query.update, { new: true }).exec();
+    }
+
+    bulkWrite(query){
+        return this.model.bulkWrite(query);
+    }
 }
 
 module.exports = CustomMongooseDbAdapter;

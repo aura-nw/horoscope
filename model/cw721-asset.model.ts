@@ -11,6 +11,7 @@ export interface ICW721Asset {
 	token_id: String;
 	owner: String;
 	history: String[];
+	is_burned: Boolean;
 }
 
 const definition: definitionType<ICW721Asset> = (collection?: string) => ({
@@ -43,6 +44,7 @@ const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 		type: [String],
 	},
 	custom_info: customInfoModel,
+	is_burned: Boolean,
 });
 
 export const cw721AssetMongoModel = (collection: string): unknown => {

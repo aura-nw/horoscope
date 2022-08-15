@@ -17,6 +17,7 @@ import {
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
+import { AddBurnedToAsset } from 'types';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
@@ -270,6 +271,25 @@ export default class CrawlAssetService extends moleculer.Service {
 		} catch (error) {
 			this.logger.error('getTokenInfor error', error);
 		}
+	}
+	@Action()
+	private async addBurnedToAsset(ctx: Context<AddBurnedToAsset>) {
+		const asset = await this.adapter.findOne({
+			contract_address: ctx.params.contractAddress,
+			token_id: ctx.params.tokenId,
+		});
+		if (asset) {
+			await this.adapter.updateById(asset._id, {
+				$set: {
+					is_burned: true,
+				},
+			});
+		}
+	}
+
+	@Action()
+	private async updateById(id: any, update: any) {
+		return await this.adapter.updateById(id, update);
 	}
 
 	// async _start(): Promise<void> {

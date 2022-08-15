@@ -13,13 +13,15 @@ import {
 	COMMON_ACTION,
 	ENRICH_TYPE,
 	CODEID_MANAGER_ACTION,
+	BASE_64_ENCODE,
 } from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
-import { Status } from '../../model';
+import { ICW721Asset, Status } from '../../model';
 import { info } from 'console';
-import { ITransaction } from 'entities';
-
+import { IAttribute, IEvent, ITransaction } from 'entities';
+import { toBase64, toUtf8, fromBase64, fromUtf8 } from '@cosmjs/encoding';
+import { Action } from '@ourparentcenter/moleculer-decorators-extended';
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
@@ -57,6 +59,8 @@ export default class CrawlAccountInfoService extends Service {
 
 						// @ts-ignore
 						this.handleJob(URL, job.data.listTx, job.data.chainId);
+						// @ts-ignore
+						this.handleTxBurnCw721(job.data.listTx, job.data.chainId);
 						job.progress(100);
 						return true;
 					},
@@ -158,6 +162,34 @@ export default class CrawlAccountInfoService extends Service {
 			this.logger.error(error);
 		}
 		return [];
+	}
+
+	handleTxBurnCw721(listTx: any[], chainId: string) {
+		listTx.map((tx) => {
+			const events = tx.tx_response.events;
+			const attributes = events.find((x: IEvent) => x.type == EVENT_TYPE.WASM)?.attributes;
+			if (attributes) {
+				const key_value = attributes.find(
+					(x: IAttribute) =>
+						x.key == BASE_64_ENCODE.ACTION && x.value == BASE_64_ENCODE.BURN,
+				);
+				if (key_value) {
+					const contract_address = attributes.find(
+						(x: IAttribute) => x.key == BASE_64_ENCODE._CONTRACT_ADDRESS,
+					)?.value;
+					const tokenId = attributes.find(
+						(x: IAttribute) => x.key == BASE_64_ENCODE.TOKEN_ID,
+					)?.value;
+
+					this.logger.info(`${fromUtf8(fromBase64(contract_address))}`);
+					this.logger.info(`${fromUtf8(fromBase64(tokenId))}`);
+					this.broker.call('v1.CW721.addBurnedToAsset', {
+						contractAddress: `${fromUtf8(fromBase64(contract_address))}`,
+						tokenId: `${fromUtf8(fromBase64(tokenId))}`,
+					});
+				}
+			}
+		});
 	}
 
 	async verifyAddressByCodeID(URL: string, address: string, chain_id: string) {

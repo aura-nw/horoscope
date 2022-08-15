@@ -131,6 +131,10 @@ export const MODULE_PARAM = {
 export const BASE_64_ENCODE = {
 	RECIPIENT: 'cmVjaXBpZW50',
 	SENDER: 'c2VuZGVy',
+	ACTION: 'YWN0aW9u',
+	BURN: 'YnVybg==',
+	_CONTRACT_ADDRESS: 'X2NvbnRyYWN0X2FkZHJlc3M=',
+	TOKEN_ID: 'dG9rZW5faWQ=',
 };
 
 export const SEARCH_TX_QUERY = {

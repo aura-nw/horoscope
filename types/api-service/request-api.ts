@@ -94,3 +94,8 @@ export interface GetHolderRequest extends ChainIdParams, PageLimit {
 	contractAddress: string;
 	contractType: string;
 }
+
+export interface AddBurnedToAsset {
+	contractAddress: string;
+	tokenId: string;
+}
