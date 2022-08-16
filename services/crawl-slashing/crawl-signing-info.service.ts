@@ -49,16 +49,6 @@ export default class CrawlSigningInfoService extends Service {
 				'validator.upsert': {
 					handler: (ctx: Context<ListValidatorAddress, Record<string, unknown>>) => {
 						this.handleJob(ctx.params.listAddress);
-
-						// this.createJob(
-						// 	'crawl.signinginfo',
-						// 	{
-						// 		listAddress: ctx.params.listAddress,
-						// 	},
-						// 	{
-						// 		removeOnComplete: true,
-						// 	},
-						// );
 						return;
 					},
 				},

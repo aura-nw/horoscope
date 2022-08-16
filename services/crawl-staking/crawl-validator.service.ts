@@ -73,32 +73,47 @@ export default class CrawlValidatorService extends Service {
 		let listValidatorInDB: IValidator[] = await this.adapter.find({
 			query: { 'custom_info.chain_id': Config.CHAIN_ID },
 		});
-		listValidator.forEach(async (validator) => {
-			// let foundValidator = await this.adapter.findOne({
-			// 	operator_address: `${validator.operator_address}`,
-			// 	'custom_info.chain_id': Config.CHAIN_ID,
-			// });
+		let listBulk: any[] = [];
+		listValidator = await Promise.all(
+			listValidator.map((validator) => {
+				return this.loadCustomInfo(validator);
+			}),
+		);
+		listValidator.map((validator) => {
 			let foundValidator = listValidatorInDB.find((validatorInDB: IValidator) => {
 				return validatorInDB.operator_address === validator.operator_address;
 			});
 			try {
+				// validator = await this.loadCustomInfo(validator);
 				if (foundValidator) {
 					validator._id = foundValidator._id;
-					validator = await this.loadCustomInfo(validator);
-					let result = await this.adapter.updateById(foundValidator._id, validator);
+
+					// let result = await this.adapter.updateById(foundValidator._id, validator);
+					listBulk.push({
+						updateOne: {
+							filter: { _id: foundValidator._id },
+							update: validator,
+							upsert: true,
+						},
+					});
 				} else {
 					const item: ValidatorEntity = new JsonConvert().deserializeObject(
 						validator,
 						ValidatorEntity,
 					);
-					validator = await this.loadCustomInfo(validator);
-					let id = await this.adapter.insert(item);
+					// let id = await this.adapter.insert(item);
+					listBulk.push({
+						insertOne: {
+							document: item,
+						},
+					});
 				}
-				// this.broker.emit('validator.upsert', { address: validator.operator_address });
 			} catch (error) {
 				this.logger.error(error);
 			}
 		});
+		let result = await this.adapter.bulkWrite(listBulk);
+		this.logger.info(`Bulkwrite validator: ${listValidator.length}`, result);
 		let listAddress: string[] = listValidator.map((item) => item.operator_address.toString());
 		if (listAddress.length > 0) {
 			this.broker.emit('validator.upsert', { listAddress: listAddress });
