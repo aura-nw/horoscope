@@ -103,6 +103,7 @@ export class Common {
 				chain_id: network?.chainId,
 				chain_name: network?.chainName,
 			},
+			is_burned: false,
 		};
 	};
 	public static createCW20AssetObject = function (
