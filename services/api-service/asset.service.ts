@@ -646,6 +646,7 @@ export default class BlockService extends MoleculerDBService<
 					sort = ctx.params.reverse
 						? { quantity: 1, updatedAt: 1 }
 						: { quantity: -1, updatedAt: -1 };
+					query['is_burned'] = false;
 					break;
 				case CONTRACT_TYPE.CW20:
 					sort = ctx.params.reverse

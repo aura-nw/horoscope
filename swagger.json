@@ -416,7 +416,7 @@
                     {
                         "in": "query",
                         "name": "contractAddress",
-                        "required": false,
+                        "required": true,
                         "type": "string",
                         "description": "asset/contract address need to query"
                     },
