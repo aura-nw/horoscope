@@ -132,6 +132,11 @@ export default class CrawlSigningInfoService extends Service {
 				return;
 			}),
 		);
+
+		listBulk = listBulk.filter(function (element) {
+			return element !== undefined;
+		});
+
 		let result = await this.adapter.bulkWrite(listBulk);
 		this.logger.info(`result : ${listBulk.length}`, result);
 	}
