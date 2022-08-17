@@ -168,7 +168,7 @@ export default class ValidatorService extends MoleculerDBService<
 				this.adapter.find({
 					query: query,
 					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset,
+					offset: ctx.params.pageOffset * ctx.params.pageLimit,
 					// @ts-ignore
 					sort: '_id',
 				}),

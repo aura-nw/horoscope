@@ -649,9 +649,7 @@ export default class BlockService extends MoleculerDBService<
 					query['is_burned'] = false;
 					break;
 				case CONTRACT_TYPE.CW20:
-					sort = ctx.params.reverse
-						? { percent_hold: -1, updatedAt: 1 }
-						: { percent_hold: 1, updatedAt: -1 };
+					sort = ctx.params.reverse ? 'percent_hold' : '-percent_hold';
 					query['balance'] = {
 						$ne: '0',
 					};
@@ -676,7 +674,7 @@ export default class BlockService extends MoleculerDBService<
 				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.getHolderByAddress`, {
 					query: query,
 					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset,
+					offset: ctx.params.pageOffset * ctx.params.pageLimit,
 					sort: sort,
 				}),
 				ctx.params.countTotal === true

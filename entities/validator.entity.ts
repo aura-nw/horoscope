@@ -3,6 +3,7 @@ import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
 import { ObjectIdNull } from 'types';
 import { Coin, ICoin } from './coin.entity';
+import { SigningInfoEntity } from './signing-info.entity';
 
 export interface IConsensusPubkey {
 	'@type': String;
@@ -127,6 +128,7 @@ export class ValidatorEntity implements IValidator {
 	public consensus_hex_address: String = '';
 	public self_delegation_balance: Coin = {} as Coin;
 	public uptime: Number = 0;
+	public val_signing_info: SigningInfoEntity = {} as SigningInfoEntity;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle
