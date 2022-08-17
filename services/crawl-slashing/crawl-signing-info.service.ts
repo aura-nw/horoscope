@@ -129,7 +129,7 @@ export default class CrawlSigningInfoService extends Service {
 				return;
 			}),
 		);
-		let result = await this.adapter.bulkUpdate(listBulk);
+		let result = await this.adapter.bulkWrite(listBulk);
 		this.logger.info(`result : ${listBulk.length}`, result);
 	}
 	getAddressHexFromPubkey(pubkey: string) {
