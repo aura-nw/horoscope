@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 import { ObjectIdNull } from 'types';
 import { Coin, ICoin } from './coin.entity';
 import { SigningInfoEntity } from './signing-info.entity';
+import { ISigningInfo } from '../model/signing-info.model';
 
 export interface IConsensusPubkey {
 	'@type': String;
@@ -45,6 +46,7 @@ export interface IValidator {
 	min_self_delegation: String;
 	self_delegation_balance: ICoin;
 	uptime: Number;
+	val_signing_info: ISigningInfo;
 }
 
 @JsonObject('ConsensusPubkey')
@@ -128,7 +130,7 @@ export class ValidatorEntity implements IValidator {
 	public consensus_hex_address: String = '';
 	public self_delegation_balance: Coin = {} as Coin;
 	public uptime: Number = 0;
-	public val_signing_info: SigningInfoEntity = {} as SigningInfoEntity;
+	public val_signing_info: ISigningInfo = {} as ISigningInfo;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

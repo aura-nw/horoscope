@@ -9,10 +9,11 @@ import { Config } from '../../common';
 import { LIST_NETWORK, MODULE_PARAM, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { ISigningInfoEntityResponseFromLCD, ListValidatorAddress } from '../../types';
-import { IParam, ParamEntity, SlashingParam, ValidatorEntity } from '../../entities';
+import { IParam, IValidator, ParamEntity, SlashingParam, ValidatorEntity } from '../../entities';
 const tmhash = require('tendermint/lib/hash');
 import { bech32 } from 'bech32';
 import { Utils } from '../../utils/utils';
+import { JsonConvert } from 'json2typescript';
 
 export default class CrawlSigningInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -57,7 +58,7 @@ export default class CrawlSigningInfoService extends Service {
 	}
 
 	async handleJob(listAddress: string[]) {
-		let listFoundValidator: ValidatorEntity[] = await this.adapter.find({
+		let listFoundValidator: IValidator[] = await this.adapter.find({
 			query: {
 				operator_address: {
 					$in: listAddress,
@@ -68,61 +69,71 @@ export default class CrawlSigningInfoService extends Service {
 		const prefixAddress = LIST_NETWORK.find(
 			(item) => item.chainId === Config.CHAIN_ID,
 		)?.prefixAddress;
-		listFoundValidator.map(async (foundValidator: ValidatorEntity) => {
-			try {
-				let consensusPubkey = foundValidator.consensus_pubkey;
-				this.logger.debug(
-					`Found validator with address ${foundValidator.operator_address}`,
-				);
-				this.logger.debug(`Found validator with consensusPubkey ${consensusPubkey}`);
-
-				const pubkey = this.getAddressHexFromPubkey(consensusPubkey.key.toString());
-				const consensusAddress = this.hexToBech32(
-					pubkey,
-					`${prefixAddress}${Config.CONSENSUS_PREFIX_ADDRESS}`,
-				);
-				let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
-
-				this.logger.info(path);
-				let result: ISigningInfoEntityResponseFromLCD = await this.callApiFromDomain(
-					url,
-					path,
-				);
-				this.logger.debug(result);
-
-				if (result.val_signing_info) {
-					let paramSlashing: ParamEntity[] = await this.broker.call(
-						'v1.crawlparam.find',
-						{
-							query: {
-								'custom_info.chain_id': Config.CHAIN_ID,
-								module: MODULE_PARAM.SLASHING,
-							},
-						},
-					);
-					let uptime: Number = 0;
-					if (paramSlashing.length > 0) {
-						//@ts-ignore
-						const blockWindow = paramSlashing[0].params.signed_blocks_window.toString();
-						const missedBlock =
-							result.val_signing_info.missed_blocks_counter.toString();
-						uptime =
-							Number(
-								((BigInt(blockWindow) - BigInt(missedBlock)) * BigInt(100000000)) /
-									BigInt(blockWindow),
-							) / 1000000;
-					}
-					let res = await this.adapter.updateById(foundValidator._id, {
-						$set: { val_signing_info: result.val_signing_info, uptime: uptime },
-					});
-					this.logger.debug(res);
-				}
-			} catch (error) {
-				this.logger.error(error);
-			}
+		let paramSlashing: ParamEntity[] = await this.broker.call('v1.crawlparam.find', {
+			query: {
+				'custom_info.chain_id': Config.CHAIN_ID,
+				module: MODULE_PARAM.SLASHING,
+			},
 		});
-		// let result = await this.adapter.bulkWrite(listBulk);
-		// this.logger.info(`result : ${listBulk.length}`, result);
+		let listBulk: any[] = await Promise.all(
+			listFoundValidator.map(async (foundValidator: IValidator) => {
+				try {
+					let consensusPubkey = foundValidator.consensus_pubkey;
+					this.logger.debug(
+						`Found validator with address ${foundValidator.operator_address}`,
+					);
+					this.logger.debug(`Found validator with consensusPubkey ${consensusPubkey}`);
+
+					const pubkey = this.getAddressHexFromPubkey(consensusPubkey.key.toString());
+					const consensusAddress = this.hexToBech32(
+						pubkey,
+						`${prefixAddress}${Config.CONSENSUS_PREFIX_ADDRESS}`,
+					);
+					let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
+
+					this.logger.debug(path);
+					let result: ISigningInfoEntityResponseFromLCD = await this.callApiFromDomain(
+						url,
+						path,
+					);
+					this.logger.debug(result);
+
+					if (result.val_signing_info) {
+						let uptime: Number = 0;
+						if (paramSlashing.length > 0) {
+							const blockWindow =
+								//@ts-ignore
+								paramSlashing[0].params?.signed_blocks_window.toString();
+							const missedBlock =
+								result.val_signing_info.missed_blocks_counter.toString();
+							uptime =
+								Number(
+									((BigInt(blockWindow) - BigInt(missedBlock)) *
+										BigInt(100000000)) /
+										BigInt(blockWindow),
+								) / 1000000;
+						}
+						return {
+							updateOne: {
+								filter: { _id: foundValidator._id },
+								update: {
+									$set: {
+										val_signing_info: result.val_signing_info,
+										uptime: uptime,
+									},
+								},
+								upsert: true,
+							},
+						};
+					}
+				} catch (error) {
+					this.logger.error(error);
+				}
+				return;
+			}),
+		);
+		let result = await this.adapter.bulkWrite(listBulk);
+		this.logger.info(`result : ${listBulk.length}`, result);
 	}
 	getAddressHexFromPubkey(pubkey: string) {
 		var bytes = Buffer.from(pubkey, 'base64');
