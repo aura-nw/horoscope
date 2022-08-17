@@ -126,6 +126,7 @@ export default class CrawlSigningInfoService extends Service {
 				} catch (error) {
 					this.logger.error(error);
 				}
+				return;
 			}),
 		);
 		let result = await this.adapter.bulkUpdate(listBulk);
