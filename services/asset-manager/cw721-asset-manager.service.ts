@@ -107,10 +107,10 @@ export default class CW721AssetManagerService extends moleculer.Service {
 				$sort: ctx.params.sort,
 			},
 			{
-				$limit: ctx.params.limit,
+				$skip: ctx.params.offset,
 			},
 			{
-				$skip: ctx.params.offset,
+				$limit: ctx.params.limit,
 			},
 			{
 				$addFields: {

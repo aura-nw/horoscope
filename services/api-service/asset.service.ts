@@ -674,7 +674,7 @@ export default class BlockService extends MoleculerDBService<
 				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.getHolderByAddress`, {
 					query: query,
 					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset * ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
 					sort: sort,
 				}),
 				ctx.params.countTotal === true

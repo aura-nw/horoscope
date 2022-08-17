@@ -157,7 +157,7 @@ export default class ParamService extends MoleculerDBService<
 				this.adapter.find({
 					query: query,
 					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset * ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
 					// @ts-ignore
 					sort: '_id',
 				}),
