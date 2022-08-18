@@ -5,14 +5,14 @@ import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { Job } from 'bull';
-import { dbTransactionAggregateMixin } from '../../mixins/dbMixinMongoose';
-import { ITransaction } from 'entities';
+import { dbBlockAggregateMixin } from '../../mixins/dbMixinMongoose';
+import { IBlock } from 'entities';
 
-export default class TxAggregateService extends Service {
+export default class BlockAggregateService extends Service {
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'transactionAggregate',
+			name: 'blockAggregate',
 			version: 1,
 			mixins: [
 				QueueService(
@@ -21,10 +21,10 @@ export default class TxAggregateService extends Service {
 						prefix: 'listtx.create',
 					},
 				),
-				dbTransactionAggregateMixin,
+				dbBlockAggregateMixin,
 			],
 			queues: {
-				'listtx.insert': {
+				'listblock.insert': {
 					concurrency: 10,
 					process(job: Job) {
 						job.progress(10);
@@ -36,12 +36,12 @@ export default class TxAggregateService extends Service {
 				},
 			},
 			events: {
-				'job.movetx': {
+				'job.moveblock': {
 					handler: (ctx: any) => {
 						this.createJob(
-							'listtx.insert',
+							'listblock.insert',
 							{
-								listTx: ctx.params.listTx,
+								listBlock: ctx.params.listBlock,
 							},
 							{
 								removeOnComplete: true,
@@ -54,29 +54,29 @@ export default class TxAggregateService extends Service {
 		});
 	}
 
-	async handleJob(listTx: ITransaction[]) {
+	async handleJob(listBlock: IBlock[]) {
 		let listBulk: any[] = [];
-		listTx.map(async (tx: ITransaction) => {
+		listBlock.map(async (block: IBlock) => {
 			listBulk.push({
 				updateOne: {
-					filter: { _id: tx._id },
-					update: tx,
+					filter: { _id: block._id },
+					update: block,
 					upsert: true,
 				},
 			});
 		});
 		let result = await this.adapter.bulkWrite(listBulk);
-		this.logger.info(`Update tx: ${listTx.length}`, result);
+		this.logger.info(`Update tx: ${listBlock.length}`, result);
 	}
 
 	async _start() {
-		this.getQueue('listtx.insert').on('completed', (job: Job) => {
+		this.getQueue('listblock.insert').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('listtx.insert').on('failed', (job: Job) => {
+		this.getQueue('listblock.insert').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('listtx.insert').on('progress', (job: Job) => {
+		this.getQueue('listblock.insert').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 

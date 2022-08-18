@@ -288,12 +288,12 @@ export default class BlockService extends MoleculerDBService<
 		if (address) {
 			listQueryAnd.push(
 				{ 'tx_response.events.type': 'transfer' },
-				// {
-				// 	$or: [
-				// 		{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-				// 		{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
-				// 	],
-				// },
+				{
+					$or: [
+						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+					],
+				},
 				{
 					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
 				},

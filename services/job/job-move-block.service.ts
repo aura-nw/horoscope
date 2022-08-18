@@ -12,24 +12,24 @@ import { JsonConvert } from 'json2typescript';
 import { ObjectId } from 'bson';
 import { Types } from 'mongoose';
 
-export default class MoveTxService extends Service {
+export default class MoveBlockService extends Service {
 	// private lastId: string = '0';
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'movetx',
+			name: 'moveblock',
 			version: 1,
 			mixins: [
 				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
-						prefix: 'move.tx',
+						prefix: 'move.block',
 					},
 				),
 				dbTransactionMixin,
 			],
 			queues: {
-				'move.tx': {
+				'move.block': {
 					concurrency: 10,
 					process(job: Job) {
 						job.progress(10);
@@ -47,17 +47,17 @@ export default class MoveTxService extends Service {
 	// 	if this.lastId === null {
 	// }
 	async handleJob(lastId: string) {
-		let txLastId: any = null;
+		let blockLastId: any = null;
 		if (lastId == '0') {
-			const lastestTxAggregate: ITransaction[] = await this.adapter.find({
+			const lastestBlockAggregate: ITransaction[] = await this.adapter.find({
 				sort: '_id',
 				limit: 1,
 				skip: 0,
 			});
-			if (lastestTxAggregate.length && lastestTxAggregate[0]._id) {
-				txLastId = lastestTxAggregate[0];
+			if (lastestBlockAggregate.length && lastestBlockAggregate[0]._id) {
+				blockLastId = lastestBlockAggregate[0];
 				let timestampObjectId = new ObjectId(
-					lastestTxAggregate[0]._id.toString(),
+					lastestBlockAggregate[0]._id.toString(),
 				).getTimestamp();
 
 				timestampObjectId.setDate(timestampObjectId.getDate() + 2);
@@ -66,16 +66,11 @@ export default class MoveTxService extends Service {
 					return;
 				}
 
-				lastId = lastestTxAggregate[0]._id.toString();
+				lastId = lastestBlockAggregate[0]._id.toString();
 			}
 		}
-		// let objectId;
-		// if (lastId == '0') {
-		// 	objectId = '0';
-		// } else {
-		// 	objectId = new ObjectId(lastId);
-		// }
-		let listTx: ITransaction[] = await this.adapter.find({
+
+		let listBlock: IBlock[] = await this.adapter.find({
 			query: {
 				_id: { $gt: new ObjectId(lastId) },
 			},
@@ -83,13 +78,13 @@ export default class MoveTxService extends Service {
 			offset: 0,
 			sort: '_id',
 		});
-		if (txLastId) {
-			listTx.unshift(txLastId);
+		if (blockLastId) {
+			listBlock.unshift(blockLastId);
 		}
-		if (listTx.length > 0) {
+		if (listBlock.length > 0) {
 			try {
 				this.createJob(
-					'move.tx',
+					'move.block',
 					{
 						//@ts-ignore
 						lastId: listTx[listTx.length - 1]._id.toString(),
@@ -99,26 +94,27 @@ export default class MoveTxService extends Service {
 					},
 				);
 
-				this.broker.emit('job.movetx', { listTx: listTx });
+				this.broker.emit('job.movetx', { listBlock: listBlock });
 				let listBulk: any[] = [];
-				listBulk = listTx.map(async (tx: ITransaction) => {
-					// return this.adapter.removeById(tx._id);
+				listBulk = listBlock.map(async (block: IBlock) => {
+					// return this.adapter.removeById(block._id);
 					return {
 						deleteOne: {
 							filter: {
-								_id: tx._id,
+								_id: block._id,
 							},
 						},
 					};
 				});
 				// await Promise.all(listPromise);
 				await this.adapter.bulkWrite(listBulk);
-				if (listTx) {
+
+				if (listBlock) {
 					//@ts-ignore
 					this.lastId = listTx[listTx.length - 1]._id.toString();
 				}
-				this.broker.emit('move.tx.success', {
-					listTx: listTx,
+				this.broker.emit('move.block.success', {
+					listBlock: listBlock,
 				});
 			} catch (error) {
 				this.logger.error(`error: ${error}`);
@@ -128,7 +124,7 @@ export default class MoveTxService extends Service {
 
 	async _start() {
 		this.createJob(
-			'move.tx',
+			'move.block',
 			{
 				lastId: '0',
 			},
@@ -136,13 +132,13 @@ export default class MoveTxService extends Service {
 				removeOnComplete: true,
 			},
 		);
-		this.getQueue('move.tx').on('completed', (job: Job) => {
+		this.getQueue('move.block').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('move.tx').on('failed', (job: Job) => {
+		this.getQueue('move.block').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('move.tx').on('progress', (job: Job) => {
+		this.getQueue('move.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();

@@ -94,6 +94,7 @@ export default class ConfigClass {
 	public static DB_ACCOUNT_REDELEGATIONS: any;
 	public static DB_ACCOUNT_UNBONDS: any;
 	public static DB_TRANSACTION_AGGREGATE: any;
+	public static DB_BLOCK_AGGREGATE: any;
 
 	public constructor() {
 		Object.keys(configObj).forEach((key: string) => {
@@ -129,5 +130,6 @@ export default class ConfigClass {
 		this.DB_ACCOUNT_REDELEGATIONS = genericDbInfo('ACCOUNT_REDELEGATIONS');
 		this.DB_ACCOUNT_UNBONDS = genericDbInfo('ACCOUNT_UNBONDS');
 		this.DB_TRANSACTION_AGGREGATE = genericDbInfo('TRANSACTION_AGGREGATE');
+		this.DB_BLOCK_AGGREGATE = genericDbInfo('BLOCK_AGGREGATE');
 	}
 }
