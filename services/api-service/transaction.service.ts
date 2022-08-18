@@ -270,6 +270,7 @@ export default class BlockService extends MoleculerDBService<
 			query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
 		}
 		let listQueryAnd: any[] = [];
+
 		if (queryParam) {
 			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
 			// this.logger.info('queryParam: ', JSON.stringify(queryParamFormat));
@@ -282,9 +283,8 @@ export default class BlockService extends MoleculerDBService<
 				};
 				queryAnd.push(tempQuery);
 			});
-			listQueryAnd.push(queryAnd);
+			listQueryAnd.push(...queryAnd);
 		}
-
 		if (address) {
 			listQueryAnd.push(
 				{ 'tx_response.events.type': 'transfer' },
@@ -299,6 +299,7 @@ export default class BlockService extends MoleculerDBService<
 				},
 			);
 		}
+
 		if (listQueryAnd.length > 0) {
 			query['$and'] = listQueryAnd;
 		}
