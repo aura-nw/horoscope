@@ -262,27 +262,6 @@ export default class BlockService extends MoleculerDBService<
 			query['tx_response.txhash'] = txHash;
 		}
 
-		if (address) {
-			query['$and'] = [
-				{ 'tx_response.events.type': 'transfer' },
-				{
-					$or: [
-						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
-					],
-				},
-				{
-					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
-				},
-			];
-			// query['tx_response.events.type'] = 'transfer';
-			// query['$or'] = [
-			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-			// 	{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
-			// ];
-			// query['tx_response.events.attributes.value'] = toBase64(toUtf8(address));
-		}
-
 		if (searchType) {
 			query['tx_response.events.type'] = searchType;
 		}
@@ -290,7 +269,7 @@ export default class BlockService extends MoleculerDBService<
 			query['tx_response.events.attributes.key'] = toBase64(toUtf8(searchKey));
 			query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
 		}
-
+		let listQueryAnd: any[] = [];
 		if (queryParam) {
 			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
 			// this.logger.info('queryParam: ', JSON.stringify(queryParamFormat));
@@ -303,7 +282,25 @@ export default class BlockService extends MoleculerDBService<
 				};
 				queryAnd.push(tempQuery);
 			});
-			query['$and'] = queryAnd;
+			listQueryAnd.push(queryAnd);
+		}
+
+		if (address) {
+			listQueryAnd.push(
+				{ 'tx_response.events.type': 'transfer' },
+				// {
+				// 	$or: [
+				// 		{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+				// 		{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+				// 	],
+				// },
+				{
+					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
+				},
+			);
+		}
+		if (listQueryAnd.length > 0) {
+			query['$and'] = listQueryAnd;
 		}
 
 		this.logger.info('query: ', JSON.stringify(query));
@@ -401,7 +398,7 @@ export default class BlockService extends MoleculerDBService<
 					? this.adapter.countWithSkipLimit({
 							query: query,
 							skip: 0,
-							limit: ctx.params.pageLimit * 10,
+							limit: ctx.params.pageLimit * 5,
 					  })
 					: 0,
 			]);

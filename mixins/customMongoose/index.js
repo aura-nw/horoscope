@@ -10,7 +10,7 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
     }
 
     countWithSkipLimit(query){
-        let cursor = this.createCursor(query).count(true);
+        let cursor = this.createCursor(query).countDocuments(true);
         return cursor.exec();
     }
 
