@@ -100,6 +100,7 @@ export const CW721_MEDIA_MANAGER_ACTION = {
 	UPSERT: 'v1.CW721-asset-media-manager.act-upsert',
 	UPDATE_MANY: 'v1.CW721-asset-media-manager.act-updateMany',
 	UPDATE_MEDIA_LINK: 'v1.CW721-asset-media-manager.update-media-link',
+	INSERT_INTO_REDIS: 'v1.CW721-asset-media-manager.act-insert-stream'
 };
 
 export const CW721_MEDIA = {

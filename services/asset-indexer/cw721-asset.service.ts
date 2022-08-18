@@ -47,12 +47,12 @@ const callApiMixin = new CallApiMixin().start();
 				// @ts-ignore
 				this.logger.info('ctx.params', code_id, chain_id, CONTRACT_TYPE.CW721);
 				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
+				const processingFlag = await this.broker.cacher?.get(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`); //e.g validate_codeid_serenity-testnet-001_257
 				if (!processingFlag) {
 					// @ts-ignore
-					await this.broker.cacher?.set(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`, true, CACHER_INDEXER_TTL);
+					await this.broker.cacher?.set(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`, true, CACHER_INDEXER_TTL); 
 					// @ts-ignore
-					await this.checkIfContractImplementInterface(URL, chain_id, code_id);
+					await this.checkIfContractImplementInterface(URL, chain_id, code_id); //
 					// @ts-ignore
 					await this.broker.cacher?.del(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
 				}

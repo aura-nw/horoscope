@@ -112,13 +112,15 @@ export default class CrawlAssetService extends moleculer.Service {
 			const media: any[] = await this.broker.call(CW721_MEDIA_MANAGER_ACTION.FIND, { query }, OPTs);
 			this.logger.info("media", media);
 			if (media.length === 0) {
-				await this.broker.call(CW721_MEDIA_MANAGER_ACTION.INSERT, {
-					_id: new Types.ObjectId(),
-					key,
-					media_link: "",
-					status: MediaStatus.HANDLING
-				}, OPTs);
-				await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK, { uri, file_name, key }, OPTs);
+				// await this.broker.call(CW721_MEDIA_MANAGER_ACTION.INSERT, {
+				// 	_id: new Types.ObjectId(),
+				// 	key,
+				// 	media_link: "",
+				// 	status: MediaStatus.HANDLING
+				// }, OPTs);
+				// await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK, { uri, file_name, key }, OPTs);
+
+				await this.broker.call(CW721_MEDIA_MANAGER_ACTION.INSERT_INTO_REDIS, { uri, file_name, key });
 			} else {
 				switch (media[0].status) {
 					case MediaStatus.PENDING: {
@@ -138,7 +140,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			}
 		} catch (error) {
 			this.logger.error(error);
-			broker.cacher.middleware();
+			broker.cacher?.clean(`${GET_MEDIA_LINK_PREFIX}_${key}`);
 			await broker.cacher?.del(`${GET_MEDIA_LINK_PREFIX}_${key}`);
 		}
 	}
