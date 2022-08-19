@@ -69,12 +69,6 @@ export default class MoveTxService extends Service {
 				lastId = lastestTxAggregate[0]._id.toString();
 			}
 		}
-		// let objectId;
-		// if (lastId == '0') {
-		// 	objectId = '0';
-		// } else {
-		// 	objectId = new ObjectId(lastId);
-		// }
 		let listTx: ITransaction[] = await this.adapter.find({
 			query: {
 				_id: { $gt: new ObjectId(lastId) },
@@ -101,7 +95,7 @@ export default class MoveTxService extends Service {
 
 				this.broker.emit('job.movetx', { listTx: listTx });
 				let listBulk: any[] = [];
-				listBulk = listTx.map(async (tx: ITransaction) => {
+				listBulk = listTx.map((tx: ITransaction) => {
 					// return this.adapter.removeById(tx._id);
 					return {
 						deleteOne: {

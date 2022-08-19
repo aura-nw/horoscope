@@ -6,14 +6,11 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 
 const QueueService = require('moleculer-bull');
 import { Job } from 'bull';
-import { IBlock, ITransaction, TransactionEntity } from '../../entities';
-import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
-import { JsonConvert } from 'json2typescript';
+import { IBlock } from '../../entities';
+import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import { ObjectId } from 'bson';
-import { Types } from 'mongoose';
 
 export default class MoveBlockService extends Service {
-	// private lastId: string = '0';
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -26,7 +23,7 @@ export default class MoveBlockService extends Service {
 						prefix: 'move.block',
 					},
 				),
-				dbTransactionMixin,
+				dbBlockMixin,
 			],
 			queues: {
 				'move.block': {
@@ -43,13 +40,10 @@ export default class MoveBlockService extends Service {
 		});
 	}
 
-	// async initEnv() {
-	// 	if this.lastId === null {
-	// }
 	async handleJob(lastId: string) {
 		let blockLastId: any = null;
 		if (lastId == '0') {
-			const lastestBlockAggregate: ITransaction[] = await this.adapter.find({
+			const lastestBlockAggregate: IBlock[] = await this.adapter.find({
 				sort: '_id',
 				limit: 1,
 				skip: 0,
@@ -87,17 +81,16 @@ export default class MoveBlockService extends Service {
 					'move.block',
 					{
 						//@ts-ignore
-						lastId: listTx[listTx.length - 1]._id.toString(),
+						lastId: listBlock[listBlock.length - 1]._id.toString(),
 					},
 					{
 						removeOnComplete: true,
 					},
 				);
 
-				this.broker.emit('job.movetx', { listBlock: listBlock });
+				this.broker.emit('job.moveblock', { listBlock: listBlock });
 				let listBulk: any[] = [];
-				listBulk = listBlock.map(async (block: IBlock) => {
-					// return this.adapter.removeById(block._id);
+				listBulk = listBlock.map((block: IBlock) => {
 					return {
 						deleteOne: {
 							filter: {
@@ -106,12 +99,11 @@ export default class MoveBlockService extends Service {
 						},
 					};
 				});
-				// await Promise.all(listPromise);
-				await this.adapter.bulkWrite(listBulk);
-
+				let result = await this.adapter.bulkWrite(listBulk);
+				this.logger.debug(result);
 				if (listBlock) {
 					//@ts-ignore
-					this.lastId = listTx[listTx.length - 1]._id.toString();
+					this.lastId = listBlock[listBlock.length - 1]._id.toString();
 				}
 				this.broker.emit('move.block.success', {
 					listBlock: listBlock,

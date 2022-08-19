@@ -276,10 +276,23 @@ export default class BlockService extends MoleculerDBService<
 			// this.logger.info('queryParam: ', JSON.stringify(queryParamFormat));
 			let queryAnd: any[] = [];
 			queryParamFormat.forEach((e: any) => {
+				// let tempQuery = {
+				// 	'tx_response.events.type': e.type,
+				// 	'tx_response.events.attributes.key': toBase64(toUtf8(e.key)),
+				// 	'tx_response.events.attributes.value': toBase64(toUtf8(e.value)),
+				// };
 				let tempQuery = {
-					'tx_response.events.type': e.type,
-					'tx_response.events.attributes.key': toBase64(toUtf8(e.key)),
-					'tx_response.events.attributes.value': toBase64(toUtf8(e.value)),
+					'tx_response.events': {
+						$elemMatch: {
+							type: e.type,
+							attributes: {
+								$elemMatch: {
+									key: toBase64(toUtf8(e.key)),
+									value: toBase64(toUtf8(e.value)),
+								},
+							},
+						},
+					},
 				};
 				queryAnd.push(tempQuery);
 			});
@@ -298,6 +311,36 @@ export default class BlockService extends MoleculerDBService<
 					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
 				},
 			);
+			// listQueryAnd.push({
+			// 	$or: [
+			// 		{
+			// 			'tx_response.events': {
+			// 				$elemMatch: {
+			// 					type: 'transfer',
+			// 					attributes: {
+			// 						$elemMatch: {
+			// 							key: BASE_64_ENCODE.RECIPIENT,
+			// 							value: toBase64(toUtf8(address)),
+			// 						},
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 		{
+			// 			'tx_response.events': {
+			// 				$elemMatch: {
+			// 					type: 'transfer',
+			// 					attributes: {
+			// 						$elemMatch: {
+			// 							key: BASE_64_ENCODE.SENDER,
+			// 							value: toBase64(toUtf8(address)),
+			// 						},
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 	],
+			// });
 		}
 
 		if (listQueryAnd.length > 0) {

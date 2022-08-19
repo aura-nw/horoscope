@@ -4,11 +4,13 @@ import { Types } from 'mongoose';
 import { Coin, ICoin } from './coin.entity';
 import { NumericConverter } from './converters/numeric.converter';
 import { DateConverter } from './converters/date.converter';
+import { CustomInfo, ICustomInfo } from './custom-info.entity';
 
 export interface ITransaction {
 	_id: Types.ObjectId | string | null;
 	tx: ITxInput;
 	tx_response: ITxResponse;
+	custom_info: ICustomInfo;
 }
 
 export interface IPublicKey {
@@ -286,31 +288,12 @@ export class TransactionEntity implements ITransaction {
 	@JsonProperty('_id', Object, true)
 	public _id = Config.DB_TRANSACTION.dialect === 'local' ? Types.ObjectId() : null;
 
-	// @JsonProperty('hash', String)
-	// hash: String = '';
-	// @JsonProperty('height', NumericConverter)
-	// height = null;
-	// @JsonProperty('index', Number)
-	// index: Number = 0;
-	// @JsonProperty('tx_result', TxResult)
-	// tx_result: TxResult = {} as TxResult;
-	// @JsonProperty('tx', String)
-	// tx: String = '';
-
-	// @JsonProperty('body', Body, true)
-	// body: Body = {} as Body;
-
-	// @JsonProperty('auth_info', AuthInfo, true)
-	// auth_info: AuthInfo = {} as AuthInfo;
-
-	// @JsonProperty('signatures', [String], true)
-	// signatures: string[] = [];
-
 	@JsonProperty('tx', TxInput)
 	tx: TxInput = {} as TxInput;
 	@JsonProperty('tx_response', TxResponse)
 	tx_response: TxResponse = {} as TxResponse;
 
+	custom_info: CustomInfo = {} as CustomInfo;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

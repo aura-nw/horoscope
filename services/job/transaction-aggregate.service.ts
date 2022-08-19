@@ -56,17 +56,16 @@ export default class TxAggregateService extends Service {
 
 	async handleJob(listTx: ITransaction[]) {
 		let listBulk: any[] = [];
+		if (!listTx) return;
 		listTx.map(async (tx: ITransaction) => {
 			listBulk.push({
-				updateOne: {
-					filter: { _id: tx._id },
-					update: tx,
-					upsert: true,
+				insertOne: {
+					document: tx,
 				},
 			});
 		});
 		let result = await this.adapter.bulkWrite(listBulk);
-		this.logger.info(`Update tx: ${listTx.length}`, result);
+		this.logger.debug(`Update tx: ${listTx.length}`, result);
 	}
 
 	async _start() {

@@ -18,7 +18,7 @@ export default class BlockAggregateService extends Service {
 				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
-						prefix: 'listtx.create',
+						prefix: 'listblock.create',
 					},
 				),
 				dbBlockAggregateMixin,
@@ -29,7 +29,7 @@ export default class BlockAggregateService extends Service {
 					process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						this.handleJob(job.data.listTx);
+						this.handleJob(job.data.listBlock);
 						job.progress(100);
 						return true;
 					},
@@ -56,17 +56,16 @@ export default class BlockAggregateService extends Service {
 
 	async handleJob(listBlock: IBlock[]) {
 		let listBulk: any[] = [];
+		if (!listBlock) return;
 		listBlock.map(async (block: IBlock) => {
 			listBulk.push({
-				updateOne: {
-					filter: { _id: block._id },
-					update: block,
-					upsert: true,
+				insertOne: {
+					document: block,
 				},
 			});
 		});
 		let result = await this.adapter.bulkWrite(listBulk);
-		this.logger.info(`Update tx: ${listBlock.length}`, result);
+		this.logger.info(`Update block: ${listBlock.length}`, result);
 	}
 
 	async _start() {
