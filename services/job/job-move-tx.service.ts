@@ -60,7 +60,9 @@ export default class MoveTxService extends Service {
 					lastestTxAggregate[0]._id.toString(),
 				).getTimestamp();
 
-				timestampObjectId.setDate(timestampObjectId.getDate() + 2);
+				timestampObjectId.setDate(
+					timestampObjectId.getDate() + parseInt(Config.RANGE_DAY_MOVE_TX, 10),
+				);
 
 				if (timestampObjectId >= new Date()) {
 					return;
