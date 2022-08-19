@@ -276,24 +276,24 @@ export default class BlockService extends MoleculerDBService<
 			// this.logger.info('queryParam: ', JSON.stringify(queryParamFormat));
 			let queryAnd: any[] = [];
 			queryParamFormat.forEach((e: any) => {
-				// let tempQuery = {
-				// 	'tx_response.events.type': e.type,
-				// 	'tx_response.events.attributes.key': toBase64(toUtf8(e.key)),
-				// 	'tx_response.events.attributes.value': toBase64(toUtf8(e.value)),
-				// };
 				let tempQuery = {
-					'tx_response.events': {
-						$elemMatch: {
-							type: e.type,
-							attributes: {
-								$elemMatch: {
-									key: toBase64(toUtf8(e.key)),
-									value: toBase64(toUtf8(e.value)),
-								},
-							},
-						},
-					},
+					'tx_response.events.type': e.type,
+					'tx_response.events.attributes.key': toBase64(toUtf8(e.key)),
+					'tx_response.events.attributes.value': toBase64(toUtf8(e.value)),
 				};
+				// let tempQuery = {
+				// 	'tx_response.events': {
+				// 		$elemMatch: {
+				// 			type: e.type,
+				// 			attributes: {
+				// 				$elemMatch: {
+				// 					key: toBase64(toUtf8(e.key)),
+				// 					value: toBase64(toUtf8(e.value)),
+				// 				},
+				// 			},
+				// 		},
+				// 	},
+				// };
 				queryAnd.push(tempQuery);
 			});
 			listQueryAnd.push(...queryAnd);
