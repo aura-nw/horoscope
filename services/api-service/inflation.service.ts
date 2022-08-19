@@ -32,6 +32,9 @@ export default class InflationService extends MoleculerDBService<
 > {
 	@Action({
 		name: 'getByChain',
+		cache: {
+			ttl: 10,
+		},
 	})
 	async getByChain(ctx: Context<DbContextParameters>) {
 		const params = await this.sanitizeParams(ctx, ctx.params);
