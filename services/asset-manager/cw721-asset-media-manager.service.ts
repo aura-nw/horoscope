@@ -4,8 +4,8 @@
 import moleculer, { CallingOptions, Context } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
-import { Common } from '@MicroServices/asset-indexer/common.service';
-import { MediaStatus } from 'model/cw721-asset-media.model';
+import { Common } from '../asset-indexer/common.service';
+import { MediaStatus } from '../../model/cw721-asset-media.model';
 import { CW721_MEDIA_MANAGER_ACTION } from '../../common/constant';
 import { Config } from '../../common';
 

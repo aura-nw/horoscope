@@ -1,16 +1,16 @@
 'use strict';
 
-import CallApiMixin from '@Mixins/callApi/call-api.mixin';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import request from 'request-promise';
 import CID from 'cids';
 const fetch = require('node-fetch');
 import parse from 'parse-uri';
-import { Config } from 'common';
+import { Config } from '../../common';
 import { Types } from 'mongoose';
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import moleculer, { Context } from 'moleculer';
 import { S3Service } from '../../utils/s3';
-import { LIST_NETWORK } from 'common/constant';
+import { LIST_NETWORK } from '../../common/constant';
 const { createHash } = require('crypto');
 const errors = require('request-promise/errors');
 
@@ -237,4 +237,13 @@ export class Common {
 		); // fragment locator
 		return !!pattern.test(str);
 	}
+	public static makeid() {
+		var text = "";
+		var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	  
+		for (var i = 0; i < 5; i++)
+		  text += possible.charAt(Math.floor(Math.random() * possible.length));
+	  
+		return text;
+	  }
 }

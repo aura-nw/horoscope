@@ -24,6 +24,7 @@ export default class RedisMixin implements Partial<ServiceSchema>, ThisType<Serv
 							database: Config.REDIS_DB_NUMBER,
 							// url: `redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 						});
+						console.log("REDIS connection",Config.REDIS_USERNAME, Config.REDIS_PASSWORD, Config.REDIS_HOST, Config.REDIS_DB_NUMBER);
 						await this.redisClient.connect();
 					}
 					return <RedisClientType>this.redisClient;
