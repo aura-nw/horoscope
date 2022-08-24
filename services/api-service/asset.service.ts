@@ -58,34 +58,28 @@ export default class BlockService extends MoleculerDBService<
 	 *      - "Asset"
 	 *      summary:  Register asset with the code id
 	 *      description: Register asset with the code id
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
-	 *      parameters:
-	 *        - in: body
-	 *          name: params
-	 *          schema:
-	 *            type: object
-	 *            properties:
-	 *              codeId:
-	 *                required: true
-	 *                type: number
-	 *                description: "Code id of stored contract"
-	 *              contractType:
-	 *                required: true
-	 *                type: string
-	 *                enum:
-	 *                - "CW721"
-	 *                description: "Type of contract want to register"
-	 *              chainId:
-	 *                required: true
-	 *                type: string
-	 *                example: aura-devnet
-	 *                description: "Chain Id of network"
+	 *      requestBody:
+	 *        content:
+	 *          application/json:
+	 *            schema:
+	 *              type: object
+	 *              properties:
+	 *                codeId:
+	 *                  type: number
+	 *                  description: "Code id of stored contract"
+	 *                contractType:
+	 *                  type: string
+	 *                  enum:
+	 *                  - "CW721"
+	 *                  - "CW20"
+	 *                  description: "Type of contract want to register"
+	 *                chainId:
+	 *                  type: string
+	 *                  example: aura-testnet
+	 *                  description: "Chain Id of network"
 	 *      responses:
 	 *        200:
-	 *          description: Register result
+	 *          description: OK
 	 *        422:
 	 *          description: Missing parameters
 	 */
@@ -183,46 +177,48 @@ export default class BlockService extends MoleculerDBService<
 	 *        - Asset
 	 *      summary: Get asset by owner
 	 *      description: Get asset by owner
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
 	 *      parameters:
 	 *        - in: query
 	 *          name: owner
 	 *          required: true
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Owner address need to query"
 	 *        - in: query
 	 *          name: chainid
 	 *          required: false
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
-	 *          type: string
+	 *          schema:
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            type: string
 	 *          description: "Chain Id of network need to query(if null it will return asset on all chainid)"
 	 *        - in: query
 	 *          name: tokenName
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Token name need to query"
 	 *        - in: query
 	 *          name: tokenId
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Token id need to query"
 	 *        - in: query
 	 *          name: contractAddress
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Contract address need to query"
 	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
-	 *          default: false
-	 *          type: boolean
+	 *          schema:
+	 *            type: boolean
+	 *            default: 'false'
 	 *          description: "count total record"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: OK
 	 *        '422':
 	 *          description: Missing parameters
 	 *
@@ -330,50 +326,52 @@ export default class BlockService extends MoleculerDBService<
 	 *        - Asset
 	 *      summary: Get asset by contract type
 	 *      description: Get asset by contract type
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
+
 	 *      parameters:
 	 *        - in: query
 	 *          name: contractType
 	 *          required: true
-	 *          type: string
-	 *          enum: ["CW721", "CW20"]
+	 *          schema: 
+	 *            type: string
+	 *            enum: ["CW721", "CW20"]
 	 *          description: "Contract type need to query"
 	 *        - in: query
 	 *          name: chainid
 	 *          required: false
-	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          schema: 
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
-	 *          default: 10
-	 *          type: number
+	 *          schema: 
+	 *            type: number
+	 *            default: 10
 	 *          description: "number record return in a page"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
-	 *          default: 0
-	 *          type: number
+	 *          schema: 
+	 *            type: number
+	 *            default: 0
 	 *          description: "Page number, start at 0"
 	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
-	 *          default: false
-	 *          type: boolean
+	 *          schema: 
+	 *            default: false
+	 *            type: boolean
 	 *          description: "count total record"
 	 *        - in: query
 	 *          name: nextKey
 	 *          required: false
-	 *          default:
-	 *          type: string
+	 *          schema: 
+	 *            type: string
 	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: OK
 	 *        '422':
 	 *          description: Missing parameters
 	 *
@@ -501,62 +499,65 @@ export default class BlockService extends MoleculerDBService<
 	 *        - Asset
 	 *      summary: Get holder by asset
 	 *      description: Get holder by asset
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
 	 *          required: true
-	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: contractType
 	 *          required: true
-	 *          type: string
-	 *          enum: ["CW721", "CW20"]
+	 *          schema:
+	 *            type: string
+	 *            enum: ["CW721", "CW20"]
 	 *          description: "Contract type need to query"
 	 *        - in: query
 	 *          name: contractAddress
 	 *          required: true
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "asset/contract address need to query"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
-	 *          default: 10
-	 *          type: number
+	 *          schema:
+	 *            type: number
+	 *            default: 10
 	 *          description: "number record return in a page"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
-	 *          default: 0
-	 *          type: number
+	 *          schema:
+	 *            type: number
+	 *            default: 0
 	 *          description: "Page number, start at 0"
 	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
-	 *          default: false
-	 *          type: boolean
+	 *          schema:
+	 *            type: boolean
+	 *            default: 'false'
 	 *          description: "count total record"
 	 *        - in: query
 	 *          name: nextKey
 	 *          required: false
-	 *          default:
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "key for next page"
 	 *        - in: query
 	 *          name: reverse
 	 *          required: false
-	 *          enum: ["true","false"]
-	 *          default: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
+	 *            default: 'false'
+	 *            enum: ["true","false"]
 	 *          description: "reverse is true if you want to get the by percent hold cw20, default is false"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: OK
 	 *        '422':
 	 *          description: Missing parameters
 	 *

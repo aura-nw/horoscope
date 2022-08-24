@@ -21,6 +21,10 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
     bulkWrite(query){
         return this.model.bulkWrite(query);
     }
+
+    lean(filters) {
+		return this.createCursor(filters).lean().maxTimeMS(1000*20);
+	}
 }
 
 module.exports = CustomMongooseDbAdapter;

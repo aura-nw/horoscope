@@ -43,66 +43,72 @@ export default class BlockService extends MoleculerDBService<
 	 *        - Block
 	 *      summary: Get latest block
 	 *      description: Get latest block
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
 	 *          required: true
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
-	 *          type: string
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: blockHeight
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Block height of transaction"
 	 *        - in: query
 	 *          name: blockHash
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Block hash"
 	 *        - in: query
 	 *          name: operatorAddress
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "operator address who proposed this block"
 	 *        - in: query
 	 *          name: consensusHexAddress
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "consensus hex address who proposed this block"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
-	 *          default: 10
-	 *          type: number
+	 *          schema:
+	 *            type: number
+	 *            default: 10
 	 *          description: "number record return in a page"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
-	 *          default: 0
-	 *          type: number
+	 *          schema:
+	 *            type: number
+	 *            default: 0
 	 *          description: "Page number, start at 0"
 	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
-	 *          default: false
-	 *          type: boolean
+	 *          schema:
+	 *            type: boolean
+	 *            default: false
 	 *          description: "count total record"
 	 *        - in: query
 	 *          name: nextKey
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "key for next page"
 	 *        - in: query
 	 *          name: reverse
 	 *          required: false
-	 *          enum: ["true","false"]
-	 *          default: false
-	 *          type: string
+	 *          schema:
+	 *            enum: ["true","false"]
+	 *            default: "false"
+	 *            type: string
 	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':

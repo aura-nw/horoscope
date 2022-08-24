@@ -49,88 +49,95 @@ export default class BlockService extends MoleculerDBService<
 	 *        - Transaction
 	 *      summary: Get latest transaction
 	 *      description: Get latest transaction
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
 	 *          required: true
-	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: blockHeight
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Block height of transaction"
 	 *        - in: query
 	 *          name: txHash
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Transaction hash"
 	 *        - in: query
 	 *          name: address
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Address in transaction"
 	 *        - in: query
 	 *          name: searchType
 	 *          required: false
-	 *          type: string
-	 *          enum: ["transfer","proposal_deposit", "proposal_vote", "delegate", "redelegate", "instantiate", "execute", "wasm"]
+	 *          schema:
+	 *            type: string
+	 *            enum: ["transfer","proposal_deposit", "proposal_vote", "delegate", "redelegate", "instantiate", "execute", "wasm"]
 	 *          description: "Search type event"
 	 *        - in: query
 	 *          name: searchKey
 	 *          required: false
-	 *          type: string
-	 *          enum: ["sender","recipient","proposal_id", "validator", "destination_validator", "_contract_address", "token_id"]
+	 *          schema:
+	 *            type: string
+	 *            enum: ["sender","recipient","proposal_id", "validator", "destination_validator", "_contract_address", "token_id"]
 	 *          description: "Search key event"
 	 *        - in: query
 	 *          name: searchValue
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Search value event"
 	 *        - in: query
 	 *          name: query
 	 *          required: false
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Search query with format A.B=C,D.E=F"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
-	 *          default: 0
-	 *          type: number
+	 *          schema:
+	 *            type: number
+	 *            default: 0
 	 *          description: "Page number, start at 0"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
-	 *          default: 10
-	 *          type: number
+	 *          schema:
+	 *            type: number
+	 *            default: 10
 	 *          description: "number record return in a page"
 	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
-	 *          default: false
-	 *          type: boolean
+	 *          schema:
+	 *            type: boolean
+	 *            default: "false"
 	 *          description: "count total record"
 	 *        - in: query
 	 *          name: nextKey
 	 *          required: false
-	 *          default:
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "key for next page"
 	 *        - in: query
 	 *          name: reverse
 	 *          required: false
-	 *          enum: ["true","false"]
-	 *          default: false
-	 *          type: string
+	 *          schema:
+	 *            type: boolean
+	 *            default: "false"
 	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: OK
 	 *        '422':
 	 *          description: Missing parameters
 	 *

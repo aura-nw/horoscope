@@ -42,25 +42,23 @@ export default class BlockService extends MoleculerDBService<
 	 *        - CodeId
 	 *      summary: Check status of code_id
 	 *      description: Check status of code_id
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
 	 *      parameters:
 	 *        - in: path
 	 *          name: chainId
 	 *          required: true
-	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network"
 	 *        - in: path
 	 *          name: codeId
 	 *          required: true
-	 *          type: number
+	 *          schema:
+	 *            type: number
 	 *          description: "Code Id of stored contract need to query"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: OK
 	 *        '422':
 	 *          description: Missing parameters
 	 *

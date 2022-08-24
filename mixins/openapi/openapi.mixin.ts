@@ -53,6 +53,7 @@ export const openAPIMixin = (mixinOptions?: any) => {
 			generateOpenAPISchema(): any {
 				try {
 					const swaggerDefinition = {
+						openapi: '3.0.0',
 						info: {
 							title: `Horoscope API Documentation`, // Title of the documentation
 							version: pkg.version, // Version of the app
@@ -60,8 +61,16 @@ export const openAPIMixin = (mixinOptions?: any) => {
 								// eslint-disable-next-line max-len
 								'Indexer for multiple Cosmos Network', // Short description of the app
 						},
-						host: `${Config.SWAGGER_HOST}:${Config.SWAGGER_PORT}`, // The host or url of the app
-						basePath: `${Config.SWAGGER_BASEPATH}`, // The basepath of your endpoint
+						// host: `${Config.SWAGGER_HOST}:${Config.SWAGGER_PORT}`, // The host or url of the app
+						// basePath: `${Config.SWAGGER_BASEPATH}`, // The basepath of your endpoint
+						servers: [
+							{
+								url: `${Config.SWAGGER_HOST}:${Config.SWAGGER_PORT}${Config.SWAGGER_BASEPATH}`,
+							},
+							{
+								url: `https://lcd.dev.aura.network`,
+							},
+						],
 					};
 					// Options for the swagger docs
 					const options = {

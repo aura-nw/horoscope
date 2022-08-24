@@ -40,21 +40,19 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *        - Account Info
 	 *      summary: Get information of an address
 	 *      description: Get information of an address
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
 	 *      parameters:
 	 *        - in: query
 	 *          name: address
 	 *          required: true
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Address of account"
 	 *        - in: query
 	 *          name: chainId
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          required: true
-	 *          type: string
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *      responses:
 	 *        '200':
@@ -169,25 +167,23 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *        - Account Info
 	 *      summary: Get delegation information of an address
 	 *      description: Get delegation information of an address
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
 	 *      parameters:
 	 *        - in: query
 	 *          name: address
 	 *          required: true
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "Address of account"
 	 *        - in: query
 	 *          name: chainId
 	 *          required: true
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
-	 *          type: string
+	 *          schema:
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            type: string
 	 *          description: "Chain Id of network need to query"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: OK
 	 *        '422':
 	 *          description: Missing parameters
 	 *

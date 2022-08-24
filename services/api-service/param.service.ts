@@ -38,44 +38,44 @@ export default class ParamService extends MoleculerDBService<
 	 *        - Param
 	 *      summary: Get param
 	 *      description: Get param
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
 	 *          required: true
-	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: module
 	 *          required: false
-	 *          type: string
-	 *          enum: ["bank", "gov", "distribution", "staking", "slashing", "ibc-transfer", "mint"]
+	 *          schema:
+	 *            type: string
+	 *            enum: ["bank", "gov", "distribution", "staking", "slashing", "ibc-transfer", "mint"]
 	 *          description: "module need to query"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
-	 *          default: 10
-	 *          type: number
+	 *          schema:
+	 *            type: number
+	 *            default: 10
 	 *          description: "number record return in a page"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
-	 *          default: 0
-	 *          type: number
+	 *          schema:
+	 *            type: number
+	 *            default: 0
 	 *          description: "Page number, start at 0"
 	 *        - in: query
 	 *          name: nextKey
 	 *          required: false
-	 *          default:
-	 *          type: string
+	 *          schema:
+	 *            type: string
 	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: OK
 	 *        '422':
 	 *          description: Missing parameters
 	 *
