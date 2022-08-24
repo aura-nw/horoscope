@@ -22,6 +22,7 @@ import {
 } from '../../types';
 import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
+import { LIST_NETWORK } from '../../common/constant';
 
 const tlBucket = 60000;
 const swMiddleware = swStats.getMiddleware({
@@ -30,6 +31,10 @@ const swMiddleware = swStats.getMiddleware({
 	uriPath: '/dashboard',
 	swaggerSpec: swaggerSpec,
 });
+
+const listLCD = LIST_NETWORK.map((e) => {
+	return e.LCD;
+}).flat();
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -42,13 +47,13 @@ const swMiddleware = swStats.getMiddleware({
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	settings: {
 		port: Config.PORT || 3000,
-
 		use: [
 			cookieParser(),
 			helmet({
 				contentSecurityPolicy: {
 					directives: {
-						'default-src': ["'self'"],
+						'default-src': ["'self'", ...listLCD],
+						'connect-src': ["'self'", ...listLCD],
 						'base-uri': ["'self'"],
 						// 'block-all-mixed-content',
 						'font-src': ["'self'"],

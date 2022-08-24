@@ -1,17 +1,6 @@
 [
 	{
 		"chainName":"Aura devnet",
-		"chainId":"aura-devnet",
-		"RPC":[
-		   "https://rpc.dev.aura.network"
-		],
-		"LCD":[
-		   "https://lcd.dev.aura.network"
-		],
-		"prefixAddress":"aura"
-	},
-	{
-		"chainName":"Aura devnet",
 		"chainId":"aura-testnet",
 		"RPC":[
 		   "https://rpc.dev.aura.network"

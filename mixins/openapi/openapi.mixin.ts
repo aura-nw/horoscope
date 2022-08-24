@@ -12,12 +12,16 @@ import _ from 'lodash';
 import swaggerJSDoc from 'swagger-jsdoc';
 import * as pkg from '../../package.json';
 import { Config } from '../../common';
+import { LIST_NETWORK } from '../../common/constant';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const MoleculerServerError = Errors.MoleculerServerError;
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
+const listLCD = LIST_NETWORK.map((e) => {
+	return e.LCD;
+}).flat();
 
 export const openAPIMixin = (mixinOptions?: any) => {
 	mixinOptions = _.defaultsDeep(mixinOptions, {
@@ -52,6 +56,12 @@ export const openAPIMixin = (mixinOptions?: any) => {
 			 */
 			generateOpenAPISchema(): any {
 				try {
+					let url = Config.SWAGGER_HOST;
+					if (Config.SWAGGER_PORT) {
+						url += `:${Config.BASE_PORT}`;
+					}
+					url += `${Config.SWAGGER_BASEPATH}`;
+
 					const swaggerDefinition = {
 						openapi: '3.0.0',
 						info: {
@@ -65,11 +75,13 @@ export const openAPIMixin = (mixinOptions?: any) => {
 						// basePath: `${Config.SWAGGER_BASEPATH}`, // The basepath of your endpoint
 						servers: [
 							{
-								url: `${Config.SWAGGER_HOST}:${Config.SWAGGER_PORT}${Config.SWAGGER_BASEPATH}`,
+								url: url,
 							},
-							{
-								url: `https://lcd.dev.aura.network`,
-							},
+							...listLCD.map((e) => {
+								return {
+									url: e,
+								};
+							}),
 						],
 					};
 					// Options for the swagger docs
