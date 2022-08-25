@@ -204,7 +204,7 @@ export class Common {
 									Bucket: BUCKET,
 									ContentType: contentType,
 								},
-								function (error) {
+								function (error: any) {
 									if (error) {
 										reject(error);
 									} else {
@@ -215,7 +215,7 @@ export class Common {
 							);
 						}
 					})
-					.catch(function (err) {
+					.catch(function (err: any) {
 						errcode = err.error.code;
 						reject(err);
 					});
@@ -239,12 +239,12 @@ export class Common {
 		return !!pattern.test(str);
 	}
 	public static makeid() {
-		var text = "";
-		var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	  
+		var text = '';
+		var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
 		for (var i = 0; i < 5; i++)
-		  text += possible.charAt(Math.floor(Math.random() * possible.length));
-	  
+			text += possible.charAt(Math.floor(Math.random() * possible.length));
+
 		return text;
-	  }
+	}
 }
