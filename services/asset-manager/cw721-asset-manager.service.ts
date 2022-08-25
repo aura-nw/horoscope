@@ -49,6 +49,47 @@ import _ from 'lodash';
 				return await this.adapter.find(ctx.params);
 			},
 		},
+		'act-join-media-link': {
+			cache: {
+				ttl: 10,
+			},
+			async handler(ctx: Context<CursorOptions, Record<string, unknown>>): Promise<any> {
+				// @ts-ignore
+				this.logger.debug(
+					`ctx.params cw721-asset-manager aggregate media ${JSON.stringify(ctx.params)}`,
+				);
+				let listAggregate: any[] = [
+					{
+						$match: ctx.params.query,
+					},
+					{
+						$lookup: {
+							from: 'cw721_media_link',
+							localField: 'media_link',
+							foreignField: 'key',
+							as: 'media_info',
+						},
+					},
+				];
+				if (ctx.params.sort) {
+					listAggregate.push({
+						$sort: ctx.params.sort,
+					});
+				}
+				if (ctx.params.offset) {
+					listAggregate.push({
+						$skip: ctx.params.offset,
+					});
+				}
+				if (ctx.params.limit) {
+					listAggregate.push({
+						$limit: ctx.params.limit,
+					});
+				}
+				// @ts-ignore
+				return await this.adapter.aggregate(listAggregate);
+			},
+		},
 		'act-list': {
 			cache: {
 				ttl: 10,
@@ -80,7 +121,14 @@ export default class CW721AssetManagerService extends moleculer.Service {
 		let item = await this.adapter.findOne({ asset_id: asset.asset_id });
 		if (item) {
 			asset._id = item._id;
-			await this.adapter.updateById(item._id, asset);
+			if (
+				item.contract_address != asset.contract_address ||
+				item.token_id != asset.token_id ||
+				item.owner != asset.owner ||
+				item.is_burned != asset.is_burned
+			) {
+				await this.adapter.updateById(item._id, asset);
+			}
 		} else {
 			await this.adapter.insert(asset);
 		}

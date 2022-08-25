@@ -276,12 +276,22 @@ export default class BlockService extends MoleculerDBService<
 			let assetsMap: Map<any, any> = new Map();
 			const getData = Promise.all(
 				contractMap.map(async (contract_type: string) => {
-					const asset: any[] = await this.broker.call(
-						`v1.${contract_type}-asset-manager.act-find`,
-						{
-							query,
-						},
-					);
+					let asset: any[];
+					if (contract_type == CONTRACT_TYPE.CW721) {
+						asset = await this.broker.call(
+							`v1.${contract_type}-asset-manager.act-join-media-link`,
+							{
+								query,
+							},
+						);
+					} else {
+						asset = await this.broker.call(
+							`v1.${contract_type}-asset-manager.act-find`,
+							{
+								query,
+							},
+						);
+					}
 					this.logger.info(`asset: ${JSON.stringify(asset)}`);
 					let count = 0;
 					if (ctx.params.countTotal === true) {
@@ -452,15 +462,28 @@ export default class BlockService extends MoleculerDBService<
 
 			this.logger.info('query', query);
 
-			const assets: any[] = await this.broker.call(
-				`v1.${ctx.params.contractType}-asset-manager.act-find`,
-				{
-					query,
-					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset,
-					sort: '-_id',
-				},
-			);
+			let assets: any[];
+			if (ctx.params.contractType == CONTRACT_TYPE.CW20) {
+				assets = await this.broker.call(
+					`v1.${ctx.params.contractType}-asset-manager.act-find`,
+					{
+						query,
+						limit: ctx.params.pageLimit,
+						offset: ctx.params.pageOffset,
+						sort: '-_id',
+					},
+				);
+			} else {
+				assets = await this.broker.call(
+					`v1.${ctx.params.contractType}-asset-manager.act-join-media-link`,
+					{
+						query,
+						limit: ctx.params.pageLimit,
+						offset: ctx.params.pageOffset,
+						sort: { _id: -1 },
+					},
+				);
+			}
 			let count = 0;
 			if (ctx.params.countTotal === true) {
 				count = await this.broker.call(
