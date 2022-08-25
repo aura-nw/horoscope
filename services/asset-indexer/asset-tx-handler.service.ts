@@ -17,6 +17,7 @@ import {
 } from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
+import { CodeIDStatus } from '../../model/codeid.model';
 import { ICW721Asset, Status } from '../../model';
 import { info } from 'console';
 import { IAttribute, IEvent, ITransaction } from 'entities';
@@ -118,9 +119,8 @@ export default class CrawlAccountInfoService extends Service {
 								chainId,
 							);
 							if (contractInfo != null) {
-								this.logger.info('contractInfo', contractInfo);
 								switch (contractInfo.status) {
-									case Status.COMPLETED:
+									case CodeIDStatus.COMPLETED:
 										await this.broker.call(
 											`v1.${contractInfo.contract_type}.enrichData`,
 											[
@@ -135,8 +135,7 @@ export default class CrawlAccountInfoService extends Service {
 											OPTs,
 										);
 										break;
-									case Status.TBD:
-										this.logger.info('contractInfo TBD', contractInfo.status);
+									case CodeIDStatus.TBD:
 										this.broker.emit(`${contractInfo.contract_type}.validate`, {
 											URL,
 											chain_id: chainId,
@@ -205,7 +204,10 @@ export default class CrawlAccountInfoService extends Service {
 			});
 			this.logger.debug('codeid-manager.find res', res);
 			if (res.length > 0) {
-				if (res[0].status === Status.COMPLETED || res[0].status === Status.TBD) {
+				if (
+					res[0].status === CodeIDStatus.COMPLETED ||
+					res[0].status === CodeIDStatus.TBD
+				) {
 					return {
 						code_id: contractInfo.contract_info.code_id,
 						contract_type: res[0].contract_type,

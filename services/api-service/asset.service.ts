@@ -24,7 +24,7 @@ import { IBlock } from '../../entities';
 import { AssetIndexParams } from '../../types/asset';
 import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
-import { Status } from '../../model/codeid.model';
+import { CodeIDStatus } from '../../model/codeid.model';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
 import {
@@ -112,7 +112,7 @@ export default class BlockService extends MoleculerDBService<
 				this.logger.info('codeid-manager.find res', res);
 				if (res.length > 0) {
 					switch (res[0].status) {
-						case Status.REJECTED:
+						case CodeIDStatus.REJECTED:
 							if (res[0].contract_type !== contract_type) {
 								const condition = {
 									code_id: code_id,
@@ -120,12 +120,12 @@ export default class BlockService extends MoleculerDBService<
 								};
 								this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
 									condition,
-									update: { status: Status.WAITING, contract_type },
+									update: { status: CodeIDStatus.WAITING, contract_type },
 								});
 								registed = true;
 							}
 							break;
-						case Status.TBD:
+						case CodeIDStatus.TBD:
 							registed = true;
 							break;
 						// case Status.WAITING:
@@ -136,7 +136,7 @@ export default class BlockService extends MoleculerDBService<
 					this.broker.call(CODEID_MANAGER_ACTION.INSERT, {
 						_id: new Types.ObjectId(),
 						code_id,
-						status: Status.WAITING,
+						status: CodeIDStatus.WAITING,
 						contract_type,
 						custom_info: {
 							chain_id,
