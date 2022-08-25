@@ -18,7 +18,7 @@ import {
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
 import { CodeIDStatus } from '../../model/codeid.model';
-import { ICW721Asset, Status } from '../../model';
+import { ICW721Asset } from '../../model';
 import { info } from 'console';
 import { IAttribute, IEvent, ITransaction } from 'entities';
 import { toBase64, toUtf8, fromBase64, fromUtf8 } from '@cosmjs/encoding';
