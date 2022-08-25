@@ -4,7 +4,7 @@
 
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
-import { lockCacherMixin } from '../../mixins/lockCacher/lock.mixin';
+// import { lockCacherMixin } from '../../mixins/lockCacher/lock.mixin';
 import moleculer, { CallingOptions, Context, ServiceBroker } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { MediaStatus } from '../../model/cw721-asset-media.model';
@@ -29,7 +29,7 @@ const GET_MEDIA_LINK_PREFIX = "get_media_link";
 @Service({
 	name: 'CW721-media',
 	version: 1,
-	mixins: [callApiMixin, dbCW721MediaLinkMixin, lockCacherMixin],
+	mixins: [callApiMixin, dbCW721MediaLinkMixin],
 	events: {
 		'CW721-media.get-media-link': {
 			async handler(ctx: Context<any>) {
