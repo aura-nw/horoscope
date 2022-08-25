@@ -163,6 +163,11 @@ export class Common {
 				chain_id: network?.chainId,
 				chain_name: network?.chainName,
 			},
+			percent_hold:
+				Number(
+					(BigInt(balanceInfo?.data?.balance) * BigInt(100000000)) /
+						BigInt(tokenInfo?.data?.total_supply),
+				) / 1000000,
 		};
 	};
 	public static checkFileTypeInvalid = function (type: string) {
