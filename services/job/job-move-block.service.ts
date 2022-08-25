@@ -54,15 +54,45 @@ export default class MoveBlockService extends Service {
 					lastestBlockAggregate[0]._id.toString(),
 				).getTimestamp();
 
-				timestampObjectId.setDate(
+				let timeRange = new Date();
+				timeRange.setDate(
 					timestampObjectId.getDate() + parseInt(Config.RANGE_DAY_MOVE_BLOCK, 10),
 				);
-
-				if (timestampObjectId >= new Date()) {
+				if (timeRange >= new Date()) {
+					this.createJob(
+						'move.block',
+						{
+							lastId: lastId,
+						},
+						{
+							removeOnComplete: true,
+							delay: new Date().getTime() - timestampObjectId.getTime(),
+						},
+					);
 					return;
 				}
 
 				lastId = lastestBlockAggregate[0]._id.toString();
+			}
+		} else {
+			let timestampObjectId = new ObjectId(lastId).getTimestamp();
+
+			let timeRange = new Date();
+			timeRange.setDate(
+				timestampObjectId.getDate() + parseInt(Config.RANGE_DAY_MOVE_BLOCK, 10),
+			);
+			if (timeRange >= new Date()) {
+				this.createJob(
+					'move.block',
+					{
+						lastId: lastId,
+					},
+					{
+						removeOnComplete: true,
+						delay: new Date().getTime() - timestampObjectId.getTime(),
+					},
+				);
+				return;
 			}
 		}
 

@@ -6,14 +6,11 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 
 const QueueService = require('moleculer-bull');
 import { Job } from 'bull';
-import { IBlock, ITransaction, TransactionEntity } from '../../entities';
+import { ITransaction } from '../../entities';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
-import { JsonConvert } from 'json2typescript';
 import { ObjectId } from 'bson';
-import { Types } from 'mongoose';
 
 export default class MoveTxService extends Service {
-	// private lastId: string = '0';
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -43,9 +40,6 @@ export default class MoveTxService extends Service {
 		});
 	}
 
-	// async initEnv() {
-	// 	if this.lastId === null {
-	// }
 	async handleJob(lastId: string) {
 		let txLastId: any = null;
 		if (lastId == '0') {
@@ -60,15 +54,43 @@ export default class MoveTxService extends Service {
 					lastestTxAggregate[0]._id.toString(),
 				).getTimestamp();
 
-				timestampObjectId.setDate(
+				let timeRange = new Date();
+				timeRange.setDate(
 					timestampObjectId.getDate() + parseInt(Config.RANGE_DAY_MOVE_TX, 10),
 				);
-
-				if (timestampObjectId >= new Date()) {
+				if (timeRange >= new Date()) {
+					this.createJob(
+						'move.tx',
+						{
+							lastId: lastId,
+						},
+						{
+							removeOnComplete: true,
+							delay: new Date().getTime() - timestampObjectId.getTime(),
+						},
+					);
 					return;
 				}
 
 				lastId = lastestTxAggregate[0]._id.toString();
+			}
+		} else {
+			let timestampObjectId = new ObjectId(lastId).getTimestamp();
+
+			let timeRange = new Date();
+			timeRange.setDate(timestampObjectId.getDate() + parseInt(Config.RANGE_DAY_MOVE_TX, 10));
+			if (timeRange >= new Date()) {
+				this.createJob(
+					'move.tx',
+					{
+						lastId: lastId,
+					},
+					{
+						removeOnComplete: true,
+						delay: new Date().getTime() - timestampObjectId.getTime(),
+					},
+				);
+				return;
 			}
 		}
 		let listTx: ITransaction[] = await this.adapter.find({

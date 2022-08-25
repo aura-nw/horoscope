@@ -59,22 +59,23 @@ export default class ConfigClass {
 	// public static REQUEST_TIMEOUT = +(process.env.REQUEST_TIMEOUT || 10000);
 	// public static NAMESPACE = process.env.NAMESPACE || undefined;
 	public static NODEID: string;
-	// public static TRANSPORTER = process.env.TRANSPORTER || undefined;
-	// public static CACHER = getValue(process.env.CACHER, undefined);
-	// public static SERIALIZER = process.env.SERIALIZER || 'JSON'; // "JSON", "Avro", "ProtoBuf", "MsgPack", "Notepack", "Thrift"
-	// public static MAPPING_POLICY = process.env.MAPPING_POLICY || 'restrict';
-	// public static LOGLEVEL = (process.env.LOGLEVEL || 'info') as LogLevels;
-	// public static TRACING_ENABLED = isTrue(process.env.TRACING_ENABLED || '1');
-	// public static TRACING_TYPE = process.env.TRACING_TYPE || 'Console';
-	// public static TRACING_ZIPKIN_URL = process.env.TRACING_ZIPKIN_URL || 'http://zipkin:9411';
-	// public static METRICS_ENABLED = isTrue(process.env.METRICS_ENABLED || '1');
-	// public static METRICS_TYPE = process.env.METRICS_TYPE || 'Prometheus';
-	// public static METRICS_PORT = +(process.env.METRICS_PORT || 3030);
-	// public static METRICS_PATH = process.env.METRICS_PATH || '/metrics';
-	// public static RATE_LIMIT = +(process.env.RATE_LIMIT || 10);
-	// public static RATE_LIMIT_WINDOW = +(process.env.RATE_LIMIT_WINDOW || 10000);
-	// public static STRATEGY = process.env.STRATEGY || 'RoundRobin'; // "RoundRobin", "Random", "CpuUsage", "Latency", "Shard"
+	public static TRANSPORTER = process.env.TRANSPORTER || undefined;
+	public static CACHER = getValue(process.env.CACHER, undefined);
+	public static SERIALIZER = process.env.SERIALIZER || 'JSON'; // "JSON", "Avro", "ProtoBuf", "MsgPack", "Notepack", "Thrift"
+	public static MAPPING_POLICY = process.env.MAPPING_POLICY || 'restrict';
+	public static LOGLEVEL = (process.env.LOGLEVEL || 'info') as LogLevels;
+	public static TRACING_ENABLED = isTrue(process.env.TRACING_ENABLED || '1');
+	public static TRACING_TYPE = process.env.TRACING_TYPE || 'Console';
+	public static TRACING_ZIPKIN_URL = process.env.TRACING_ZIPKIN_URL || 'http://zipkin:9411';
+	public static METRICS_ENABLED = isTrue(process.env.METRICS_ENABLED || '1');
+	public static METRICS_TYPE = process.env.METRICS_TYPE || 'Prometheus';
+	public static METRICS_PORT = +(process.env.METRICS_PORT || 3030);
+	public static METRICS_PATH = process.env.METRICS_PATH || '/metrics';
+	public static RATE_LIMIT = +(process.env.RATE_LIMIT || 10);
+	public static RATE_LIMIT_WINDOW = +(process.env.RATE_LIMIT_WINDOW || 10000);
+	public static STRATEGY = process.env.STRATEGY || 'RoundRobin'; // "RoundRobin", "Random", "CpuUsage", "Latency", "Shard"
 	// public static JWT_SECRET = process.env.JWT_SECRET || 'dummy-secret';
+	public static ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
 	public static DB_USER: any;
 	public static DB_PRODUCT: any;
 	public static DB_TRANSACTION: any;
