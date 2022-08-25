@@ -44,17 +44,18 @@ const callApiMixin = new CallApiMixin().start();
 				const chain_id = ctx.params.chain_id;
 				// const contract_type = ctx.params.contract_type;
 				const URL = ctx.params.URL;
+				const cacheKey =`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`;
 				// @ts-ignore
 				this.logger.info('ctx.params', code_id, chain_id, CONTRACT_TYPE.CW721);
 				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
+				const processingFlag = await this.broker.cacher?.get(cacheKey);
 				if (!processingFlag) {
 					// @ts-ignore
-					await this.broker.cacher?.set(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`, true, CACHER_INDEXER_TTL);
+					await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
 					// @ts-ignore
 					await this.checkIfContractImplementInterface(URL, chain_id, code_id);
 					// @ts-ignore
-					await this.broker.cacher?.del(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
+					await this.broker.cacher?.del(cacheKey);
 				}
 			},
 		},
@@ -63,17 +64,18 @@ const callApiMixin = new CallApiMixin().start();
 				const chain_id = ctx.params.chain_id;
 				const code_id = ctx.params.code_id;
 				const URL = ctx.params.URL;
+				const cacheKey = `${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`;
 				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(`${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`);
+				const processingFlag = await this.broker.cacher?.get(cacheKey);
 				if (!processingFlag) {
 					// @ts-ignore
-					await this.broker.cacher?.set(`${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`, true);
+					await this.broker.cacher?.set(cacheKey, true);
 					// @ts-ignore
 					this.logger.debug('Asset handler registered', chain_id, code_id);
 					// @ts-ignore
 					await this.handleJob(URL, chain_id, code_id);
 					// @ts-ignore
-					await this.broker.cacher?.del(`${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`);
+					await this.broker.cacher?.del(cacheKey);
 					//TODO emit event index history of the NFT.
 				}
 				//TODO subcribe the event index the history of the NFT
@@ -143,7 +145,6 @@ export default class CrawlAssetService extends moleculer.Service {
 						condition,
 						update: { status: CodeIDStatus.COMPLETED },
 					});
-					this.logger.info('CW721.handle');
 					this.broker.emit('CW721.handle', { URL, chain_id, code_id });
 					break;
 				}
