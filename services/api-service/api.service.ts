@@ -107,6 +107,13 @@ const listLCD = LIST_NETWORK.map((e) => {
 					// Access to any actions in all services under "/api" URL
 					// '**',
 					'v1.network.*',
+					// 'v1.account-info.*',
+					// 'v1.proposal.getByChain',
+					// 'v1.validator.getByChain',
+					// 'v1.block.getByChain',
+					// 'v1.codeid.*',
+					// 'v1.transaction.getByChain',
+					'v1.test.*',
 					'v1.account-info.*',
 					'v1.account-unbonds.getByAddress',
 					'v1.proposal.getByChain',

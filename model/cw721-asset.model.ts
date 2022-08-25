@@ -10,6 +10,7 @@ export interface ICW721Asset {
 	contract_address: String;
 	token_id: String;
 	owner: String;
+	media_link: String,
 	history: String[];
 	is_burned: Boolean;
 }
@@ -43,6 +44,7 @@ const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 	history: {
 		type: [String],
 	},
+	media_link: String,
 	custom_info: customInfoModel,
 	is_burned: Boolean,
 });

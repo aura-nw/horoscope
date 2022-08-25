@@ -6,6 +6,7 @@ export * from './validator.model';
 export * from './pool.model';
 export * from './community-pool.model';
 export * from './cw721-asset.model';
+export * from './cw721-asset-media.model';
 export * from './codeid.model';
 export * from './inflation.model';
 export * from './account-auth.model';
