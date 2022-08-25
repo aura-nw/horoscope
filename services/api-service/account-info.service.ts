@@ -75,6 +75,7 @@ export default class AccountInfoService extends MoleculerDBService<
 	async getAccountInfoByAddress(ctx: Context<AccountInfoRequest>) {
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
+		const paramAuth = Config.GET_PARAMS_AUTH_INFO + `/${ctx.params.address}`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
 		let accountAuth,
@@ -93,10 +94,7 @@ export default class AccountInfoService extends MoleculerDBService<
 			accountUnbonds,
 			accountRewards,
 		] = await Promise.all([
-			this.broker.call('v1.account-auth.getByAddress', {
-				address: ctx.params.address,
-				chainid: ctx.params.chainId,
-			}),
+			this.callApiFromDomain(url, paramAuth),
 			this.broker.call('v1.account-balances.getByAddress', {
 				address: ctx.params.address,
 				chainid: ctx.params.chainId,
@@ -119,7 +117,7 @@ export default class AccountInfoService extends MoleculerDBService<
 			}),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
-		if (accountAuth) {
+		if (accountBalances) {
 			const data = {
 				account_balances: accountBalances,
 				account_delegations: accountDelegations,
