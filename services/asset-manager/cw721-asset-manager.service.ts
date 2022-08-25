@@ -149,6 +149,7 @@ export default class CW721AssetManagerService extends moleculer.Service {
 						owner: '$owner',
 					},
 					quantity: { $sum: 1 },
+					updatedAt: { $max: '$updatedAt' },
 				},
 			},
 			{
