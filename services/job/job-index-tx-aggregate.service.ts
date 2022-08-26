@@ -7,7 +7,7 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { Job } from 'bull';
 import { IAttribute, IEvent, ITransaction } from '../../entities';
-import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
+import { dbTransactionAggregateMixin } from '../../mixins/dbMixinMongoose';
 import { ObjectId } from 'bson';
 import { toBase64, toUtf8, fromBase64, fromUtf8 } from '@cosmjs/encoding';
 import RedisMixin from '../../mixins/redis/redis.mixin';
@@ -22,14 +22,14 @@ export default class IndexTxService extends Service {
 				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
-						prefix: 'index.tx',
+						prefix: 'index.tx-aggregate',
 					},
 				),
-				dbTransactionMixin,
+				dbTransactionAggregateMixin,
 				this.redisMixin,
 			],
 			queues: {
-				'index.tx': {
+				'index.tx-aggregate': {
 					concurrency: 10,
 					process(job: Job) {
 						job.progress(10);
@@ -49,7 +49,6 @@ export default class IndexTxService extends Service {
 		if (lastId == '0') {
 		} else {
 			query['_id'] = { $gt: new ObjectId(lastId) };
-			// query['indexes.timestamp'] = { $eq: null };
 		}
 		const listTx: ITransaction[] = await this.adapter.find({
 			query: query,
@@ -59,7 +58,7 @@ export default class IndexTxService extends Service {
 		});
 		if (listTx.length > 0) {
 			this.createJob(
-				'index.tx',
+				'index.tx-aggregate',
 				{
 					//@ts-ignore
 					lastId: listTx[listTx.length - 1]._id.toString(),
@@ -80,7 +79,7 @@ export default class IndexTxService extends Service {
 
 		// if (nextTx) {
 		// 	this.createJob(
-		// 		'index.tx',
+		// 		'index.tx-aggregate',
 		// 		{
 		// 			//@ts-ignore
 		// 			lastId: lastId,
@@ -161,7 +160,7 @@ export default class IndexTxService extends Service {
 	async _start() {
 		this.redisClient = await this.getRedisClient();
 		this.createJob(
-			'index.tx',
+			'index.tx-aggregate',
 			{
 				lastId: '0',
 			},
@@ -169,13 +168,13 @@ export default class IndexTxService extends Service {
 				removeOnComplete: true,
 			},
 		);
-		this.getQueue('index.tx').on('completed', (job: Job) => {
+		this.getQueue('index.tx-aggregate').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('index.tx').on('failed', (job: Job) => {
+		this.getQueue('index.tx-aggregate').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
 		});
-		this.getQueue('index.tx').on('progress', (job: Job) => {
+		this.getQueue('index.tx-aggregate').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
