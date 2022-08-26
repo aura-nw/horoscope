@@ -107,7 +107,7 @@ export default class IndexTxService extends Service {
 								: '';
 							let array = indexes[`${type}.${key}`];
 							if (array && array.length > 0) {
-								let position = indexes[`${type}.${key}`].indexOf(value);
+								let position = indexes[`${type}_${key}`].indexOf(value);
 								if (position == -1) {
 									indexes[`${type}_${key}`].push(value);
 								}
