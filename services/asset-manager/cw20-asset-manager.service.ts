@@ -82,8 +82,8 @@ export default class CW20AssetManagerService extends moleculer.Service {
 			if (
 				asset.balance != item.balance ||
 				asset.owner != item.owner ||
-				asset.code_id != asset.code_id ||
-				asset.contract_address != asset.contract_address
+				asset.code_id != item.code_id ||
+				asset.contract_address != item.contract_address
 			) {
 				await this.adapter.updateById(item._id, asset);
 			}
