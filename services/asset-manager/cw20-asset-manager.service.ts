@@ -5,6 +5,7 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CursorOptions } from 'moleculer-db';
+import { ICW20Asset } from '@Model';
 
 @Service({
 	name: 'CW20-asset-manager',
@@ -83,7 +84,11 @@ export default class CW20AssetManagerService extends moleculer.Service {
 				asset.balance != item.balance ||
 				asset.owner != item.owner ||
 				asset.code_id != item.code_id ||
-				asset.contract_address != item.contract_address
+				asset.contract_address != item.contract_address ||
+				asset.asset_info.data.total_supply != item.asset_info.data.total_supply ||
+				asset.asset_info.data.decimals != item.asset_info.data.decimals ||
+				asset.asset_info.data.symbol != item.asset_info.data.symbol ||
+				asset.asset_info.data.name != item.asset_info.data.name
 			) {
 				await this.adapter.updateById(item._id, asset);
 			}
