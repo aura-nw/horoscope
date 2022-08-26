@@ -16,7 +16,7 @@ export default class IndexTxService extends Service {
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'indextx',
+			name: 'indextx-aggregate',
 			version: 1,
 			mixins: [
 				QueueService(
