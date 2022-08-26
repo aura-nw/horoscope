@@ -89,6 +89,7 @@ const definition: definitionType<ITransaction> = (collection?: string) => ({
 		],
 	},
 	custom_info: customInfoModel,
+	indexes: Object,
 });
 
 export const transactionMongoModel = (collection: string): unknown => {

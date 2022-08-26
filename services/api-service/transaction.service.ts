@@ -7,6 +7,7 @@ import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
 	ErrorMessage,
+	GetPowerEventTxRequest,
 	GetTxRequest,
 	ISearchTxQuery,
 	MoleculerDBService,
@@ -460,6 +461,247 @@ export default class BlockService extends MoleculerDBService<
 					nextKey = result[result.length - 1]?._id;
 				} else {
 					nextKey = ctx.params.txHash ? null : result[result.length - 2]?._id;
+				}
+				if (result.length <= ctx.params.pageLimit) {
+					nextKey = null;
+				}
+
+				if (nextKey) {
+					result.pop();
+				}
+			}
+
+			response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					transactions: result,
+					count: count,
+					nextKey: nextKey,
+				},
+			};
+		} catch (error) {
+			response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					error,
+				},
+			};
+		}
+
+		return response;
+	}
+
+	/**
+	 *  @swagger
+	 *  /v1/transaction/power-event:
+	 *    get:
+	 *      tags:
+	 *        - Transaction
+	 *      summary: Get transaction power event of validator
+	 *      description: Get transaction power event of validator
+	 *      parameters:
+	 *        - in: query
+	 *          name: chainid
+	 *          required: true
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          description: "Chain Id of network need to query"
+	 *        - in: query
+	 *          name: address
+	 *          required: true
+	 *          schema:
+	 *            type: string
+	 *          description: "Validator address (valoper)"
+	 *        - in: query
+	 *          name: pageOffset
+	 *          required: false
+	 *          schema:
+	 *            type: number
+	 *            default: 0
+	 *          description: "Page number, start at 0"
+	 *        - in: query
+	 *          name: pageLimit
+	 *          required: false
+	 *          schema:
+	 *            type: number
+	 *            default: 10
+	 *          description: "number record return in a page"
+	 *        - in: query
+	 *          name: countTotal
+	 *          required: false
+	 *          schema:
+	 *            type: boolean
+	 *            default: "false"
+	 *          description: "count total record"
+	 *        - in: query
+	 *          name: nextKey
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *          description: "key for next page"
+	 *      responses:
+	 *        '200':
+	 *          description: OK
+	 *        '422':
+	 *          description: Missing parameters
+	 *
+	 */
+	@Get('/power-event', {
+		name: 'getPowerEvent',
+		params: {
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+			address: { type: 'string', optional: false },
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+			countTotal: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+		},
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getPowerEvent(ctx: Context<GetPowerEventTxRequest, Record<string, unknown>>) {
+		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
+
+		const address = ctx.params.address;
+
+		const sort = '-_id';
+		let query: QueryOptions = {};
+
+		if (ctx.params.nextKey) {
+			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+		}
+		query['custom_info.chain_id'] = ctx.params.chainid;
+
+		let listQueryAnd: any[] = [];
+
+		if (address) {
+			listQueryAnd.push({
+				$or: [
+					{
+						'tx_response.events': {
+							$elemMatch: {
+								type: 'delegate',
+								'attributes.key': BASE_64_ENCODE.VALIDATOR,
+								'attributes.value': toBase64(toUtf8(address)),
+							},
+						},
+					},
+					{
+						'tx_response.events': {
+							$elemMatch: {
+								type: 'redelegate',
+								'attributes.key': BASE_64_ENCODE.SOURCE_VALIDATOR,
+								'attributes.value': toBase64(toUtf8(address)),
+							},
+						},
+					},
+					{
+						'tx_response.events': {
+							$elemMatch: {
+								type: 'redelegate',
+								'attributes.key': BASE_64_ENCODE.DESTINATION_VALIDATOR,
+								'attributes.value': toBase64(toUtf8(address)),
+							},
+						},
+					},
+					{
+						'tx_response.events': {
+							$elemMatch: {
+								type: 'unbond',
+								'attributes.key': BASE_64_ENCODE.VALIDATOR,
+								'attributes.value': toBase64(toUtf8(address)),
+							},
+						},
+					},
+				],
+			});
+		}
+
+		if (listQueryAnd.length > 0) {
+			query['$and'] = listQueryAnd;
+		}
+
+		this.logger.info('query: ', JSON.stringify(query));
+		let listPromise = [];
+
+		listPromise.push(
+			this.adapter.find({
+				query: query,
+				// @ts-ignore
+				sort: sort,
+				limit: ctx.params.pageLimit + 1,
+				offset: ctx.params.pageOffset,
+			}),
+		);
+
+		try {
+			// @ts-ignore
+			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
+				Promise.race(listPromise),
+				//@ts-ignore
+				ctx.params.countTotal === true
+					? this.adapter.countWithSkipLimit({
+							query: query,
+							skip: 0,
+							limit: ctx.params.pageLimit * 5,
+					  })
+					: 0,
+			]);
+
+			let nextKey = null;
+			if (result.length > 0) {
+				if (result.length == 1) {
+					nextKey = result[result.length - 1]?._id;
+				} else {
+					nextKey = result[result.length - 2]?._id;
 				}
 				if (result.length <= ctx.params.pageLimit) {
 					nextKey = null;

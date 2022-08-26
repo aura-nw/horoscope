@@ -147,6 +147,10 @@ export const BASE_64_ENCODE = {
 	BURN: 'YnVybg==',
 	_CONTRACT_ADDRESS: 'X2NvbnRyYWN0X2FkZHJlc3M=',
 	TOKEN_ID: 'dG9rZW5faWQ=',
+	VALIDATOR: 'dmFsaWRhdG9y',
+	AMOUNT: 'YW1vdW50',
+	SOURCE_VALIDATOR: 'c291cmNlX3ZhbGlkYXRvcg==',
+	DESTINATION_VALIDATOR: 'ZGVzdGluYXRpb25fdmFsaWRhdG9y',
 };
 
 export const SEARCH_TX_QUERY = {
