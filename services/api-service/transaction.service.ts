@@ -244,22 +244,22 @@ export default class BlockService extends MoleculerDBService<
 		const searchKey = ctx.params.searchKey;
 		const searchValue = ctx.params.searchValue;
 		const queryParam = ctx.params.query;
-
+		let findOne = false;
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
 		// ctx.params.countTotal = false;
 		// const sort = ctx.params.reverse ? '_id' : '-_id';
+
 		const sort = '-_id';
 		let query: QueryOptions = {};
 		if (ctx.params.txHash) {
 			ctx.params.nextKey = undefined;
 			ctx.params.countTotal = false;
 			ctx.params.pageOffset = 0;
+			findOne = true;
 		}
 		if (ctx.params.nextKey) {
 			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
-			ctx.params.pageOffset = 0;
-			ctx.params.countTotal = false;
 		}
 		query['custom_info.chain_id'] = ctx.params.chainid;
 		if (blockHeight) {
@@ -362,7 +362,7 @@ export default class BlockService extends MoleculerDBService<
 				query: query,
 				// @ts-ignore
 				sort: sort,
-				limit: ctx.params.pageLimit,
+				limit: ctx.params.pageLimit + 1,
 				offset: ctx.params.pageOffset,
 			}),
 		);
@@ -453,13 +453,30 @@ export default class BlockService extends MoleculerDBService<
 					  })
 					: 0,
 			]);
+
+			let nextKey = null;
+			if (result.length > 0) {
+				if (result.length == 1) {
+					nextKey = result[result.length - 1]?._id;
+				} else {
+					nextKey = ctx.params.txHash ? null : result[result.length - 2]?._id;
+				}
+				if (result.length <= ctx.params.pageLimit) {
+					nextKey = null;
+				}
+
+				if (nextKey) {
+					result.pop();
+				}
+			}
+
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					transactions: result,
 					count: count,
-					nextKey: ctx.params.txHash ? null : result[result.length - 1]?._id,
+					nextKey: nextKey,
 				},
 			};
 		} catch (error) {

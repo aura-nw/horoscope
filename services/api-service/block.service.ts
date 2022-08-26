@@ -210,7 +210,6 @@ export default class BlockService extends MoleculerDBService<
 			let needNextKey = true;
 			if (blockHeight) {
 				query['block.header.height'] = blockHeight;
-				needNextKey = false;
 			}
 			if (chainId) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
@@ -237,43 +236,53 @@ export default class BlockService extends MoleculerDBService<
 
 			if (ctx.params.nextKey) {
 				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
-				ctx.params.pageOffset = 0;
-				ctx.params.countTotal = false;
 			}
 
 			let [resultBlock, resultCount]: [any[], any] = await Promise.all([
 				this.adapter.find({
 					query: query,
-					limit: ctx.params.pageLimit,
+					limit: ctx.params.pageLimit + 1,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
 					// sort: '-block.header.height',
 					sort: sort,
 				}),
 				ctx.params.countTotal === true
-					? this.adapter.find({
-							query: { 'custom_info.chain_id': ctx.params.chainid },
-							limit: 1,
-							offset: 0,
-							// @ts-ignore
-							sort: sort,
+					? this.adapter.countWithSkipLimit({
+							query: query,
+							skip: 0,
+							limit: ctx.params.pageLimit * 5,
 					  })
 					: 0,
 			]);
+
+			let nextKey = null;
+			if (resultBlock.length > 0) {
+				if (resultBlock.length == 1) {
+					if (needNextKey) {
+						nextKey = resultBlock[resultBlock.length - 1]?._id;
+					}
+				} else {
+					if (needNextKey) {
+						nextKey = resultBlock[resultBlock.length - 2]?._id;
+					}
+				}
+				if (resultBlock.length <= ctx.params.pageLimit) {
+					nextKey = null;
+				}
+
+				if (nextKey) {
+					resultBlock.pop();
+				}
+			}
 
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					blocks: resultBlock,
-					count:
-						ctx.params.countTotal === true && resultCount.length
-							? resultCount[0].block?.header?.height
-							: 0,
-					nextKey:
-						needNextKey && resultBlock.length
-							? resultBlock[resultBlock.length - 1]?._id
-							: null,
+					count: resultCount,
+					nextKey: nextKey,
 				},
 			};
 		} catch (error) {
