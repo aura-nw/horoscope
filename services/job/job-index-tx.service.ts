@@ -54,7 +54,7 @@ export default class IndexTxService extends Service {
 		const listTx: ITransaction[] = await this.adapter.find({
 			query: query,
 			sort: '_id',
-			limit: 10,
+			limit: 100,
 			skip: 0,
 		});
 		if (listTx.length > 0) {
