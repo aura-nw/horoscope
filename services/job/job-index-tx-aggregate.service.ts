@@ -98,6 +98,7 @@ export default class IndexTxService extends Service {
 				indexes['height'] = tx.tx_response.height;
 				tx.tx_response.events.map((event: IEvent) => {
 					let type = event.type.toString();
+					type = type.replace('.','_');
 					let attributes = event.attributes;
 					attributes.map((attribute: IAttribute) => {
 						try {
@@ -105,6 +106,8 @@ export default class IndexTxService extends Service {
 							let value = attribute.value
 								? fromUtf8(fromBase64(attribute.value.toString()))
 								: '';
+							key = key.replace('.','_');
+							value = value.replace('.','_')
 							let array = indexes[`${type}.${key}`];
 							if (array && array.length > 0) {
 								let position = indexes[`${type}_${key}`].indexOf(value);
