@@ -54,7 +54,7 @@ export default class IndexTxService extends Service {
 		const listTx: ITransaction[] = await this.adapter.find({
 			query: query,
 			sort: '_id',
-			limit: 100,
+			limit: 10,
 			skip: 0,
 		});
 		if (listTx.length > 0) {
@@ -99,7 +99,7 @@ export default class IndexTxService extends Service {
 				indexes['height'] = tx.tx_response.height;
 				tx.tx_response.events.map((event: IEvent) => {
 					let type = event.type.toString();
-					type = type.replace('.','_');
+					type = type.replace(/\./g,'_');
 					let attributes = event.attributes;
 					attributes.map((attribute: IAttribute) => {
 						try {
@@ -107,8 +107,8 @@ export default class IndexTxService extends Service {
 							let value = attribute.value
 								? fromUtf8(fromBase64(attribute.value.toString()))
 								: '';
-							key = key.replace('.','_');
-							value = value.replace('.','_')
+							key = key.replace(/\./g,'_');
+							value = value.replace(/\./g,'_');
 							let array = indexes[`${type}.${key}`];
 							if (array && array.length > 0) {
 								let position = indexes[`${type}_${key}`].indexOf(value);
@@ -151,6 +151,7 @@ export default class IndexTxService extends Service {
 					},
 				});
 			});
+			this.logger.debug(JSON.stringify(listBulk))
 			let result = await this.adapter.bulkWrite(listBulk);
 			// let result = await this.adapter.updateById(tx._id, {
 			// 	$set: {
