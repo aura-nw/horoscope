@@ -9,7 +9,7 @@ import { Job } from 'bull';
 import { IAttribute, IEvent, ITransaction } from '../../entities';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { ObjectId } from 'bson';
-import { toBase64, toUtf8, fromBase64, fromUtf8 } from '@cosmjs/encoding';
+import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 export default class IndexTxService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -45,12 +45,12 @@ export default class IndexTxService extends Service {
 
 	async handleJob(lastId: string) {
 		let query: any = {};
-		query['indexes'] = { $eq: null };
 		if (lastId == '0') {
 		} else {
 			query['_id'] = { $gt: new ObjectId(lastId) };
 			// query['indexes.timestamp'] = { $eq: null };
 		}
+		query['indexes'] = { $eq: null };
 		const listTx: ITransaction[] = await this.adapter.find({
 			query: query,
 			sort: '_id',
@@ -109,7 +109,7 @@ export default class IndexTxService extends Service {
 								: '';
 							key = key.replace(/\./g,'_');
 							value = value.replace(/\./g,'_');
-							let array = indexes[`${type}.${key}`];
+							let array = indexes[`${type}_${key}`];
 							if (array && array.length > 0) {
 								let position = indexes[`${type}_${key}`].indexOf(value);
 								if (position == -1) {
