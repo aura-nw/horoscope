@@ -278,7 +278,7 @@ export default class BlockService extends MoleculerDBService<
 			query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
 		}
 		let listQueryAnd: any[] = [];
-
+		let listQueryOr: any[] = [];
 		if (queryParam) {
 			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
 			// this.logger.info('queryParam: ', JSON.stringify(queryParamFormat));
@@ -307,12 +307,10 @@ export default class BlockService extends MoleculerDBService<
 			listQueryAnd.push(...queryAnd);
 		}
 		if (address) {
-			listQueryAnd.push({
-				$or: [
-					{ 'indexes.transfer_recipient': address },
-					{ 'indexes.transfer_sender': address },
-				],
-			});
+			listQueryOr.push(
+				{ 'indexes.transfer_recipient': address },
+				{ 'indexes.transfer_sender': address },
+			);
 			// listQueryAnd.push(
 			// 	{ 'tx_response.events.type': 'transfer' },
 			// 	{
@@ -361,11 +359,14 @@ export default class BlockService extends MoleculerDBService<
 			query['$and'] = listQueryAnd;
 		}
 
+		if (listQueryOr.length > 0) {
+			query['$or'] = listQueryOr;
+		}
 		this.logger.info('query: ', JSON.stringify(query));
 		let listPromise = [];
 
 		listPromise.push(
-			this.adapter.find({
+			this.adapter.lean({
 				query: query,
 				// @ts-ignore
 				sort: sort,
@@ -463,6 +464,10 @@ export default class BlockService extends MoleculerDBService<
 
 			let nextKey = null;
 			if (result.length > 0) {
+				await result.forEach((tx: any) => {
+					delete tx['custom_info'];
+					delete tx['indexes'];
+				});
 				if (result.length == 1) {
 					nextKey = result[result.length - 1]?._id;
 				} else {

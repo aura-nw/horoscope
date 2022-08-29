@@ -173,7 +173,7 @@ export default class HandleTransactionService extends Service {
 			listTransactionEntity.forEach((tx: ITransaction) => {
 				let indexes: any = {};
 				//@ts-ignore
-				indexes['timestamp'] = new Date(tx.tx_response.timestamp).toISOString();
+				indexes['timestamp'] = new Date(tx.tx_response.timestamp);
 				indexes['height'] = Number(tx.tx_response.height);
 				tx.tx_response.events.map((event: IEvent) => {
 					let type = event.type.toString();
