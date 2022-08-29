@@ -11,7 +11,7 @@ export type definitionType<T> = (
 export type ObjectId = Types.ObjectId | string;
 export type ObjectIdNull = ObjectId | null;
 
-export type DBDialog = 'local' | 'file' | 'mongodb';
+export type DBDialog = 'local' | 'file' | 'mongodb' | 'mysql';
 
 export interface DBInfo {
 	dialect: DBDialog;

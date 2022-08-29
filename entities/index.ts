@@ -17,3 +17,5 @@ export * from './account-spendable-balances.entity';
 export * from './account-spendable-balances.entity';
 export * from './supply.entity';
 export * from './param.entity';
+export * from './aurascan/proposal_votes.entity';
+export * from './aurascan/validators.entity';
