@@ -675,10 +675,10 @@ export default class BlockService extends MoleculerDBService<
 			// 	],
 			// });
 			listQueryOr.push(
-				{ 'indexes.delegate_validator': address },
-				{ 'indexes.redelegate_source_validator': address },
-				{ 'indexes.redelegate_destination_validator': address },
-				{ 'indexes.unbond_validator': address },
+				{ 'indexes.delegate_validator': { $exists: true, $eq: address } },
+				{ 'indexes.redelegate_source_validator': { $exists: true, $eq: address } },
+				{ 'indexes.redelegate_destination_validator': { $exists: true, $eq: address } },
+				{ 'indexes.unbond_validator': { $exists: true, $eq: address } },
 			);
 		}
 
