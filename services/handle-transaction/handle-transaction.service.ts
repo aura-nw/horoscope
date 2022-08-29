@@ -171,13 +171,13 @@ export default class HandleTransactionService extends Service {
 			});
 			let listTransactionNeedSaveToDb: ITransaction[] = [];
 			listTransactionEntity.forEach((tx: ITransaction) => {
-				
 				let indexes: any = {};
-				indexes['timestamp'] = tx.tx_response.timestamp;
-				indexes['height'] = tx.tx_response.height;
+				//@ts-ignore
+				indexes['timestamp'] = new Date(tx.tx_response.timestamp);
+				indexes['height'] = Number(tx.tx_response.height);
 				tx.tx_response.events.map((event: IEvent) => {
 					let type = event.type.toString();
-					type = type.replace(/\./g,'_');
+					type = type.replace(/\./g, '_');
 					let attributes = event.attributes;
 					attributes.map((attribute: IAttribute) => {
 						try {
@@ -185,8 +185,8 @@ export default class HandleTransactionService extends Service {
 							let value = attribute.value
 								? fromUtf8(fromBase64(attribute.value.toString()))
 								: '';
-							key = key.replace(/\./g,'_');
-							value = value.replace(/\./g,'_');
+							key = key.replace(/\./g, '_');
+							value = value.replace(/\./g, '_');
 							let array = indexes[`${type}.${key}`];
 							if (array && array.length > 0) {
 								let position = indexes[`${type}_${key}`].indexOf(value);
@@ -218,7 +218,7 @@ export default class HandleTransactionService extends Service {
 				});
 
 				tx.indexes = indexes;
-				
+
 				let hash = tx.tx_response.txhash;
 				let foundItem = listFoundTransaction.find((itemFound: ITransaction) => {
 					return itemFound.tx_response.txhash == hash;

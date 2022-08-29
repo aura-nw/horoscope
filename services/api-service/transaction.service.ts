@@ -307,18 +307,24 @@ export default class BlockService extends MoleculerDBService<
 			listQueryAnd.push(...queryAnd);
 		}
 		if (address) {
-			listQueryAnd.push(
-				{ 'tx_response.events.type': 'transfer' },
-				{
-					$or: [
-						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-						{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
-					],
-				},
-				{
-					'tx_response.events.attributes.value': toBase64(toUtf8(address)),
-				},
-			);
+			listQueryAnd.push({
+				$or: [
+					{ 'indexes.transfer_recipient': address },
+					{ 'indexes.transfer_sender': address },
+				],
+			});
+			// listQueryAnd.push(
+			// 	{ 'tx_response.events.type': 'transfer' },
+			// 	{
+			// 		$or: [
+			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
+			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
+			// 		],
+			// 	},
+			// 	{
+			// 		'tx_response.events.attributes.value': toBase64(toUtf8(address)),
+			// 	},
+			// );
 			// listQueryAnd.push({
 			// 	$or: [
 			// 		{
