@@ -195,3 +195,9 @@ export const SEARCH_TX_QUERY = {
 		key: 'token_id',
 	},
 };
+
+export enum VESTING_ACCOUNT_TYPE {
+	CONTINUOUS = 'cosmos-sdk/ContinuousVestingAccount',
+	PERIODIC = 'cosmos-sdk/PeriodicVestingAccount',
+	DELAYED = 'cosmos-sdk/DelayedVestingAccount'
+}
