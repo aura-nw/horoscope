@@ -187,7 +187,7 @@ export default class HandleTransactionService extends Service {
 								: '';
 							key = key.replace(/\./g, '_');
 							value = value.replace(/\./g, '_');
-							let array = indexes[`${type}.${key}`];
+							let array = indexes[`${type}_${key}`];
 							if (array && array.length > 0) {
 								let position = indexes[`${type}_${key}`].indexOf(value);
 								if (position == -1) {
