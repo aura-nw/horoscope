@@ -1,8 +1,10 @@
 import RedisMixin from "../../mixins/redis/redis.mixin";
 import { Service, ServiceBroker } from "moleculer";
 import { Config } from "../../common";
-import { dbAccountDelegationsMixin } from "../../mixins/dbMixinMongoose";
+import { dbAccountAuthMixin, dbAccountDelegationsMixin } from "../../mixins/dbMixinMongoose";
 import { Job } from "bull";
+import { CONST_CHAR, LIST_NETWORK } from "../../common/constant";
+import { ListTxCreatedParams } from "../../types";
 const QueueService = require('moleculer-bull');
 const knex = require('../../config/database');
 
@@ -21,6 +23,7 @@ export default class IndexDelegatorsService extends Service {
                     },
                 ),
                 dbAccountDelegationsMixin,
+                // dbAccountAuthMixin,
                 this.redisMixin,
             ],
             queues: {
@@ -221,7 +224,6 @@ export default class IndexDelegatorsService extends Service {
             .join('proposal_votes', 'validators.acc_address', '=', 'proposal_votes.voter')
             .where('proposal_votes.proposal_id', '!=', '1')
             .where({
-                status: 3,
                 'proposal_votes.option': 'VOTE_OPTION_YES',
             })
             .groupBy('validators.operator_address');
@@ -239,6 +241,25 @@ export default class IndexDelegatorsService extends Service {
             });
             console.log(`${validator.title},${validator.address},${addresses},${vote_count}/${total_votes}`);
         };
+
+        // const listVestingAccounts = await this.adapter.find({
+        //     query: {
+        //         'account.result.type': {
+        //             $in: [
+        //                 'cosmos-sdk/ContinuousVestingAccount',
+        //                 'cosmos-sdk/PeriodicVestingAccount',
+        //                 'cosmos-sdk/DelayedVestingAccount'
+        //             ]
+        //         }
+        //     },
+        // });
+        // LIST_NETWORK.map((network) => {
+        //     this.broker.emit('list-tx.upsert', {
+        //         listTx: listVestingAccounts.filter((v: any) => v.custom_info.chain_id === network.chainId),
+        //         source: CONST_CHAR.API,
+        //         chainId: network.chainId,
+        //     } as ListTxCreatedParams);
+        // });
     }
 
     async _start() {
