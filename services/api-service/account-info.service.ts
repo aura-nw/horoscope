@@ -119,7 +119,9 @@ export default class AccountInfoService extends MoleculerDBService<
 			[accountBalances, accountSpendableBalances] = await Promise.all([
 				this.callApiFromDomain(url, paramBalances),
 				this.callApiFromDomain(url, paramSpendableBalances)
-			])
+			]);
+			accountBalances = accountBalances.balances;
+			accountSpendableBalances = accountSpendableBalances.balances;
 		}
 
 		if (accountDelegations) {
