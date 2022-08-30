@@ -2,7 +2,7 @@ import CallApiMixin from "../../mixins/callApi/call-api.mixin";
 import { dbAccountAuthMixin } from "../../mixins/dbMixinMongoose";
 import { Job } from "bull";
 import { Config } from "../../common";
-import { CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS } from "../../common/constant";
+import { CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from "../../common/constant";
 import { JsonConvert, OperationMode } from "json2typescript";
 import { Context, Service, ServiceBroker } from "moleculer";
 import { AccountAuthEntity } from "../../entities/account-auth.entity";
@@ -81,6 +81,31 @@ export default class CrawlAccountAuthInfoService extends Service {
                 }
 
                 let resultCallApi = await this.callApiFromDomain(url, param);
+                try {
+                    if (resultCallApi.result.type === VESTING_ACCOUNT_TYPE.CONTINUOUS
+                        || resultCallApi.result.type === VESTING_ACCOUNT_TYPE.DELAYED
+                        || resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC) {
+                        let delay = resultCallApi.result.value.base_vesting_account.end_time - new Date().getTime();
+                        this.createJob(
+                            'handle.address',
+                            {
+                                listTx: [
+                                    {
+                                        address,
+                                    }
+                                ],
+                                source: CONST_CHAR.API,
+                                chainId,
+                            },
+                            {
+                                removeOnComplete: true,
+                                delay,
+                            }
+                        );
+                    }
+                } catch (error) {
+                    this.logger.info(`This account is not a vesting account`);
+                }
 
                 accountInfo.account = resultCallApi;
 
