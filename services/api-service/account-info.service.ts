@@ -121,7 +121,9 @@ export default class AccountInfoService extends MoleculerDBService<
 				this.callApiFromDomain(url, paramSpendableBalances)
 			]);
 			accountBalances = accountBalances.balances;
-			accountSpendableBalances = accountSpendableBalances.balances;
+			accountSpendableBalances = {
+				spendable_balances: accountSpendableBalances.balances
+			};
 		}
 
 		if (accountDelegations) {
