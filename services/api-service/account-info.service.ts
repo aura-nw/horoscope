@@ -1,7 +1,7 @@
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Get, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { Config } from '../../common';
-import { CONST_CHAR, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { CONST_CHAR, URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from '../../common/constant';
 import { Context } from 'moleculer';
 import {
 	AccountInfoRequest,
@@ -73,19 +73,16 @@ export default class AccountInfoService extends MoleculerDBService<
 		},
 	})
 	async getAccountInfoByAddress(ctx: Context<AccountInfoRequest>) {
+		const paramBalances = 
+			Config.GET_PARAMS_BALANCE + `/${ctx.params.address}`;
+		const paramSpendableBalances = 
+			Config.GET_PARAMS_SPENDABLE_BALANCE + `/${ctx.params.address}`;
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const paramAuth = Config.GET_PARAMS_AUTH_INFO + `/${ctx.params.address}`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
-		let accountAuth,
-			accountBalances,
-			accountDelegations,
-			accountRedelegations,
-			accountSpendableBalances,
-			accountUnbonds: any,
-			accountRewards;
-		[
+		let [
 			accountAuth,
 			accountBalances,
 			accountDelegations,
@@ -93,7 +90,8 @@ export default class AccountInfoService extends MoleculerDBService<
 			accountSpendableBalances,
 			accountUnbonds,
 			accountRewards,
-		] = await Promise.all([
+		]
+		: [any, any, any, any, any, any, any] = await Promise.all([
 			this.callApiFromDomain(url, paramAuth),
 			this.broker.call('v1.account-balances.getByAddress', {
 				address: ctx.params.address,
@@ -117,7 +115,14 @@ export default class AccountInfoService extends MoleculerDBService<
 			}),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
-		if (accountBalances) {
+		if (accountAuth.result.type === VESTING_ACCOUNT_TYPE.CONTINUOUS || accountAuth.result.type === VESTING_ACCOUNT_TYPE.PERIODIC) {
+			[accountBalances, accountSpendableBalances] = await Promise.all([
+				this.callApiFromDomain(url, paramBalances),
+				this.callApiFromDomain(url, paramSpendableBalances)
+			])
+		}
+
+		if (accountDelegations) {
 			const data = {
 				account_balances: accountBalances,
 				account_delegations: accountDelegations,
