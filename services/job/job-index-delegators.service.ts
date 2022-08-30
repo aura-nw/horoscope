@@ -224,7 +224,6 @@ export default class IndexDelegatorsService extends Service {
             .join('proposal_votes', 'validators.acc_address', '=', 'proposal_votes.voter')
             .where('proposal_votes.proposal_id', '!=', '1')
             .where({
-                status: 3,
                 'proposal_votes.option': 'VOTE_OPTION_YES',
             })
             .groupBy('validators.operator_address');
