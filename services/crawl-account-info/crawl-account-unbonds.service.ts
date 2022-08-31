@@ -9,6 +9,7 @@ import { AccountUnbondsEntity, UnbondingResponse } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 const QueueService = require('moleculer-bull');
+const Bull = require('bull');
 
 export default class CrawlAccountUnbondsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -102,21 +103,32 @@ export default class CrawlAccountUnbondsService extends Service {
 
 				if (listUnbonds) {
 					accountInfo.unbonding_responses = listUnbonds;
-					// listUnbonds.map((unbond: UnbondingResponse) => {
-					// 	let expireTime = new Date(unbond.entries[0].completion_time.toString());
-					// 	let delay = expireTime.getTime() - new Date().getTime();
-					// 	this.createJob(
-					// 		'crawl.account-unbonds',
-					// 		{
-					// 			listAddresses: [address],
-					// 			chainId,
-					// 		},
-					// 		{
-					// 			removeOnComplete: true,
-					// 			delay,
-					// 		},
-					// 	);
-					// });
+					listUnbonds.map((unbond: UnbondingResponse) => {
+						let expireTime = new Date(unbond.entries[0].completion_time.toString());
+						let delay = expireTime.getTime() - new Date().getTime();
+						const apiKeyQueue = new Bull(
+							'handle.address',
+							{
+								redis: {
+									host: Config.REDIS_HOST,
+									port: Config.REDIS_PORT,
+									username: Config.REDIS_USERNAME,
+									password: Config.REDIS_PASSWORD,
+									db: Config.REDIS_DB_NUMBER,
+								},
+								prefix: 'handle.address',
+								defaultJobOptions: {
+									jobId: `${address}_${chainId}_${unbond.entries[0].completion_time}`,
+									removeOnComplete: true,
+									delay,
+								}
+							}
+						);
+						apiKeyQueue.add({
+							listAddresses: [address],
+							chainId
+						});
+					});
 				}
 
 				listAccounts.push(accountInfo);
