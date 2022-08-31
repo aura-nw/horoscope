@@ -9,6 +9,7 @@ import { AccountAuthEntity } from "../../entities/account-auth.entity";
 import { Utils } from "../../utils/utils";
 import { CrawlAccountInfoParams } from "../../types";
 const QueueService = require('moleculer-bull');
+const Bull = require('bull');
 
 export default class CrawlAccountAuthInfoService extends Service {
     private callApiMixin = new CallApiMixin().start();
@@ -86,22 +87,33 @@ export default class CrawlAccountAuthInfoService extends Service {
                         || resultCallApi.result.type === VESTING_ACCOUNT_TYPE.DELAYED
                         || resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC) {
                         let delay = resultCallApi.result.value.base_vesting_account.end_time - new Date().getTime();
-                        this.createJob(
+                        const apiKeyQueue = new Bull(
                             'handle.address',
                             {
-                                listTx: [
-                                    {
-                                        address,
-                                    }
-                                ],
-                                source: CONST_CHAR.API,
-                                chainId,
-                            },
-                            {
-                                removeOnComplete: true,
-                                delay,
+                                redis: {
+                                    host: Config.REDIS_HOST,
+                                    port: Config.REDIS_PORT,
+                                    username: Config.REDIS_USERNAME,
+                                    password: Config.REDIS_PASSWORD,
+                                    db: Config.REDIS_DB_NUMBER,
+                                },
+                                prefix: 'handle.address',
+                                defaultJobOptions: {
+                                    jobId: `${address}_${chainId}_${resultCallApi.result.value.base_vesting_account.end_time}`,
+                                    removeOnComplete: true,
+                                    delay,
+                                }
                             }
                         );
+                        apiKeyQueue.add({
+                            listTx: [
+                                {
+                                    address,
+                                }
+                            ],
+                            source: CONST_CHAR.API,
+                            chainId,
+                        });
                     }
                 } catch (error) {
                     this.logger.info(`This account is not a vesting account`);
