@@ -102,21 +102,21 @@ export default class CrawlAccountUnbondsService extends Service {
 
 				if (listUnbonds) {
 					accountInfo.unbonding_responses = listUnbonds;
-					listUnbonds.map((unbond: UnbondingResponse) => {
-						let expireTime = new Date(unbond.entries[0].completion_time.toString());
-						let delay = expireTime.getTime() - new Date().getTime();
-						this.createJob(
-							'crawl.account-unbonds',
-							{
-								listAddresses: [address],
-								chainId,
-							},
-							{
-								removeOnComplete: true,
-								delay,
-							},
-						);
-					});
+					// listUnbonds.map((unbond: UnbondingResponse) => {
+					// 	let expireTime = new Date(unbond.entries[0].completion_time.toString());
+					// 	let delay = expireTime.getTime() - new Date().getTime();
+					// 	this.createJob(
+					// 		'crawl.account-unbonds',
+					// 		{
+					// 			listAddresses: [address],
+					// 			chainId,
+					// 		},
+					// 		{
+					// 			removeOnComplete: true,
+					// 			delay,
+					// 		},
+					// 	);
+					// });
 				}
 
 				listAccounts.push(accountInfo);

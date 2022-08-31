@@ -101,23 +101,23 @@ export default class CrawlAccountRedelegatesService extends Service {
 
 				if (listRedelegates) {
 					accountInfo.redelegation_responses = listRedelegates;
-					listRedelegates.map((redelegate: RedelegationResponse) => {
-						let expireTime = new Date(
-							redelegate.entries[0].redelegation_entry.completion_time.toString(),
-						);
-						let delay = expireTime.getTime() - new Date().getTime();
-						this.createJob(
-							'crawl.account-redelegates',
-							{
-								listAddresses: [address],
-								chainId
-							},
-							{
-								removeOnComplete: true,
-								delay,
-							},
-						);
-					});
+					// listRedelegates.map((redelegate: RedelegationResponse) => {
+					// 	let expireTime = new Date(
+					// 		redelegate.entries[0].redelegation_entry.completion_time.toString(),
+					// 	);
+					// 	let delay = expireTime.getTime() - new Date().getTime();
+					// 	this.createJob(
+					// 		'crawl.account-redelegates',
+					// 		{
+					// 			listAddresses: [address],
+					// 			chainId
+					// 		},
+					// 		{
+					// 			removeOnComplete: true,
+					// 			delay,
+					// 		},
+					// 	);
+					// });
 				}
 
 				listAccounts.push(accountInfo);
