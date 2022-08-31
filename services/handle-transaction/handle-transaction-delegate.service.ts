@@ -113,15 +113,15 @@ export default class HandleTransactionDelegateService extends Service {
 							}
 						});
 					}
-					if (amount) {
-						let coin = parseCoins(amount);
-						bulkOps.push({
-							updateOne: {
-								filter: { address: fromUtf8(fromBase64(sender)) },
-								update: { $inc: { 'validatorReward.': newActions } },
-							},
-						});
-					}
+					// if (amount) {
+					// 	let coin = parseCoins(amount);
+					// 	bulkOps.push({
+					// 		updateOne: {
+					// 			filter: { address: fromUtf8(fromBase64(sender)) },
+					// 			update: { $inc: { 'validatorReward.': newActions } },
+					// 		},
+					// 	});
+					// }
 				}
 			});
 		});
