@@ -103,32 +103,32 @@ export default class CrawlAccountRedelegatesService extends Service {
 				if (listRedelegates) {
 					accountInfo.redelegation_responses = listRedelegates;
 					listRedelegates.map(async (redelegate: RedelegationResponse) => {
-						let expireTime = new Date(
-							redelegate.entries[0].redelegation_entry.completion_time.toString(),
-						);
-						let delay = expireTime.getTime() - new Date().getTime();
-						const apiKeyQueue = new Bull(
-							'handle.address',
-							{
-								redis: {
-									host: Config.REDIS_HOST,
-									port: Config.REDIS_PORT,
-									username: Config.REDIS_USERNAME,
-									password: Config.REDIS_PASSWORD,
-									db: Config.REDIS_DB_NUMBER,
-								},
-								prefix: 'handle.address',
-								defaultJobOptions: {
-									jobId: `${address}_${chainId}_${redelegate.entries[0].redelegation_entry.completion_time}`,
-									removeOnComplete: true,
-									delay,
-								}
-							}
-						);
-						apiKeyQueue.add({
-							listAddresses: [address],
-							chainId
-						});
+						// let expireTime = new Date(
+						// 	redelegate.entries[0].redelegation_entry.completion_time.toString(),
+						// );
+						// let delay = expireTime.getTime() - new Date().getTime();
+						// const apiKeyQueue = new Bull(
+						// 	'handle.address',
+						// 	{
+						// 		redis: {
+						// 			host: Config.REDIS_HOST,
+						// 			port: Config.REDIS_PORT,
+						// 			username: Config.REDIS_USERNAME,
+						// 			password: Config.REDIS_PASSWORD,
+						// 			db: Config.REDIS_DB_NUMBER,
+						// 		},
+						// 		prefix: 'handle.address',
+						// 		defaultJobOptions: {
+						// 			jobId: `${address}_${chainId}_${redelegate.entries[0].redelegation_entry.completion_time}`,
+						// 			removeOnComplete: true,
+						// 			delay,
+						// 		}
+						// 	}
+						// );
+						// apiKeyQueue.add({
+						// 	listAddresses: [address],
+						// 	chainId
+						// });
 					});
 				}
 
