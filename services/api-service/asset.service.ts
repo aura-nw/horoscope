@@ -673,7 +673,9 @@ export default class BlockService extends MoleculerDBService<
 					query['is_burned'] = false;
 					break;
 				case CONTRACT_TYPE.CW20:
-					sort = ctx.params.reverse ? 'percent_hold' : '-percent_hold';
+					sort = ctx.params.reverse
+						? ['percent_hold', 'updatedAt']
+						: ['-percent_hold', '-updatedAt'];
 					query['balance'] = {
 						$ne: '0',
 					};
