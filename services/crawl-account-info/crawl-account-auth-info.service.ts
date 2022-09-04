@@ -67,7 +67,7 @@ export default class CrawlAccountAuthInfoService extends Service {
     async handleJob(listAddresses: string[], chainId: string) {
         let listAccounts: AccountAuthEntity[] = [], listUpdateQueries: any[] = [];
         if (listAddresses.length > 0) {
-            for (const address of listAddresses) {
+            listAddresses.map(async (address) => {
                 const param =
                     Config.GET_PARAMS_AUTH_INFO + `/${address}`;
                 const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
@@ -122,10 +122,10 @@ export default class CrawlAccountAuthInfoService extends Service {
                 accountInfo.account = resultCallApi;
 
                 listAccounts.push(accountInfo);
-            };
+            });
         }
         try {
-            listAccounts.forEach((element) => {
+            listAccounts.map((element) => {
                 if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
                 else {
                     const chain = LIST_NETWORK.find(x => x.chainId === chainId);
