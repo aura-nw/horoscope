@@ -201,3 +201,8 @@ export enum VESTING_ACCOUNT_TYPE {
 	PERIODIC = 'cosmos-sdk/PeriodicVestingAccount',
 	DELAYED = 'cosmos-sdk/DelayedVestingAccount'
 }
+
+export enum DELAY_JOB_TYPE {
+	REDELEGATE = 'redelegate',
+	UNBOND = 'unbond'
+}

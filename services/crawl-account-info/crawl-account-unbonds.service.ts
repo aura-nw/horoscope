@@ -2,14 +2,16 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountUnbondsMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { CONST_CHAR, DELAY_JOB_TYPE, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountUnbondsEntity, UnbondingResponse } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
+import { DelayJobEntity } from 'entities/delay-job.entity';
 const QueueService = require('moleculer-bull');
 const Bull = require('bull');
+const mongo = require('mongodb');
 
 export default class CrawlAccountUnbondsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -65,10 +67,18 @@ export default class CrawlAccountUnbondsService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
+		let client = await this.connectToDB();
+		const db = client.db('aura_indexer_dev');
+		let [accountUnbonds, delayJob] = await Promise.all([
+			db.collection("account_unbonds"),
+			db.collection("delay_job"),
+		]);
+
 		let listAccounts: AccountUnbondsEntity[] = [],
-			listUpdateQueries: any[] = [];
+			listUpdateQueries: any[] = [],
+			listDelayJobs: DelayJobEntity[] = [];
 		if (listAddresses.length > 0) {
-			for (const address of listAddresses) {
+			listAddresses.map(async (address) => {
 				let listUnbonds: UnbondingResponse[] = [];
 
 				const param =
@@ -104,35 +114,40 @@ export default class CrawlAccountUnbondsService extends Service {
 				if (listUnbonds) {
 					accountInfo.unbonding_responses = listUnbonds;
 					listUnbonds.map((unbond: UnbondingResponse) => {
-						let expireTime = new Date(unbond.entries[0].completion_time.toString());
-						let delay = expireTime.getTime() - new Date().getTime();
-						const apiKeyQueue = new Bull(
-							'handle.address',
-							{
-								redis: {
-									host: Config.REDIS_HOST,
-									port: Config.REDIS_PORT,
-									username: Config.REDIS_USERNAME,
-									password: Config.REDIS_PASSWORD,
-									db: Config.REDIS_DB_NUMBER,
-								},
-								prefix: 'handle.address',
-								defaultJobOptions: {
-									jobId: `${address}_${chainId}_${unbond.entries[0].completion_time}`,
-									removeOnComplete: true,
-									delay,
-								}
-							}
-						);
-						apiKeyQueue.add({
-							listAddresses: [address],
-							chainId
-						});
+						// let expireTime = new Date(unbond.entries[0].completion_time.toString());
+						// let delay = expireTime.getTime() - new Date().getTime();
+						// const apiKeyQueue = new Bull(
+						// 	'handle.address',
+						// 	{
+						// 		redis: {
+						// 			host: Config.REDIS_HOST,
+						// 			port: Config.REDIS_PORT,
+						// 			username: Config.REDIS_USERNAME,
+						// 			password: Config.REDIS_PASSWORD,
+						// 			db: Config.REDIS_DB_NUMBER,
+						// 		},
+						// 		prefix: 'handle.address',
+						// 		defaultJobOptions: {
+						// 			jobId: `${address}_${chainId}_${unbond.entries[0].completion_time}`,
+						// 			removeOnComplete: true,
+						// 			delay,
+						// 		}
+						// 	}
+						// );
+						// apiKeyQueue.add({
+						// 	listAddresses: [address],
+						// 	chainId
+						// });
+						let newDelayJob = {} as DelayJobEntity;
+						newDelayJob.address = address;
+						newDelayJob.type = DELAY_JOB_TYPE.UNBOND;
+						newDelayJob.expire_time = unbond.entries[0].completion_time.toString();
+						listDelayJobs.push(newDelayJob);
 					});
 				}
 
 				listAccounts.push(accountInfo);
-			}
+			});
 		}
 		try {
 			listAccounts.forEach((element) => {
@@ -151,10 +166,31 @@ export default class CrawlAccountUnbondsService extends Service {
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
+			listDelayJobs.map((element) => {
+				const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
+				const item: DelayJobEntity = new JsonConvert().deserializeObject(
+					element,
+					DelayJobEntity,
+				);
+				item.custom_info = {
+					chain_id: chainId,
+					chain_name: chain ? chain.chainName : '',
+				};
+				listUpdateQueries.push(delayJob.insertOne(item));
+			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
 		}
+	}
+
+	async connectToDB() {
+		const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}`;
+
+		let cacheClient = await mongo.MongoClient.connect(
+			DB_URL,
+		);
+		return cacheClient;
 	}
 
 	async _start() {
