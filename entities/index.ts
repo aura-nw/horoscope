@@ -20,3 +20,4 @@ export * from './param.entity';
 export * from './aurascan/proposal_votes.entity';
 export * from './aurascan/validators.entity';
 export * from './account-total-rewards.entity';
+export * from './delay-job.entity';

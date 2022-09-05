@@ -68,7 +68,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 		let listAccounts: AccountSpendableBalancesEntity[] = [],
 			listUpdateQueries: any[] = [];
 		if (listAddresses.length > 0) {
-			listAddresses.map(async (address) => {
+			for (let address of listAddresses) {
 				let listSpendableBalances: Coin[] = [];
 
 				const param =
@@ -105,7 +105,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				}
 
 				listAccounts.push(accountInfo);
-			});
+			};
 		}
 		try {
 			listAccounts.map((element) => {

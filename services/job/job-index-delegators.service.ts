@@ -1,7 +1,7 @@
 import RedisMixin from "../../mixins/redis/redis.mixin";
 import { Service, ServiceBroker } from "moleculer";
 import { Config } from "../../common";
-import { dbAccountAuthMixin, dbAccountDelegationsMixin } from "../../mixins/dbMixinMongoose";
+import { dbAccountAuthMixin, dbAccountDelegationsMixin, dbAccountRedelegationsMixin, dbAccountUnbondsMixin } from "../../mixins/dbMixinMongoose";
 import { Job } from "bull";
 import { CONST_CHAR, LIST_NETWORK } from "../../common/constant";
 import { ListTxCreatedParams } from "../../types";
@@ -43,6 +43,81 @@ export default class IndexDelegatorsService extends Service {
 
     async handleJob() {
         const listAddresses = [
+            "aura1je4hqtv7e2pakprxhjy6f6d7sdgxw6x2emzjmn",
+            "aura1yjf68x7e3l8u53l6qea2z5zr202wn89px93w3r",
+            "aura1c3acjuenv3pcfzr3tj0ttlnjfu88uk6z6yaxvk",
+            "aura17s735l2qyeadnphp3td4l8z0whx6jzau0ykdqd",
+            "aura1lu8xqqj372jekj5vpdj59kjjxv56zz0f30zjjd",
+            "aura1xe3l8s9s9yjquw97wdjfr5e3zag63tk876nf8g",
+            "aura1gexuf9mf6u0y2mkf23mctpgd4wh9zzyxvxxqn8",
+            "aura1s43ctsweeywnpkj86qf2ynypcq0l6h5y6zm27f",
+            "aura1d2hs5h4h9yyuyg4ss0u8cq30xvnv0ys5s5u7et",
+            "aura1j3a68v60dtxtd6ysr8vzvr7qxzt764zrarhzfk",
+            "aura19d3k8rs9g2f5a5a8v6h9xkfeu0g9rp32wxkuq6",
+            "aura1a8qxgtach45tx557h6uu25dkzmqeexqd3acjhm",
+            "aura1l3l5cketh0cmunwqqkj0996e94l2dteqt5re67",
+            "aura15g9pass50y43p8tswwv7yj4s4nnarm7qern5xa",
+            "aura18h4565ec2ak9d9u8ayjpe9ylk73flrs4jfq485",
+            "aura1qwvl904up509xayjhrs6gmuxfts7w0r33nmwqy",
+            "aura15jqx77lgy94dfly0u5yv5lejqy6hqyycq0l5q5",
+            "aura1q3truhus7zwhazzuaczygc5fy3u4a2frknavq2",
+            "aura1qerukkmaufkzdn696n29e999jmsk6dkq08xj26",
+            "aura1528duj6qtaqezhxlj7rvz6z0r5crkwwk4zvh88",
+            "aura1a028w08wslepl85p0u5fza39ykty277qhx2vev",
+            "aura12aghm4vtwma89mk8xy93zy07mq0nlwr24wgczr",
+            "aura13p9cvq5atl2cagnjsxsm72vnyfkfnnguzhc2qs",
+            "aura1fwtjkpt4c4s0gypz2676r5pa5ftxq7xa4egxe3",
+            "aura1yagqjylur6uq4fessttutvkjeklnucya6sx5sf",
+            "aura1tswwmrqydq3pe05sswcs2f3qe7k2wwsaaqyx99",
+            "aura16d3syv9scmjfrteedvql59zk9m0zldwulcdzhk",
+            "aura168rg366kzd656703gkef735wr40zcr79zuwp4h",
+            "aura1mxsu7s050cdsauas39uzfe8k044l70kfn66mmq",
+            "aura1nlh95pasnkhfm5qyphrvc79kc6vkx6yf3lzmvg",
+            "aura14qgh4z32jpdtje2zgggdtllfmcmy20dlpla0lk",
+            "aura1ly6qjtla64decegsuhdyyrxp9s6g5gqhfxhvex",
+            "aura1pnfer4xwfhzvnke478je5ck3ulfe2u3c9hy847",
+            "aura1cryyj7exmymze835zwrjl5vvgvn3qvumkmp20h",
+            "aura1965tmcxs8w4y4nu44vldnxwt3vcntvape609z8",
+            "aura19p9ryr6jn4565f3ace942e94pcfr5vpeudqv6p",
+            "aura16e0zjh6yp4dg83qpkztn7mc3gf2aq3dcv7e7kp",
+            "aura1598z7x9u3wc4ykd4zemqyfusa0fmzm7mzcjs76",
+            "aura19f7f7ylewuf6wzenqn5p4l4nsrrwcta6w8hghe",
+            "aura1ml0wpgnvdmzd26r6qgjmzedxpuydugty350ntt",
+            "aura1das7qstvmzcjwp6dakqcm00lq9lvtgkswln8g4",
+            "aura1w6tq6ygpdpy8chc378c7hr8694nw5palqmd0py",
+            "aura1wqlq8s530fxm45k6qke40h4pf09h4rhj6j80ux",
+            "aura168ah3d6xtacspfpgdfzdpshnpn2v2v7cdlj44a",
+            "aura16vw9sx27t0ld25zwjapumz263glwlxsyhnl8vn",
+            "aura16y44yh9u7emykpkv44rtgeyjfeufrz44kpppx8",
+            "aura10vufz5p78m084epchncuz2y02khfys9skgyzp6",
+            "aura1z3ckaakkyz598kncu4ftkhxmm02akmdan7epcj",
+            "aura1dt3ta0z2dgkj3wu83pvgqskuq4q6gcnx2pzwga",
+            "aura1nqarlq23scu43wnkx2nk06nsjrd5f3a3094rtg",
+            "aura1u3paq2ysmkwaua8xeachxtc4q7mqk2efgkv9hs",
+            "aura1pwvte8ka6mgayd40z2zxrwg0wt0jfwyl36qhef",
+            "aura1jur5y6lsq5ur3hxqmhkcrpx4nc0hgm3qnzt0cl",
+            "aura1a3dktxfcg7e4y3w9w5ncn43382h38sgct798d2",
+            "aura1a2cnnzm26zahetj2s0rxz3tkcjjhqjqt2qdd4m",
+            "aura16asyrq7hgtjwk4v32l4zqvlfv6xaul3rx3ytw7",
+            "aura1qrw4lme7qa954638e7w9u569zq8pgr84xy7xxl",
+            "aura1pwuk25thsa7leu55aj6dpehwq0tmj7lr6gnmr9",
+            "aura19apla94gz457y2u03gkpq6p6ephgmymxdw9253",
+            "aura1nc2cl2nhsjezwk5wpmlnpzl7wl4setghp2vn2h",
+            "aura1jafv7mweknkv46nmg6r78ftj5ktfsts99wkwtu",
+            "aura1rqll2d4wyylvl03ht6mhglswj46gkcr3ksvkm7",
+            "aura18jrvntf406awra3dzx7657c97vzm7k07usr450",
+            "aura18fe3z2e58x6jkqnly7fp30l0fu2nvc6nffy86f",
+            "aura1f4kp7gqumq4qux7338y25934a7z600xcytga84",
+            "aura1g657rjyl768lxqx2hmtvvyfm5yhraqw75hakmh",
+            "aura12ljtyweh3y9706rkxf93kjmgugs3e7ne5a5p2n",
+            "aura17l6gwy77jnxq2zaaxp96nga6h7w27ecv2yy429",
+            "aura1my4ffwxey990zm8t2j4hd5rlq8s57nf0wsr8qg",
+            "aura1stjxpkq8mep33hze99jf280m8efkkgz3qmfa7s",
+            "aura15ucd80aednzdgvd59py6z00gvt6ywf9rfmh2gz",
+            "aura16ea6krn4vvdukn7dae7p0l9yqkuzlufjw5fuee",
+            "aura1xk6nnn0gen9n9fduz0t3twyzt8c2uzedy2545a",
+            "aura1555hhrav8nklvphu0deeykffhc03zs2wj8rq6t",
+            "aura1ar42ehx3spphfg6rlacdcdy326qxcrpdwvxjwd",
             "aura189ty8nanmvfsjmsgd0f0cvpnzj9ace3etft93q",
             "aura16tm055dn07prysr0yht5z467225n52aflq8a4u",
             "aura150zhsrpv5sgnhyvdw3xamc24xmvupajlctwy7l",
@@ -217,6 +292,7 @@ export default class IndexDelegatorsService extends Service {
             { title: "MinatoFund", address: "auravaloper17rm2mpzmgqqfm0jvyt6j0lq4vysyvqcgm7dypp" },
             { title: "lkskrn", address: "auravaloper18udxtfaemz8rc6g5qjamur4kxkp72egv3723nk" },
             { title: "-STAKECRAFT-", address: "auravaloper1my2s84cetqudfswymd5dwngh808xpzev9zm5sp" },
+            { title: "hodl_global_new", address: "auravaloper12zydfqfj500x63npllnhtn97gx3gte4avydcn0" },
         ];
         const vote_counts = await knex('validators')
             .select('validators.operator_address')
@@ -229,7 +305,9 @@ export default class IndexDelegatorsService extends Service {
             .groupBy('validators.operator_address');
         const total_votes = (await knex('proposals').count('pro_id as proposals'))[0].proposals - 1;
         for (let validator of listValidators) {
-            const vote_count = vote_counts.find((v: any) => v.operator_address === validator.address).vote_count;
+            const vote_count = vote_counts.find((v: any) => v.operator_address === validator.address)
+                ? vote_counts.find((v: any) => v.operator_address === validator.address).vote_count
+                : 0;
             const addresses: number = await this.adapter.count({
                 query: {
                     address: {

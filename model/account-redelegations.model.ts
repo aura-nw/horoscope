@@ -25,7 +25,7 @@ const definition: definitionType<IAccountRedelegations> = (collection?: string) 
 				{
 					redelegation_entry: {
 						creation_height: String,
-						completion_time: String,
+						completion_time: Date,
 						initial_balance: String,
 						shares_dst: String,
 					},

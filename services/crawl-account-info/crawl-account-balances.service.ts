@@ -68,7 +68,7 @@ export default class CrawlAccountBalancesService extends Service {
 		let listAccounts: AccountBalancesEntity[] = [],
 			listUpdateQueries: any[] = [];
 		if (listAddresses.length > 0) {
-			listAddresses.map(async (address) => {
+			for (let address of listAddresses) {
 				let listBalances: Coin[] = [];
 
 				const param = Config.GET_PARAMS_BALANCE + `/${address}?pagination.limit=100`;
@@ -104,7 +104,7 @@ export default class CrawlAccountBalancesService extends Service {
 				}
 
 				listAccounts.push(accountInfo);
-			});
+			};
 		}
 		try {
 			listAccounts.map((element) => {

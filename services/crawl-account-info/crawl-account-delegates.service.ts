@@ -70,7 +70,7 @@ export default class CrawlAccountDelegatesService extends Service {
 		let listAccounts: AccountDelegationsEntity[] = [],
 			listUpdateQueries: any[] = [];
 		if (listAddresses.length > 0) {
-			listAddresses.map(async (address) => {
+			for (let address of listAddresses) {
 				let listDelegates: DelegationResponse[] = [];
 
 				const param = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
@@ -106,7 +106,7 @@ export default class CrawlAccountDelegatesService extends Service {
 				}
 
 				listAccounts.push(accountInfo);
-			});
+			};
 		}
 		try {
 			listAccounts.map((element) => {

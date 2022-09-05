@@ -1,14 +1,15 @@
-import { Config } from "common";
+import { Config } from "../common";
 import { JsonObject, JsonProperty } from "json2typescript";
 import { ObjectIdNull } from "types";
 import { CustomInfo } from "./custom-info.entity";
 import { Types } from "mongoose";
+import { DateConverter } from "./converters/date.converter";
 
 export interface IDelayJob {
     _id: ObjectIdNull;
-    address: String;
+    content: Object;
     type: String;
-    expire_time: String;
+    expire_time: Date | null;
     custom_info: CustomInfo;
 }
 
@@ -16,12 +17,12 @@ export interface IDelayJob {
 export class DelayJobEntity implements IDelayJob {
     @JsonProperty('_id', String, true)
     _id = Config.DB_DELAY_JOB.dialect === 'local' ? Types.ObjectId() : null;
-    @JsonProperty('address', String)
-    address: string = '';
+    @JsonProperty('content', Object)
+    content: Object = {};
     @JsonProperty('type', String)
     type: String = '';
-    @JsonProperty('expire_time', String)
-    expire_time: String = '';
+    @JsonProperty('expire_time', DateConverter)
+    expire_time: Date | null = null;
     @JsonProperty('custom_info', CustomInfo, true)
     custom_info = {} as CustomInfo;
 }

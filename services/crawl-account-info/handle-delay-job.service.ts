@@ -2,12 +2,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import { dbDelayJobMixin } from "@Mixins/dbMixinMongoose/db-delay-job.mixin";
+import { dbDelayJobMixin } from "../../mixins/dbMixinMongoose/db-delay-job.mixin";
 import { Job } from "bull";
-import { Config } from "common";
-import { DELAY_JOB_TYPE } from "common/constant";
-import { RedelegateEntry } from "entities";
-import { DelayJobEntity } from "entities/delay-job.entity";
+import { Config } from "../../common";
+import { DELAY_JOB_TYPE } from "../../common/constant";
+import { RedelegateEntry, DelayJobEntity, RedelegationEntry } from "../../entities";
 import { indexOf } from "lodash";
 import { Service, ServiceBroker } from "moleculer";
 const QueueService = require('moleculer-bull');
@@ -47,97 +46,119 @@ export default class HandleDelayJobService extends Service {
 
     async handleJob() {
         let listUpdateQueries: any[] = [];
-        
+
         let client = await this.connectToDB();
-		const db = client.db('aura_indexer_dev');
-		let [accountBalances, accountSpendableBalances, accountRedelegates, accountUnbonds, delayJob] = await Promise.all([
+        const db = client.db(Config.DB_GENERIC_DBNAME);
+        let [accountBalances, accountSpendableBalances, accountRedelegates, accountUnbonds, delayJob] = await Promise.all([
             db.collection("account_balances"),
             db.collection("account_spendable_balances"),
             db.collection("account_redelegations"),
-			db.collection("account_unbonds"),
-			db.collection("delay_job"),
-		]);
+            db.collection("account_unbonds"),
+            db.collection("delay_job"),
+        ]);
 
         let currentJobs: DelayJobEntity[] = await delayJob.find({ 'custom_info.chain_id': Config.CHAIN_ID }).toArray();
         currentJobs.map(async (job: any) => {
             if (job.expire_time <= new Date().getTime()) {
-                switch(job.type) {
-                    case DELAY_JOB_TYPE.REDELEGATE: 
-                        let updateRedelegates = await accountRedelegates.find({
-                                address: job.address,
+                switch (job.type) {
+                    case DELAY_JOB_TYPE.REDELEGATE:
+                        try {
+                            let updateRedelegates = await accountRedelegates.find({
+                                address: job.content.address,
                                 'custom_info.chain_id': Config.CHAIN_ID
                             }).toArray();
-                        let newRedelegates = updateRedelegates[0].redelegation_responses.entries,
-                            removeRedelegate = newRedelegates
-                                .filter((x: RedelegateEntry) => x.redelegation_entry.completion_time === job.expire_time)[0];
-                        newRedelegates.splice(indexOf(removeRedelegate, 1));
-                        listUpdateQueries.push(
-                            accountRedelegates.updateOne(
-                                {
-                                    _id: updateRedelegates._id
-                                },
-                                {
-                                    $set: {
-                                        entries: newRedelegates
+                            let oldRedelegates = updateRedelegates[0].redelegation_responses[0].entries,
+                                removeRedelegate = oldRedelegates
+                                    .find((x: RedelegateEntry) => new Date(x.redelegation_entry.completion_time!).getTime() === new Date(job.expire_time).getTime());
+                            oldRedelegates.splice(oldRedelegates.indexOf(removeRedelegate), 1);
+                            let newRedelegates = updateRedelegates[0].redelegation_responses;
+                            if (oldRedelegates.length === 0) newRedelegates = [];
+                            else newRedelegates[0].entries = oldRedelegates;
+                            listUpdateQueries.push(
+                                accountRedelegates.updateOne(
+                                    {
+                                        _id: updateRedelegates[0]._id
+                                    },
+                                    {
+                                        $set: {
+                                            redelegation_responses: newRedelegates
+                                        }
                                     }
-                                }
-                            ),
-                        );
+                                ),
+                                delayJob.deleteOne({
+                                    _id: job._id
+                                }),
+                            );
+                        } catch (error) {
+                            this.logger.error(error);
+                        }
+                        break;
                     case DELAY_JOB_TYPE.UNBOND:
-                        let [updateBalances, updateSpendableBalances, updateUnbonds] = await Promise.all([
-                            accountBalances.find({
-                                address: job.address,
-                                'custom_info.chain_id': Config.CHAIN_ID
-                            }).toArray(),
-                            accountSpendableBalances.find({
-                                address: job.address,
-                                'custom_info.chain_id': Config.CHAIN_ID
-                            }).toArray(),
-                            accountUnbonds.find({
-                                address: job.address,
-                                'custom_info.chain_id': Config.CHAIN_ID
-                            }).toArray(),
-                        ]);
-                        let newBalances = updateBalances[0].balances,
-                            newSpendableBalances = updateSpendableBalances[0].spendable_balances,
-                            newUnbonds = updateUnbonds[0].unbonding_responses.entries,
-                            removeUnbond = newUnbonds
-                                .filter((x: RedelegateEntry) => x.redelegation_entry.completion_time === job.expire_time)[0];
-                        newBalances[0].amount += removeUnbond.balance;
-                        newSpendableBalances[0].amount += removeUnbond.balance;
-                        newUnbonds.splice(indexOf(removeUnbond, 1));
-                        listUpdateQueries.push(...[
-                            accountBalances.updateOne(
-                                {
-                                    _id: updateBalances._id
-                                },
-                                {
-                                    $set: {
-                                        balances: newBalances
+                        try {
+                            let [updateBalances, updateSpendableBalances, updateUnbonds] = await Promise.all([
+                                accountBalances.find({
+                                    address: job.content.address,
+                                    'custom_info.chain_id': Config.CHAIN_ID
+                                }).toArray(),
+                                accountSpendableBalances.find({
+                                    address: job.content.address,
+                                    'custom_info.chain_id': Config.CHAIN_ID
+                                }).toArray(),
+                                accountUnbonds.find({
+                                    address: job.content.address,
+                                    'custom_info.chain_id': Config.CHAIN_ID
+                                }).toArray(),
+                            ]);
+                            let newBalances = updateBalances[0].balances,
+                                newSpendableBalances = updateSpendableBalances[0].spendable_balances,
+                                oldUnbonds = updateUnbonds[0].unbonding_responses[0].entries,
+                                removeUnbond = oldUnbonds
+                                    .find((x: RedelegationEntry) => new Date(x.completion_time!).getTime() === new Date(job.expire_time).getTime());
+                            newBalances[0].amount = (parseInt(newBalances[0].amount) + parseInt(removeUnbond.balance)).toString();
+                            newSpendableBalances[0].amount = (parseInt(newSpendableBalances[0].amount) + parseInt(removeUnbond.balance)).toString();
+                            oldUnbonds.splice(oldUnbonds.indexOf(removeUnbond), 1);
+                            let newUnbonds = updateUnbonds[0].unbonding_responses;
+                            if (oldUnbonds.length === 0) newUnbonds = [];
+                            else newUnbonds[0].entries = oldUnbonds;
+                            listUpdateQueries.push(...[
+                                accountBalances.updateOne(
+                                    {
+                                        _id: updateBalances[0]._id
+                                    },
+                                    {
+                                        $set: {
+                                            balances: newBalances
+                                        }
                                     }
-                                }
-                            ),
-                            accountSpendableBalances.updateOne(
-                                {
-                                    _id: updateSpendableBalances._id
-                                },
-                                {
-                                    $set: {
-                                        spendable_balances: newSpendableBalances
+                                ),
+                                accountSpendableBalances.updateOne(
+                                    {
+                                        _id: updateSpendableBalances[0]._id
+                                    },
+                                    {
+                                        $set: {
+                                            spendable_balances: newSpendableBalances
+                                        }
                                     }
-                                }
-                            ),
-                            accountUnbonds.updateOne(
-                                {
-                                    _id: updateUnbonds._id
-                                },
-                                {
-                                    $set: {
-                                        entries: newUnbonds
+                                ),
+                                accountUnbonds.updateOne(
+                                    {
+                                        _id: updateUnbonds[0]._id
+                                    },
+                                    {
+                                        $set: {
+                                            unbonding_responses: newUnbonds
+                                        }
                                     }
-                                }
-                            ),
-                        ]);
+                                ),
+                                delayJob.deleteOne({
+                                    _id: job._id
+                                }),
+                            ]);
+                        } catch (error) {
+                            this.logger.error(error);
+                        }
+                        break;
                 }
                 const result = await Promise.all(listUpdateQueries);
                 this.logger.info(result);
@@ -146,13 +167,13 @@ export default class HandleDelayJobService extends Service {
     }
 
     async connectToDB() {
-		const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}`;
+        const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
 
-		let cacheClient = await mongo.MongoClient.connect(
-			DB_URL,
-		);
-		return cacheClient;
-	}
+        let cacheClient = await mongo.MongoClient.connect(
+            DB_URL,
+        );
+        return cacheClient;
+    }
 
     async _start() {
         this.createJob(

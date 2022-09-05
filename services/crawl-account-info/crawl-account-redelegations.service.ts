@@ -5,10 +5,9 @@ import { Config } from '../../common';
 import { CONST_CHAR, DELAY_JOB_TYPE, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { AccountRedelegationsEntity, RedelegationResponse } from '../../entities';
+import { AccountRedelegationsEntity, RedelegationResponse, DelayJobEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
-import { DelayJobEntity } from 'entities/delay-job.entity';
 const QueueService = require('moleculer-bull');
 const Bull = require('bull');
 const mongo = require('mongodb');
@@ -68,17 +67,15 @@ export default class CrawlAccountRedelegatesService extends Service {
 
 	async handleJob(listAddresses: string[], chainId: string) {
 		let client = await this.connectToDB();
-		const db = client.db('aura_indexer_dev');
-		let [accountRedelegates, delayJob] = await Promise.all([
-			db.collection("account_redelegations"),
-			db.collection("delay_job"),
-		]);
+		const db = client.db(Config.DB_GENERIC_DBNAME);
+		let delayJob = await db.collection("delay_job");
 
 		let listAccounts: AccountRedelegationsEntity[] = [],
 			listUpdateQueries: any[] = [],
 			listDelayJobs: DelayJobEntity[] = [];
+		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
-			listAddresses.map(async (address) => {
+			for (let address of listAddresses) {
 				let listRedelegates: RedelegationResponse[] = [];
 
 				const param =
@@ -136,26 +133,30 @@ export default class CrawlAccountRedelegatesService extends Service {
 						// 	}
 						// );
 						// apiKeyQueue.add({
-						// 	listAddresses: [address],
+						// 	listTx: [address],
+						// 	source: CONST_CHAR.API,
 						// 	chainId
 						// });
 						let newDelayJob = {} as DelayJobEntity;
-						newDelayJob.address = address;
+						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.REDELEGATE;
-						newDelayJob.expire_time = redelegate.entries[0].redelegation_entry.completion_time.toString();
+						newDelayJob.expire_time = redelegate.entries[0].redelegation_entry.completion_time;
+						newDelayJob.custom_info = {
+							chain_id: chainId,
+							chain_name: chain ? chain.chainName : '',
+						};
 						listDelayJobs.push(newDelayJob);
 					});
 				}
 
 				listAccounts.push(accountInfo);
-			});
+			};
 		}
 		try {
 			listAccounts.map((element) => {
 				if (element._id)
-					listUpdateQueries.push(accountRedelegates.updateOne(element._id, element));
+					listUpdateQueries.push(this.adapter.updateById(element._id, element));
 				else {
-					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 					const item: AccountRedelegationsEntity = new JsonConvert().deserializeObject(
 						element,
 						AccountRedelegationsEntity,
@@ -164,20 +165,11 @@ export default class CrawlAccountRedelegatesService extends Service {
 						chain_id: chainId,
 						chain_name: chain ? chain.chainName : '',
 					};
-					listUpdateQueries.push(accountRedelegates.insertOne(item));
+					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
 			listDelayJobs.map((element) => {
-				const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-				const item: DelayJobEntity = new JsonConvert().deserializeObject(
-					element,
-					DelayJobEntity,
-				);
-				item.custom_info = {
-					chain_id: chainId,
-					chain_name: chain ? chain.chainName : '',
-				};
-				listUpdateQueries.push(delayJob.insertOne(item));
+				listUpdateQueries.push(delayJob.insertMany([element]));
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
@@ -186,7 +178,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 	}
 
 	async connectToDB() {
-		const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}`;
+		const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
 
 		let cacheClient = await mongo.MongoClient.connect(
 			DB_URL,
