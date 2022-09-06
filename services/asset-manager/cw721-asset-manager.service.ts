@@ -58,7 +58,13 @@ import _ from 'lodash';
 				this.logger.debug(
 					`ctx.params cw721-asset-manager aggregate media ${JSON.stringify(ctx.params)}`,
 				);
-				let listAggregate: any[] = [
+				let listAggregate: any[] = [];
+				if (ctx.params.sort) {
+					listAggregate.push({
+						$sort: ctx.params.sort,
+					});
+				}
+				listAggregate.push(
 					{
 						$match: ctx.params.query,
 					},
@@ -70,12 +76,7 @@ import _ from 'lodash';
 							as: 'media_info',
 						},
 					},
-				];
-				if (ctx.params.sort) {
-					listAggregate.push({
-						$sort: ctx.params.sort,
-					});
-				}
+				);
 				if (ctx.params.offset) {
 					listAggregate.push({
 						$skip: ctx.params.offset,

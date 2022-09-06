@@ -75,7 +75,13 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: false
 	 *          schema:
 	 *            type: string
-	 *          description: "Address in transaction"
+	 *          description: "Address in transaction with native coin"
+	 *        - in: query
+	 *          name: addressInContract
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *          description: "Address in transaction with token from smart contract"
 	 *        - in: query
 	 *          name: searchType
 	 *          required: false
@@ -156,6 +162,7 @@ export default class BlockService extends MoleculerDBService<
 			blockHeight: { type: 'number', optional: true, convert: true },
 			txHash: { type: 'string', optional: true },
 			address: { type: 'string', optional: true },
+			addressInContract: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -245,6 +252,7 @@ export default class BlockService extends MoleculerDBService<
 		const searchKey = ctx.params.searchKey;
 		const searchValue = ctx.params.searchValue;
 		const queryParam = ctx.params.query;
+		const addressInContract = ctx.params.addressInContract;
 		let findOne = false;
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
@@ -354,7 +362,12 @@ export default class BlockService extends MoleculerDBService<
 			// 	],
 			// });
 		}
-
+		if (addressInContract) {
+			listQueryOr.push(
+				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
+				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
+			);
+		}
 		if (listQueryAnd.length > 0) {
 			query['$and'] = listQueryAnd;
 		}

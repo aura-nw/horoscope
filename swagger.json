@@ -48,6 +48,62 @@
         }
     ],
     "paths": {
+        "/v1/validator/delegator-reward-claimed": {
+            "get": {
+                "tags": [
+                    "Validator"
+                ],
+                "summary": "Get total claimed reward by delegator",
+                "description": "Get total claimed reward by delegator",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
+                                "euphoria-1",
+                                "cosmoshub-4"
+                            ]
+                        },
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "delegatorAddress",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "delegator address"
+                    },
+                    {
+                        "in": "query",
+                        "name": "validatorAddress",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "validator address (valoper)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "422": {
+                        "description": "Missing parameters"
+                    }
+                }
+            }
+        },
         "/v1/account-info": {
             "get": {
                 "tags": [
@@ -640,10 +696,243 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Register result"
+                        "description": "Block result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "blocks": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "block_id": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "parts": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "total": {
+                                                                                "type": "number",
+                                                                                "example": 1
+                                                                            },
+                                                                            "hash": {
+                                                                                "type": "string",
+                                                                                "example": "7D045310732FBDB9DB3C31CE644E831BA450B89C6FC46E298B1589AE6BC61FCE"
+                                                                            }
+                                                                        },
+                                                                        "hash": {
+                                                                            "type": "string",
+                                                                            "example": "0FC0669C5CC9F8C7A891F6BCE43334D5391BA36F1E178D0C10C2E77BAA5CFB9F"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "block": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "header": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "version": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "block": {
+                                                                                        "type": "number",
+                                                                                        "example": 11
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "last_block_id": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "parts": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "total": {
+                                                                                                "type": "number",
+                                                                                                "example": 1
+                                                                                            },
+                                                                                            "hash": {
+                                                                                                "type": "string",
+                                                                                                "example": "7D045310732FBDB9DB3C31CE644E831BA450B89C6FC46E298B1589AE6BC61FCE"
+                                                                                            }
+                                                                                        }
+                                                                                    },
+                                                                                    "hash": {
+                                                                                        "type": "string",
+                                                                                        "example": "0FC0669C5CC9F8C7A891F6BCE43334D5391BA36F1E178D0C10C2E77BAA5CFB9F"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "chain_id": {
+                                                                                "type": "string",
+                                                                                "example": "aura"
+                                                                            },
+                                                                            "height": {
+                                                                                "type": "number",
+                                                                                "example": 123
+                                                                            },
+                                                                            "time": {
+                                                                                "type": "string",
+                                                                                "example": "2022-09-06T03:05:37.931Z"
+                                                                            },
+                                                                            "last_commit_hash": {
+                                                                                "type": "string",
+                                                                                "example": "406AA52905BBAD518B7E39EDEA4108F3569779EA5BCDCEB5D44BED7BC296F2E0"
+                                                                            },
+                                                                            "data_hash": {
+                                                                                "type": "string",
+                                                                                "example": "5BA80BD845CB59539CD027253AC8F39DE8983C0713D7E22DA8867B9D08981837"
+                                                                            },
+                                                                            "validators_hash": {
+                                                                                "type": "string",
+                                                                                "example": "EB5CDC9D3D506F56E9E10C49FCCF3098755B8699D67F35BF3748A5572EEA033A"
+                                                                            },
+                                                                            "next_validators_hash": {
+                                                                                "type": "string",
+                                                                                "example": "EB5CDC9D3D506F56E9E10C49FCCF3098755B8699D67F35BF3748A5572EEA033A"
+                                                                            },
+                                                                            "consensus_hash": {
+                                                                                "type": "string",
+                                                                                "example": "048091BC7DDC283F77BFBF91D73C44DA58C3DF8A9CBC867405D8B7F3DAADA22F"
+                                                                            },
+                                                                            "app_hash": {
+                                                                                "type": "string",
+                                                                                "example": "5C97FF89AA5464245766A3BAD7C21B658D8AE405E71304B93F499DB960738633"
+                                                                            },
+                                                                            "last_results_hash": {
+                                                                                "type": "string",
+                                                                                "example": "21DB2576AE5F49F6FDE57AC1F1A6081134A63534956C536DCE6A25BD72917C75"
+                                                                            },
+                                                                            "evidence_hash": {
+                                                                                "type": "string",
+                                                                                "example": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+                                                                            },
+                                                                            "proposer_address": {
+                                                                                "type": "string",
+                                                                                "example": "8690272AC41B780D3F009C9F50C36461C967B0C1"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "data": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "txs": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string",
+                                                                            "example": "Cr4CCpwBCjcvY29zbW9zLmRpc3RyaWJ1dGlvbi52MWJldGExLk1zZ1dpdGhkcmF3RGVsZWdhdG9yUmV3YXJkEmEKK2F1cmExZ3lwdDJ3N3hnNXQ5eXI3Nmh4NnplbXdkNHh2NzJqY2trMDNyNnQSMmF1cmF2YWxvcGVyMWQzbjB2NWYyM3NxemtobGNuZXdoa3NhajhsM3g3amV5dTkzOGd4CpwBCjcvY29zbW9zLmRpc3RyaWJ1dGlvbi52MWJldGExLk1zZ1dpdGhkcmF3RGVsZWdhdG9yUmV3YXJkEmEKK2F1cmExZ3lwdDJ3N3hnNXQ5eXI3Nmh4NnplbXdkNHh2NzJqY2trMDNyNnQSMmF1cmF2YWxvcGVyMWVkdzRsd2N6M2VzbmxnemN3NjByYThtMzhrM3p5Z3oyeHRsMnFoEmkKUgpGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOpI9dkWS6LMKVUiDKO+l6Cj42RgpHPB6zsDR5g+T9EoBIECgIIARjc/g0SEwoNCgZ1dGF1cmESAzIwMBDAmgwaQCbAXZBszJbxJBkFDQ34+gO1S0eSG8uHMa//hZ4RNjYnIhHVZfhQtdsAP+tVumfrCKifITaDFaZIiEORBlgmZSk="
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "evidence": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "evidence": {
+                                                                        "type": "array"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "custom_info": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "chain_id": {
+                                                                        "type": "string",
+                                                                        "example": "aura"
+                                                                    },
+                                                                    "chain_name": {
+                                                                        "type": "string",
+                                                                        "example": "Aura network"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "count": {
+                                            "type": "number"
+                                        },
+                                        "nextKey": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.block.chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -960,7 +1249,16 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "Address in transaction"
+                        "description": "Address in transaction with native coin"
+                    },
+                    {
+                        "in": "query",
+                        "name": "addressInContract",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Address in transaction with token from smart contract"
                     },
                     {
                         "in": "query",
