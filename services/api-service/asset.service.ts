@@ -481,6 +481,7 @@ export default class BlockService extends MoleculerDBService<
 						limit: ctx.params.pageLimit,
 						offset: ctx.params.pageOffset,
 						sort: { _id: -1 },
+						nextKey: ctx.params.nextKey,
 					},
 				);
 				this.logger.debug(JSON.stringify(assets));
