@@ -7,6 +7,7 @@ const definition: definitionType<IDelayJob> = (collection?: string) => ({
 	content: Object,
 	type: { type: String },
     expire_time: Date,
+	status: String,
 	custom_info: {
 		chain_id: String,
 		chain_name: String,
@@ -20,5 +21,6 @@ export const delayJobMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection: collection,
 	});
+	schema.index({ 'content.address': 1, 'type': 1, 'expire_time': 1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

@@ -6,7 +6,7 @@ import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-de
 import { dbAccountDelegationsMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
-import { IAccountDelegations } from '../../entities';
+import { IAccountDelegations } from '../../entities/account-delegations.entity';
 import { DbContextParameters } from 'moleculer-db';
 
 /**

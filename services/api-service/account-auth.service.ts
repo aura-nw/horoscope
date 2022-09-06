@@ -6,7 +6,7 @@ import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-de
 import { dbAccountAuthMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
-import { IAccountAuth } from '../../entities';
+import { IAccountAuth } from '../../entities/account-auth.entity';
 import { DbContextParameters } from 'moleculer-db';
 
 /**

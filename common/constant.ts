@@ -204,5 +204,12 @@ export enum VESTING_ACCOUNT_TYPE {
 
 export enum DELAY_JOB_TYPE {
 	REDELEGATE = 'redelegate',
-	UNBOND = 'unbond'
+	UNBOND = 'unbond',
+	PERIODIC_VESTING = 'periodic_vesting',
+	DELAYED_VESTING = 'delayed_vesting',
+}
+
+export enum DELAY_JOB_STATUS {
+	PENDING = 'pending',
+	DONE = 'done',
 }

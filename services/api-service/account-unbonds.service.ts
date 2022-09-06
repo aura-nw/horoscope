@@ -13,7 +13,7 @@ import {
 	MoleculerDBService,
 	RestOptions,
 } from '../../types';
-import { IAccountUnbonds } from '../../entities';
+import { IAccountUnbonds } from '../../entities/account-unbonds.entity';
 import { DbContextParameters } from 'moleculer-db';
 import { LIST_NETWORK } from '../../common/constant';
 /**

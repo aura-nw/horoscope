@@ -10,6 +10,7 @@ export interface IDelayJob {
     content: Object;
     type: String;
     expire_time: Date | null;
+    status: String;
     custom_info: CustomInfo;
 }
 
@@ -23,6 +24,8 @@ export class DelayJobEntity implements IDelayJob {
     type: String = '';
     @JsonProperty('expire_time', DateConverter)
     expire_time: Date | null = null;
+    @JsonProperty('status', String)
+    status: String = '';
     @JsonProperty('custom_info', CustomInfo, true)
     custom_info = {} as CustomInfo;
 }
