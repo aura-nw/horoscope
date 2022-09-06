@@ -9,6 +9,7 @@ import { AccountRedelegationsEntity, RedelegationResponse } from '../../entities
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 const QueueService = require('moleculer-bull');
+const Bull = require('bull');
 
 export default class CrawlAccountRedelegatesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -101,23 +102,34 @@ export default class CrawlAccountRedelegatesService extends Service {
 
 				if (listRedelegates) {
 					accountInfo.redelegation_responses = listRedelegates;
-					// listRedelegates.map((redelegate: RedelegationResponse) => {
-					// 	let expireTime = new Date(
-					// 		redelegate.entries[0].redelegation_entry.completion_time.toString(),
-					// 	);
-					// 	let delay = expireTime.getTime() - new Date().getTime();
-					// 	this.createJob(
-					// 		'crawl.account-redelegates',
-					// 		{
-					// 			listAddresses: [address],
-					// 			chainId
-					// 		},
-					// 		{
-					// 			removeOnComplete: true,
-					// 			delay,
-					// 		},
-					// 	);
-					// });
+					listRedelegates.map(async (redelegate: RedelegationResponse) => {
+						let expireTime = new Date(
+							redelegate.entries[0].redelegation_entry.completion_time.toString(),
+						);
+						let delay = expireTime.getTime() - new Date().getTime();
+						const apiKeyQueue = new Bull(
+							'handle.address',
+							{
+								redis: {
+									host: Config.REDIS_HOST,
+									port: Config.REDIS_PORT,
+									username: Config.REDIS_USERNAME,
+									password: Config.REDIS_PASSWORD,
+									db: Config.REDIS_DB_NUMBER,
+								},
+								prefix: 'handle.address',
+								defaultJobOptions: {
+									jobId: `${address}_${chainId}_${redelegate.entries[0].redelegation_entry.completion_time}`,
+									removeOnComplete: true,
+									delay,
+								}
+							}
+						);
+						apiKeyQueue.add({
+							listAddresses: [address],
+							chainId
+						});
+					});
 				}
 
 				listAccounts.push(accountInfo);
