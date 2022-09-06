@@ -483,6 +483,7 @@ export default class BlockService extends MoleculerDBService<
 						sort: { _id: -1 },
 					},
 				);
+				this.logger.debug(JSON.stringify(assets));
 			}
 			let count = 0;
 			if (ctx.params.countTotal === true) {
@@ -702,6 +703,7 @@ export default class BlockService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					sort: sort,
+					nextKey: ctx.params.nextKey,
 				}),
 				ctx.params.countTotal === true
 					? this.broker.call(
