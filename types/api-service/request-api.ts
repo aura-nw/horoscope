@@ -99,3 +99,8 @@ export interface AddBurnedToAsset extends ChainIdParams {
 	contractAddress: string;
 	tokenId: string;
 }
+
+export interface GetTotalRewardsByAddress extends ChainIdParams {
+	operatorAddress: string;
+	delegatorAddress: string;
+}

@@ -1,15 +1,15 @@
-import { IAccountTotalRewards } from '../entities';
+import { IAccountClaimedRewards } from '../entities';
 import { IAccountSpendableBalances } from 'entities/account-spendable-balances.entity';
 import { model, models, Types, Schema } from 'mongoose';
 import { definitionType } from 'types';
 import { customInfoModel } from './custom-info.model';
 
-const definition: definitionType<IAccountTotalRewards> = (collection?: string) => ({
+const definition: definitionType<IAccountClaimedRewards> = (collection?: string) => ({
 	_id: Types.ObjectId,
 	address: String,
-	validatorReward: [
+	validator_reward: [
 		{
-			validatorAddress: String,
+			validator_address: String,
 			rewards: [
 				{
 					denom: String,
@@ -24,7 +24,7 @@ const definition: definitionType<IAccountTotalRewards> = (collection?: string) =
 	},
 });
 
-export const accountTotalRewardsMongoModel = (collection: string): unknown => {
+export const accountClaimedRewardsMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	const schema = new Schema<IAccountSpendableBalances>(definition(collection), {
