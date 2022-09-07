@@ -4,8 +4,9 @@
 import moleculer, { Context } from 'moleculer';
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
-import { CursorOptions } from 'moleculer-db';
+import { CursorOptions, QueryOptions } from 'moleculer-db';
 import { ICW20Asset } from '@Model';
+import { ObjectID, ObjectId } from 'bson';
 
 @Service({
 	name: 'CW20-asset-manager',
@@ -39,11 +40,14 @@ import { ICW20Asset } from '@Model';
 			cache: {
 				ttl: 10,
 			},
-			async handler(ctx: Context): Promise<any> {
+			async handler(ctx: Context<QueryOptions, Record<string, unknown>>): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(
 					`ctx.params cw20-asset-manager find ${JSON.stringify(ctx.params)}`,
 				);
+				if (ctx.params.nextKey) {
+					ctx.params.query['_id'] = { $lt: new ObjectID(ctx.params.nextKey) };
+				}
 				// @ts-ignore
 				return await this.adapter.find(ctx.params);
 			},

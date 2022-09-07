@@ -234,7 +234,7 @@ export default class BlockService extends MoleculerDBService<
 	 *      parameters:
 	 *        - in: query
 	 *          name: owner
-	 *          required: true
+	 *          required: false
 	 *          schema:
 	 *            type: string
 	 *          description: "Owner address need to query"
@@ -245,6 +245,14 @@ export default class BlockService extends MoleculerDBService<
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *            type: string
 	 *          description: "Chain Id of network need to query(if null it will return asset on all chainid)"
+	 *        - in: query
+	 *          name: contractType
+	 *          required: true
+	 *          schema:
+	 *            enum: ["CW20","CW721"]
+	 *            type: string
+	 *          description: "Type asset need to query"
+	 *          default: "CW20"
 	 *        - in: query
 	 *          name: tokenName
 	 *          required: false
@@ -270,6 +278,26 @@ export default class BlockService extends MoleculerDBService<
 	 *            type: boolean
 	 *            default: 'false'
 	 *          description: "count total record"
+	 *        - in: query
+	 *          name: pageLimit
+	 *          required: false
+	 *          schema:
+	 *            type: number
+	 *            default: 10
+	 *          description: "number record return in a page"
+	 *        - in: query
+	 *          name: pageOffset
+	 *          required: false
+	 *          schema:
+	 *            type: number
+	 *            default: 0
+	 *          description: "Page number, start at 0"
+	 *        - in: query
+	 *          name: nextKey
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
 	 *          description: List asset
@@ -476,7 +504,7 @@ export default class BlockService extends MoleculerDBService<
 	@Get('/getByOwner', {
 		name: 'getByOwner',
 		params: {
-			owner: { type: 'string', optional: false },
+			owner: { type: 'string', optional: true },
 			chainid: {
 				type: 'string',
 				optional: true,
@@ -487,11 +515,40 @@ export default class BlockService extends MoleculerDBService<
 			tokenName: { type: 'string', optional: true },
 			tokenId: { type: 'string', optional: true },
 			contractAddress: { type: 'string', optional: true },
+			contractType: {
+				type: 'string',
+				optional: false,
+				enum: Object.values(CONTRACT_TYPE),
+				default: 'CW20',
+			},
 			countTotal: {
 				type: 'boolean',
 				optional: true,
 				default: false,
 				convert: true,
+			},
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
 			},
 		},
 		cache: {
@@ -500,8 +557,21 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async getByOwner(ctx: Context<GetAssetByOwnerAddressRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
+		if (!ctx.params.owner && !ctx.params.contractAddress) {
+			return (response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.VALIDATION_ERROR,
+				data: {
+					message: 'owner or contractAddress must be inputted',
+				},
+			});
+		}
 		try {
-			let query: QueryOptions = { owner: ctx.params.owner };
+			let query: QueryOptions = {};
+			let needNextKey = true;
+			if (ctx.params.owner) {
+				query['owner'] = ctx.params.owner;
+			}
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
@@ -521,41 +591,66 @@ export default class BlockService extends MoleculerDBService<
 					},
 				];
 			}
+			if (ctx.params.nextKey) {
+				ctx.params.pageOffset = 0;
+				ctx.params.countTotal = false;
+			}
 			this.logger.debug('query', query);
-			let contractMap = Object.values(CONTRACT_TYPE);
+			let contract_type = ctx.params.contractType;
+			let asset: any[];
+			if (contract_type == CONTRACT_TYPE.CW721) {
+				asset = await this.broker.call(
+					`v1.${contract_type}-asset-manager.act-join-media-link`,
+					{
+						query,
+						sort: { _id: -1 },
+						limit: ctx.params.pageLimit + 1,
+						offset: ctx.params.pageOffset,
+						nextKey: ctx.params.nextKey,
+					},
+				);
+			} else {
+				asset = await this.broker.call(`v1.${contract_type}-asset-manager.act-find`, {
+					query,
+					sort: '-_id',
+					limit: ctx.params.pageLimit + 1,
+					offset: ctx.params.pageOffset,
+					nextKey: ctx.params.nextKey,
+				});
+			}
+			let nextKey = null;
+			if (asset.length > 0) {
+				if (asset.length == 1) {
+					nextKey = asset[asset.length - 1]?._id;
+				} else {
+					nextKey = asset[asset.length - 2]?._id;
+				}
+				if (asset.length <= ctx.params.pageLimit) {
+					nextKey = null;
+				}
+				if (nextKey) {
+					asset.pop();
+				}
+			}
+			this.logger.info(`asset: ${JSON.stringify(asset)}`);
+			let count = 0;
+			if (ctx.params.countTotal === true) {
+				count = await this.broker.call(`v1.${contract_type}-asset-manager.act-count`, {
+					query,
+					skip: 0,
+					limit: ctx.params.pageLimit * 5,
+				});
+			}
 			let assetsMap: Map<any, any> = new Map();
-			const getData = Promise.all(
-				contractMap.map(async (contract_type: string) => {
-					let asset: any[];
-					if (contract_type == CONTRACT_TYPE.CW721) {
-						asset = await this.broker.call(
-							`v1.${contract_type}-asset-manager.act-join-media-link`,
-							{
-								query,
-							},
-						);
-					} else {
-						asset = await this.broker.call(
-							`v1.${contract_type}-asset-manager.act-find`,
-							{
-								query,
-							},
-						);
-					}
-					this.logger.info(`asset: ${JSON.stringify(asset)}`);
-					let count = 0;
-					if (ctx.params.countTotal === true) {
-						count = await this.broker.call(
-							`v1.${contract_type}-asset-manager.act-count`,
-							{
-								query,
-							},
-						);
-					}
-					assetsMap.set(contract_type, { asset, count });
-				}),
-			);
-			await getData;
+			assetsMap.set(contract_type, { asset, count });
+
+			// const getData = Promise.all(
+			// 	contractMap.map(async (contract_type: string) => {
+			// 		let asset: any[];
+
+			// 	}),
+			// );
+			// await getData;
 			const assetObj = Object.fromEntries(assetsMap);
 			this.logger.debug(`assetObj: ${JSON.stringify(assetObj)}`);
 
@@ -564,6 +659,7 @@ export default class BlockService extends MoleculerDBService<
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					assets: assetObj,
+					nextKey: nextKey,
 				},
 			};
 		} catch (error) {

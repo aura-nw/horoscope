@@ -380,7 +380,7 @@
                     {
                         "in": "query",
                         "name": "owner",
-                        "required": true,
+                        "required": false,
                         "schema": {
                             "type": "string"
                         },
@@ -404,6 +404,20 @@
                             "type": "string"
                         },
                         "description": "Chain Id of network need to query(if null it will return asset on all chainid)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "contractType",
+                        "required": true,
+                        "schema": {
+                            "enum": [
+                                "CW20",
+                                "CW721"
+                            ],
+                            "type": "string"
+                        },
+                        "description": "Type asset need to query",
+                        "default": "CW20"
                     },
                     {
                         "in": "query",
@@ -441,6 +455,35 @@
                             "default": "false"
                         },
                         "description": "count total record"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "default": 10
+                        },
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "default": 0
+                        },
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "key for next page"
                     }
                 ],
                 "responses": {

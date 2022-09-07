@@ -38,9 +38,10 @@ export interface GetAllAsset extends ChainIdParams, PageLimit {}
 
 export interface GetAssetByOwnerAddressRequest extends ChainIdParams, PageLimit {
 	owner: string;
-	tokenId: String;
-	tokenName: String;
-	contractAddress: String;
+	tokenId: string;
+	tokenName: string;
+	contractAddress: string;
+	contractType: string;
 }
 
 export interface GetAssetByContractTypeAddressRequest extends ChainIdParams, PageLimit {
