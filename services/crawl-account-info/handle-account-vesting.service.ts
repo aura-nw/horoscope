@@ -45,6 +45,7 @@ export default class HandleAccountVestingService extends Service {
 		let continuousVestingAccounts = await this.adapter.find({
 			query: {
 				'account_auth.result.type': VESTING_ACCOUNT_TYPE.CONTINUOUS,
+				'custom_info.chain_id': Config.CHAIN_ID
 			}
 		});
 		continuousVestingAccounts.map(async (account: any) => {
@@ -53,7 +54,7 @@ export default class HandleAccountVestingService extends Service {
 				let listSpendableBalances: Coin[] = [];
 				const param =
 					Config.GET_PARAMS_SPENDABLE_BALANCE + `/${account.address}?pagination.limit=100`;
-				const url = Utils.getUrlByChainIdAndType(account.custom_info.chain_id.toString(), URL_TYPE_CONSTANTS.LCD);
+				const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 				let urlToCall = param;
 				let done = false;

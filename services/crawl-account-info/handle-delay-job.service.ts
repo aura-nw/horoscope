@@ -202,8 +202,8 @@ export default class HandleDelayJobService extends Service {
                                     }
                                 };
                             else {
-                                let newJobExpireTime = 
-                                new Date((job.expire_time.getTime() + parseInt(updateInfo.account_auth.result.value.vesting_periods[0].length, 10)) * 1000);
+                                let newJobExpireTime =
+                                    new Date((job.expire_time.getTime() + parseInt(updateInfo.account_auth.result.value.vesting_periods[0].length, 10)) * 1000);
                                 updateJob = {
                                     $set: {
                                         expire_time: newJobExpireTime
