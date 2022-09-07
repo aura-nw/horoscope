@@ -17,10 +17,10 @@ const definition: definitionType<IDelayJob> = (collection?: string) => ({
 export const delayJobMongoModel = (collection: string): unknown => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	const schema = new Schema<IDelayJob>(definition(collection), {
+	const schema = new mongoose.Schema<IDelayJob>(definition(collection), {
 		autoIndex: true,
 		collection: collection,
 	});
-	schema.index({ 'content.address': 1, 'type': 1, 'expire_time': 1, 'custom_info.chain_id': 1 });
+	schema.index({ 'content.address': 1, 'type': 1, 'expire_time': 1, 'custom_info.chain_id': 1 }, { unique: true });
 	return models[collection] || model(collection, schema);
 };
