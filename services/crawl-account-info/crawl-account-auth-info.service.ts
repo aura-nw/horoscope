@@ -136,8 +136,14 @@ export default class CrawlAccountAuthInfoService extends Service {
                                 break;
                             case VESTING_ACCOUNT_TYPE.PERIODIC:
                                 newDelayJob.type = DELAY_JOB_TYPE.PERIODIC_VESTING;
-                                newDelayJob.expire_time = new Date((parseInt(resultCallApi.result.value.start_time, 10)
-                                    + parseInt(resultCallApi.result.value.vesting_periods[0].length, 10)) * 1000);
+                                const start_time = parseInt(resultCallApi.result.value.start_time, 10) * 1000;
+                                const number_of_periods = (new Date().getTime() - start_time) 
+                                    / (parseInt(resultCallApi.result.value.vesting_periods[0].length, 10) * 1000);
+                                let expire_time = start_time + 
+                                    number_of_periods * parseInt(resultCallApi.result.value.vesting_periods[0].length, 10) * 1000;
+                                if (expire_time < new Date().getTime()) 
+                                    expire_time += parseInt(resultCallApi.result.value.vesting_periods[0].length, 10) * 1000;
+                                newDelayJob.expire_time = new Date(expire_time);
                                 break;
                         }
                         newDelayJob.status = DELAY_JOB_STATUS.PENDING;

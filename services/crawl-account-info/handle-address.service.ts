@@ -36,9 +36,9 @@ export default class HandleAddressService extends Service {
 				accountinfoupsert: {
 					name: 'accountinfoupsert',
 					rest: 'GET /account-info/:address',
-					handler: (ctx: any) => {
+					handler: async (ctx: any) => {
 						this.logger.debug(`Crawl account info`);
-						this.handleJob(ctx.params.listTx, ctx.params.source, ctx.params.chainId);
+						await this.handleJob(ctx.params.listTx, ctx.params.source, ctx.params.chainId);
 					},
 				},
 			},

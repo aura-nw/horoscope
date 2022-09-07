@@ -140,7 +140,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 						let newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.REDELEGATE;
-						newDelayJob.expire_time = redelegate.entries[0].redelegation_entry.completion_time;
+						newDelayJob.expire_time = new Date(redelegate.entries[0].redelegation_entry.completion_time!);
 						newDelayJob.status = DELAY_JOB_STATUS.PENDING;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
