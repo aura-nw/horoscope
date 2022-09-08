@@ -5,7 +5,7 @@ import { Config } from '../../common';
 import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { AccountUnbondsEntity, ITransaction, UnbondingResponse } from '../../entities';
+import { ITransaction, UnbondingResponse } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams, ListTxCreatedParams } from '../../types';
 const QueueService = require('moleculer-bull');

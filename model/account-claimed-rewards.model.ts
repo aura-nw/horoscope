@@ -1,4 +1,4 @@
-import { IAccountTotalRewards } from 'entities/account-total-rewards.entity';
+import { IAccountClaimedRewards } from 'entities/account-claimed-rewards.entity';
 import { IAccountSpendableBalances } from 'entities/account-spendable-balances.entity';
 import { model, models, Types, Schema } from 'mongoose';
 import { definitionType } from 'types';
