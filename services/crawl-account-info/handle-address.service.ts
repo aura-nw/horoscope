@@ -67,29 +67,36 @@ export default class HandleAddressService extends Service {
 	async handleJob(listTx: any[], source: string, chainId: string) {
 		let listAddresses: any[] = [];
 		let listUpdateInfo: string[] = [];
+		listUpdateInfo.push(...[
+			'account-info.upsert-balances',
+			'account-info.upsert-delegates',
+			'account-info.upsert-redelegates',
+			'account-info.upsert-spendable-balances',
+			'account-info.upsert-unbonds'
+		]);
 		if (listTx.length > 0) {
 			for (const element of listTx) {
 				let message;
 				if (source == CONST_CHAR.CRAWL) {
 					try {
 						message = element.tx.body.messages[0]['@type'];
-						listUpdateInfo.push(...[
-							'account-info.upsert-balances',
-							'account-info.upsert-spendable-balances'
-						]);
+						// listUpdateInfo.push(...[
+						// 	'account-info.upsert-balances',
+						// 	'account-info.upsert-spendable-balances'
+						// ]);
 					} catch (error) {
 						this.logger.error(`Error when get message type: ${error}`);
 						continue;
 					}
 				} else if (source == CONST_CHAR.API) {
 					listAddresses.push(element.address);
-					listUpdateInfo.push(...[
-						'account-info.upsert-balances',
-						'account-info.upsert-delegates',
-						'account-info.upsert-redelegates',
-						'account-info.upsert-spendable-balances',
-						'account-info.upsert-unbonds'
-					]);
+					// listUpdateInfo.push(...[
+					// 	'account-info.upsert-balances',
+					// 	'account-info.upsert-delegates',
+					// 	'account-info.upsert-redelegates',
+					// 	'account-info.upsert-spendable-balances',
+					// 	'account-info.upsert-unbonds'
+					// ]);
 				}
 
 				switch (message) {
@@ -101,21 +108,21 @@ export default class HandleAddressService extends Service {
 						break;
 					case MSG_TYPE.MSG_DELEGATE:
 						listAddresses.push(element.tx.body.messages[0].delegator_address);
-						listUpdateInfo.push('account-info.upsert-delegates');
+						// listUpdateInfo.push('account-info.upsert-delegates');
 						break;
 					case MSG_TYPE.MSG_REDELEGATE:
 						listAddresses.push(element.tx.body.messages[0].delegator_address);
-						listUpdateInfo.push(...[
-							'account-info.upsert-delegates',
-							'account-info.upsert-redelegates'
-						]);
+						// listUpdateInfo.push(...[
+						// 	'account-info.upsert-delegates',
+						// 	'account-info.upsert-redelegates'
+						// ]);
 						break;
 					case MSG_TYPE.MSG_UNDELEGATE:
 						listAddresses.push(element.tx.body.messages[0].delegator_address);
-						listUpdateInfo.push(...[
-							'account-info.upsert-delegates',
-							'account-info.upsert-unbonds'
-						]);
+						// listUpdateInfo.push(...[
+						// 	'account-info.upsert-delegates',
+						// 	'account-info.upsert-unbonds'
+						// ]);
 						break;
 					case MSG_TYPE.MSG_EXECUTE_CONTRACT:
 						listAddresses.push(element.tx.body.messages[0].sender);

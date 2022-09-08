@@ -1,6 +1,7 @@
 import { IDelayJob } from "../entities/delay-job.entity";
 import { model, models, Types, Schema } from "mongoose";
 import { definitionType } from "types";
+const mongoose = require('mongoose');
 
 const definition: definitionType<IDelayJob> = (collection?: string) => ({
 	_id: Types.ObjectId,

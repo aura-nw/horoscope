@@ -8,6 +8,7 @@ import { ListTxCreatedParams } from "../../types";
 import { ObjectId } from "mongodb";
 const QueueService = require('moleculer-bull');
 const knex = require('../../config/database');
+const mongo = require('mongodb');
 
 export default class IndexDelegatorsService extends Service {
     private redisMixin = new RedisMixin().start();
@@ -23,8 +24,8 @@ export default class IndexDelegatorsService extends Service {
                         prefix: 'index.delegators',
                     },
                 ),
-                // dbAccountDelegationsMixin,
-                dbAccountAuthMixin,
+                dbAccountDelegationsMixin,
+                // dbAccountAuthMixin,
                 this.redisMixin,
             ],
             queues: {
@@ -380,24 +381,27 @@ export default class IndexDelegatorsService extends Service {
         //     console.log(`${validator.title},${validator.address},${addresses},${vote_count}/${total_votes}`);
         // };
 
+        let client = await this.connectToDB();
+        const db = client.db(Config.DB_GENERIC_DBNAME);
+        let accountCollection = await db.collection("account_auth");
         let query: any = {
-            'custom_info.chain_id': {
-                $in: ['aura-testnet', 'euphoria-1', 'serenity-testnet-001']
-            },
+            'custom_info.chain_id': 'aura-testnet' // , 'euphoria-1', 'serenity-testnet-001'
         };
         query['indexes'] = { $eq: null };
         if (lastId == '0') {
         } else {
             query['_id'] = { $gt: new ObjectId(lastId) };
         }
-        const listAccounts = await this.adapter.find({
-            query: query,
-            sort: '_id',
-            limit: 100,
-            skip: 0,
-        });
+        const listAccounts = await accountCollection.find(
+            query,
+            {
+                projection: { address: 1 },
+                sort: '_id',
+                limit: 100,
+                skip: 0,
+            }
+        );
         if (listAccounts.length > 0) {
-            await this.sleep(10000);
             this.createJob(
                 'index.delegators',
                 {
@@ -409,15 +413,10 @@ export default class IndexDelegatorsService extends Service {
                 },
             );
         }
-        listAccounts.map((account: any) => {
-            this.logger.info(account._id);
-            this.logger.info(account.custom_info.chain_id);
-            if (account.custom_info.chain_id !== 'aura-devnet')
-                this.broker.emit('list-tx.upsert', {
-                    listTx: [{ address: account.address }],
-                    source: CONST_CHAR.API,
-                    chainId: account.custom_info.chain_id,
-                });
+        this.broker.emit('list-tx.upsert', {
+            listTx: [listAccounts],
+            source: CONST_CHAR.API,
+            chainId: 'aura-testnet',
         });
 
         // const listVestingAccounts = await this.adapter.find({
@@ -444,6 +443,15 @@ export default class IndexDelegatorsService extends Service {
         return new Promise((resolve) => {
             setTimeout(resolve, ms);
         });
+    }
+
+    async connectToDB() {
+        const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
+
+        let cacheClient = await mongo.MongoClient.connect(
+            DB_URL,
+        );
+        return cacheClient;
     }
 
     async _start() {

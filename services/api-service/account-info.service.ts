@@ -89,6 +89,11 @@ export default class AccountInfoService extends MoleculerDBService<
 			]);
 
 		if (accountInfo) {
+			this.broker.call('v1.handleAddress.accountinfoupsert', {
+				listTx: [{ address: ctx.params.address, message: '' }],
+				source: CONST_CHAR.API,
+				chainId: ctx.params.chainId,
+			});
 			accountInfo.account_delegate_rewards = accountRewards;
 			const data = accountInfo;
 			const result: ResponseDto = {
@@ -183,6 +188,11 @@ export default class AccountInfoService extends MoleculerDBService<
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
 		if (accountInfo) {
+			this.broker.call('v1.handleAddress.accountinfoupsert', {
+				listTx: [{ address: ctx.params.address, message: '' }],
+				source: CONST_CHAR.API,
+				chainId: ctx.params.chainId,
+			});
 			accountInfo.account_delegate_rewards = accountRewards;
 			const data = accountInfo;
 			const result: ResponseDto = {
