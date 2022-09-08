@@ -6,7 +6,7 @@ import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-de
 import { dbAccountRedelegationsMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
-import { IAccountRedelegations } from '../../entities';
+import { IAccountRedelegations } from '../../entities/account-redelegations.entity';
 import { DbContextParameters } from 'moleculer-db';
 
 /**

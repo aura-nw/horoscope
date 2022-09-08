@@ -2,6 +2,7 @@ import { Config } from "../common";
 import { JsonObject, JsonProperty } from "json2typescript";
 import { Types } from "mongoose";
 import { CustomInfo } from "./custom-info.entity";
+import { DateConverter } from "./converters/date.converter";
 
 export interface IAccountRedelegations {
     _id: Types.ObjectId | string | null;
@@ -12,7 +13,7 @@ export interface IAccountRedelegations {
 
 export interface IRedelegationEntry {
     creation_height: String;
-    completion_time: String;
+    completion_time: Date | null;
     initial_balance: String;
     shares_dst: String;
 }
@@ -37,8 +38,8 @@ export interface IRedelegationResponse {
 export class RedelegationEntry implements IRedelegationEntry {
     @JsonProperty('creation_height', String)
     creation_height: String = '';
-    @JsonProperty('completion_time', String)
-    completion_time: String = '';
+    @JsonProperty('completion_time', DateConverter)
+    completion_time: Date | null = null;
     @JsonProperty('initial_balance', String)
     initial_balance: String = '';
     @JsonProperty('shares_dst', String)

@@ -13,7 +13,7 @@ const definition: definitionType<IAccountUnbonds> = (collection?: string) => ({
 			entries: [
 				{
 					creation_height: String,
-					completion_time: String,
+					completion_time: Date,
 					initial_balance: String,
 					balance: String,
 				},

@@ -6,7 +6,7 @@ import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-de
 import { dbAccountSpendableBalancesMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
-import { IAccountSpendableBalances } from '../../entities';
+import { IAccountSpendableBalances } from '../../entities/account-spendable-balances.entity';
 import { DbContextParameters } from 'moleculer-db';
 
 /**

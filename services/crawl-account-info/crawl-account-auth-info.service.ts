@@ -1,19 +1,19 @@
 import CallApiMixin from "../../mixins/callApi/call-api.mixin";
-import { dbAccountAuthMixin } from "../../mixins/dbMixinMongoose";
+import { dbAccountInfoMixin } from "../../mixins/dbMixinMongoose";
 import { Job } from "bull";
 import { Config } from "../../common";
-import { CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from "../../common/constant";
-import { JsonConvert, OperationMode } from "json2typescript";
+import { DELAY_JOB_STATUS, DELAY_JOB_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from "../../common/constant";
+import { JsonConvert } from "json2typescript";
 import { Context, Service, ServiceBroker } from "moleculer";
-import { AccountAuthEntity } from "../../entities/account-auth.entity";
 import { Utils } from "../../utils/utils";
 import { CrawlAccountInfoParams } from "../../types";
+import { AccountInfoEntity, DelayJobEntity } from "../../entities";
 const QueueService = require('moleculer-bull');
-const Bull = require('bull');
+const mongo = require('mongodb');
 
 export default class CrawlAccountAuthInfoService extends Service {
     private callApiMixin = new CallApiMixin().start();
-    private dbAccountAuthMixin = dbAccountAuthMixin;
+    private dbAccountInfoMixin = dbAccountInfoMixin;
 
     public constructor(public broker: ServiceBroker) {
         super(broker);
@@ -28,7 +28,7 @@ export default class CrawlAccountAuthInfoService extends Service {
                     },
                 ),
                 // this.redisMixin,
-                this.dbAccountAuthMixin,
+                this.dbAccountInfoMixin,
                 this.callApiMixin,
             ],
             queues: {
@@ -43,8 +43,17 @@ export default class CrawlAccountAuthInfoService extends Service {
                     },
                 }
             },
+            actions: {
+                accountauthupsert: {
+                    name: 'accountauthupsert',
+                    handler: async (ctx: any) => {
+                        this.logger.debug(`Crawl account auth info`);
+                        await this.handleJob(ctx.params.listAddresses, ctx.params.chainId);
+                    },
+                },
+            },
             events: {
-                'account-info.upsert-each': {
+                'account-info.upsert-auth': {
                     handler: (ctx: Context<CrawlAccountInfoParams>) => {
                         this.logger.debug(`Crawl account auth info`);
                         this.createJob(
@@ -65,71 +74,99 @@ export default class CrawlAccountAuthInfoService extends Service {
     }
 
     async handleJob(listAddresses: string[], chainId: string) {
-        let listAccounts: AccountAuthEntity[] = [], listUpdateQueries: any[] = [];
+        let client = await this.connectToDB();
+        const db = client.db(Config.DB_GENERIC_DBNAME);
+        let delayJob = await db.collection("delay_job");
+
+        let listAccounts: AccountInfoEntity[] = [], listUpdateQueries: any[] = [], listDelayJobs: DelayJobEntity[] = [];
+        const chain = LIST_NETWORK.find(x => x.chainId === chainId);
         if (listAddresses.length > 0) {
-            for (const address of listAddresses) {
+            for (let address of listAddresses) {
                 const param =
                     Config.GET_PARAMS_AUTH_INFO + `/${address}`;
                 const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
-                let accountInfo: AccountAuthEntity = await this.adapter.findOne({
+                let accountInfo: AccountInfoEntity = await this.adapter.findOne({
                     address,
                     'custom_info.chain_id': chainId,
                 });
                 if (!accountInfo) {
-                    accountInfo = {} as AccountAuthEntity;
+                    accountInfo = {} as AccountInfoEntity;
                     accountInfo.address = address;
                 }
 
                 let resultCallApi = await this.callApiFromDomain(url, param);
                 try {
-                    if (resultCallApi.result.type === VESTING_ACCOUNT_TYPE.CONTINUOUS
-                        || resultCallApi.result.type === VESTING_ACCOUNT_TYPE.DELAYED
-                        || resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC) {
-                        let delay = resultCallApi.result.value.base_vesting_account.end_time - new Date().getTime();
-                        const apiKeyQueue = new Bull(
-                            'handle.address',
-                            {
-                                redis: {
-                                    host: Config.REDIS_HOST,
-                                    port: Config.REDIS_PORT,
-                                    username: Config.REDIS_USERNAME,
-                                    password: Config.REDIS_PASSWORD,
-                                    db: Config.REDIS_DB_NUMBER,
-                                },
-                                prefix: 'handle.address',
-                                defaultJobOptions: {
-                                    jobId: `${address}_${chainId}_${resultCallApi.result.value.base_vesting_account.end_time}`,
-                                    removeOnComplete: true,
-                                    delay,
-                                }
-                            }
-                        );
-                        apiKeyQueue.add({
-                            listTx: [
-                                {
-                                    address,
-                                }
-                            ],
-                            source: CONST_CHAR.API,
-                            chainId,
-                        });
+                    if (resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC ||
+                        resultCallApi.result.type === VESTING_ACCOUNT_TYPE.DELAYED) {
+                        // let delay = resultCallApi.result.value.base_vesting_account.end_time - new Date().getTime();
+                        // const apiKeyQueue = new Bull(
+                        //     'handle.address',
+                        //     {
+                        //         redis: {
+                        //             host: Config.REDIS_HOST,
+                        //             port: Config.REDIS_PORT,
+                        //             username: Config.REDIS_USERNAME,
+                        //             password: Config.REDIS_PASSWORD,
+                        //             db: Config.REDIS_DB_NUMBER,
+                        //         },
+                        //         prefix: 'handle.address',
+                        //         defaultJobOptions: {
+                        //             jobId: `${address}_${chainId}_${resultCallApi.result.value.base_vesting_account.end_time}`,
+                        //             removeOnComplete: true,
+                        //             delay,
+                        //         }
+                        //     }
+                        // );
+                        // apiKeyQueue.add({
+                        //     listTx: [
+                        //         {
+                        //             address,
+                        //         }
+                        //     ],
+                        //     source: CONST_CHAR.API,
+                        //     chainId,
+                        // });
+                        let newDelayJob = {} as DelayJobEntity;
+                        newDelayJob.content = { address };
+                        switch (resultCallApi.result.type) {
+                            case VESTING_ACCOUNT_TYPE.DELAYED:
+                                newDelayJob.type = DELAY_JOB_TYPE.DELAYED_VESTING;
+                                newDelayJob.expire_time = new Date(parseInt(resultCallApi.result.value.base_vesting_account.end_time, 10) * 1000);
+                                break;
+                            case VESTING_ACCOUNT_TYPE.PERIODIC:
+                                newDelayJob.type = DELAY_JOB_TYPE.PERIODIC_VESTING;
+                                const start_time = parseInt(resultCallApi.result.value.start_time, 10) * 1000;
+                                const number_of_periods = (new Date().getTime() - start_time) 
+                                    / (parseInt(resultCallApi.result.value.vesting_periods[0].length, 10) * 1000);
+                                let expire_time = start_time + 
+                                    number_of_periods * parseInt(resultCallApi.result.value.vesting_periods[0].length, 10) * 1000;
+                                if (expire_time < new Date().getTime()) 
+                                    expire_time += parseInt(resultCallApi.result.value.vesting_periods[0].length, 10) * 1000;
+                                newDelayJob.expire_time = new Date(expire_time);
+                                break;
+                        }
+                        newDelayJob.status = DELAY_JOB_STATUS.PENDING;
+                        newDelayJob.custom_info = {
+                            chain_id: chainId,
+                            chain_name: chain ? chain.chainName : '',
+                        };
+                        listDelayJobs.push(newDelayJob);
                     }
                 } catch (error) {
                     this.logger.info(`This account is not a vesting account`);
                 }
 
-                accountInfo.account = resultCallApi;
+                accountInfo.account_auth = resultCallApi;
 
                 listAccounts.push(accountInfo);
             };
         }
         try {
-            listAccounts.forEach((element) => {
-                if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, element));
+            listAccounts.map((element) => {
+                if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, { $set: { account_auth: element.account_auth } }));
                 else {
-                    const chain = LIST_NETWORK.find(x => x.chainId === chainId);
-                    const item: AccountAuthEntity = new JsonConvert().deserializeObject(element, AccountAuthEntity);
+                    const item: AccountInfoEntity = new JsonConvert().deserializeObject(element, AccountInfoEntity);
                     item.custom_info = {
                         chain_id: chainId,
                         chain_name: chain ? chain.chainName : '',
@@ -137,10 +174,22 @@ export default class CrawlAccountAuthInfoService extends Service {
                     listUpdateQueries.push(this.adapter.insert(item));
                 }
             });
+            listDelayJobs.map((element) => {
+                listUpdateQueries.push(delayJob.insertMany([element]));
+            });
             await Promise.all(listUpdateQueries);
         } catch (error) {
             this.logger.error(error);
         }
+    }
+
+    async connectToDB() {
+        const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
+
+        let cacheClient = await mongo.MongoClient.connect(
+            DB_URL,
+        );
+        return cacheClient;
     }
 
     async _start() {
