@@ -48,6 +48,8 @@ export class Utils {
 			queryArray = query.split(';');
 		} else if (query.includes(',')) {
 			queryArray = query.split(',');
+		} else {
+			queryArray = [query];
 		}
 		let queryObject: any[] = [];
 		queryArray.forEach((element) => {

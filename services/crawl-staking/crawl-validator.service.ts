@@ -130,6 +130,7 @@ export default class CrawlValidatorService extends Service {
 				validator.operator_address.toString(),
 				Config.NETWORK_PREFIX_ADDRESS,
 			);
+			validator.account_address = address;
 			let pathDelegation = `${
 				Config.GET_ALL_VALIDATOR
 			}/${validator.operator_address.toString()}/delegations/${address}`;
