@@ -6,7 +6,7 @@ import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-de
 import { dbAccountClaimedRewardsMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { GetTotalRewardsByAddress, MoleculerDBService } from '../../types';
-import { IAccountClaimedRewards } from '../../entities';
+import { IAccountClaimedRewards } from '../../entities/account-claimed-rewards.entity';
 import { LIST_NETWORK } from '../../common/constant';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
