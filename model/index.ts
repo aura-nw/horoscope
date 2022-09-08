@@ -17,6 +17,6 @@ export * from './account-spendable-balances.model';
 export * from './account-unbonds.model';
 export * from './supply.model';
 export * from './cw20-asset.model';
-export * from './account-total-rewards.model';
+export * from './account-claimed-rewards.model';
 export * from './delay-job.model';
 export * from './account-info.model';

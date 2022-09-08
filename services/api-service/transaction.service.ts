@@ -75,7 +75,13 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: false
 	 *          schema:
 	 *            type: string
-	 *          description: "Address in transaction"
+	 *          description: "Address in transaction with native coin"
+	 *        - in: query
+	 *          name: addressInContract
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *          description: "Address in transaction with token from smart contract"
 	 *        - in: query
 	 *          name: searchType
 	 *          required: false
@@ -156,6 +162,7 @@ export default class BlockService extends MoleculerDBService<
 			blockHeight: { type: 'number', optional: true, convert: true },
 			txHash: { type: 'string', optional: true },
 			address: { type: 'string', optional: true },
+			addressInContract: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -245,6 +252,7 @@ export default class BlockService extends MoleculerDBService<
 		const searchKey = ctx.params.searchKey;
 		const searchValue = ctx.params.searchValue;
 		const queryParam = ctx.params.query;
+		const addressInContract = ctx.params.addressInContract;
 		let findOne = false;
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
@@ -270,25 +278,36 @@ export default class BlockService extends MoleculerDBService<
 			query['tx_response.txhash'] = txHash;
 		}
 
-		if (searchType) {
-			query['tx_response.events.type'] = searchType;
-		}
-		if (searchKey && searchValue) {
-			query['tx_response.events.attributes.key'] = toBase64(toUtf8(searchKey));
-			query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
-		}
+		// if (searchType) {
+		// 	query['tx_response.events.type'] = searchType;
+		// }
+		// if (searchKey && searchValue) {
+		// 	query['tx_response.events.attributes.key'] = toBase64(toUtf8(searchKey));
+		// 	query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
+		// }
 		let listQueryAnd: any[] = [];
 		let listQueryOr: any[] = [];
+
+		if (searchType && searchKey && searchValue) {
+			// query[`indexes.${searchType}_${searchKey}`] = searchValue;
+			listQueryAnd.push({
+				[`indexes.${searchType}_${searchKey}`]: { $exists: true, $eq: searchValue },
+			});
+		}
+
 		if (queryParam) {
 			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
 			// this.logger.info('queryParam: ', JSON.stringify(queryParamFormat));
 			let queryAnd: any[] = [];
 			queryParamFormat.forEach((e: any) => {
 				let tempQuery = {
-					'tx_response.events.type': e.type,
-					'tx_response.events.attributes.key': toBase64(toUtf8(e.key)),
-					'tx_response.events.attributes.value': toBase64(toUtf8(e.value)),
+					[`indexes.${e.type}_${e.key}`]: { $exists: true, $eq: e.value },
 				};
+				// let tempQuery = {
+				// 	'tx_response.events.type': e.type,
+				// 	'tx_response.events.attributes.key': toBase64(toUtf8(e.key)),
+				// 	'tx_response.events.attributes.value': toBase64(toUtf8(e.value)),
+				// };
 				// let tempQuery = {
 				// 	'tx_response.events': {
 				// 		$elemMatch: {
@@ -308,8 +327,8 @@ export default class BlockService extends MoleculerDBService<
 		}
 		if (address) {
 			listQueryOr.push(
-				{ 'indexes.transfer_recipient': address },
-				{ 'indexes.transfer_sender': address },
+				{ 'indexes.transfer_recipient': { $exists: true, $eq: address } },
+				{ 'indexes.transfer_sender': { $exists: true, $eq: address } },
 			);
 			// listQueryAnd.push(
 			// 	{ 'tx_response.events.type': 'transfer' },
@@ -354,7 +373,12 @@ export default class BlockService extends MoleculerDBService<
 			// 	],
 			// });
 		}
-
+		if (addressInContract) {
+			listQueryOr.push(
+				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
+				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
+			);
+		}
 		if (listQueryAnd.length > 0) {
 			query['$and'] = listQueryAnd;
 		}

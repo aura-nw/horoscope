@@ -5,8 +5,9 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Method, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 import { GetHolderRequest } from 'types';
-import { CursorOptions, FilterOptions } from 'moleculer-db';
+import { CursorOptions, FilterOptions, QueryOptions } from 'moleculer-db';
 import _ from 'lodash';
+import { ObjectID } from 'bson';
 
 @Service({
 	name: 'CW721-asset-manager',
@@ -53,12 +54,21 @@ import _ from 'lodash';
 			cache: {
 				ttl: 10,
 			},
-			async handler(ctx: Context<CursorOptions, Record<string, unknown>>): Promise<any> {
+			async handler(ctx: Context<QueryOptions, Record<string, unknown>>): Promise<any> {
 				// @ts-ignore
 				this.logger.debug(
 					`ctx.params cw721-asset-manager aggregate media ${JSON.stringify(ctx.params)}`,
 				);
-				let listAggregate: any[] = [
+				let listAggregate: any[] = [];
+				if (ctx.params.sort) {
+					listAggregate.push({
+						$sort: ctx.params.sort,
+					});
+				}
+				if (ctx.params.nextKey) {
+					ctx.params.query['_id'] = { $lt: new ObjectID(ctx.params.nextKey) };
+				}
+				listAggregate.push(
 					{
 						$match: ctx.params.query,
 					},
@@ -70,12 +80,7 @@ import _ from 'lodash';
 							as: 'media_info',
 						},
 					},
-				];
-				if (ctx.params.sort) {
-					listAggregate.push({
-						$sort: ctx.params.sort,
-					});
-				}
+				);
 				if (ctx.params.offset) {
 					listAggregate.push({
 						$skip: ctx.params.offset,
@@ -87,7 +92,10 @@ import _ from 'lodash';
 					});
 				}
 				// @ts-ignore
-				return await this.adapter.aggregate(listAggregate);
+				this.logger.debug(JSON.stringify(listAggregate));
+				// @ts-ignore
+				let result = await this.adapter.aggregate(listAggregate);
+				return result;
 			},
 		},
 		'act-list': {

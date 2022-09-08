@@ -15,7 +15,7 @@ import {
 } from '../../types';
 import { DbContextParameters, QueryOptions } from 'moleculer-db';
 import { IProposal, ProposalEntity } from '../../entities';
-import { LIST_NETWORK } from '../../common/constant';
+import { LIST_NETWORK, PROPOSAL_STATUS } from '../../common/constant';
 import { ObjectId } from 'bson';
 
 /**
@@ -84,10 +84,155 @@ export default class ProposalService extends MoleculerDBService<
 	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: Result list proposal
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      proposals:
+	 *                        type: array
+	 *                        items:
+	 *                          properties:
+	 *                            content:
+	 *                              type: object
+	 *                              properties:
+	 *                                "@type":
+	 *                                  type: string
+	 *                                  example: "/cosmos.distribution.v1beta1.CommunityPoolSpendProposal"
+	 *                                title:
+	 *                                  type: string
+	 *                                  example: "proposal create validator"
+	 *                                description:
+	 *                                  type: string
+	 *                                  example: "New proposal to create validator"
+	 *                                changes:
+	 *                                  type: array
+	 *                                  items:
+	 *                                    type: object
+	 *                            tally:
+	 *                              type: object
+	 *                              properties:
+	 *                                yes:
+	 *                                  type: string
+	 *                                  example: "0"
+	 *                                abstain:
+	 *                                  type: string
+	 *                                  example: "0"
+	 *                                no:
+	 *                                  type: string
+	 *                                  example: "0"
+	 *                                no_with_veto:
+	 *                                  type: string
+	 *                                  example: "0"
+	 *                            final_tally_result:
+	 *                              type: object
+	 *                              properties:
+	 *                                yes:
+	 *                                  type: string
+	 *                                  example: "0"
+	 *                                abstain:
+	 *                                  type: string
+	 *                                  example: "0"
+	 *                                no:
+	 *                                  type: string
+	 *                                  example: "0"
+	 *                                no_with_veto:
+	 *                                  type: string
+	 *                                  example: "0"
+	 *                            custom_info:
+	 *                              type: object
+	 *                              properties:
+	 *                                chain_id:
+	 *                                  type: string
+	 *                                  example: "aura"
+	 *                                chain_name:
+	 *                                  type: string
+	 *                                  example: "Aura network"
+	 *                            proposal_id:
+	 *                              type: number
+	 *                              example: 1
+	 *                            status:
+	 *                              type: string
+	 *                              example: "PROPOSAL_STATUS_REJECTED"
+	 *                            submit_time:
+	 *                              type: string
+	 *                              example: "2022-09-07T02:38:44.357Z"
+	 *                            deposit_end_time:
+	 *                              type: string
+	 *                              example: "2022-09-07T02:38:44.357Z"
+	 *                            total_deposit:
+	 *                              type: array
+	 *                              items:
+	 *                                type: object
+	 *                                properties:
+	 *                                  denom:
+	 *                                    type: string
+	 *                                    example: "uaura"
+	 *                                  amount:
+	 *                                    type: string
+	 *                                    example: "10000"
+	 *                            voting_start_time:
+	 *                              type: string
+	 *                              example: "2022-09-07T02:38:44.357Z"
+	 *                            voting_end_time:
+	 *                              type: string
+	 *                              example: "2022-09-07T02:38:44.357Z"
+	 *                            deposit:
+	 *                              type: array
+	 *                              items:
+	 *                                type: object
+	 *                                properties:
+	 *                                  amount:
+	 *                                    type: object
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.block.chain"
 	 */
 	@Get('/', {
 		name: 'getByChain',
@@ -151,15 +296,22 @@ export default class ProposalService extends MoleculerDBService<
 		}
 		try {
 			const proposalId = ctx.params.proposalId;
-			const sort = ctx.params.reverse ? '-_id' : '_id';
+			const sort = ctx.params.reverse ? '_id' : '-_id';
 			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
 			let needNextKey = true;
 			if (proposalId) {
 				query['proposal_id'] = proposalId;
 				needNextKey = false;
+			} else {
+				query['status'] = { $ne: PROPOSAL_STATUS.PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT };
 			}
 			if (ctx.params.nextKey) {
-				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				if (ctx.params.reverse) {
+					query._id = { $gt: new ObjectId(ctx.params.nextKey) };
+				} else {
+					query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				}
+
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
 			}

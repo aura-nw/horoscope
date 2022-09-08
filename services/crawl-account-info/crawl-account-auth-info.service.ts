@@ -193,15 +193,15 @@ export default class CrawlAccountAuthInfoService extends Service {
     }
 
     async _start() {
-        this.getQueue('crawl.account-auth-info').on('completed', (job: Job) => {
-            this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
-        });
-        this.getQueue('crawl.account-auth-info').on('failed', (job: Job) => {
-            this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
-        });
-        this.getQueue('crawl.account-auth-info').on('progress', (job: Job) => {
-            this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
-        });
+//         this.getQueue('crawl.account-auth-info').on('completed', (job: Job) => {
+//             this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
+//         });
+//         this.getQueue('crawl.account-auth-info').on('failed', (job: Job) => {
+//             this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+//         });
+//         this.getQueue('crawl.account-auth-info').on('progress', (job: Job) => {
+//             this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
+//         });
         return super._start();
     }
 }

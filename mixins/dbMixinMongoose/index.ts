@@ -20,3 +20,4 @@ export * from './db-supply.mixin';
 export * from './db-transaction-aggregate.mixin';
 export * from './db-block-aggregate.mixin';
 export * from './db-account-info.mixin';
+export * from './db-account-claimed-rewards.mixin';

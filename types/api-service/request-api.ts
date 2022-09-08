@@ -38,9 +38,10 @@ export interface GetAllAsset extends ChainIdParams, PageLimit {}
 
 export interface GetAssetByOwnerAddressRequest extends ChainIdParams, PageLimit {
 	owner: string;
-	tokenId: String;
-	tokenName: String;
-	contractAddress: String;
+	tokenId: string;
+	tokenName: string;
+	contractAddress: string;
+	contractType: string;
 }
 
 export interface GetAssetByContractTypeAddressRequest extends ChainIdParams, PageLimit {
@@ -62,6 +63,7 @@ export interface GetTxRequest
 	searchKey: string;
 	searchValue: string;
 	query: string;
+	addressInContract: string;
 }
 export interface GetPowerEventTxRequest extends ChainIdParams, PageLimit, AddressParams {}
 export interface AccountInfoRequest {
@@ -98,4 +100,9 @@ export interface GetHolderRequest extends ChainIdParams, PageLimit {
 export interface AddBurnedToAsset extends ChainIdParams {
 	contractAddress: string;
 	tokenId: string;
+}
+
+export interface GetTotalRewardsByAddress extends ChainIdParams {
+	operatorAddress: string;
+	delegatorAddress: string;
 }
