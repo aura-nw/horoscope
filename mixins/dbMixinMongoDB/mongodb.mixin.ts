@@ -1,4 +1,4 @@
-import { Config } from "common";
+import { Config } from "../../common";
 import { ServiceSchema, Service } from "moleculer";
 const mongo = require('mongodb');
 

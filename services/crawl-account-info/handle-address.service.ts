@@ -3,7 +3,7 @@ import { Context, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
 import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
 import { ListTxCreatedParams } from 'types';
-import { AccountInfoEntity, ITransaction } from 'entities';
+import { AccountInfoEntity, ITransaction } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 const QueueService = require('moleculer-bull');
@@ -163,7 +163,8 @@ export default class HandleAddressService extends Service {
 			}
 
 			try {
-				listAddresses.map((address) => {
+				let listUniqueAddresses = listAddresses.filter(this.onlyUnique);
+				listUniqueAddresses.map((address) => {
 					const account: AccountInfoEntity = {} as AccountInfoEntity;
 					account.address = address;
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
@@ -174,9 +175,10 @@ export default class HandleAddressService extends Service {
 						chain_id: chainId,
 						chain_name: chain ? chain.chainName : '',
 					};
-					listInsert.push(this.adapter.insert(item));
+					listInsert.push({ insertOne: { document: item } });
 				});
-				await Promise.all(listInsert);
+				const result = await this.adapter.bulkWrite(listInsert);
+				this.logger.info(`${JSON.stringify(result)}`);
 			} catch (error) {
 				this.logger.error(error);
 			}
@@ -185,6 +187,10 @@ export default class HandleAddressService extends Service {
 			});
 		}
 	}
+
+	onlyUnique(value: any, index: any, self: any) {
+		return self.indexOf(value) === index;
+	  }
 
 	async _start() {
 		this.getQueue('handle.address').on('completed', (job: Job) => {
