@@ -8,12 +8,13 @@ import { Context, Service, ServiceBroker } from "moleculer";
 import { Utils } from "../../utils/utils";
 import { CrawlAccountInfoParams } from "../../types";
 import { AccountInfoEntity, DelayJobEntity } from "../../entities";
+import { mongoDBMixin } from "../../mixins/dbMixinMongoDB/mongodb.mixin";
 const QueueService = require('moleculer-bull');
-const mongo = require('mongodb');
 
 export default class CrawlAccountAuthInfoService extends Service {
     private callApiMixin = new CallApiMixin().start();
     private dbAccountInfoMixin = dbAccountInfoMixin;
+    private mongoDBMixin = mongoDBMixin;
 
     public constructor(public broker: ServiceBroker) {
         super(broker);
@@ -30,6 +31,7 @@ export default class CrawlAccountAuthInfoService extends Service {
                 // this.redisMixin,
                 this.dbAccountInfoMixin,
                 this.callApiMixin,
+                this.mongoDBMixin,
             ],
             queues: {
                 'crawl.account-auth-info': {
@@ -42,15 +44,6 @@ export default class CrawlAccountAuthInfoService extends Service {
                         return true;
                     },
                 }
-            },
-            actions: {
-                accountauthupsert: {
-                    name: 'accountauthupsert',
-                    handler: async (ctx: any) => {
-                        this.logger.debug(`Crawl account auth info`);
-                        await this.handleJob(ctx.params.listAddresses, ctx.params.chainId);
-                    },
-                },
             },
             events: {
                 'account-info.upsert-auth': {
@@ -74,8 +67,8 @@ export default class CrawlAccountAuthInfoService extends Service {
     }
 
     async handleJob(listAddresses: string[], chainId: string) {
-        let client = await this.connectToDB();
-        const db = client.db(Config.DB_GENERIC_DBNAME);
+        this.mongoDBClient = await this.connectToDB();
+        const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
         let delayJob = await db.collection("delay_job");
 
         let listAccounts: AccountInfoEntity[] = [], listUpdateQueries: any[] = [], listDelayJobs: DelayJobEntity[] = [];
@@ -183,25 +176,16 @@ export default class CrawlAccountAuthInfoService extends Service {
         }
     }
 
-    async connectToDB() {
-        const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
-
-        let cacheClient = await mongo.MongoClient.connect(
-            DB_URL,
-        );
-        return cacheClient;
-    }
-
     async _start() {
-//         this.getQueue('crawl.account-auth-info').on('completed', (job: Job) => {
-//             this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
-//         });
-//         this.getQueue('crawl.account-auth-info').on('failed', (job: Job) => {
-//             this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
-//         });
-//         this.getQueue('crawl.account-auth-info').on('progress', (job: Job) => {
-//             this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
-//         });
+        this.getQueue('crawl.account-auth-info').on('completed', (job: Job) => {
+            this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
+        });
+        this.getQueue('crawl.account-auth-info').on('failed', (job: Job) => {
+            this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+        });
+        this.getQueue('crawl.account-auth-info').on('progress', (job: Job) => {
+            this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
+        });
         return super._start();
     }
 }

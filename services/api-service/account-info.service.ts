@@ -12,7 +12,7 @@ import {
 } from '../../types';
 import { Utils } from '../../utils/utils';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
-const mongo = require('mongodb');
+import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -23,7 +23,7 @@ const mongo = require('mongodb');
 	/**
 	 * Mixins
 	 */
-	mixins: [callApiMixin, dbAccountInfoMixin],
+	mixins: [callApiMixin, dbAccountInfoMixin, mongoDBMixin],
 	/**
 	 * Settings
 	 */
@@ -167,8 +167,8 @@ export default class AccountInfoService extends MoleculerDBService<
 		},
 	})
 	async getAccountDelegationInfoByAddress(ctx: Context<AccountInfoRequest>) {
-		let client = await this.connectToDB();
-        const db = client.db(Config.DB_GENERIC_DBNAME);
+		this.mongoDBClient = await this.connectToDB();
+        const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
         let accountInfoCollection = await db.collection("account_info");
 
 		const paramDelegateRewards =
@@ -187,6 +187,7 @@ export default class AccountInfoService extends MoleculerDBService<
 			),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
+		let result: ResponseDto;
 		if (accountInfo) {
 			this.broker.call('v1.handleAddress.accountinfoupsert', {
 				listTx: [{ address: ctx.params.address, message: '' }],
@@ -195,12 +196,11 @@ export default class AccountInfoService extends MoleculerDBService<
 			});
 			accountInfo.account_delegate_rewards = accountRewards;
 			const data = accountInfo;
-			const result: ResponseDto = {
+			result = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data,
 			};
-			return result;
 		} else {
 			this.broker.call('v1.handleAddress.accountinfoupsert', {
 				listTx: [{ address: ctx.params.address, message: '' }],
@@ -215,22 +215,13 @@ export default class AccountInfoService extends MoleculerDBService<
 				};
 				return result;
 			} else {
-				const result: ResponseDto = {
+				result = {
 					code: ErrorCode.ADDRESS_NOT_FOUND,
 					message: ErrorMessage.ADDRESS_NOT_FOUND,
 					data: null,
 				};
-				return result;
 			}
 		}
+		return result;
 	}
-
-	async connectToDB() {
-        const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
-
-        let cacheClient = await mongo.MongoClient.connect(
-            DB_URL,
-        );
-        return cacheClient;
-    }
 }
