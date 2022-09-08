@@ -8,10 +8,11 @@ import { DELAY_JOB_STATUS, DELAY_JOB_TYPE } from "../../common/constant";
 import { RedelegateEntry, DelayJobEntity, RedelegationEntry } from "../../entities";
 import { Service, ServiceBroker } from "moleculer";
 import { Coin } from "entities/coin.entity";
+import { mongoDBMixin } from "../../mixins/dbMixinMongoDB/mongodb.mixin";
 const QueueService = require('moleculer-bull');
-const mongo = require('mongodb');
 
 export default class HandleDelayJobService extends Service {
+    private mongoDBMixin = mongoDBMixin;
 
     public constructor(public broker: ServiceBroker) {
         super(broker);
@@ -25,6 +26,7 @@ export default class HandleDelayJobService extends Service {
                         prefix: 'handle.delay-job',
                     },
                 ),
+                this.mongoDBMixin,
             ],
             queues: {
                 'handle.delay-job': {
@@ -44,8 +46,8 @@ export default class HandleDelayJobService extends Service {
     async handleJob() {
         let listUpdateQueries: any[] = [];
 
-        let client = await this.connectToDB();
-        const db = client.db(Config.DB_GENERIC_DBNAME);
+        this.mongoDBClient = await this.connectToDB();
+        const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
         let [accountInfo, delayJob] = await Promise.all([
             db.collection("account_info"),
             db.collection("delay_job"),
@@ -236,16 +238,7 @@ export default class HandleDelayJobService extends Service {
                 const result = await Promise.all(listUpdateQueries);
                 this.logger.info(result);
             }
-        })
-    }
-
-    async connectToDB() {
-        const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
-
-        let cacheClient = await mongo.MongoClient.connect(
-            DB_URL,
-        );
-        return cacheClient;
+        });
     }
 
     async _start() {

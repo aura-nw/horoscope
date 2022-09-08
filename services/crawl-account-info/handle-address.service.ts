@@ -1,12 +1,16 @@
 import { Config } from '../../common';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
-import { CONST_CHAR, MSG_TYPE } from '../../common/constant';
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
 import { ListTxCreatedParams } from 'types';
-import { ITransaction } from 'entities';
+import { AccountInfoEntity, ITransaction } from 'entities';
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
+import { JsonConvert } from 'json2typescript';
 const QueueService = require('moleculer-bull');
 
 export default class HandleAddressService extends Service {
+	private dbAccountInfoMixin = dbAccountInfoMixin;
+
 	public constructor(broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -19,6 +23,7 @@ export default class HandleAddressService extends Service {
 						prefix: 'handle.address',
 					},
 				),
+				this.dbAccountInfoMixin,
 			],
 			queues: {
 				'handle.address': {
@@ -67,7 +72,10 @@ export default class HandleAddressService extends Service {
 	async handleJob(listTx: any[], source: string, chainId: string) {
 		let listAddresses: any[] = [];
 		let listUpdateInfo: string[] = [];
+		let listInsert: any[] = [];
+		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		listUpdateInfo.push(...[
+			'account-info.upsert-auth',
 			'account-info.upsert-balances',
 			'account-info.upsert-delegates',
 			'account-info.upsert-redelegates',
@@ -154,10 +162,27 @@ export default class HandleAddressService extends Service {
 				}
 			}
 
-			await this.broker.call('v1.crawlAccountAuthInfo.accountauthupsert', { listAddresses, chainId });
+			try {
+				listAddresses.map((address) => {
+					const account: AccountInfoEntity = {} as AccountInfoEntity;
+					account.address = address;
+					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
+						account,
+						AccountInfoEntity,
+					);
+					item.custom_info = {
+						chain_id: chainId,
+						chain_name: chain ? chain.chainName : '',
+					};
+					listInsert.push(this.adapter.insert(item));
+				});
+				await Promise.all(listInsert);
+			} catch (error) {
+				this.logger.error(error);
+			}
 			listUpdateInfo.map(item => {
 				this.broker.emit(item, { listAddresses, chainId });
-			})
+			});
 		}
 	}
 

@@ -8,13 +8,14 @@ import { Context, Service, ServiceBroker } from 'moleculer';
 import { RedelegationResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
+import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 const QueueService = require('moleculer-bull');
 const Bull = require('bull');
-const mongo = require('mongodb');
 
 export default class CrawlAccountRedelegatesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
+	private mongoDBMixin = mongoDBMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -31,6 +32,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
+				this.mongoDBMixin,
 			],
 			queues: {
 				'crawl.account-redelegates': {
@@ -66,8 +68,8 @@ export default class CrawlAccountRedelegatesService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
-		let client = await this.connectToDB();
-		const db = client.db(Config.DB_GENERIC_DBNAME);
+		this.mongoDBClient = await this.connectToDB();
+		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
 		let delayJob = await db.collection("delay_job");
 
 		let listAccounts: AccountInfoEntity[] = [],
@@ -176,15 +178,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 		} catch (error) {
 			this.logger.error(error);
 		}
-	}
-
-	async connectToDB() {
-		const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
-
-		let cacheClient = await mongo.MongoClient.connect(
-			DB_URL,
-		);
-		return cacheClient;
 	}
 
 	async _start() {
