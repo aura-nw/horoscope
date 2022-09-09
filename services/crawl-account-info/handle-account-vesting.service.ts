@@ -6,11 +6,13 @@ import { URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from "../../common/constant"
 import { AccountInfoEntity } from "../../entities";
 import { Utils } from "../../utils/utils";
 import { Coin } from "entities/coin.entity";
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 const QueueService = require('moleculer-bull');
 
 export default class HandleAccountVestingService extends Service {
 	private dbAccountInfoMixin = dbAccountInfoMixin;
-
+	private callApiMixin = new CallApiMixin().start();
+	
 	public constructor(broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -24,6 +26,7 @@ export default class HandleAccountVestingService extends Service {
 					},
 				),
 				this.dbAccountInfoMixin,
+				this.callApiMixin,
 			],
 			queues: {
 				'handle.account-continuous-vesting': {
