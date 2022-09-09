@@ -1,7 +1,7 @@
 import RedisMixin from "../../mixins/redis/redis.mixin";
 import { Service, ServiceBroker } from "moleculer";
 import { Config } from "../../common";
-import { dbAccountAuthMixin, dbAccountDelegationsMixin, dbAccountRedelegationsMixin, dbAccountUnbondsMixin } from "../../mixins/dbMixinMongoose";
+import { dbAccountDelegationsMixin } from "../../mixins/dbMixinMongoose/db-account-delegations.mixin";
 import { Job } from "bull";
 import { CONST_CHAR, LIST_NETWORK } from "../../common/constant";
 import { ListTxCreatedParams } from "../../types";
@@ -360,9 +360,9 @@ export default class IndexDelegatorsService extends Service {
             .count('proposal_votes.proposal_id as vote_count')
             .join('proposal_votes', 'validators.acc_address', '=', 'proposal_votes.voter')
             .where('proposal_votes.proposal_id', '!=', '1')
-            .where({
-                'proposal_votes.option': 'VOTE_OPTION_YES',
-            })
+            // .where({
+            //     'proposal_votes.option': 'VOTE_OPTION_YES',
+            // })
             .groupBy('validators.operator_address');
         const total_votes = (await knex('proposals').count('pro_id as proposals'))[0].proposals - 1;
         for (let validator of listValidators) {
