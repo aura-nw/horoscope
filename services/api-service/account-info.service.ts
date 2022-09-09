@@ -196,7 +196,6 @@ export default class AccountInfoService extends MoleculerDBService<
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
 			});
-			accountInfo = accountInfo.toObject();
 			accountInfo.account_delegate_rewards = accountRewards;
 			const data = accountInfo;
 			result = {
