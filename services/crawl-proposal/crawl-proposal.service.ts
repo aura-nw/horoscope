@@ -101,9 +101,9 @@ export default class CrawlProposalService extends Service {
 				try {
 					if (foundProposal) {
 						proposal._id = foundProposal._id;
-						if (proposal.proposal_id) {
+						if (foundProposal.proposal_id && !foundProposal.proposer_address) {
 							let proposer = await this.getProposerBySearchTx(
-								proposal.proposal_id.toString(),
+								foundProposal.proposal_id,
 							);
 							if (proposer?.nameValidator) {
 								proposal.proposer_name = proposer.nameValidator;
@@ -149,9 +149,6 @@ export default class CrawlProposalService extends Service {
 		const resultCallApi = await this.callApiFromDomain(
 			url,
 			`${Config.GET_TX_API_EVENTS}?events=submit_proposal.proposal_id=${proposalId}`,
-		);
-		this.logger.info(
-			`${url}/${Config.GET_TX_API_EVENTS}?events=submit_proposal.proposal_id=${proposalId}`,
 		);
 		try {
 			const proposerAddress = resultCallApi.txs[0].body.messages[0].proposer;
