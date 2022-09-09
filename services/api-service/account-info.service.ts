@@ -94,6 +94,7 @@ export default class AccountInfoService extends MoleculerDBService<
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
 			});
+			accountInfo = accountInfo.toObject();
 			accountInfo.account_delegate_rewards = accountRewards;
 			const data = accountInfo;
 			const result: ResponseDto = {
@@ -101,6 +102,7 @@ export default class AccountInfoService extends MoleculerDBService<
 				message: ErrorMessage.SUCCESSFUL,
 				data,
 			};
+			this.logger.info(JSON.stringify(result));
 			return result;
 		} else {
 			this.broker.call('v1.handleAddress.accountinfoupsert', {
@@ -175,7 +177,7 @@ export default class AccountInfoService extends MoleculerDBService<
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
-		const [accountInfo, accountRewards]: [any, any] = await Promise.all([
+		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
 			accountInfoCollection.findOne(
 				{
 					address: ctx.params.address,
@@ -194,6 +196,7 @@ export default class AccountInfoService extends MoleculerDBService<
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
 			});
+			accountInfo = accountInfo.toObject();
 			accountInfo.account_delegate_rewards = accountRewards;
 			const data = accountInfo;
 			result = {
