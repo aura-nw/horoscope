@@ -10,14 +10,13 @@ export default class MongoDBMixin implements Partial<ServiceSchema>, ThisType<Se
             methods: {
                 async connectToDB() {
                     if (this.mongoDBClient === undefined) {
-
-                        let listParamUri = [`${this.dbInfo.dialect}://`];
-                        if (this.dbInfo.user && this.dbInfo.password){
-                            listParamUri.push(`${this.dbInfo.user}:${this.dbInfo.password}@`)
+                        let listParamUri = [`mongodb://`];
+                        if (Config.DB_GENERIC_USER && Config.DB_GENERIC_PASSWORD){
+                            listParamUri.push(`${Config.DB_GENERIC_USER}:${Config.DB_GENERIC_PASSWORD}@`)
                         }
-                        listParamUri.push(`${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`)
-                        if (this.dbInfo.replicaSet != '') {
-                            listParamUri.push(`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`);
+                        listParamUri.push(`${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?retryWrites=${Config.DB_GENERIC_RETRY_WRITES}`)
+                        if (Config.DB_GENERIC_REPLICA_SET && Config.DB_GENERIC_READ_PREFERENCE) {
+                            listParamUri.push(`&replicaSet=${Config.DB_GENERIC_REPLICA_SET}&readPreference=${Config.DB_GENERIC_REPLICA_SET}`);
                         }
                         let uri = listParamUri.join('');
                         this.mongoDBClient = await mongo.MongoClient.connect(
