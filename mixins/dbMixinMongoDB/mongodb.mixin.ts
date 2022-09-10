@@ -17,7 +17,7 @@ export default class MongoDBMixin implements Partial<ServiceSchema>, ThisType<Se
                         }
                         listParamUri.push(`${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?retryWrites=${Config.DB_GENERIC_RETRY_WRITES}`)
                         if (Config.DB_GENERIC_REPLICA_SET && Config.DB_GENERIC_READ_PREFERENCE) {
-                            listParamUri.push(`&replicaSet=${Config.DB_GENERIC_REPLICA_SET}&readPreference=${Config.DB_GENERIC_REPLICA_SET}`);
+                            listParamUri.push(`&replicaSet=${Config.DB_GENERIC_REPLICA_SET}&readPreference=${Config.DB_GENERIC_READ_PREFERENCE}`);
                         }
                         let uri = listParamUri.join('');
                         this.mongoDBClient = await mongo.MongoClient.connect(
