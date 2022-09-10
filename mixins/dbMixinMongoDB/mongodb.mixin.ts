@@ -10,9 +10,10 @@ export default class MongoDBMixin implements Partial<ServiceSchema>, ThisType<Se
             methods: {
                 async connectToDB() {
                     if (this.mongoDBClient === undefined) {
+
                         let listParamUri = [`mongodb://`];
                         if (Config.DB_GENERIC_USER && Config.DB_GENERIC_PASSWORD){
-                            listParamUri.push(`${Config.DB_GENERIC_USER}:${Config.DB_GENERIC_PASSWORD}@`)
+                            listParamUri.push(`${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@`)
                         }
                         listParamUri.push(`${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?retryWrites=${Config.DB_GENERIC_RETRY_WRITES}`)
                         if (Config.DB_GENERIC_REPLICA_SET && Config.DB_GENERIC_READ_PREFERENCE) {
