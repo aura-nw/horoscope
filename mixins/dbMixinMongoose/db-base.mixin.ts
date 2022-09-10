@@ -145,10 +145,6 @@ export class DbBaseMixin {
 			listParamUri.push(`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`);
 		}
 		let uri = listParamUri.join('');
-		// let uri = `${this.dbInfo.dialect}://${this.dbInfo.user}:${this.dbInfo.password}@${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`;
-		// if (this.dbInfo.replicaSet != '') {
-		// 	uri = `${uri}&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`;
-		// }
 		return uri;
 	}
 
