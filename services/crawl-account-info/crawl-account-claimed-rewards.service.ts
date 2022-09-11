@@ -130,7 +130,25 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						// TODO
 						break;
 					case MSG_TYPE.MSG_UNDELEGATE:
-						// TODO
+						const undelegateValAddress = tx.tx.body.messages[0].validator_address;
+						const undelegateIndexReward = tx.logs[0].events[0]
+							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes
+							.findIndex((x: any) => x.value === userAddress);
+						const undelegateClaimedReward = tx.logs[0].events[0]
+							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes[undelegateIndexReward + 1].value;
+						const undelegateAmount = undelegateClaimedReward.match(/\d+/g)[0];
+						if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)) {
+							account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress).amount
+								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress).amount.toString(), 10)
+									+ parseInt(amount, 10)).toString();
+						} else {
+							account.account_claimed_rewards.push({
+								validator_address: validatorAddress,
+								denom: claimedReward.match(/[a-zA-Z]+/g)[0],
+								amount: undelegateAmount,
+							});
+						}
+						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_WITHDRAW_REWARDS:
 						tx.tx.body.messages.map((msg: any) => {
