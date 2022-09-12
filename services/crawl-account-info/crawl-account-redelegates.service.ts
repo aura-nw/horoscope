@@ -58,6 +58,9 @@ export default class CrawlAccountRedelegatesService extends Service {
 							},
 							{
 								removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
 							},
 						);
 						return;
@@ -130,6 +133,9 @@ export default class CrawlAccountRedelegatesService extends Service {
 						// 		defaultJobOptions: {
 						// 			jobId: `${address}_${chainId}_${redelegate.entries[0].redelegation_entry.completion_time}`,
 						// 			removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
 						// 			delay,
 						// 		}
 						// 	}

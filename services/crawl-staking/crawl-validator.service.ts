@@ -163,6 +163,9 @@ export default class CrawlValidatorService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_VALIDATOR, 10),
 				},

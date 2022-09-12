@@ -104,7 +104,9 @@ export default class HandleTransactionService extends Service {
 				let listMessageNeedAck: String[] = [];
 				try {
 					element.messages.forEach(async (item: IRedisStreamData) => {
-						this.logger.info(`Handling message ${item.id}`);
+						this.logger.info(
+							`Handling message ID: ${item.id}, txhash: ${item.message.source}`,
+						);
 						try {
 							const transaction: TransactionEntity =
 								new JsonConvert().deserializeObject(
@@ -243,6 +245,9 @@ export default class HandleTransactionService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_TRANSACTION, 10),
 				},

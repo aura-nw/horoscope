@@ -70,8 +70,6 @@ export default class HandleBlockService extends Service {
 	private lastId = '0-0';
 
 	async handleJob() {
-		this.logger.info('handleJob');
-
 		let xAutoClaimResult: IRedisStreamResponse = await this.redisClient.xAutoClaim(
 			Config.REDIS_STREAM_BLOCK_NAME,
 			Config.REDIS_STREAM_BLOCK_GROUP,
@@ -103,14 +101,13 @@ export default class HandleBlockService extends Service {
 					let listTx: String[] = [];
 					try {
 						element.messages.forEach((item: IRedisStreamData) => {
-							this.logger.info(`Handling message ${item.id}`);
-							// let block = JSON.parse(item.message.element.toString());
-
 							const block: BlockEntity = new JsonConvert().deserializeObject(
 								JSON.parse(item.message.element.toString()),
 								BlockEntity,
 							);
-
+							this.logger.info(
+								`Handling message: ${item.id}, block height: ${block.block?.header?.height}`,
+							);
 							listBlockNeedSaveToDb.push(block);
 							let listTxInBlock = block.block?.data?.txs;
 							if (listTxInBlock) {
@@ -147,8 +144,6 @@ export default class HandleBlockService extends Service {
 		} catch (error) {
 			this.logger.error(error);
 		}
-
-		this.logger.info(`handleJob done`);
 	}
 
 	async handleListBlock(listBlock: IBlock[]) {
@@ -171,6 +166,7 @@ export default class HandleBlockService extends Service {
 		listBlockEntity.forEach((block: BlockEntity) => {
 			try {
 				let hash = block?.block_id?.hash;
+				this.logger.info('handle block height: ', block.block?.header?.height);
 				let foundItem = listFoundBlock.find((item: BlockEntity) => {
 					return item?.block_id?.hash === hash;
 				});
@@ -203,6 +199,9 @@ export default class HandleBlockService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_BLOCK, 10),
 				},

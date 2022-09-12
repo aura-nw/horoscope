@@ -410,6 +410,9 @@ export default class IndexDelegatorsService extends Service {
         //         },
         //         {
         //             removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
         //         },
         //     );
         // }
@@ -463,6 +466,9 @@ export default class IndexDelegatorsService extends Service {
             },
             {
                 removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
             },
         );
         this.getQueue('index.delegators').on('completed', (job: Job) => {

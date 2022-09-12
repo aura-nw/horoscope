@@ -82,7 +82,7 @@ export default class CrawlBlockService extends Service {
 
 		const startBlock = this.currentBlock + 1;
 
-		let endBlock = startBlock + 1 - 1;
+		let endBlock = startBlock + parseInt(Config.NUMBER_OF_BLOCK_PER_CALL) - 1;
 		if (endBlock > latestBlockNetwork) {
 			endBlock = latestBlockNetwork;
 		}
@@ -105,11 +105,7 @@ export default class CrawlBlockService extends Service {
 					}),
 				},
 			};
-			// this.logger.info(data);
-			// let data: ResponseFromRPC = await this.callApiFromDomain(
-			// 	url,
-			// 	`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
-			// );
+
 			if (data == null) {
 				throw new Error('cannot crawl block');
 			}
@@ -170,6 +166,9 @@ export default class CrawlBlockService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_BLOCK, 10),
 				},

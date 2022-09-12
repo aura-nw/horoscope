@@ -1,18 +1,18 @@
-import { dbAccountInfoMixin } from "../../mixins/dbMixinMongoose";
-import { Job } from "bull";
-import { Config } from "../../common";
-import { Service, ServiceBroker } from "moleculer";
-import { URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from "../../common/constant";
-import { AccountInfoEntity } from "../../entities";
-import { Utils } from "../../utils/utils";
-import { Coin } from "entities/coin.entity";
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
+import { Job } from 'bull';
+import { Config } from '../../common';
+import { Service, ServiceBroker } from 'moleculer';
+import { URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from '../../common/constant';
+import { AccountInfoEntity } from '../../entities';
+import { Utils } from '../../utils/utils';
+import { Coin } from 'entities/coin.entity';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 const QueueService = require('moleculer-bull');
 
 export default class HandleAccountVestingService extends Service {
 	private dbAccountInfoMixin = dbAccountInfoMixin;
 	private callApiMixin = new CallApiMixin().start();
-	
+
 	public constructor(broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -48,15 +48,20 @@ export default class HandleAccountVestingService extends Service {
 		let continuousVestingAccounts = await this.adapter.find({
 			query: {
 				'account_auth.result.type': VESTING_ACCOUNT_TYPE.CONTINUOUS,
-				'custom_info.chain_id': Config.CHAIN_ID
-			}
+				'custom_info.chain_id': Config.CHAIN_ID,
+			},
 		});
 		continuousVestingAccounts.map(async (account: any) => {
-			if (new Date(parseInt(account.account_auth.result.value.base_vesting_account.end_time, 10) * 1000).getTime()
-				>= new Date().getTime()) {
+			if (
+				new Date(
+					parseInt(account.account_auth.result.value.base_vesting_account.end_time, 10) *
+						1000,
+				).getTime() >= new Date().getTime()
+			) {
 				let listSpendableBalances: Coin[] = [];
 				const param =
-					Config.GET_PARAMS_SPENDABLE_BALANCE + `/${account.address}?pagination.limit=100`;
+					Config.GET_PARAMS_SPENDABLE_BALANCE +
+					`/${account.address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 				let urlToCall = param;
@@ -87,6 +92,9 @@ export default class HandleAccountVestingService extends Service {
 			{},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_CONTINUOUS_VESTING, 10),
 				},

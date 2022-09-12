@@ -83,19 +83,8 @@ export default class HandleBlockUpsertedService extends Service {
 						consensus_hex_address: hexAddress,
 					},
 				});
-				// let foundBlock = await this.adapter.findOne({
-				// 	'block_id.hash': block.block_id?.hash,
-				// 	'custom_info.chain_id': Config.CHAIN_ID,
-				// });
 				const nameValidator: string = result[0].description.moniker;
 				const operatorAddress: string = result[0].operator_address;
-				// let res = await this.adapter.updateById(foundBlock._id, {
-				// 	$set: {
-				// 		name_validator: nameValidator,
-				// 		operator_address: operatorAddress,
-				// 	},
-				// });
-				// this.logger.info(res);
 				return {
 					updateOne: {
 						filter: { 'block_id.hash': block.block_id?.hash },
@@ -109,13 +98,12 @@ export default class HandleBlockUpsertedService extends Service {
 				};
 			}),
 		);
-		// let bulkOps = await Promise.all(list);
 		if (list.length > 0) {
-			this.logger.info(JSON.stringify(list));
+			this.logger.debug(JSON.stringify(list));
 
 			try {
 				let result = await this.adapter.bulkWrite(list);
-				this.logger.info(`result : ${result.length}`, result);
+				this.logger.info(`result : `, result);
 			} catch (error) {
 				this.logger.error(error);
 			}

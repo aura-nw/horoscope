@@ -63,6 +63,9 @@ export default class HandleTransactionDelegateService extends Service {
 									removeOnFail: {
 										count: 10,
 									},
+									removeOnFail: {
+										count: 10,
+									},
 								},
 							);
 						}

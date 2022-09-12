@@ -45,6 +45,9 @@ export default class TxAggregateService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;

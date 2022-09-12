@@ -57,6 +57,9 @@ export default class CrawlAccountAuthInfoService extends Service {
                             },
                             {
                                 removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
                             },
                         );
                         return;
@@ -107,6 +110,9 @@ export default class CrawlAccountAuthInfoService extends Service {
                         //         defaultJobOptions: {
                         //             jobId: `${address}_${chainId}_${resultCallApi.result.value.base_vesting_account.end_time}`,
                         //             removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
                         //             delay,
                         //         }
                         //     }

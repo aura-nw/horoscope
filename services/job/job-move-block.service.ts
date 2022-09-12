@@ -66,6 +66,9 @@ export default class MoveBlockService extends Service {
 						},
 						{
 							removeOnComplete: true,
+							removeOnFail: {
+								count: 10,
+							},
 							delay: new Date().getTime() - timestampObjectId.getTime(),
 						},
 					);
@@ -89,6 +92,9 @@ export default class MoveBlockService extends Service {
 					},
 					{
 						removeOnComplete: true,
+						removeOnFail: {
+							count: 10,
+						},
 						delay: new Date().getTime() - timestampObjectId.getTime(),
 					},
 				);
@@ -117,6 +123,9 @@ export default class MoveBlockService extends Service {
 					},
 					{
 						removeOnComplete: true,
+						removeOnFail: {
+							count: 10,
+						},
 					},
 				);
 
@@ -154,6 +163,9 @@ export default class MoveBlockService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 			},
 		);
 		this.getQueue('move.block').on('completed', (job: Job) => {

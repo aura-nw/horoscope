@@ -2,7 +2,12 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { DELAY_JOB_STATUS, DELAY_JOB_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
+import {
+	DELAY_JOB_STATUS,
+	DELAY_JOB_TYPE,
+	LIST_NETWORK,
+	URL_TYPE_CONSTANTS,
+} from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { UnbondingResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
@@ -58,6 +63,9 @@ export default class CrawlAccountUnbondsService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -70,7 +78,7 @@ export default class CrawlAccountUnbondsService extends Service {
 	async handleJob(listAddresses: string[], chainId: string) {
 		this.mongoDBClient = await this.connectToDB();
 		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let delayJob = await db.collection("delay_job");
+		let delayJob = await db.collection('delay_job');
 
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [],
@@ -152,12 +160,16 @@ export default class CrawlAccountUnbondsService extends Service {
 				}
 
 				listAccounts.push(accountInfo);
-			};
+			}
 		}
 		try {
 			listAccounts.forEach((element) => {
 				if (element._id)
-					listUpdateQueries.push(this.adapter.updateById(element._id, { $set: { account_unbonding: element.account_unbonding } }));
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_unbonding: element.account_unbonding },
+						}),
+					);
 				else {
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 						element,
