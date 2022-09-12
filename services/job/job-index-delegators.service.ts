@@ -11,37 +11,37 @@ const knex = require('../../config/database');
 const mongo = require('mongodb');
 
 export default class IndexDelegatorsService extends Service {
-    private redisMixin = new RedisMixin().start();
-    public constructor(public broker: ServiceBroker) {
-        super(broker);
-        this.parseServiceSchema({
-            name: 'indexDelegators',
-            version: 1,
-            mixins: [
-                QueueService(
-                    `redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-                    {
-                        prefix: 'index.delegators',
-                    },
-                ),
-                dbAccountDelegationsMixin,
-                // dbAccountAuthMixin,
-                this.redisMixin,
-            ],
-            queues: {
-                'index.delegators': {
-                    concurrency: 10,
-                    process(job: Job) {
-                        job.progress(10);
-                        // @ts-ignore
-                        this.handleJob(job.data.lastId);
-                        job.progress(100);
-                        return true;
-                    },
-                },
-            },
-        });
-    }
+	private redisMixin = new RedisMixin().start();
+	public constructor(public broker: ServiceBroker) {
+		super(broker);
+		this.parseServiceSchema({
+			name: 'indexDelegators',
+			version: 1,
+			mixins: [
+				QueueService(
+					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
+					{
+						prefix: 'index.delegators',
+					},
+				),
+				dbAccountDelegationsMixin,
+				// dbAccountAuthMixin,
+				this.redisMixin,
+			],
+			queues: {
+				'index.delegators': {
+					concurrency: 10,
+					process(job: Job) {
+						job.progress(10);
+						// @ts-ignore
+						this.handleJob(job.data.lastId);
+						job.progress(100);
+						return true;
+					},
+				},
+			},
+		});
+	}
 
     async handleJob(lastId: string) {
         const listAddresses = [
@@ -404,99 +404,104 @@ export default class IndexDelegatorsService extends Service {
             console.log(`${validator.title},${validator.address},${addresses},${vote_count}/${total_votes}`);
         };
 
-        // let client = await this.connectToDB();
-        // const db = client.db(Config.DB_GENERIC_DBNAME);
-        // let accountCollection = await db.collection("account_auth");
-        // let query: any = {
-        //     'custom_info.chain_id': 'aura-testnet' // , 'euphoria-1', 'serenity-testnet-001'
-        // };
-        // query['indexes'] = { $eq: null };
-        // if (lastId == '0') {
-        // } else {
-        //     query['_id'] = { $gt: new ObjectId(lastId) };
-        // }
-        // const listAccounts = await accountCollection.find(
-        //     query,
-        //     {
-        //         projection: { address: 1 },
-        //         sort: '_id',
-        //         limit: 100,
-        //         skip: 0,
-        //     }
-        // );
-        // if (listAccounts.length > 0) {
-        //     this.createJob(
-        //         'index.delegators',
-        //         {
-        //             //@ts-ignore
-        //             lastId: listAccounts[listAccounts.length - 1]._id.toString(),
-        //         },
-        //         {
-        //             removeOnComplete: true,
-        //         },
-        //     );
-        // }
-        // this.broker.emit('list-tx.upsert', {
-        //     listTx: [listAccounts],
-        //     source: CONST_CHAR.API,
-        //     chainId: 'aura-testnet',
-        // });
+		// let client = await this.connectToDB();
+		// const db = client.db(Config.DB_GENERIC_DBNAME);
+		// let accountCollection = await db.collection("account_auth");
+		// let query: any = {
+		//     'custom_info.chain_id': 'aura-testnet' // , 'euphoria-1', 'serenity-testnet-001'
+		// };
+		// query['indexes'] = { $eq: null };
+		// if (lastId == '0') {
+		// } else {
+		//     query['_id'] = { $gt: new ObjectId(lastId) };
+		// }
+		// const listAccounts = await accountCollection.find(
+		//     query,
+		//     {
+		//         projection: { address: 1 },
+		//         sort: '_id',
+		//         limit: 100,
+		//         skip: 0,
+		//     }
+		// );
+		// if (listAccounts.length > 0) {
+		//     this.createJob(
+		//         'index.delegators',
+		//         {
+		//             //@ts-ignore
+		//             lastId: listAccounts[listAccounts.length - 1]._id.toString(),
+		//         },
+		//         {
+		//             removeOnComplete: true,
+		//         },
+		//     );
+		// }
+		// this.broker.emit('list-tx.upsert', {
+		//     listTx: [listAccounts],
+		//     source: CONST_CHAR.API,
+		//     chainId: 'aura-testnet',
+		// });
 
-        // const listVestingAccounts = await this.adapter.find({
-        //     query: {
-        //         'account.result.type': {
-        //             $in: [
-        //                 'cosmos-sdk/ContinuousVestingAccount',
-        //                 'cosmos-sdk/PeriodicVestingAccount',
-        //                 'cosmos-sdk/DelayedVestingAccount'
-        //             ]
-        //         }
-        //     },
-        // });
-        // LIST_NETWORK.map((network) => {
-        //     this.broker.emit('list-tx.upsert', {
-        //         listTx: listVestingAccounts.filter((v: any) => v.custom_info.chain_id === network.chainId),
-        //         source: CONST_CHAR.API,
-        //         chainId: network.chainId,
-        //     } as ListTxCreatedParams);
-        // });
-    }
+		// const listVestingAccounts = await this.adapter.find({
+		//     query: {
+		//         'account.result.type': {
+		//             $in: [
+		//                 'cosmos-sdk/ContinuousVestingAccount',
+		//                 'cosmos-sdk/PeriodicVestingAccount',
+		//                 'cosmos-sdk/DelayedVestingAccount'
+		//             ]
+		//         }
+		//     },
+		// });
+		// LIST_NETWORK.map((network) => {
+		//     this.broker.emit('list-tx.upsert', {
+		//         listTx: listVestingAccounts.filter((v: any) => v.custom_info.chain_id === network.chainId),
+		//         source: CONST_CHAR.API,
+		//         chainId: network.chainId,
+		//     } as ListTxCreatedParams);
+		// });
+	}
 
-    sleep(ms: number) {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms);
-        });
-    }
+	sleep(ms: number) {
+		return new Promise((resolve) => {
+			setTimeout(resolve, ms);
+		});
+	}
 
-    async connectToDB() {
-        const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(Config.DB_GENERIC_PASSWORD)}@${Config.DB_GENERIC_HOST}:${Config.DB_GENERIC_PORT}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
+	async connectToDB() {
+		const DB_URL = `mongodb://${Config.DB_GENERIC_USER}:${encodeURIComponent(
+			Config.DB_GENERIC_PASSWORD,
+		)}@${Config.DB_GENERIC_HOST}:${
+			Config.DB_GENERIC_PORT
+		}/?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
 
-        let cacheClient = await mongo.MongoClient.connect(
-            DB_URL,
-        );
-        return cacheClient;
-    }
+		let cacheClient = await mongo.MongoClient.connect(DB_URL);
+		return cacheClient;
+	}
 
-    async _start() {
-        this.redisClient = await this.getRedisClient();
-        this.createJob(
-            'index.delegators',
-            {
-                lastId: '0',
-            },
-            {
-                removeOnComplete: true,
-            },
-        );
-        this.getQueue('index.delegators').on('completed', (job: Job) => {
-            this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
-        });
-        this.getQueue('index.delegators').on('failed', (job: Job) => {
-            this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
-        });
-        this.getQueue('index.delegators').on('progress', (job: Job) => {
-            this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
-        });
-        return super._start();
-    }
+	async _start() {
+		this.redisClient = await this.getRedisClient();
+		this.createJob(
+			'index.delegators',
+			{
+				lastId: '0',
+			},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
+			},
+		);
+		this.getQueue('index.delegators').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
+		});
+		this.getQueue('index.delegators').on('failed', (job: Job) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+		});
+		this.getQueue('index.delegators').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
+		});
+		return super._start();
+	}
 }

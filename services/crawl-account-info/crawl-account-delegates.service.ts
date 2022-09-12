@@ -54,6 +54,9 @@ export default class CrawlAccountDelegatesService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -103,12 +106,16 @@ export default class CrawlAccountDelegatesService extends Service {
 				}
 
 				listAccounts.push(accountInfo);
-			};
+			}
 		}
 		try {
 			listAccounts.map((element) => {
 				if (element._id)
-					listUpdateQueries.push(this.adapter.updateById(element._id, { $set: { account_delegations: element.account_delegations } }));
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_delegations: element.account_delegations },
+						}),
+					);
 				else {
 					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(

@@ -60,6 +60,9 @@ export default class HandleAddressService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -74,14 +77,16 @@ export default class HandleAddressService extends Service {
 		let listUpdateInfo: string[] = [];
 		let listInsert: any[] = [];
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listUpdateInfo.push(...[
-			'account-info.upsert-auth',
-			'account-info.upsert-balances',
-			'account-info.upsert-delegates',
-			'account-info.upsert-redelegates',
-			'account-info.upsert-spendable-balances',
-			'account-info.upsert-unbonds'
-		]);
+		listUpdateInfo.push(
+			...[
+				'account-info.upsert-auth',
+				'account-info.upsert-balances',
+				'account-info.upsert-delegates',
+				'account-info.upsert-redelegates',
+				'account-info.upsert-spendable-balances',
+				'account-info.upsert-unbonds',
+			],
+		);
 		if (listTx.length > 0) {
 			for (const element of listTx) {
 				let message;
@@ -182,7 +187,7 @@ export default class HandleAddressService extends Service {
 			} catch (error) {
 				this.logger.error(error);
 			}
-			listUpdateInfo.map(item => {
+			listUpdateInfo.map((item) => {
 				this.broker.emit(item, { listAddresses, chainId });
 			});
 		}
@@ -190,7 +195,7 @@ export default class HandleAddressService extends Service {
 
 	onlyUnique(value: any, index: any, self: any) {
 		return self.indexOf(value) === index;
-	  }
+	}
 
 	async _start() {
 		this.getQueue('handle.address').on('completed', (job: Job) => {

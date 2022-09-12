@@ -55,6 +55,9 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -105,19 +108,24 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				}
 
 				listAccounts.push(accountInfo);
-			};
+			}
 		}
 		try {
 			listAccounts.map((element) => {
 				if (element._id)
-					listUpdateQueries.push(this.adapter.updateById(element._id, { $set: { account_spendable_balances: element.account_spendable_balances } }));
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: {
+								account_spendable_balances: element.account_spendable_balances,
+							},
+						}),
+					);
 				else {
 					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-					const item: AccountInfoEntity =
-						new JsonConvert().deserializeObject(
-							element,
-							AccountInfoEntity,
-						);
+					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
+						element,
+						AccountInfoEntity,
+					);
 					item.custom_info = {
 						chain_id: chainId,
 						chain_name: chain ? chain.chainName : '',

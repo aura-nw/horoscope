@@ -80,6 +80,9 @@ export default class CrawlInflationService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_INFLATION, 10),
 				},

@@ -65,6 +65,9 @@ export default class CrawlTransactionService extends Service {
 								},
 								{
 									removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
 								},
 							);
 						}
@@ -86,6 +89,9 @@ export default class CrawlTransactionService extends Service {
 								},
 								{
 									removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
 								},
 							);
 						}

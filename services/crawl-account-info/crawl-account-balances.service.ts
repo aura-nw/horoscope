@@ -55,6 +55,9 @@ export default class CrawlAccountBalancesService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -104,12 +107,16 @@ export default class CrawlAccountBalancesService extends Service {
 				}
 
 				listAccounts.push(accountInfo);
-			};
+			}
 		}
 		try {
 			listAccounts.map((element) => {
 				if (element._id)
-					listUpdateQueries.push(this.adapter.updateById(element._id, { $set: { account_balances: element.account_balances } }));
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_balances: element.account_balances },
+						}),
+					);
 				else {
 					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(

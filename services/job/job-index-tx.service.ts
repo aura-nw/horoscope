@@ -66,6 +66,9 @@ export default class IndexTxService extends Service {
 				},
 				{
 					removeOnComplete: true,
+					removeOnFail: {
+						count: 10,
+					},
 				},
 			);
 		}
@@ -171,6 +174,9 @@ export default class IndexTxService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 			},
 		);
 		this.getQueue('index.tx').on('completed', (job: Job) => {

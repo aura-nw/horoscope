@@ -66,6 +66,9 @@ export default class MoveTxService extends Service {
 						},
 						{
 							removeOnComplete: true,
+							removeOnFail: {
+								count: 10,
+							},
 							delay: new Date().getTime() - timestampObjectId.getTime(),
 						},
 					);
@@ -87,6 +90,9 @@ export default class MoveTxService extends Service {
 					},
 					{
 						removeOnComplete: true,
+						removeOnFail: {
+							count: 10,
+						},
 						delay: new Date().getTime() - timestampObjectId.getTime(),
 					},
 				);
@@ -114,6 +120,9 @@ export default class MoveTxService extends Service {
 					},
 					{
 						removeOnComplete: true,
+						removeOnFail: {
+							count: 10,
+						},
 					},
 				);
 
@@ -152,6 +161,9 @@ export default class MoveTxService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 			},
 		);
 		this.getQueue('move.tx').on('completed', (job: Job) => {

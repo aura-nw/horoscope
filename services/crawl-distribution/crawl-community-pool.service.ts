@@ -84,6 +84,9 @@ export default class CrawlCommunityPoolService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_COMMUNITY_POOL, 10),
 				},
