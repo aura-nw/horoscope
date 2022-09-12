@@ -27,6 +27,7 @@ export default class HandleAccountVestingService extends Service {
 				),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
+				this.callApiMixin,
 			],
 			queues: {
 				'handle.account-continuous-vesting': {

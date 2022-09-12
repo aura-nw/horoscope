@@ -29,6 +29,9 @@ export const CONST_CHAR = {
 	CRAWL: 'crawl',
 	API: 'api',
 	RECIPIENT: 'recipient',
+	COIN_RECEIVED: 'coin_received',
+	WITHDRAW_REWARDS: 'withdraw_rewards',
+	AMOUNT: 'amount',
 };
 
 export const MSG_TYPE = {
