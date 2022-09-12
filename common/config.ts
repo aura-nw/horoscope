@@ -138,5 +138,6 @@ export default class ConfigClass {
 		this.DB_BLOCK_AGGREGATE = genericDbInfo('BLOCK_AGGREGATE');
 		this.DB_ACCOUNT_REWARDS = genericDbInfo('ACCOUNT_REWARDS');
 		this.DB_DELAY_JOB = genericDbInfo('DELAY_JOB');
+		this.DB_VOTE = genericDbInfo('VOTE');
 	}
 }

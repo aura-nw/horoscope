@@ -78,6 +78,15 @@ export const CODEID_MANAGER_ACTION = {
 	INSERT: 'v1.codeid-manager.act-insert',
 };
 
+export const VOTE_MANAGER_ACTION = {
+	UPDATE_MANY: 'v1.proposal-vote-manager.act-updateMany',
+	FIND: 'v1.proposal-vote-manager.act-find',
+	// FIND: 'v1.vote-handler.findByCondition',
+	CHECK_STATUS: 'v1.proposal-vote-manager.checkStatus',
+	// CREATE: 'v1.vote-handler.act-create',
+	INSERT: 'v1.proposal-vote-manager.act-insert',
+};
+
 export const CW20_MANAGER_ACTION = {
 	FIND: 'v1.cw20-asset-manager.act-find',
 	COUNT: 'v1.cw20-asset-manager.act-count',
@@ -199,7 +208,7 @@ export const SEARCH_TX_QUERY = {
 export enum VESTING_ACCOUNT_TYPE {
 	CONTINUOUS = 'cosmos-sdk/ContinuousVestingAccount',
 	PERIODIC = 'cosmos-sdk/PeriodicVestingAccount',
-	DELAYED = 'cosmos-sdk/DelayedVestingAccount'
+	DELAYED = 'cosmos-sdk/DelayedVestingAccount',
 }
 
 export enum DELAY_JOB_TYPE {
