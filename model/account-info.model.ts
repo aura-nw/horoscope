@@ -83,15 +83,11 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 			],
 		},
 	],
-    account_validator_rewards: [
+    account_claimed_rewards: [
 		{
 			validator_address: String,
-			rewards: [
-				{
-					denom: String,
-					amount: String,
-				},
-			],
+			denom: String,
+			amount: String,
 		},
 	],
 	custom_info: {

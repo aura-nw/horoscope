@@ -14,7 +14,7 @@ export interface IAccountInfo {
     account_redelegations: IRedelegationResponse[];
     account_spendable_balances: ICoin[];
     account_unbonding: IUnbondingResponse[];
-    account_validator_rewards: IReward[];
+    account_claimed_rewards: IReward[];
     custom_info: ICustomInfo;
 }
 
@@ -89,8 +89,9 @@ export interface IUnbondingResponse {
 }
 
 export interface IReward {
-	validatorAddress: String;
-	rewards: ICoin[];
+	validator_address: String;
+	amount: String;
+	denom: String;
 }
 
 export class AccountPubKey implements IAccountPubKey {
@@ -198,8 +199,9 @@ export class RedelegationResponse implements IRedelegationResponse {
 }
 
 class Rewards implements IReward {
-	validatorAddress: String = '';
-	rewards: Coin[] = [];
+	validator_address: String = '';
+	amount: String = '';
+	denom: String  = '';
 }
 
 @JsonObject('AccountInfo')
@@ -220,8 +222,8 @@ export class AccountInfoEntity implements IAccountInfo {
     account_spendable_balances: Coin[] = [];
     @JsonProperty('account_unbonding', [UnbondingResponse], true)
     account_unbonding: UnbondingResponse[] = [];
-    @JsonProperty('account_validator_rewards', [Rewards], true)
-    account_validator_rewards: Rewards[] = [];
+    @JsonProperty('account_claimed_rewards', [Rewards], true)
+    account_claimed_rewards: Rewards[] = [];
     custom_info = {} as CustomInfo;
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
