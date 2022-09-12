@@ -58,10 +58,234 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *          description: "Chain Id of network need to query"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: Account information
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      account_auth:
+	 *                        type: object
+	 *                        properties:
+	 *                          result:
+	 *                            type: object
+	 *                            properties:
+	 *                              'type':
+	 *                                type: string
+	 *                                example: 'cosmos-sdk/BaseAccount'
+	 *                              value:
+	 *                                type: object
+	 *                                properties:
+	 *                                  address:
+	 *                                    type: string
+	 *                                    example: 'aura123123123123123123'
+	 *                                  public_key:
+	 *                                    type: object
+	 *                                    properties:
+	 *                                      'type':
+	 *                                        type: string
+	 *                                        example: 'tendermint/PubKeySecp256k1'
+	 *                                      value:
+	 *                                        type: string
+	 *                                        example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+	 *                                  account_number:
+	 *                                    type: string
+	 *                                    example: '10'
+	 *                                  sequence:
+	 *                                    type: string
+	 *                                    example: '10'
+	 *                          height:
+	 *                            type: string
+	 *                            example: '100'
+	 *                      address:
+	 *                        type: string
+	 *                        example: 'aura123123123123123123123'
+	 *                      account_balances:
+	 *                        type: array
+	 *                        items:
+	 *                          type: object
+	 *                          properties:
+	 *                            denom:
+	 *                              type: string
+	 *                              example: 'aura'
+	 *                            amount:
+	 *                              type: string
+	 *                              example: '10000000'
+	 *                      account_delegations:
+	 *                        type: array
+	 *                        items:
+	 *                          type: object
+	 *                          properties:
+	 *                            delegations:
+	 *                              type: object
+	 *                              properties:
+	 *                                delegator_address:
+	 *                                  type: string
+	 *                                  example: 'aura123123123123123123'
+	 *                                validator_address:
+	 *                                  type: string
+	 *                                  example: 'auravaloper123123123123'
+	 *                                shares:
+	 *                                  type: string
+	 *                                  example: '100000'
+	 *                            balance:
+	 *                              type: object
+	 *                              properties:
+	 *                                denom:
+	 *                                  type: string
+	 *                                  example: 'uaura'
+	 *                                amount:
+	 *                                  type: string
+	 *                                  example: '1000000'
+	 *                      account_redelegations:
+	 *                        type: object
+	 *                        properties:
+	 *                          redelegation:
+	 *                            type: object
+	 *                            properties:
+	 *                              delegator_address:
+	 *                                type: string
+	 *                                example: 'aura123123123123123123123'
+	 *                              validator_src_address:
+	 *                                type: string
+	 *                                example: 'auravaloper123123123123123'
+	 *                              validator_dst_address:
+	 *                                type: string
+	 *                                example: 'auravaloper123123123123123'
+	 *                          entries:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                redelegation_entry:
+	 *                                  type: object
+	 *                                  properties:
+	 *                                    creation_height:
+	 *                                      type: string
+	 *                                      example: '100000'
+	 *                                    completion_time:
+	 *                                      type: string
+	 *                                      example: '2022-09-13T09:23:48.195Z'
+	 *                                    initial_balance:
+	 *                                      type: string
+	 *                                      example: '1000000'
+	 *                                    shares_dst:
+	 *                                      type: string
+	 *                                      example: '1000000'
+	 *                                balance:
+	 *                                  type: string
+	 *                                  example: '1000000'
+	 *                      account_spendable_balances:
+	 *                        type: object
+	 *                        properties:
+	 *                          redelegation:
+	 *                            type: object
+	 *                            properties:
+	 *                              denom:
+	 *                                type: string
+	 *                                example: 'uaura'
+	 *                              amount:
+	 *                                type: string
+	 *                                example: '10000000000'
+	 *                      account_unbonding:
+	 *                        type: object
+	 *                        properties:
+	 *                          delegator_address:
+	 *                            type: string
+	 *                            example: 'aura123123123123'
+	 *                          validator_address:
+	 *                            type: string
+	 *                            example: 'auravaloper123123123'
+	 *                          entries:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                creation_height:
+	 *                                  type: string
+	 *                                  example: '100000'
+	 *                                completion_time:
+	 *                                  type: string
+	 *                                  example: '2022-09-13T09:23:12.018Z'
+	 *                                initial_balance:
+	 *                                  type: string
+	 *                                  example: '100000000'
+	 *                                balance:
+	 *                                  type: string
+	 *                                  example: '100000000'
+	 *                      account_delegate_rewards:
+	 *                        type: object
+	 *                        properties:
+	 *                          rewards:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                denom:
+	 *                                  type: string
+	 *                                  example: 'uaura'
+	 *                                amount:
+	 *                                  type: string
+	 *                                  example: '100000'
+	 *                          total:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                denom:
+	 *                                  type: string
+	 *                                  example: 'uaura'
+	 *                                amount:
+	 *                                  type: string
+	 *                                  example: '100000'
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.block.chain"
 	 */
 	@Get('/', {
 		name: 'getAccountInfo',
@@ -79,14 +303,13 @@ export default class AccountInfoService extends MoleculerDBService<
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
-		let [accountInfo, accountRewards]
-			: [any, any] = await Promise.all([
-				this.adapter.findOne({
-					address: ctx.params.address,
-					'custom_info.chain_id': ctx.params.chainId,
-				}),
-				this.callApiFromDomain(url, paramDelegateRewards),
-			]);
+		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
+			this.adapter.findOne({
+				address: ctx.params.address,
+				'custom_info.chain_id': ctx.params.chainId,
+			}),
+			this.callApiFromDomain(url, paramDelegateRewards),
+		]);
 
 		if (accountInfo) {
 			this.broker.call('v1.handleAddress.accountinfoupsert', {
@@ -152,10 +375,125 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *          description: "Chain Id of network need to query"
 	 *      responses:
 	 *        '200':
-	 *          description: OK
+	 *          description: Account information
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      address:
+	 *                        type: string
+	 *                        example: 'aura123123123123123123123'
+	 *                      account_balances:
+	 *                        type: array
+	 *                        items:
+	 *                          type: object
+	 *                          properties:
+	 *                            denom:
+	 *                              type: string
+	 *                              example: 'aura'
+	 *                            amount:
+	 *                              type: string
+	 *                              example: '10000000'
+	 *                      account_delegations:
+	 *                        type: array
+	 *                        items:
+	 *                          type: object
+	 *                          properties:
+	 *                            delegations:
+	 *                              type: object
+	 *                              properties:
+	 *                                delegator_address:
+	 *                                  type: string
+	 *                                  example: 'aura123123123123123123'
+	 *                                validator_address:
+	 *                                  type: string
+	 *                                  example: 'auravaloper123123123123'
+	 *                                shares:
+	 *                                  type: string
+	 *                                  example: '100000'
+	 *                            balance:
+	 *                              type: object
+	 *                              properties:
+	 *                                denom:
+	 *                                  type: string
+	 *                                  example: 'uaura'
+	 *                                amount:
+	 *                                  type: string
+	 *                                  example: '1000000'
+	 *                      account_delegate_rewards:
+	 *                        type: object
+	 *                        properties:
+	 *                          rewards:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                denom:
+	 *                                  type: string
+	 *                                  example: 'uaura'
+	 *                                amount:
+	 *                                  type: string
+	 *                                  example: '100000'
+	 *                          total:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                denom:
+	 *                                  type: string
+	 *                                  example: 'uaura'
+	 *                                amount:
+	 *                                  type: string
+	 *                                  example: '100000'
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.block.chain"
 	 */
 	@Get('/delegations', {
 		name: 'getAccountDelegationInfo',
@@ -170,8 +508,8 @@ export default class AccountInfoService extends MoleculerDBService<
 	})
 	async getAccountDelegationInfoByAddress(ctx: Context<AccountInfoRequest>) {
 		this.mongoDBClient = await this.connectToDB();
-        const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-        let accountInfoCollection = await db.collection("account_info");
+		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
+		let accountInfoCollection = await db.collection('account_info');
 
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
@@ -184,8 +522,13 @@ export default class AccountInfoService extends MoleculerDBService<
 					'custom_info.chain_id': ctx.params.chainId,
 				},
 				{
-					projection: { address: 1, account_balances: 1, account_delegations: 1, custom_info: 1 }
-				}
+					projection: {
+						address: 1,
+						account_balances: 1,
+						account_delegations: 1,
+						custom_info: 1,
+					},
+				},
 			),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
