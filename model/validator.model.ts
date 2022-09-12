@@ -46,6 +46,7 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 		amount: String,
 	},
 	uptime: Number,
+	account_address: String,
 	custom_info: customInfoModel,
 });
 
@@ -58,6 +59,7 @@ export const validatorMongoModel = (collection: string): unknown => {
 		collection: collection,
 	});
 	schema.index({ operator_address: 1, 'custom_info.chain_id': 1 });
+	schema.index({ account_address: 1, 'custom_info.chain_id': 1 });
 	schema.index({ consensus_hex_address: 1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

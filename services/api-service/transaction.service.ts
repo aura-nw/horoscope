@@ -377,6 +377,7 @@ export default class BlockService extends MoleculerDBService<
 			listQueryOr.push(
 				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
 				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
+				// { 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
 			);
 		}
 		if (listQueryAnd.length > 0) {

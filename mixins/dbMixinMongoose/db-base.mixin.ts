@@ -136,10 +136,15 @@ export class DbBaseMixin {
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private getDBUri() {
-		let uri = `${this.dbInfo.dialect}://${this.dbInfo.user}:${this.dbInfo.password}@${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`;
-		if (this.dbInfo.replicaSet != '') {
-			uri = `${uri}&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`;
+		let listParamUri = [`${this.dbInfo.dialect}://`];
+		if (this.dbInfo.user && this.dbInfo.password){
+			listParamUri.push(`${this.dbInfo.user}:${this.dbInfo.password}@`)
 		}
+		listParamUri.push(`${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`)
+		if (this.dbInfo.replicaSet != '') {
+			listParamUri.push(`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`);
+		}
+		let uri = listParamUri.join('');
 		return uri;
 	}
 

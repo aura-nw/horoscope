@@ -56,6 +56,8 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 	voting_start_time: Date,
 	voting_end_time: Date,
 	custom_info: customInfoModel,
+	proposer_address: String || null,
+	proposer_name: String || null,
 });
 
 export const proposalMongoModel = (collection: string): unknown => {
