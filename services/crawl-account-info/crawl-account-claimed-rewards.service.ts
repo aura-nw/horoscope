@@ -91,7 +91,9 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 	}
 
 	async handleJob(listTx: ITransaction[], chainId: string) {
-		let listAccounts: AccountInfoEntity[] = [];
+		let listAccounts: AccountInfoEntity[] = [],
+			listUpdateQueries: any[] = [];
+		const chain = LIST_NETWORK.find(x => x.chainId === chainId);
 		try {
 			listTx.map((tx: any) => {
 				this.logger.info(tx);
@@ -127,7 +129,52 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_REDELEGATE:
-						// TODO
+						const valSrcAddress = tx.tx.body.messages[0].validator_src_address;
+						const valDstAddress = tx.tx.body.messages[0].validator_dst_address;
+						const coinReceived = tx.logs[0].events[0].find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes;
+						if (coinReceived.length === 2) {
+							const srcClaimedReward = coinReceived.find((x: any) => x.key === CONST_CHAR.AMOUNT).value;
+							const srcAmount = srcClaimedReward.match(/\d+/g)[0];
+							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
+								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress).amount
+									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress).amount.toString(), 10)
+										+ parseInt(srcAmount, 10)).toString();
+							} else {
+								account.account_claimed_rewards.push({
+									validator_address: validatorAddress,
+									denom: srcClaimedReward.match(/[a-zA-Z]+/g)[0],
+									amount: srcAmount,
+								});
+							}
+						} else if (coinReceived.length > 2) {
+							const srcClaimedReward = coinReceived[1].value;
+							const dstClaimedReward = coinReceived[3].value;
+							const srcAmount = srcClaimedReward.match(/\d+/g)[0];
+							const dstAmount = dstClaimedReward.match(/\d+/g)[0];
+							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
+								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress).amount
+									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress).amount.toString(), 10)
+										+ parseInt(srcAmount, 10)).toString();
+							} else {
+								account.account_claimed_rewards.push({
+									validator_address: validatorAddress,
+									denom: srcClaimedReward.match(/[a-zA-Z]+/g)[0],
+									amount: srcAmount,
+								});
+							}
+							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)) {
+								account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress).amount
+									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress).amount.toString(), 10)
+										+ parseInt(dstAmount, 10)).toString();
+							} else {
+								account.account_claimed_rewards.push({
+									validator_address: validatorAddress,
+									denom: dstClaimedReward.match(/[a-zA-Z]+/g)[0],
+									amount: dstAmount,
+								});
+							}
+						}
+						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_UNDELEGATE:
 						const undelegateValAddress = tx.tx.body.messages[0].validator_address;
@@ -140,11 +187,11 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)) {
 							account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress).amount
 								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress).amount.toString(), 10)
-									+ parseInt(amount, 10)).toString();
+									+ parseInt(undelegateAmount, 10)).toString();
 						} else {
 							account.account_claimed_rewards.push({
 								validator_address: validatorAddress,
-								denom: claimedReward.match(/[a-zA-Z]+/g)[0],
+								denom: undelegateClaimedReward.match(/[a-zA-Z]+/g)[0],
 								amount: undelegateAmount,
 							});
 						}
@@ -158,6 +205,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 							});
 							const claimedReward = log.events.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS)
 								.attributes.find((attr: any) => attr.key === CONST_CHAR.AMOUNT).value;
+							const amount = claimedReward.match(/\d+/g)[0];
 							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)) {
 								account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address).amount
 									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address).amount.toString(), 10)
@@ -172,6 +220,18 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						});
 						listAccounts.push(account);
 						break;
+				}
+			});
+
+			listAccounts.map((element) => {
+				if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, { $set: { account_claimed_rewards: element.account_claimed_rewards } }));
+				else {
+					const item: AccountInfoEntity = new JsonConvert().deserializeObject(element, AccountInfoEntity);
+					item.custom_info = {
+						chain_id: chainId,
+						chain_name: chain ? chain.chainName : '',
+					};
+					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
 		} catch (error) {
