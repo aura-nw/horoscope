@@ -12,6 +12,7 @@ import { ObjectID, ObjectId } from 'bson';
 import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { bech32 } from 'bech32';
+const hash = require('tendermint/lib/hash');
 export default class IndexTxService extends Service {
 	private redisMixin = new RedisMixin().start();
 	public constructor(public broker: ServiceBroker) {
@@ -90,17 +91,17 @@ export default class IndexTxService extends Service {
 	}
 
 	async _start() {
-		let operatorAddress = 'cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en';
+		// let operatorAddress = 'cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en';
 		// const operator_address = data.operator_address;
 		// const decodeAcc = bech32.decode(operatorAddress);
 		// const wordsByte = bech32.fromWords(decodeAcc.words);
 		// const account_address = bech32.encode('cosmos', bech32.toWords(wordsByte));
 
-		const operator_address = operatorAddress;
-		const decodeAcc = bech32.decode(operator_address.toString());
-		const wordsByte = bech32.fromWords(decodeAcc.words);
-		const account_address = bech32.encode('cosmos', bech32.toWords(wordsByte));
-		this.logger.info('account_address:', account_address);
+		// const operator_address = operatorAddress;
+		// const decodeAcc = bech32.decode(operator_address.toString());
+		// const wordsByte = bech32.fromWords(decodeAcc.words);
+		// const account_address = bech32.encode('cosmos', bech32.toWords(wordsByte));
+		// this.logger.info('account_address:', account_address);
 		// this.redisClient = await this.getRedisClient();
 		// this.createJob(
 		// 	'index.tx',
@@ -111,6 +112,13 @@ export default class IndexTxService extends Service {
 		// 		removeOnComplete: true,
 		// 	},
 		// );
+
+		let operatorHexAddress = 'B00D6A3D473A303E8058810754074F8106804767';
+
+		const bytes = Buffer.from('nDxL1WxLTMVpt8sm2x4E8RxFKEtAXBL+rFcVr1fewVc=', 'base64');
+		const operatorAddress = hash.tmhash(bytes).slice(0, 20).toString('hex').toUpperCase();
+		this.logger.info('operatorAddress:', operatorAddress);
+
 		this.getQueue('index.tx').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

@@ -82,7 +82,7 @@ export default class CrawlBlockService extends Service {
 
 		const startBlock = this.currentBlock + 1;
 
-		let endBlock = startBlock + parseInt(Config.NUMBER_OF_BLOCK_PER_CALL) - 1;
+		let endBlock = startBlock + 1 - 1;
 		if (endBlock > latestBlockNetwork) {
 			endBlock = latestBlockNetwork;
 		}

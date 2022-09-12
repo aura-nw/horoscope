@@ -9,8 +9,9 @@ import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { BlockEntity, IBlock } from '../../entities';
 import { Job } from 'bull';
-import { IRedisStreamData, IRedisStreamResponse } from '../../types';
+import { IRedisStreamData, IRedisStreamResponse, ListBlockCreatedParams } from '../../types';
 import { ListTxInBlockParams } from '../../types';
+import { CONST_CHAR } from 'common/constant';
 export default class HandleBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbBlockMixin = dbBlockMixin;
@@ -182,6 +183,10 @@ export default class HandleBlockService extends Service {
 		});
 		if (listBlockNeedSaveToDb.length > 0) {
 			let listId = await this.adapter.insertMany(listBlockNeedSaveToDb);
+			this.broker.emit('list-block.upserted', {
+				listBlock: listBlockNeedSaveToDb,
+				chainId: Config.CHAIN_ID,
+			} as ListBlockCreatedParams);
 			return listId;
 		}
 	}
