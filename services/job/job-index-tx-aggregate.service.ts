@@ -65,9 +65,9 @@ export default class IndexTxService extends Service {
 				},
 				{
 					removeOnComplete: true,
-									removeOnFail: {
-										count: 10,
-									},
+					removeOnFail: {
+						count: 10,
+					},
 				},
 			);
 		}
@@ -89,9 +89,6 @@ export default class IndexTxService extends Service {
 		// 		},
 		// 		{
 		// 			removeOnComplete: true,
-									removeOnFail: {
-										count: 10,
-									},
 		// 		},
 		// 	);
 		// }
@@ -104,7 +101,7 @@ export default class IndexTxService extends Service {
 				indexes['height'] = tx.tx_response.height;
 				tx.tx_response.events.map((event: IEvent) => {
 					let type = event.type.toString();
-					type = type.replace(/\./g,'_');
+					type = type.replace(/\./g, '_');
 					let attributes = event.attributes;
 					attributes.map((attribute: IAttribute) => {
 						try {
@@ -112,8 +109,8 @@ export default class IndexTxService extends Service {
 							let value = attribute.value
 								? fromUtf8(fromBase64(attribute.value.toString()))
 								: '';
-							key = key.replace(/\./g,'_');
-							value = value.replace(/\./g,'_')
+							key = key.replace(/\./g, '_');
+							value = value.replace(/\./g, '_');
 							let array = indexes[`${type}_${key}`];
 							if (array && array.length > 0) {
 								let position = indexes[`${type}_${key}`].indexOf(value);
@@ -156,7 +153,7 @@ export default class IndexTxService extends Service {
 					},
 				});
 			});
-			this.logger.debug(JSON.stringify(listBulk))
+			this.logger.debug(JSON.stringify(listBulk));
 			let result = await this.adapter.bulkWrite(listBulk);
 			// let result = await this.adapter.updateById(tx._id, {
 			// 	$set: {
@@ -176,9 +173,9 @@ export default class IndexTxService extends Service {
 			},
 			{
 				removeOnComplete: true,
-									removeOnFail: {
-										count: 10,
-									},
+				removeOnFail: {
+					count: 10,
+				},
 			},
 		);
 		this.getQueue('index.tx-aggregate').on('completed', (job: Job) => {

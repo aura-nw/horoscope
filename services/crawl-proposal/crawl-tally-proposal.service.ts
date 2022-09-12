@@ -83,9 +83,6 @@ export default class CrawlProposalService extends Service {
 				// 			},
 				// 			{
 				// 				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
-				},
 				// 			},
 				// 		);
 				// 		return;

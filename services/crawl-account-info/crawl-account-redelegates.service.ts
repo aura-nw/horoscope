@@ -2,7 +2,12 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { DELAY_JOB_STATUS, DELAY_JOB_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
+import {
+	DELAY_JOB_STATUS,
+	DELAY_JOB_TYPE,
+	LIST_NETWORK,
+	URL_TYPE_CONSTANTS,
+} from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { RedelegationResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
@@ -58,9 +63,9 @@ export default class CrawlAccountRedelegatesService extends Service {
 							},
 							{
 								removeOnComplete: true,
-									removeOnFail: {
-										count: 10,
-									},
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -73,7 +78,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 	async handleJob(listAddresses: string[], chainId: string) {
 		this.mongoDBClient = await this.connectToDB();
 		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let delayJob = await db.collection("delay_job");
+		let delayJob = await db.collection('delay_job');
 
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [],
@@ -133,9 +138,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 						// 		defaultJobOptions: {
 						// 			jobId: `${address}_${chainId}_${redelegate.entries[0].redelegation_entry.completion_time}`,
 						// 			removeOnComplete: true,
-									removeOnFail: {
-										count: 10,
-									},
 						// 			delay,
 						// 		}
 						// 	}
@@ -148,7 +150,9 @@ export default class CrawlAccountRedelegatesService extends Service {
 						let newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.REDELEGATE;
-						newDelayJob.expire_time = new Date(redelegate.entries[0].redelegation_entry.completion_time!);
+						newDelayJob.expire_time = new Date(
+							redelegate.entries[0].redelegation_entry.completion_time!,
+						);
 						newDelayJob.status = DELAY_JOB_STATUS.PENDING;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
@@ -159,12 +163,16 @@ export default class CrawlAccountRedelegatesService extends Service {
 				}
 
 				listAccounts.push(accountInfo);
-			};
+			}
 		}
 		try {
 			listAccounts.map((element) => {
 				if (element._id)
-					listUpdateQueries.push(this.adapter.updateById(element._id, { $set: { account_redelegations: element.account_redelegations } }));
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_redelegations: element.account_redelegations },
+						}),
+					);
 				else {
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 						element,
