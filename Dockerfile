@@ -44,7 +44,7 @@ RUN npm install -g avsc \
 # 	thrift
 
 # install project dependencies
-RUN npm install
+RUN npm ci --silent
 # RUN yarn install --frozen-lockfile
 
 # Copy source
