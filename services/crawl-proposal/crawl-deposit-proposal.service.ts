@@ -79,49 +79,9 @@ export default class CrawlProposalService extends Service {
 						return;
 					},
 				},
-				// 'list-tx.upsert': {
-				// 	handler: (ctx: Context<ListTxCreatedParams, Record<string, unknown>>) => {
-				// 		this.logger.debug(`Crawl deposit by tx`);
-				// 		this.createJob(
-				// 			'crawl.deposit.tx',
-				// 			{
-				// 				listTx: ctx.params.listTx,
-				// 			},
-				// 			{
-				// 				removeOnComplete: true,
-				// 			},
-				// 		);
-				// 		return;
-				// 	},
-				// },
 			},
 		});
 	}
-
-	// async handleJobDepositTx(listTx: ITransaction[]) {
-	// 	listTx.map(async (tx: ITransaction) => {
-	// 		if (tx.tx_response.code == '0') {
-	// 			let listMessage = tx.tx.body.messages;
-	// 			listMessage.map(async (message: any) => {
-	// 				if (message['@type'] == MSG_TYPE.MSG_DEPOSIT) {
-	// 					let depositTx = {
-	// 						depositor: message.depositor,
-	// 						amount: message.amount,
-	// 						txhash: tx.tx_response.txhash,
-	// 					};
-	// 					let foundProposal: IProposal = await this.adapter.findOne({
-	// 						proposal_id: Number(message.proposal_id),
-	// 						'custom_info.chain_id': Config.CHAIN_ID,
-	// 					});
-	// 					if (foundProposal) {
-	// 						foundProposal.list_tx_deposit.push(depositTx);
-	// 						await this.adapter.updateById(foundProposal._id, foundProposal);
-	// 					}
-	// 				}
-	// 			});
-	// 		}
-	// 	});
-	// }
 
 	async handleJobDeposit(proposalId: String) {
 		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/deposits`;

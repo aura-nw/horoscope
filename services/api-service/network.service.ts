@@ -33,8 +33,8 @@ export default class NetworkService extends MoleculerDBService<
 	 *    get:
 	 *      tags:
 	 *        - Network
-	 *      summary: Get status network
-	 *      description: Get status network
+	 *      summary: Get status network (inflation, pool, community pool, supply)
+	 *      description: Get status network (inflation, pool, community pool, supply)
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
@@ -45,10 +45,103 @@ export default class NetworkService extends MoleculerDBService<
 	 *          description: "Chain Id of network need to query"
 	 *      responses:
 	 *        '200':
-	 *          description: OK
+	 *          description: Network information
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      inflation:
+	 *                        type: object
+	 *                        properties:
+	 *                          inflation:
+	 *                            type: string
+	 *                            example: '0.255222222222522525'
+	 *                      pool:
+	 *                        type: object
+	 *                        properties:
+	 *                          bonded_tokens:
+	 *                            type: string
+	 *                            example: "1000000000"
+	 *                          not_bonded_tokens:
+	 *                            type: string
+	 *                            example: "1000000000"
+	 *                      communityPool:
+	 *                        type: object
+	 *                        properties:
+	 *                          pool:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                amount:
+	 *                                  type: string
+	 *                                  amount: "100000"
+	 *                                denom:
+	 *                                  type: string
+	 *                                  amount: "uaura"
+	 *                      supply:
+	 *                        type: object
+	 *                        properties:
+	 *                          supply:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                denom:
+	 *                                  type: string
+	 *                                  amount: "uaura"
+	 *                                amount:
+	 *                                  type: string
+	 *                                  amount: "1000000"
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.network.chain"
 	 */
 	@Get('/', {
 		name: 'status',

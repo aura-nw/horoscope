@@ -344,71 +344,18 @@ export default class CrawlTxService extends Service {
 				'tx_response.height': { $lte: toBlock, $gte: fromBlock },
 				'custom_info.chain_id': 'euphoria-1',
 				'indexes.transfer_sender': address,
-				// 'tx_response.events': {
-				// 	$elemMatch: {
-				// 		type: 'transfer',
-				// 		'attributes.key': toBase64(toUtf8('sender')),
-				// 		'attributes.value': toBase64(toUtf8(address)),
-				// 	},
-				// },
 			};
 			let query2 = {
 				'tx_response.height': { $lte: toBlock, $gte: fromBlock },
 				'custom_info.chain_id': 'euphoria-1',
 				'indexes.transfer_sender': address,
 				'indexes.message_action': '/cosmos.staking.v1beta1.MsgBeginRedelegate',
-				// $and: [
-				// 	{
-				// 		'tx_response.events': {
-				// 			$elemMatch: {
-				// 				type: 'transfer',
-				// 				'attributes.key': toBase64(toUtf8('sender')),
-				// 				'attributes.value': toBase64(toUtf8(address)),
-				// 			},
-				// 		},
-				// 	},
-				// 	{
-				// 		'tx_response.events': {
-				// 			$elemMatch: {
-				// 				type: 'message',
-				// 				'attributes.key': toBase64(toUtf8('action')),
-				// 				'attributes.value': toBase64(
-				// 					toUtf8('/cosmos.staking.v1beta1.MsgBeginRedelegate'),
-				// 				),
-				// 			},
-				// 		},
-				// 	},
-				// ],
 			};
 			let query3 = {
 				'tx_response.height': { $lte: toBlock, $gte: fromBlock },
 				'custom_info.chain_id': 'euphoria-1',
 				'indexes.transfer_sender': address,
 				'indexes.message_action': '/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward',
-				// $and: [
-				// 	{
-				// 		'tx_response.events': {
-				// 			$elemMatch: {
-				// 				type: 'transfer',
-				// 				'attributes.key': toBase64(toUtf8('sender')),
-				// 				'attributes.value': toBase64(toUtf8(address)),
-				// 			},
-				// 		},
-				// 	},
-				// 	{
-				// 		'tx_response.events': {
-				// 			$elemMatch: {
-				// 				type: 'message',
-				// 				'attributes.key': toBase64(toUtf8('action')),
-				// 				'attributes.value': toBase64(
-				// 					toUtf8(
-				// 						'/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward',
-				// 					),
-				// 				),
-				// 			},
-				// 		},
-				// 	},
-				// ],
 			};
 			let query4 = {
 				'tx_response.height': { $lte: toBlock, $gte: 843044 },
@@ -417,63 +364,92 @@ export default class CrawlTxService extends Service {
 				'indexes.message_action': '/cosmos.gov.v1beta1.MsgVote',
 				'indexes.proposal_vote_proposal_id': '7',
 			};
-			// let query5 = {
-			// 	'tx_response.height': { $lte: toBlock, $gte: 657698 },
-			// 	'custom_info.chain_id': 'euphoria-1',
-			// 	'indexes.transfer_sender': address,
-			// 	'indexes.message_action': '/cosmos.gov.v1beta1.MsgVote',
-			// 	'indexes.proposal_vote_proposal_id': '6',
-			// };
-			//case 1
-			// let pathAllSendTx = /cosmos/tx/v1beta1/txs?events=tx.height>=${fromBlock}&events=tx.height<=${toBlock}&events=transfer.sender='${address}'&pagination.offset=0&pagination.limit=1&pagination.count_total=true&order_by=ORDER_BY_DESC
-			// let pathRedelegateTx = /cosmos/tx/v1beta1/txs?events=tx.height>=${fromBlock}&events=tx.height<=${toBlock}&events=message.action='/cosmos.staking.v1beta1.MsgBeginRedelegate'&events=transfer.sender='${address}'&pagination.offset=0&pagination.limit=1&pagination.count_total=true&order_by=ORDER_BY_DESC
-			// let pathWithdraw = /cosmos/tx/v1beta1/txs?events=tx.height>=${fromBlock}&events=tx.height<=${toBlock}&events=message.action='/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward'&events=transfer.sender='${address}'&pagination.offset=0&pagination.limit=1&pagination.count_total=true&order_by=ORDER_BY_DESC;
 
-			// let [result1, result2, result3] = await Promise.all([
-			//     this.callApiFromDomain(
-			//         url,
-			//         pathAllSendTx,
-			//     ),
-			//     this.callApiFromDomain(
-			//         url,
-			//         pathRedelegateTx,
-			//     ),this.callApiFromDomain(
-			//         url,
-			//         pathWithdraw,
-			//     )
-			// ])
-
+			// let [result1, result2, result3, result4] = await Promise.all([
+			// 	this.adapter.count({ query: query1 }),
+			// 	this.adapter.count({ query: query2 }),
+			// 	this.adapter.count({ query: query3 }),
+			// 	this.adapter.count({ query: query4 }),
+			// 	// this.adapter.count({ query: query5 }),
+			// ]);
 			// let element = {
-			//     address: address,
-			//     noTx: result1.pagination.total,
-			//     noRedelegate : result2.pagination.total,
-			//     noWithdraw: result3.pagination.total,
-			// }
+			// 	address: address,
+			// 	noTx: result1,
+			// 	noRedelegate: result2,
+			// 	noWithdraw: result3,
+			// };
 			// listResult.push(element);
-			// this.logger.info(result1.pagination.total,' ',result2.pagination.total,' ',result3.pagination.total,' ');
+			// this.logger.info(`${address},${result1},${result2},${result3},${result4}`);
 
-			//case 2
-			this.logger.info(query1);
-			// let result1: number = await this.adapter.count({query: query1});
-			// let result2: number = await this.adapter.count({query: query2});
-			// let result3: number = await this.adapter.count({query: query3});
-			let [result1, result2, result3, result4] = await Promise.all([
-				this.adapter.count({ query: query1 }),
-				this.adapter.count({ query: query2 }),
-				this.adapter.count({ query: query3 }),
-				this.adapter.count({ query: query4 }),
-				// this.adapter.count({ query: query5 }),
+			const queryDelegate = [
+				{
+					$match: {
+						'custom_info.chain_id': 'euphoria-1',
+						'indexes.message_action': '/cosmos.staking.v1beta1.MsgDelegate',
+						'indexes.transfer_sender': address,
+					},
+				},
+				{
+					$unwind: {
+						path: '$indexes.delegate_validator',
+					},
+				},
+				{
+					$group: {
+						_id: {
+							chain_id: '$custom_info.chain_id',
+							indexes_transfer_sender: '$indexes.transfer_sender',
+						},
+						indexes_validator: {
+							$push: '$indexes.delegate_validator',
+						},
+					},
+				},
+			];
+			const queryRedelegate = [
+				{
+					$match: {
+						'custom_info.chain_id': 'euphoria-1',
+						'indexes.message_action': '/cosmos.staking.v1beta1.MsgBeginRedelegate',
+						'indexes.transfer_sender': address,
+					},
+				},
+				{
+					$unwind: {
+						path: '$indexes.redelegate_destination_validator',
+					},
+				},
+				{
+					$group: {
+						_id: {
+							chain_id: '$custom_info.chain_id',
+							indexes_transfer_sender: '$indexes.transfer_sender',
+						},
+						indexes_redelegate_dest: {
+							$push: '$indexes.redelegate_destination_validator',
+						},
+					},
+				},
+			];
+
+			let [resultDelegate, resultRedelegate] = await Promise.all([
+				this.adapter.aggregate(queryDelegate),
+				this.adapter.aggregate(queryRedelegate),
 			]);
-			let element = {
-				address: address,
-				noTx: result1,
-				noRedelegate: result2,
-				noWithdraw: result3,
-			};
-			listResult.push(element);
-			this.logger.info(`${address},${result1},${result2},${result3},${result4}`);
+			let listValidator: any[] = [];
+			if (resultDelegate && resultDelegate.length > 0) {
+				listValidator.push(...resultDelegate[0].indexes_validator);
+			}
+			if (resultRedelegate && resultRedelegate.length > 0) {
+				listValidator.push(...resultRedelegate[0].indexes_redelegate_dest);
+			}
+
+			function onlyUnique(value: any, index: any, self: any) {
+				return self.indexOf(value) === index;
+			}
+			let listValidatorUnique = listValidator.filter(onlyUnique);
+			this.logger.info(`${address},${listValidatorUnique.length}`);
 		});
-		this.logger.info(JSON.stringify(listResult));
 
 		return super._start();
 	}

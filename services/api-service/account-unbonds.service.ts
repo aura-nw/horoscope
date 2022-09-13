@@ -141,7 +141,7 @@ export default class AccountUnbondsService extends MoleculerDBService<
 	 *                           example: "node1"
 	 *                         action:
 	 *                           type: string
-	 *                           example: "v1.block.chain"
+	 *                           example: "v1.account-info"
 	 */
 	@Get('/', {
 		name: 'getByAddress',
@@ -157,19 +157,19 @@ export default class AccountUnbondsService extends MoleculerDBService<
 		},
 	})
 	async getByAddress(ctx: Context<GetAccountUnbondRequest, Record<string, unknown>>) {
-        this.mongoDBClient = await this.connectToDB();
-        const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-        let accountInfoCollection = await db.collection("account_info");
+		this.mongoDBClient = await this.connectToDB();
+		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
+		let accountInfoCollection = await db.collection('account_info');
 
 		let data = await accountInfoCollection.findOne(
-            {
-                address: ctx.params.address,
-                'custom_info.chain_id': ctx.params.chainid,
-            },
-            {
-                projection: { address: 1, account_unbonding: 1, custom_info: 1 }
-            }
-        );
+			{
+				address: ctx.params.address,
+				'custom_info.chain_id': ctx.params.chainid,
+			},
+			{
+				projection: { address: 1, account_unbonding: 1, custom_info: 1 },
+			},
+		);
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,

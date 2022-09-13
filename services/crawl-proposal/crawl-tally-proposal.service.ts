@@ -42,16 +42,6 @@ export default class CrawlProposalService extends Service {
 						return true;
 					},
 				},
-				// 'crawl.voting.tx': {
-				// 	concurrency: 1,
-				// 	async process(job: Job) {
-				// 		job.progress(10);
-				// 		// @ts-ignore
-				// 		await this.handleJobVotingTx(job.data.listTx);
-				// 		job.progress(100);
-				// 		return true;
-				// 	},
-				// },
 			},
 			events: {
 				'proposal.voting': {
@@ -73,56 +63,9 @@ export default class CrawlProposalService extends Service {
 						return;
 					},
 				},
-				// 'list-tx.upsert': {
-				// 	handler: (ctx: Context<ListTxCreatedParams, Record<string, unknown>>) => {
-				// 		this.logger.debug(`Crawl deposit by tx`);
-				// 		this.createJob(
-				// 			'crawl.voting.tx',
-				// 			{
-				// 				listTx: ctx.params.listTx,
-				// 			},
-				// 			{
-				// 				removeOnComplete: true,
-				// 			},
-				// 		);
-				// 		return;
-				// 	},
-				// },
 			},
 		});
 	}
-	// async handleJobVotingTx(listTx: ITransaction[]) {
-	// 	listTx.map(async (tx: ITransaction) => {
-	// 		if (tx.tx_response.code == '0') {
-	// 			let listMessage = tx.tx.body.messages;
-	// 			listMessage.map(async (message: any) => {
-	// 				if (message['@type'] == MSG_TYPE.MSG_VOTE) {
-	// 					let voteTx = {
-	// 						voter: message.voter,
-	// 						option: message.option,
-	// 						txhash: tx.tx_response.txhash,
-	// 					};
-	// 					let foundProposal: IProposal = await this.adapter.findOne({
-	// 						proposal_id: Number(message.proposal_id),
-	// 						'custom_info.chain_id': Config.CHAIN_ID,
-	// 					});
-	// 					if (foundProposal) {
-	// 						let foundVoterIndex = foundProposal.list_tx_vote.findIndex(
-	// 							(voter: IVoteTx) => voter.voter == voteTx.voter,
-	// 						);
-	// 						if (foundVoterIndex != -1) {
-	// 							foundProposal.list_tx_vote[foundVoterIndex].option = voteTx.option;
-	// 							foundProposal.list_tx_vote[foundVoterIndex].txhash = voteTx.txhash;
-	// 						} else {
-	// 							foundProposal.list_tx_vote.push(voteTx);
-	// 						}
-	// 						await this.adapter.updateById(foundProposal._id, foundProposal);
-	// 					}
-	// 				}
-	// 			});
-	// 		}
-	// 	});
-	// }
 	async handleJob(proposalId: String) {
 		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/tally`;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);

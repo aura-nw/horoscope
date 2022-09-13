@@ -48,8 +48,8 @@ export default class BlockService extends MoleculerDBService<
 	 *    get:
 	 *      tags:
 	 *        - Transaction
-	 *      summary: Get latest transaction
-	 *      description: Get latest transaction
+	 *      summary: Get latest transaction or get with condition
+	 *      description: Get latest transaction or get with condition
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
@@ -144,10 +144,204 @@ export default class BlockService extends MoleculerDBService<
 	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
-	 *          description: OK
-	 *        '422':
-	 *          description: Missing parameters
+	 *          description: List transaction
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      transaction:
+	 *                        type: object
+	 *                        properties:
+	 *                          tx:
+	 *                            type: object
+	 *                            properties:
+	 *                              body:
+	 *                                type: object
+	 *                                properties:
+	 *                                  messages:
+	 *                                    type: array
+	 *                                    items:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        '@type':
+	 *                                          type: string
+	 *                                          example: '/cosmos.staking.v1beta1.MsgDelegate'
+	 *                                        delegator_address:
+	 *                                          type: string
+	 *                                          example: 'aura123123123123'
+	 *                                        validator_address:
+	 *                                          type: string
+	 *                                          example: 'aura123123123123'
+	 *                                  extension_options:
+	 *                                    type: array
+	 *                                  non_critical_extension_options:
+	 *                                    type: array
+	 *                                  memo:
+	 *                                    type: string
+	 *                                    example: "This is Aura Tx"
+	 *                                  timeout_height:
+	 *                                    type: string
+	 *                                    example: "0"
+	 *                              auth_info:
+	 *                                type: object
+	 *                                properties:
+	 *                                  fee:
+	 *                                    type: object
+	 *                                    properties:
+	 *                                      amount:
+	 *                                        type: array
+	 *                                        items:
+	 *                                          properties:
+	 *                                            denom:
+	 *                                              type: string
+	 *                                              example: 'uaura'
+	 *                                            amount:
+	 *                                              type: string
+	 *                                              example: '1000000'
+	 *                                      gas_limit:
+	 *                                        type: string
+	 *                                        example: '100000'
+	 *                                      payer:
+	 *                                        type: string
+	 *                                        example: ''
+	 *                                      granter:
+	 *                                        type: string
+	 *                                        example: ''
+	 *                                    signer_infos:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        type: object
+	 *                                        properties:
+	 *                                          mode_info:
+	 *                                            type: object
+	 *                                            properties:
+	 *                                              single:
+	 *                                                type: object
+	 *                                                properties:
+	 *                                                  mode:
+	 *                                                    type: string
+	 *                                                    example: "SIGN_MODE_DIRECT"
+	 *                                          public_key:
+	 *                                            type: object
+	 *                                            properties:
+	 *                                              '@type':
+	 *                                                type: string
+	 *                                                example: '/cosmos.crypto.secp256k1.PubKey'
+	 *                                              key:
+	 *                                                type: string
+	 *                                                example: 'xxxxxxxxxxxxxxxxxxxx'
+	 *                                          sequence:
+	 *                                            type: string
+	 *                                            example: '1000000'
+	 *                              signatures:
+	 *                                type: array
+	 *                                items:
+	 *                                  type: string
+	 *                                  example: 'xxxxxxxxxxxxxxx'
+	 *                          tx_response:
+	 *                            type: object
+	 *                            properties:
+	 *                              height:
+	 *                                type: number
+	 *                                example: 10000
+	 *                              txhash:
+	 *                                type: string
+	 *                                example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+	 *                              codespace:
+	 *                                type: string
+	 *                                example: ''
+	 *                              code:
+	 *                                type: string
+	 *                                example: '0'
+	 *                              data:
+	 *                                type: string
+	 *                                example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+	 *                              raw_log:
+	 *                                type: string
+	 *                                example: '[{\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"xxxxx\"}]'
+	 *                              logs:
+	 *                                type: array
+	 *                                items:
+	 *                                  type: object
+	 *                                  properties:
+	 *                                    msg_index:
+	 *                                      type: number
+	 *                                      example: 0
+	 *                                    log:
+	 *                                      type: string
+	 *                                      example: ''
+	 *                                    events:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        type: object
+	 *                                        properties:
+	 *                                          'type':
+	 *                                            type: string
+	 *                                            example: 'coin_received'
+	 *                                          attributes:
+	 *                                            type: array
+	 *                                            items:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                key:
+	 *                                                  type: string
+	 *                                                  example: receiver
+	 *                                                value:
+	 *                                                  type: string
+	 *                                                  example: 'aura123123123123123'
 	 *
+	 *
+	 *
+	 *
+	 *        '422':
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.transaction"
 	 */
 	@Get('/', {
 		name: 'getByChain',
