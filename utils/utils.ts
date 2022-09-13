@@ -43,7 +43,14 @@ export class Utils {
 	}
 
 	public static formatSearchQueryInTxSearch(query: string) {
-		let queryArray = query.split(',');
+		let queryArray: string[] = [];
+		if (query.includes(';')) {
+			queryArray = query.split(';');
+		} else if (query.includes(',')) {
+			queryArray = query.split(',');
+		} else {
+			queryArray = [query];
+		}
 		let queryObject: any[] = [];
 		queryArray.forEach((element) => {
 			let keyValueList = element.split('=');

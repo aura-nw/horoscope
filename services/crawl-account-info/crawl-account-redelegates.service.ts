@@ -1,18 +1,26 @@
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import { dbAccountRedelegationsMixin } from '../../mixins/dbMixinMongoose';
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import {
+	DELAY_JOB_STATUS,
+	DELAY_JOB_TYPE,
+	LIST_NETWORK,
+	URL_TYPE_CONSTANTS,
+} from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { AccountRedelegationsEntity, RedelegationResponse } from '../../entities';
+import { RedelegationResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
+import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 const QueueService = require('moleculer-bull');
+const Bull = require('bull');
 
 export default class CrawlAccountRedelegatesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
-	private dbAccountRedelegationsMixin = dbAccountRedelegationsMixin;
+	private dbAccountInfoMixin = dbAccountInfoMixin;
+	private mongoDBMixin = mongoDBMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -27,8 +35,9 @@ export default class CrawlAccountRedelegatesService extends Service {
 					},
 				),
 				// this.redisMixin,
-				this.dbAccountRedelegationsMixin,
+				this.dbAccountInfoMixin,
 				this.callApiMixin,
+				this.mongoDBMixin,
 			],
 			queues: {
 				'crawl.account-redelegates': {
@@ -43,7 +52,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 				},
 			},
 			events: {
-				'account-info.upsert-each': {
+				'account-info.upsert-redelegates': {
 					handler: (ctx: Context<CrawlAccountInfoParams>) => {
 						this.logger.debug(`Crawl account redelegates`);
 						this.createJob(
@@ -54,6 +63,9 @@ export default class CrawlAccountRedelegatesService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -64,22 +76,28 @@ export default class CrawlAccountRedelegatesService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
-		let listAccounts: AccountRedelegationsEntity[] = [],
-			listUpdateQueries: any[] = [];
+		this.mongoDBClient = await this.connectToDB();
+		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
+		let delayJob = await db.collection('delay_job');
+
+		let listAccounts: AccountInfoEntity[] = [],
+			listUpdateQueries: any[] = [],
+			listDelayJobs: DelayJobEntity[] = [];
+		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
-			for (const address of listAddresses) {
+			for (let address of listAddresses) {
 				let listRedelegates: RedelegationResponse[] = [];
 
 				const param =
 					Config.GET_PARAMS_DELEGATOR + `/${address}/redelegations?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
-				let accountInfo: AccountRedelegationsEntity = await this.adapter.findOne({
+				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
 					address,
 					'custom_info.chain_id': chainId,
 				});
 				if (!accountInfo) {
-					accountInfo = {} as AccountRedelegationsEntity;
+					accountInfo = {} as AccountInfoEntity;
 					accountInfo.address = address;
 				}
 
@@ -100,23 +118,47 @@ export default class CrawlAccountRedelegatesService extends Service {
 				}
 
 				if (listRedelegates) {
-					accountInfo.redelegation_responses = listRedelegates;
-					listRedelegates.map((redelegate: RedelegationResponse) => {
-						let expireTime = new Date(
-							redelegate.entries[0].redelegation_entry.completion_time.toString(),
+					accountInfo.account_redelegations = listRedelegates;
+					listRedelegates.map(async (redelegate: RedelegationResponse) => {
+						// let expireTime = new Date(
+						// 	redelegate.entries[0].redelegation_entry.completion_time.toString(),
+						// );
+						// let delay = expireTime.getTime() - new Date().getTime();
+						// const apiKeyQueue = new Bull(
+						// 	'handle.address',
+						// 	{
+						// 		redis: {
+						// 			host: Config.REDIS_HOST,
+						// 			port: Config.REDIS_PORT,
+						// 			username: Config.REDIS_USERNAME,
+						// 			password: Config.REDIS_PASSWORD,
+						// 			db: Config.REDIS_DB_NUMBER,
+						// 		},
+						// 		prefix: 'handle.address',
+						// 		defaultJobOptions: {
+						// 			jobId: `${address}_${chainId}_${redelegate.entries[0].redelegation_entry.completion_time}`,
+						// 			removeOnComplete: true,
+						// 			delay,
+						// 		}
+						// 	}
+						// );
+						// apiKeyQueue.add({
+						// 	listTx: [address],
+						// 	source: CONST_CHAR.API,
+						// 	chainId
+						// });
+						let newDelayJob = {} as DelayJobEntity;
+						newDelayJob.content = { address };
+						newDelayJob.type = DELAY_JOB_TYPE.REDELEGATE;
+						newDelayJob.expire_time = new Date(
+							redelegate.entries[0].redelegation_entry.completion_time!,
 						);
-						let delay = expireTime.getTime() - new Date().getTime();
-						this.createJob(
-							'crawl.account-redelegates',
-							{
-								listAddresses: [address],
-								chainId
-							},
-							{
-								removeOnComplete: true,
-								delay,
-							},
-						);
+						newDelayJob.status = DELAY_JOB_STATUS.PENDING;
+						newDelayJob.custom_info = {
+							chain_id: chainId,
+							chain_name: chain ? chain.chainName : '',
+						};
+						listDelayJobs.push(newDelayJob);
 					});
 				}
 
@@ -124,14 +166,17 @@ export default class CrawlAccountRedelegatesService extends Service {
 			}
 		}
 		try {
-			listAccounts.forEach((element) => {
+			listAccounts.map((element) => {
 				if (element._id)
-					listUpdateQueries.push(this.adapter.updateById(element._id, element));
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_redelegations: element.account_redelegations },
+						}),
+					);
 				else {
-					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-					const item: AccountRedelegationsEntity = new JsonConvert().deserializeObject(
+					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 						element,
-						AccountRedelegationsEntity,
+						AccountInfoEntity,
 					);
 					item.custom_info = {
 						chain_id: chainId,
@@ -139,6 +184,9 @@ export default class CrawlAccountRedelegatesService extends Service {
 					};
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
+			});
+			listDelayJobs.map((element) => {
+				listUpdateQueries.push(delayJob.insertMany([element]));
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {

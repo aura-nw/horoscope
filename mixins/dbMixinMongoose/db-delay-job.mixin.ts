@@ -1,18 +1,18 @@
 'use strict';
 
 import { Config } from "../../common";
-import { accountAuthMongoModel } from "../../model/account-auth.model";
+import { delayJobMongoModel } from "../../model/delay-job.model";
 import { DbBaseMixin } from "./db-base.mixin";
 
-const dbInfo = Config.DB_ACCOUNT_AUTH;
+const dbInfo = Config.DB_DELAY_JOB;
 
 const dbBaseMixin = new DbBaseMixin({
 	dbInfo,
-	name: 'dbAccountAuthMixin',
+	name: 'dbDelayJobMixin',
 	collection: dbInfo.collection,
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	model: accountAuthMongoModel(dbInfo.collection),
+	model: delayJobMongoModel(dbInfo.collection),
 });
 
-export const dbAccountAuthMixin = dbBaseMixin.getMixin();
+export const dbDelayJobMixin = dbBaseMixin.getMixin();

@@ -78,6 +78,9 @@ export default class CrawlAccountInfoService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;

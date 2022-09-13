@@ -1,4 +1,4 @@
-import { ITransaction } from '../entities';
+import { IBlock, ITransaction } from '../entities';
 
 export interface ListTxInBlockParams {
 	listTx: string[];
@@ -6,6 +6,11 @@ export interface ListTxInBlockParams {
 export interface ListTxCreatedParams {
 	listTx: ITransaction[];
 	source: string;
+	chainId: string;
+}
+
+export interface ListBlockCreatedParams {
+	listBlock: IBlock[];
 	chainId: string;
 }
 

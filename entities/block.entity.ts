@@ -66,6 +66,8 @@ export interface IBlock {
 	_id: ObjectIdNull;
 	block_id: IBlockId | null;
 	block: IBlockDetail | null;
+	validator_name: String | null;
+	operator_address: String | null;
 }
 
 @JsonObject('BlockIdPart')
@@ -177,6 +179,8 @@ export class BlockEntity implements IBlock {
 	@JsonProperty('block', BlockDetail)
 	block: BlockDetail | null = null;
 
+	validator_name: String | null = null;
+	operator_address: String | null = null;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

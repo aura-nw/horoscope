@@ -10,6 +10,7 @@ import { DBInfo } from '../../types';
 // import { MongooseDbAdapter } from 'moleculer-db-adapter-mongoose';
 import MongooseDbAdapter = require('moleculer-db-adapter-mongoose');
 import CustomMongooseDbAdapter = require('../customMongoose');
+const SqlAdapter = require('moleculer-db-adapter-sequelize');
 export interface BaseMixinConfig {
 	name: string;
 	model: Model<any>;
@@ -43,7 +44,8 @@ export class DbBaseMixin {
 				return this.getLocalAdapter(schema, true);
 			case 'mongodb':
 				return this.getMongoAdapter(schema);
-			// Case 'mysql':
+			case 'mysql':
+				return this.getSequelizeAdapter(schema);
 			// Case 'postgres':
 			// Case 'mariadb':
 			//   Return this.getSequelizeAdapter(schema);
@@ -134,10 +136,15 @@ export class DbBaseMixin {
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private getDBUri() {
-		let uri = `${this.dbInfo.dialect}://${this.dbInfo.user}:${this.dbInfo.password}@${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`;
-		if (this.dbInfo.replicaSet != '') {
-			uri = `${uri}&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`;
+		let listParamUri = [`${this.dbInfo.dialect}://`];
+		if (this.dbInfo.user && this.dbInfo.password){
+			listParamUri.push(`${this.dbInfo.user}:${this.dbInfo.password}@`)
 		}
+		listParamUri.push(`${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`)
+		if (this.dbInfo.replicaSet != '') {
+			listParamUri.push(`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`);
+		}
+		let uri = listParamUri.join('');
 		return uri;
 	}
 
@@ -173,6 +180,28 @@ export class DbBaseMixin {
 				dbName: this.dbInfo.dbname,
 				useCreateIndex: true,
 				autoIndex: true,
+			}),
+			collection: this.collection,
+			model: this.mixModel,
+		};
+	}
+
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	private getSequelizeAdapter(schema: ServiceSchema) {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		let SequelizedDbAdapter: any;
+		import('moleculer-db-adapter-sequelize').then(
+			(AdapterMySql) => (SequelizedDbAdapter = AdapterMySql),
+		);
+		return {
+			...schema,
+			adapter: new SqlAdapter(this.dbInfo.dbname, this.dbInfo.user, this.dbInfo.password, {
+				host: this.dbInfo.host,
+				port: this.dbInfo.port,
+				dialect: 'mysql',
+				define: {
+					timestamps: false,
+				}
 			}),
 			collection: this.collection,
 			model: this.mixModel,

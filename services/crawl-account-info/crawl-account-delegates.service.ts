@@ -1,21 +1,18 @@
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import { dbAccountDelegationsMixin } from '../../mixins/dbMixinMongoose';
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import {
-	AccountDelegationsEntity,
-	DelegationResponse,
-} from '../../entities/account-delegations.entity';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
+import { AccountInfoEntity, DelegationResponse } from '../../entities';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountDelegatesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
-	private dbAccountDelegationsMixin = dbAccountDelegationsMixin;
+	private dbAccountInfoMixin = dbAccountInfoMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -30,7 +27,7 @@ export default class CrawlAccountDelegatesService extends Service {
 					},
 				),
 				// this.redisMixin,
-				this.dbAccountDelegationsMixin,
+				this.dbAccountInfoMixin,
 				this.callApiMixin,
 			],
 			queues: {
@@ -46,7 +43,7 @@ export default class CrawlAccountDelegatesService extends Service {
 				},
 			},
 			events: {
-				'account-info.upsert-each': {
+				'account-info.upsert-delegates': {
 					handler: (ctx: Context<CrawlAccountInfoParams>) => {
 						this.logger.debug(`Crawl account delegates`);
 						this.createJob(
@@ -57,6 +54,9 @@ export default class CrawlAccountDelegatesService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -67,21 +67,21 @@ export default class CrawlAccountDelegatesService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
-		let listAccounts: AccountDelegationsEntity[] = [],
+		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
 		if (listAddresses.length > 0) {
-			for (const address of listAddresses) {
+			for (let address of listAddresses) {
 				let listDelegates: DelegationResponse[] = [];
 
 				const param = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
-				let accountInfo: AccountDelegationsEntity = await this.adapter.findOne({
+				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
 					address,
 					'custom_info.chain_id': chainId,
 				});
 				if (!accountInfo) {
-					accountInfo = {} as AccountDelegationsEntity;
+					accountInfo = {} as AccountInfoEntity;
 					accountInfo.address = address;
 				}
 
@@ -102,21 +102,25 @@ export default class CrawlAccountDelegatesService extends Service {
 				}
 
 				if (listDelegates) {
-					accountInfo.delegation_responses = listDelegates;
+					accountInfo.account_delegations = listDelegates;
 				}
 
 				listAccounts.push(accountInfo);
 			}
 		}
 		try {
-			listAccounts.forEach((element) => {
+			listAccounts.map((element) => {
 				if (element._id)
-					listUpdateQueries.push(this.adapter.updateById(element._id, element));
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_delegations: element.account_delegations },
+						}),
+					);
 				else {
 					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-					const item: AccountDelegationsEntity = new JsonConvert().deserializeObject(
+					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 						element,
-						AccountDelegationsEntity,
+						AccountInfoEntity,
 					);
 					item.custom_info = {
 						chain_id: chainId,

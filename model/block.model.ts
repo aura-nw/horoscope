@@ -64,6 +64,8 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 			],
 		},
 	},
+	validator_name: String,
+	operator_address: String,
 	custom_info: customInfoModel,
 });
 

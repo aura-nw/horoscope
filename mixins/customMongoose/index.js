@@ -23,7 +23,7 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
     }
 
     lean(filters) {
-		return this.createCursor(filters).lean().maxTimeMS(1000*20);
+		return this.createCursor(filters).lean();
 	}
 }
 

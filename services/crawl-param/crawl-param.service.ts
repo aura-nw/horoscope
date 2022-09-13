@@ -151,6 +151,9 @@ export default class CrawlParamService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_PARAM, 10),
 				},

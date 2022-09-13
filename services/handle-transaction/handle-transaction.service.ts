@@ -8,7 +8,7 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
-import { ITransaction, TransactionEntity } from '../../entities';
+import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../entities';
 import { CONST_CHAR } from '../../common/constant';
 import {
 	IRedisStreamData,
@@ -16,7 +16,7 @@ import {
 	ListTxCreatedParams,
 	TransactionHashParam,
 } from '../../types';
-
+import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbTransactionMixin = dbTransactionMixin;
@@ -104,7 +104,9 @@ export default class HandleTransactionService extends Service {
 				let listMessageNeedAck: String[] = [];
 				try {
 					element.messages.forEach(async (item: IRedisStreamData) => {
-						this.logger.info(`Handling message ${item.id}`);
+						this.logger.info(
+							`Handling message ID: ${item.id}, txhash: ${item.message.source}`,
+						);
 						try {
 							const transaction: TransactionEntity =
 								new JsonConvert().deserializeObject(
@@ -171,10 +173,58 @@ export default class HandleTransactionService extends Service {
 			});
 			let listTransactionNeedSaveToDb: ITransaction[] = [];
 			listTransactionEntity.forEach((tx: ITransaction) => {
+				let indexes: any = {};
+				//@ts-ignore
+				indexes['timestamp'] = new Date(tx.tx_response.timestamp);
+				indexes['height'] = Number(tx.tx_response.height);
+				tx.tx_response.events.map((event: IEvent) => {
+					let type = event.type.toString();
+					type = type.replace(/\./g, '_');
+					let attributes = event.attributes;
+					attributes.map((attribute: IAttribute) => {
+						try {
+							let key = fromUtf8(fromBase64(attribute.key.toString()));
+							let value = attribute.value
+								? fromUtf8(fromBase64(attribute.value.toString()))
+								: '';
+							key = key.replace(/\./g, '_');
+							let array = indexes[`${type}_${key}`];
+							if (array && array.length > 0) {
+								let position = indexes[`${type}_${key}`].indexOf(value);
+								if (position == -1) {
+									indexes[`${type}_${key}`].push(value);
+								}
+							} else {
+								indexes[`${type}_${key}`] = [value];
+							}
+
+							let hashValue = this.redisClient
+								.hGet(`att-${type}`, key)
+								.then((value: any) => {
+									if (value) {
+										this.redisClient.hSet(
+											`att-${type}`,
+											key,
+											Number(value) + 1,
+										);
+									} else {
+										this.redisClient.hSet(`att-${type}`, key, 1);
+									}
+								});
+						} catch (error) {
+							this.logger.info(tx._id);
+							this.logger.error(error);
+						}
+					});
+				});
+
+				tx.indexes = indexes;
+
 				let hash = tx.tx_response.txhash;
 				let foundItem = listFoundTransaction.find((itemFound: ITransaction) => {
 					return itemFound.tx_response.txhash == hash;
 				});
+
 				if (!foundItem) {
 					listTransactionNeedSaveToDb.push(tx);
 				}
@@ -195,6 +245,9 @@ export default class HandleTransactionService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_TRANSACTION, 10),
 				},

@@ -114,7 +114,8 @@ const listLCD = LIST_NETWORK.map((e) => {
 					// 'v1.codeid.*',
 					// 'v1.transaction.getByChain',
 					'v1.test.*',
-					'v1.account-info.*',
+					'v1.account-info.getAccountInfo',
+					'v1.account-info.getAccountDelegationInfo',
 					'v1.account-unbonds.getByAddress',
 					'v1.proposal.getByChain',
 					'v1.validator.getByChain',
@@ -123,6 +124,7 @@ const listLCD = LIST_NETWORK.map((e) => {
 					'v1.asset.*',
 					'v1.codeid.*',
 					'v1.transaction.getByChain',
+					'v1.transaction.getPowerEvent',
 					'v1.param.getByChain',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares

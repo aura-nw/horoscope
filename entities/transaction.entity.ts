@@ -11,6 +11,7 @@ export interface ITransaction {
 	tx: ITxInput;
 	tx_response: ITxResponse;
 	custom_info: ICustomInfo;
+	indexes: Object;
 }
 
 export interface IPublicKey {
@@ -294,6 +295,7 @@ export class TransactionEntity implements ITransaction {
 	tx_response: TxResponse = {} as TxResponse;
 
 	custom_info: CustomInfo = {} as CustomInfo;
+	indexes: Object = {};
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

@@ -29,6 +29,9 @@ export const CONST_CHAR = {
 	CRAWL: 'crawl',
 	API: 'api',
 	RECIPIENT: 'recipient',
+	COIN_RECEIVED: 'coin_received',
+	WITHDRAW_REWARDS: 'withdraw_rewards',
+	AMOUNT: 'amount',
 };
 
 export const MSG_TYPE = {
@@ -147,6 +150,10 @@ export const BASE_64_ENCODE = {
 	BURN: 'YnVybg==',
 	_CONTRACT_ADDRESS: 'X2NvbnRyYWN0X2FkZHJlc3M=',
 	TOKEN_ID: 'dG9rZW5faWQ=',
+	VALIDATOR: 'dmFsaWRhdG9y',
+	AMOUNT: 'YW1vdW50',
+	SOURCE_VALIDATOR: 'c291cmNlX3ZhbGlkYXRvcg==',
+	DESTINATION_VALIDATOR: 'ZGVzdGluYXRpb25fdmFsaWRhdG9y',
 };
 
 export const SEARCH_TX_QUERY = {
@@ -191,3 +198,21 @@ export const SEARCH_TX_QUERY = {
 		key: 'token_id',
 	},
 };
+
+export enum VESTING_ACCOUNT_TYPE {
+	CONTINUOUS = 'cosmos-sdk/ContinuousVestingAccount',
+	PERIODIC = 'cosmos-sdk/PeriodicVestingAccount',
+	DELAYED = 'cosmos-sdk/DelayedVestingAccount'
+}
+
+export enum DELAY_JOB_TYPE {
+	REDELEGATE = 'redelegate',
+	UNBOND = 'unbond',
+	PERIODIC_VESTING = 'periodic_vesting',
+	DELAYED_VESTING = 'delayed_vesting',
+}
+
+export enum DELAY_JOB_STATUS {
+	PENDING = 'pending',
+	DONE = 'done',
+}

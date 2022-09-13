@@ -101,9 +101,20 @@ export default class CrawlProposalService extends Service {
 				try {
 					if (foundProposal) {
 						proposal._id = foundProposal._id;
+						if (foundProposal.proposal_id && !foundProposal.proposer_address) {
+							let proposer = await this.getProposerBySearchTx(
+								foundProposal.proposal_id,
+							);
+							if (proposer?.nameValidator) {
+								proposal.proposer_name = proposer.nameValidator;
+							}
+							if (proposer?.proposalAddress) {
+								proposal.proposer_address = proposer.proposalAddress;
+							}
+						}
 						listPromise.push(this.adapter.updateById(foundProposal._id, proposal));
 					} else {
-						const item: any = new JsonConvert().deserializeObject(
+						const item: ProposalEntity = new JsonConvert().deserializeObject(
 							proposal,
 							ProposalEntity,
 						);
@@ -133,6 +144,34 @@ export default class CrawlProposalService extends Service {
 		await Promise.all(listPromise);
 	}
 
+	async getProposerBySearchTx(proposalId: string) {
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+		const resultCallApi = await this.callApiFromDomain(
+			url,
+			`${Config.GET_TX_API_EVENTS}?events=submit_proposal.proposal_id=${proposalId}`,
+		);
+		try {
+			const proposerAddress = resultCallApi.txs[0].body.messages[0].proposer;
+			let result: any = await this.broker.call('v1.crawlValidator.find', {
+				query: {
+					'custom_info.chain_id': Config.CHAIN_ID,
+					account_address: proposerAddress,
+				},
+			});
+			if (result && result.length > 0) {
+				const nameValidator = result[0].description.moniker;
+				return { proposalAddress: proposerAddress, nameValidator: nameValidator };
+			} else {
+				return {
+					proposalAddress: proposerAddress,
+				};
+			}
+		} catch (error) {
+			this.logger.error(error);
+		}
+		return null;
+	}
+
 	async _start() {
 		this.createJob(
 			'crawl.proposal',
@@ -141,6 +180,9 @@ export default class CrawlProposalService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_PROPOSAL, 10),
 				},
