@@ -727,10 +727,145 @@ export default class BlockService extends MoleculerDBService<
 	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
-	 *          description: OK
+	 *          description: Asset 
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      assets:
+	 *                        type: array
+	 *                        items:
+	 *                          type: object
+	 *                          properties:
+	 *                            asset_info:
+	 *                              type: object
+	 *                              properties:
+	 *                                data:
+	 *                                  type: object
+	 *                                  properties:
+	 *                                    access:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        approvals:
+	 *                                          type: array
+	 *                                          items:
+	 *                                            type: object
+	 *                                        owner:
+	 *                                          type: string
+	 *                                          example: 'aura123'
+	 *                                    info:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        token_uri:
+	 *                                          type: string
+	 *                                        extension:
+	 *                                          type: string
+	 *                            custom_info:
+	 *                              type: object
+	 *                              properties:
+	 *                                chain_id:
+	 *                                  type: string
+	 *                                  example: 'aura'
+	 *                                chain_name:
+	 *                                  type: string
+	 *                                  example: 'Aura network'
+	 *                            history:
+	 *                              type: array
+	 *                              items:
+	 *                                type: object
+	 *                            asset_id:
+	 *                              type: string
+	 *                            code_id:
+	 *                              type: string
+	 *                            contract_address:
+	 *                              type: string
+	 *                            token_id:
+	 *                              type: string
+	 *                            owner:
+	 *                              type: string
+	 *                            is_burned:
+	 *                              type: boolean
+	 *                            createdAt:
+	 *                              type: string
+	 *                              example: "2022-08-17T06:20:19.342Z"
+	 *                            updatedAt:
+	 *                              type: string
+	 *                              example: "2022-08-17T06:20:19.342Z"
+	 *                            media_info:
+	 *                              type: array
+	 *                              items:
+	 *                                type: object
+	 *                                properties:
+	 *                                  key:
+	 *                                    type: string
+	 *                                  media_link:
+	 *                                    type: string
+	 *                                    example: "s3://aws.aura.network"
+	 *                                  status:
+	 *                                    type: string
+	 *                                    example: "COMPLETED"
+	 *                                  createdAt:
+	 *                                    type: string
+	 *                                    example: "2022-08-17T06:20:19.342Z"
+	 *                                  updatedAt:
+	 *                                    type: string
+	 *                                    example: "2022-08-17T06:20:19.342Z"
+	 *                            
+	 *                      count:
+	 *                        type: number
+	 *                        example: 0
+	 *                      nextKey:
+	 *                        type: string
+	 *                        example: 'xxxxxxxxxxxx'
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.account-info"
 	 */
 	@Get('/getByContractType', {
 		name: 'getByContractType',

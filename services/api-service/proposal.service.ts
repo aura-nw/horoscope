@@ -84,7 +84,7 @@ export default class ProposalService extends MoleculerDBService<
 	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
-	 *          description: Result list proposal
+	 *          description: List proposal
 	 *          content:
 	 *            application/json:
 	 *              schema:

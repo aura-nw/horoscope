@@ -40,8 +40,8 @@ export default class BlockService extends MoleculerDBService<
 	 *    get:
 	 *      tags:
 	 *        - CodeId
-	 *      summary: Check status of code_id
-	 *      description: Check status of code_id
+	 *      summary: Check status asset by code_id after register
+	 *      description: Check status asset by code_id after register
 	 *      parameters:
 	 *        - in: path
 	 *          name: chainId
@@ -58,7 +58,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          description: "Code Id of stored contract need to query"
 	 *      responses:
 	 *        '200':
-	 *          description: Account information
+	 *          description: CodeId information
 	 *          content:
 	 *            application/json:
 	 *              schema:
