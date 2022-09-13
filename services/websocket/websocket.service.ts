@@ -8,7 +8,7 @@ import SocketIOMixin from 'moleculer-io';
 import ApiGatewayService from 'moleculer-web';
 import { Config } from '../../common';
 import { Job } from 'bull';
-import { ListTxCreatedParams, TransactionArrayParam } from 'types';
+import { ListTxInBlockParams, TransactionArrayParam } from 'types';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from 'redis';
 import { ITransaction } from 'entities';
@@ -20,12 +20,9 @@ const QueueService = require('moleculer-bull');
  * @typedef {import('http').ServerResponse} ServerResponse HTTP Server Response
  */
 
-const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
-const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
-const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
+const SORTEDSET = Config.WEBOSCKET_SORTEDSET;
 
 export default class WebsocketService extends Service {
-
 	private redisMixin = new RedisMixin().start();
 
 	public constructor(public broker: ServiceBroker) {
@@ -46,9 +43,10 @@ export default class WebsocketService extends Service {
 			],
 			queues: {
 				'websocket.tx-handle': {
+					concurrency: parseInt(Config.CONCURRENCY_HANDLE_TX_WEBSOCKET, 10),
 					process(job: Job) {
 						// @ts-ignore
-						this.handleNewBlock(job.data.listTx, job.data.chainId);
+						this.handleNewBlock(job.data.listTx);
 
 						return true;
 					},
@@ -61,7 +59,6 @@ export default class WebsocketService extends Service {
 							'websocket.tx-handle',
 							{
 								listTx: ctx.params.listTx,
-								chainId: ctx.params.chainId,
 							},
 							{
 								removeOnComplete: true,
@@ -78,9 +75,9 @@ export default class WebsocketService extends Service {
 					namespaces: {
 						'/register': {
 							events: {
-								'call': {
-									whitelist: ['v1.io.client-register'],
-								}
+								call: {
+									whitelist: ['v1.io.client-register', 'v1.io.broadcast'],
+								},
 							},
 						},
 					},
@@ -88,33 +85,60 @@ export default class WebsocketService extends Service {
 			},
 			actions: {
 				'client-register': {
-					async handler(ctx: Context<TransactionArrayParam>) {	
+					async handler(ctx: Context<TransactionArrayParam>) {
 						// @ts-ignore
 						await this.clientRegister(ctx);
 					},
 				},
-			}
+				'broadcast': {
+					async handler(ctx: Context<ListTxInBlockParams>) {
+						await ctx.broadcast("listTx", ctx.params.listTx);
+					},
+				},
+			},
 		});
 	}
 	//@ts-ignore
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	async clientRegister(ctx: Context<TransactionArrayParam>) {
 		let redisClient: RedisClientType = await this.getRedisClient();
-		let result = await redisClient.SADD("hash", ctx.params.txHashArr);
-		this.logger.info(result);
+		await redisClient.SADD(
+			SORTEDSET,
+			ctx.params.txHashArr,
+		);
 	}
 
-	async txFilter(ctx: Context<ListTxCreatedParams>) { }
-
-	async handleNewBlock(listTx: ITransaction[], chainId: string): Promise<any[]> {
+	async handleNewBlock(listTx: ITransaction[]): Promise<any[]> {
 		try {
 			let redisClient: RedisClientType = await this.getRedisClient();
-			this.logger.info('listTx', listTx);
-			let blockTxHash = listTx[0].tx_response.txhash;
-			let txHashChecked = await redisClient.SISMEMBER('myhash', blockTxHash.toString());
 
-			this.logger.info('Check', txHashChecked);
+			//Get all member of set Transactions
+			let syncTx = await redisClient.SMEMBERS(SORTEDSET);
 
+			//Get all tx of a block
+			let listInsideTx: string[] = [];
+			listTx.forEach(x => {
+				listInsideTx.push(x.tx_response.txhash.toString());
+			});
+
+			let sameTx: any[] = [];
+
+			syncTx.forEach(tx => {
+				if (listInsideTx.indexOf(tx) > 0) {
+					sameTx.push(tx);
+				}
+			});
+
+			//Broadcast message to websocket channel using broker call io service what is defined in constructor
+			if (sameTx.length > 0) {
+				await this.broker?.call('v1.io.broadcast', {
+					namespace: '/register',
+					event: 'hello',
+					args: [sameTx]
+				});
+			}
+
+			return [];
 		} catch (error) {
 			this.logger.error(error);
 		}
