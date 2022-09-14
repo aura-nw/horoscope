@@ -1,10 +1,7 @@
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { dbVoteMixin } from '@Mixins/dbMixinMongoose/db-vote.mixin';
-import CallApiMixin from '@Mixins/callApi/call-api.mixin';
 
 export default class VoteHandlerService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -19,7 +16,25 @@ export default class VoteHandlerService extends Service {
 							`ctx.params proposal-vote-manager insert ${JSON.stringify(ctx.params)}`,
 						);
 						// @ts-ignore
-						return await this.adapter.insert(ctx.params);
+						const result = await this.adapter.insert(ctx.params);
+						return result;
+					},
+				},
+				'act-find-smallest-id': {
+					async handler(ctx: Context): Promise<string> {
+						// @ts-ignore
+						this.logger.debug(
+							`ctx.params proposal-vote-manager find smallest id ${JSON.stringify(
+								ctx.params,
+							)}`,
+						);
+
+						// @ts-ignore
+						const smallestVote = await this.adapter.findOne(undefined, undefined, {
+							sort: '_id',
+						});
+
+						return smallestVote?._id.toString();
 					},
 				},
 			},

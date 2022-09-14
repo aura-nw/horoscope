@@ -4,10 +4,14 @@ import { Job } from 'bull';
 const QueueService = require('moleculer-bull');
 import { Config } from 'common';
 import { VOTE_MANAGER_ACTION } from 'common/constant';
+import { ITransaction } from 'entities';
 import { VoteEntity } from 'entities/vote.entity';
 import { JsonConvert } from 'json2typescript';
-import { Service, ServiceBroker } from 'moleculer';
+import { Context, Service, ServiceBroker } from 'moleculer';
 
+interface TakeVoteRequest {
+	listTx: ITransaction[];
+}
 export default class VoteHandlerService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 
@@ -51,6 +55,15 @@ export default class VoteHandlerService extends Service {
 								removeOnComplete: true,
 							},
 						);
+						return;
+					},
+				},
+			},
+			actions: {
+				'act-take-vote': {
+					async handler(ctx: Context<TakeVoteRequest>): Promise<any> {
+						const { listTx } = ctx.params;
+						await this.handleJob(listTx);
 						return;
 					},
 				},
