@@ -2,7 +2,7 @@ import { Config } from '../../common';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
 import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
-import { ListTxCreatedParams } from 'types';
+import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
 import { AccountInfoEntity, ITransaction } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
@@ -190,6 +190,10 @@ export default class HandleAddressService extends Service {
 			listUpdateInfo.map((item) => {
 				this.broker.emit(item, { listAddresses, chainId });
 			});
+			this.broker.emit('account-info.upsert-claimed-rewards', {
+				listTx,
+				chainId,
+			} as CrawlAccountClaimedRewardsParams);
 		}
 	}
 

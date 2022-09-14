@@ -9,6 +9,11 @@ export interface ListTxCreatedParams {
 	chainId: string;
 }
 
+export interface CrawlAccountClaimedRewardsParams {
+	listTx: ITransaction[];
+	chainId: string;
+}
+
 export interface ListBlockCreatedParams {
 	listBlock: IBlock[];
 	chainId: string;
