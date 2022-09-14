@@ -272,6 +272,13 @@ export default class BlockService extends MoleculerDBService<
 	 *            type: string
 	 *          description: "Contract address need to query"
 	 *        - in: query
+	 *          name: isBurned
+	 *          required: false
+	 *          schema:
+	 *            type: boolean
+	 *            default: 'false'
+	 *          description: "get token which is burned"
+	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
 	 *          schema:
@@ -521,6 +528,12 @@ export default class BlockService extends MoleculerDBService<
 				enum: Object.values(CONTRACT_TYPE),
 				default: 'CW20',
 			},
+			isBurned: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
 			countTotal: {
 				type: 'boolean',
 				optional: true,
@@ -581,6 +594,9 @@ export default class BlockService extends MoleculerDBService<
 			if (ctx.params.contractAddress) {
 				query['contract_address'] = ctx.params.contractAddress;
 			}
+			if (ctx.params.isBurned) {
+				query['is_burned'] = ctx.params.isBurned;
+			}
 			if (ctx.params.tokenName) {
 				query['$or'] = [
 					{
@@ -632,7 +648,7 @@ export default class BlockService extends MoleculerDBService<
 					asset.pop();
 				}
 			}
-			this.logger.info(`asset: ${JSON.stringify(asset)}`);
+			this.logger.debug(`asset: ${JSON.stringify(asset)}`);
 			let count = 0;
 			if (ctx.params.countTotal === true) {
 				count = await this.broker.call(`v1.${contract_type}-asset-manager.act-count`, {
