@@ -567,6 +567,7 @@ export default class BlockService extends MoleculerDBService<
 		const queryParam = ctx.params.query;
 		const addressInContract = ctx.params.addressInContract;
 		let findOne = false;
+		let projection: any = { indexes: 0, custom_info: 0 };
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
 		// ctx.params.countTotal = false;
@@ -589,15 +590,15 @@ export default class BlockService extends MoleculerDBService<
 		}
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
+		} else {
+			projection['tx.body.messages'] = { $slice: 3 };
+			projection['tx_response.tx.body.messages'] = { $slice: 3 };
+			projection['tx_response.events'] = { $slice: 3 };
+			projection['tx_response.logs'] = 0;
+			projection['tx_response.data'] = 0;
+			projection['tx_response.raw_log'] = 0;
 		}
 
-		// if (searchType) {
-		// 	query['tx_response.events.type'] = searchType;
-		// }
-		// if (searchKey && searchValue) {
-		// 	query['tx_response.events.attributes.key'] = toBase64(toUtf8(searchKey));
-		// 	query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
-		// }
 		let listQueryAnd: any[] = [];
 		let listQueryOr: any[] = [];
 
@@ -610,30 +611,11 @@ export default class BlockService extends MoleculerDBService<
 
 		if (queryParam) {
 			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
-			// this.logger.info('queryParam: ', JSON.stringify(queryParamFormat));
 			let queryAnd: any[] = [];
 			queryParamFormat.forEach((e: any) => {
 				let tempQuery = {
 					[`indexes.${e.type}_${e.key}`]: { $exists: true, $eq: e.value },
 				};
-				// let tempQuery = {
-				// 	'tx_response.events.type': e.type,
-				// 	'tx_response.events.attributes.key': toBase64(toUtf8(e.key)),
-				// 	'tx_response.events.attributes.value': toBase64(toUtf8(e.value)),
-				// };
-				// let tempQuery = {
-				// 	'tx_response.events': {
-				// 		$elemMatch: {
-				// 			type: e.type,
-				// 			attributes: {
-				// 				$elemMatch: {
-				// 					key: toBase64(toUtf8(e.key)),
-				// 					value: toBase64(toUtf8(e.value)),
-				// 				},
-				// 			},
-				// 		},
-				// 	},
-				// };
 				queryAnd.push(tempQuery);
 			});
 			listQueryAnd.push(...queryAnd);
@@ -643,54 +625,12 @@ export default class BlockService extends MoleculerDBService<
 				{ 'indexes.transfer_recipient': { $exists: true, $eq: address } },
 				{ 'indexes.transfer_sender': { $exists: true, $eq: address } },
 			);
-			// listQueryAnd.push(
-			// 	{ 'tx_response.events.type': 'transfer' },
-			// 	{
-			// 		$or: [
-			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
-			// 		],
-			// 	},
-			// 	{
-			// 		'tx_response.events.attributes.value': toBase64(toUtf8(address)),
-			// 	},
-			// );
-			// listQueryAnd.push({
-			// 	$or: [
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'transfer',
-			// 					attributes: {
-			// 						$elemMatch: {
-			// 							key: BASE_64_ENCODE.RECIPIENT,
-			// 							value: toBase64(toUtf8(address)),
-			// 						},
-			// 					},
-			// 				},
-			// 			},
-			// 		},
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'transfer',
-			// 					attributes: {
-			// 						$elemMatch: {
-			// 							key: BASE_64_ENCODE.SENDER,
-			// 							value: toBase64(toUtf8(address)),
-			// 						},
-			// 					},
-			// 				},
-			// 			},
-			// 		},
-			// 	],
-			// });
 		}
 		if (addressInContract) {
 			listQueryOr.push(
 				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
 				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
-				// { 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
+				{ 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
 			);
 		}
 		if (listQueryAnd.length > 0) {
@@ -702,10 +642,10 @@ export default class BlockService extends MoleculerDBService<
 		}
 		this.logger.info('query: ', JSON.stringify(query));
 		let listPromise = [];
-
 		listPromise.push(
 			this.adapter.lean({
 				query: query,
+				projection: projection,
 				// @ts-ignore
 				sort: sort,
 				limit: ctx.params.pageLimit + 1,
@@ -802,10 +742,10 @@ export default class BlockService extends MoleculerDBService<
 
 			let nextKey = null;
 			if (result.length > 0) {
-				await result.forEach((tx: any) => {
-					delete tx['custom_info'];
-					delete tx['indexes'];
-				});
+				// await result.forEach((tx: any) => {
+				// 	delete tx['custom_info'];
+				// 	delete tx['indexes'];
+				// });
 				if (result.length == 1) {
 					nextKey = result[result.length - 1]?._id;
 				} else {
@@ -1284,47 +1224,9 @@ export default class BlockService extends MoleculerDBService<
 
 		let listQueryAnd: any[] = [];
 		let listQueryOr: any[] = [];
+		let projection: any = { indexes: 0, custom_info: 0 };
+
 		if (address) {
-			// listQueryAnd.push({
-			// 	$or: [
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'delegate',
-			// 					'attributes.key': BASE_64_ENCODE.VALIDATOR,
-			// 					'attributes.value': toBase64(toUtf8(address)),
-			// 				},
-			// 			},
-			// 		},
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'redelegate',
-			// 					'attributes.key': BASE_64_ENCODE.SOURCE_VALIDATOR,
-			// 					'attributes.value': toBase64(toUtf8(address)),
-			// 				},
-			// 			},
-			// 		},
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'redelegate',
-			// 					'attributes.key': BASE_64_ENCODE.DESTINATION_VALIDATOR,
-			// 					'attributes.value': toBase64(toUtf8(address)),
-			// 				},
-			// 			},
-			// 		},
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'unbond',
-			// 					'attributes.key': BASE_64_ENCODE.VALIDATOR,
-			// 					'attributes.value': toBase64(toUtf8(address)),
-			// 				},
-			// 			},
-			// 		},
-			// 	],
-			// });
 			listQueryOr.push(
 				{ 'indexes.delegate_validator': { $exists: true, $eq: address } },
 				{ 'indexes.redelegate_source_validator': { $exists: true, $eq: address } },
@@ -1346,6 +1248,7 @@ export default class BlockService extends MoleculerDBService<
 		listPromise.push(
 			this.adapter.lean({
 				query: query,
+				projection: projection,
 				// @ts-ignore
 				sort: sort,
 				limit: ctx.params.pageLimit + 1,
@@ -1369,10 +1272,10 @@ export default class BlockService extends MoleculerDBService<
 
 			let nextKey = null;
 			if (result.length > 0) {
-				await result.forEach((tx: any) => {
-					delete tx['custom_info'];
-					delete tx['indexes'];
-				});
+				// await result.forEach((tx: any) => {
+				// 	delete tx['custom_info'];
+				// 	delete tx['indexes'];
+				// });
 
 				if (result.length == 1) {
 					nextKey = result[result.length - 1]?._id;
