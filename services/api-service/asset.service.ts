@@ -594,9 +594,7 @@ export default class BlockService extends MoleculerDBService<
 			if (ctx.params.contractAddress) {
 				query['contract_address'] = ctx.params.contractAddress;
 			}
-			if (ctx.params.isBurned) {
-				query['is_burned'] = ctx.params.isBurned;
-			}
+			query['is_burned'] = ctx.params.isBurned;
 			if (ctx.params.tokenName) {
 				query['$or'] = [
 					{
