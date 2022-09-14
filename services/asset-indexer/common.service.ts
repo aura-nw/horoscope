@@ -18,6 +18,7 @@ const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
 const BUCKET = Config.BUCKET;
 const FILE_TYPE_VALID = Config.FILE_TYPE_VALID;
+const REQUEST_IPFS_TIMEOUT = Config.REQUEST_IPFS_TIMEOUT;
 const callApiMixin = new CallApiMixin().start();
 const s3Client = new S3Service().connectS3();
 const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
@@ -195,7 +196,7 @@ export class Common {
 				json: true,
 				transform: _include_headers,
 				resolveWithFullResponse: true,
-				timeout: 100000,
+				timeout: REQUEST_IPFS_TIMEOUT,
 			};
 			const rs = new Promise(async (resolve, reject) => {
 				request(options)
