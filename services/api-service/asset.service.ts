@@ -276,7 +276,6 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: false
 	 *          schema:
 	 *            type: boolean
-	 *            default: 'false'
 	 *          description: "get token which is burned"
 	 *        - in: query
 	 *          name: countTotal
@@ -531,7 +530,6 @@ export default class BlockService extends MoleculerDBService<
 			isBurned: {
 				type: 'boolean',
 				optional: true,
-				default: false,
 				convert: true,
 			},
 			countTotal: {
@@ -594,7 +592,9 @@ export default class BlockService extends MoleculerDBService<
 			if (ctx.params.contractAddress) {
 				query['contract_address'] = ctx.params.contractAddress;
 			}
-			query['is_burned'] = ctx.params.isBurned;
+			if (ctx.params.isBurned != null) {
+				query['is_burned'] = ctx.params.isBurned;
+			}
 			if (ctx.params.tokenName) {
 				query['$or'] = [
 					{

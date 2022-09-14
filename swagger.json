@@ -1005,8 +1005,7 @@
                         "name": "isBurned",
                         "required": false,
                         "schema": {
-                            "type": "boolean",
-                            "default": "false"
+                            "type": "boolean"
                         },
                         "description": "get token which is burned"
                     },
