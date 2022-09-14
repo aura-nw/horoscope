@@ -105,25 +105,42 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 
 
 		} catch (err: any) {
-			this.logger.error("error", uri, key, err, "errorCode:", err.error?.code);
-			this.logger.error("StatusCodeError", err.StatusCodeError);
-			this.logger.error("statusCode", err.statusCode);
-			this.logger.error("error string", JSON.stringify(err.error));
-			switch (err.error?.code) {
-				case "ETIMEDOUT":
-					await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
-						key,
-						media_link: "",
-						status: MediaStatus.PENDING
-					}, OPTs);
-					break;
-				default:
-					await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
-						key,
-						media_link: "",
-						status: MediaStatus.ERROR
-					}, OPTs);
-					break;
+			this.logger.error("error", uri, key, err);
+			if (err.error?.code) {
+				switch (err.error?.code) {
+					case "ETIMEDOUT":
+						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
+							key,
+							media_link: "",
+							status: MediaStatus.PENDING
+						}, OPTs);
+						break;
+					default:
+						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
+							key,
+							media_link: "",
+							status: MediaStatus.ERROR
+						}, OPTs);
+						break;
+				}
+			}
+			if (err.statusCode) {
+				switch (err.statusCode) {
+					case "504":
+						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
+							key,
+							media_link: "",
+							status: MediaStatus.PENDING
+						}, OPTs);
+						break;
+					default:
+						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
+							key,
+							media_link: "",
+							status: MediaStatus.ERROR
+						}, OPTs);
+						break;
+				}
 			}
 		}
 	};
