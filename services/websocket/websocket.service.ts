@@ -102,6 +102,9 @@ export default class WebsocketService extends Service {
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	async clientRegister(ctx: Context<TransactionArrayParam>) {
 		let redisClient: RedisClientType = await this.getRedisClient();
+
+		this.logger.info('Tx need to crawl' + ctx.params.txHashArr);
+
 		await redisClient.SADD(
 			SORTEDSET,
 			ctx.params.txHashArr,
@@ -114,6 +117,8 @@ export default class WebsocketService extends Service {
 
 			//Get all member of set Transactions
 			let syncTx = await redisClient.SMEMBERS(SORTEDSET);
+
+			this.logger.info('ListTx ' + syncTx);
 
 			//Get all tx of a block
 			let listInsideTx: string[] = [];
