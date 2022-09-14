@@ -1002,6 +1002,16 @@
                     },
                     {
                         "in": "query",
+                        "name": "isBurned",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": "false"
+                        },
+                        "description": "get token which is burned"
+                    },
+                    {
+                        "in": "query",
                         "name": "countTotal",
                         "required": false,
                         "schema": {
