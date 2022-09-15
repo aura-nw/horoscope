@@ -188,12 +188,13 @@ export default class HandleAddressService extends Service {
 				this.logger.error(error);
 			}
 			listUpdateInfo.map((item) => {
-				this.broker.emit(item, { listUniqueAddresses, chainId });
+				this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });
 			});
-			this.broker.emit('account-info.upsert-claimed-rewards', {
-				listTx,
-				chainId,
-			} as CrawlAccountClaimedRewardsParams);
+			if (source !== CONST_CHAR.API)
+				this.broker.emit('account-info.upsert-claimed-rewards', {
+					listTx,
+					chainId,
+				} as CrawlAccountClaimedRewardsParams);
 		}
 	}
 
