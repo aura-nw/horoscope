@@ -62,10 +62,86 @@ export default class AccountUnbondsService extends MoleculerDBService<
 	 *          description: "Address need to query"
 	 *      responses:
 	 *        '200':
-	 *          description: OK
+	 *          description: Account information
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      account_unbonding:
+	 *                        type: object
+	 *                        properties:
+	 *                          delegator_address:
+	 *                            type: string
+	 *                            example: 'aura123123123123'
+	 *                          validator_address:
+	 *                            type: string
+	 *                            example: 'auravaloper123123123'
+	 *                          entries:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                creation_height:
+	 *                                  type: string
+	 *                                  example: '100000'
+	 *                                completion_time:
+	 *                                  type: string
+	 *                                  example: '2022-09-13T09:23:12.018Z'
+	 *                                initial_balance:
+	 *                                  type: string
+	 *                                  example: '100000000'
+	 *                                balance:
+	 *                                  type: string
+	 *                                  example: '100000000'
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.account-info"
 	 */
 	@Get('/', {
 		name: 'getByAddress',
@@ -81,19 +157,19 @@ export default class AccountUnbondsService extends MoleculerDBService<
 		},
 	})
 	async getByAddress(ctx: Context<GetAccountUnbondRequest, Record<string, unknown>>) {
-        this.mongoDBClient = await this.connectToDB();
-        const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-        let accountInfoCollection = await db.collection("account_info");
+		this.mongoDBClient = await this.connectToDB();
+		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
+		let accountInfoCollection = await db.collection('account_info');
 
 		let data = await accountInfoCollection.findOne(
-            {
-                address: ctx.params.address,
-                'custom_info.chain_id': ctx.params.chainid,
-            },
-            {
-                projection: { address: 1, account_unbonding: 1, custom_info: 1 }
-            }
-        );
+			{
+				address: ctx.params.address,
+				'custom_info.chain_id': ctx.params.chainid,
+			},
+			{
+				projection: { address: 1, account_unbonding: 1, custom_info: 1 },
+			},
+		);
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,

@@ -80,7 +80,7 @@ export default class CrawlAssetService extends moleculer.Service {
 
 	async getMediaLink(uri: string, file_name: string, key: string) {
 
-		this.logger.debug("getMediaLink", uri, file_name, key);
+		this.logger.info("getMediaLink", uri, file_name, key);
 		let query: QueryOptions = { key };
 		const media: any[] = await this.broker.call(CW721_MEDIA_MANAGER_ACTION.FIND, { query }, OPTs);
 		this.logger.debug("media", media);

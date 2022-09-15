@@ -48,62 +48,6 @@
         }
     ],
     "paths": {
-        "/v1/validator/delegator-reward-claimed": {
-            "get": {
-                "tags": [
-                    "Validator"
-                ],
-                "summary": "Get total claimed reward by delegator",
-                "description": "Get total claimed reward by delegator",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "chainid",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
-                                "euphoria-1",
-                                "cosmoshub-4"
-                            ]
-                        },
-                        "description": "Chain Id of network need to query"
-                    },
-                    {
-                        "in": "query",
-                        "name": "delegatorAddress",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "delegator address"
-                    },
-                    {
-                        "in": "query",
-                        "name": "validatorAddress",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "validator address (valoper)"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "422": {
-                        "description": "Missing parameters"
-                    }
-                }
-            }
-        },
         "/v1/account-info": {
             "get": {
                 "tags": [
@@ -143,10 +87,338 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Register result"
+                        "description": "Account information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "account_auth": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "result": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "type": {
+                                                                    "type": "string",
+                                                                    "example": "cosmos-sdk/BaseAccount"
+                                                                },
+                                                                "value": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "address": {
+                                                                            "type": "string",
+                                                                            "example": "aura123123123123123123"
+                                                                        },
+                                                                        "public_key": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "type": {
+                                                                                    "type": "string",
+                                                                                    "example": "tendermint/PubKeySecp256k1"
+                                                                                },
+                                                                                "value": {
+                                                                                    "type": "string",
+                                                                                    "example": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "account_number": {
+                                                                            "type": "string",
+                                                                            "example": "10"
+                                                                        },
+                                                                        "sequence": {
+                                                                            "type": "string",
+                                                                            "example": "10"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "height": {
+                                                            "type": "string",
+                                                            "example": "100"
+                                                        }
+                                                    }
+                                                },
+                                                "address": {
+                                                    "type": "string",
+                                                    "example": "aura123123123123123123123"
+                                                },
+                                                "account_balances": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "denom": {
+                                                                "type": "string",
+                                                                "example": "aura"
+                                                            },
+                                                            "amount": {
+                                                                "type": "string",
+                                                                "example": "10000000"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "account_delegations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "delegations": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "delegator_address": {
+                                                                        "type": "string",
+                                                                        "example": "aura123123123123123123"
+                                                                    },
+                                                                    "validator_address": {
+                                                                        "type": "string",
+                                                                        "example": "auravaloper123123123123"
+                                                                    },
+                                                                    "shares": {
+                                                                        "type": "string",
+                                                                        "example": "100000"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "balance": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "denom": {
+                                                                        "type": "string",
+                                                                        "example": "uaura"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "string",
+                                                                        "example": "1000000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "account_redelegations": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "redelegation": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "delegator_address": {
+                                                                    "type": "string",
+                                                                    "example": "aura123123123123123123123"
+                                                                },
+                                                                "validator_src_address": {
+                                                                    "type": "string",
+                                                                    "example": "auravaloper123123123123123"
+                                                                },
+                                                                "validator_dst_address": {
+                                                                    "type": "string",
+                                                                    "example": "auravaloper123123123123123"
+                                                                }
+                                                            }
+                                                        },
+                                                        "entries": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "redelegation_entry": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "creation_height": {
+                                                                                "type": "string",
+                                                                                "example": "100000"
+                                                                            },
+                                                                            "completion_time": {
+                                                                                "type": "string",
+                                                                                "example": "2022-09-13T09:23:48.195Z"
+                                                                            },
+                                                                            "initial_balance": {
+                                                                                "type": "string",
+                                                                                "example": "1000000"
+                                                                            },
+                                                                            "shares_dst": {
+                                                                                "type": "string",
+                                                                                "example": "1000000"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "balance": {
+                                                                        "type": "string",
+                                                                        "example": "1000000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "account_spendable_balances": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "redelegation": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "denom": {
+                                                                    "type": "string",
+                                                                    "example": "uaura"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "string",
+                                                                    "example": "10000000000"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "account_unbonding": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "delegator_address": {
+                                                            "type": "string",
+                                                            "example": "aura123123123123"
+                                                        },
+                                                        "validator_address": {
+                                                            "type": "string",
+                                                            "example": "auravaloper123123123"
+                                                        },
+                                                        "entries": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "creation_height": {
+                                                                        "type": "string",
+                                                                        "example": "100000"
+                                                                    },
+                                                                    "completion_time": {
+                                                                        "type": "string",
+                                                                        "example": "2022-09-13T09:23:12.018Z"
+                                                                    },
+                                                                    "initial_balance": {
+                                                                        "type": "string",
+                                                                        "example": "100000000"
+                                                                    },
+                                                                    "balance": {
+                                                                        "type": "string",
+                                                                        "example": "100000000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "account_delegate_rewards": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "rewards": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "denom": {
+                                                                        "type": "string",
+                                                                        "example": "uaura"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "string",
+                                                                        "example": "100000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "total": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "denom": {
+                                                                        "type": "string",
+                                                                        "example": "uaura"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "string",
+                                                                        "example": "100000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.block.chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -190,10 +462,180 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "Account information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "address": {
+                                                    "type": "string",
+                                                    "example": "aura123123123123123123123"
+                                                },
+                                                "account_balances": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "denom": {
+                                                                "type": "string",
+                                                                "example": "aura"
+                                                            },
+                                                            "amount": {
+                                                                "type": "string",
+                                                                "example": "10000000"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "account_delegations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "delegations": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "delegator_address": {
+                                                                        "type": "string",
+                                                                        "example": "aura123123123123123123"
+                                                                    },
+                                                                    "validator_address": {
+                                                                        "type": "string",
+                                                                        "example": "auravaloper123123123123"
+                                                                    },
+                                                                    "shares": {
+                                                                        "type": "string",
+                                                                        "example": "100000"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "balance": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "denom": {
+                                                                        "type": "string",
+                                                                        "example": "uaura"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "string",
+                                                                        "example": "1000000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "account_delegate_rewards": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "rewards": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "denom": {
+                                                                        "type": "string",
+                                                                        "example": "uaura"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "string",
+                                                                        "example": "100000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "total": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "denom": {
+                                                                        "type": "string",
+                                                                        "example": "uaura"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "string",
+                                                                        "example": "100000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.block.chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -237,10 +679,122 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "Account information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "account_unbonding": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "delegator_address": {
+                                                            "type": "string",
+                                                            "example": "aura123123123123"
+                                                        },
+                                                        "validator_address": {
+                                                            "type": "string",
+                                                            "example": "auravaloper123123123"
+                                                        },
+                                                        "entries": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "creation_height": {
+                                                                        "type": "string",
+                                                                        "example": "100000"
+                                                                    },
+                                                                    "completion_time": {
+                                                                        "type": "string",
+                                                                        "example": "2022-09-13T09:23:12.018Z"
+                                                                    },
+                                                                    "initial_balance": {
+                                                                        "type": "string",
+                                                                        "example": "100000000"
+                                                                    },
+                                                                    "balance": {
+                                                                        "type": "string",
+                                                                        "example": "100000000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.account-info"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -445,6 +999,15 @@
                             "type": "string"
                         },
                         "description": "Contract address need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "isBurned",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "description": "get token which is burned"
                     },
                     {
                         "in": "query",
@@ -870,10 +1433,209 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "Asset",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "assets": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "asset_info": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "data": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "access": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "approvals": {
+                                                                                        "type": "array",
+                                                                                        "items": {
+                                                                                            "type": "object"
+                                                                                        }
+                                                                                    },
+                                                                                    "owner": {
+                                                                                        "type": "string",
+                                                                                        "example": "aura123"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "info": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "token_uri": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "extension": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "custom_info": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "chain_id": {
+                                                                        "type": "string",
+                                                                        "example": "aura"
+                                                                    },
+                                                                    "chain_name": {
+                                                                        "type": "string",
+                                                                        "example": "Aura network"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "history": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "asset_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "code_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "contract_address": {
+                                                                "type": "string"
+                                                            },
+                                                            "token_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "owner": {
+                                                                "type": "string"
+                                                            },
+                                                            "is_burned": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "createdAt": {
+                                                                "type": "string",
+                                                                "example": "2022-08-17T06:20:19.342Z"
+                                                            },
+                                                            "updatedAt": {
+                                                                "type": "string",
+                                                                "example": "2022-08-17T06:20:19.342Z"
+                                                            },
+                                                            "media_info": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "key": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "media_link": {
+                                                                            "type": "string",
+                                                                            "example": "s3://aws.aura.network"
+                                                                        },
+                                                                        "status": {
+                                                                            "type": "string",
+                                                                            "example": "COMPLETED"
+                                                                        },
+                                                                        "createdAt": {
+                                                                            "type": "string",
+                                                                            "example": "2022-08-17T06:20:19.342Z"
+                                                                        },
+                                                                        "updatedAt": {
+                                                                            "type": "string",
+                                                                            "example": "2022-08-17T06:20:19.342Z"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "count": {
+                                                    "type": "number",
+                                                    "example": 0
+                                                },
+                                                "nextKey": {
+                                                    "type": "string",
+                                                    "example": "xxxxxxxxxxxx"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.account-info"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1463,8 +2225,8 @@
                 "tags": [
                     "CodeId"
                 ],
-                "summary": "Check status of code_id",
-                "description": "Check status of code_id",
+                "summary": "Check status asset by code_id after register",
+                "description": "Check status asset by code_id after register",
                 "parameters": [
                     {
                         "in": "path",
@@ -1497,10 +2259,89 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "CodeId information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "REJECTED"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.block.chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1510,8 +2351,8 @@
                 "tags": [
                     "Network"
                 ],
-                "summary": "Get status network",
-                "description": "Get status network",
+                "summary": "Get status network (inflation, pool, community pool, supply)",
+                "description": "Get status network (inflation, pool, community pool, supply)",
                 "parameters": [
                     {
                         "in": "query",
@@ -1535,10 +2376,149 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "Network information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "inflation": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "inflation": {
+                                                            "type": "string",
+                                                            "example": "0.255222222222522525"
+                                                        }
+                                                    }
+                                                },
+                                                "pool": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "bonded_tokens": {
+                                                            "type": "string",
+                                                            "example": "1000000000"
+                                                        },
+                                                        "not_bonded_tokens": {
+                                                            "type": "string",
+                                                            "example": "1000000000"
+                                                        }
+                                                    }
+                                                },
+                                                "communityPool": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "pool": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "string",
+                                                                        "amount": "100000"
+                                                                    },
+                                                                    "denom": {
+                                                                        "type": "string",
+                                                                        "amount": "uaura"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "supply": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "supply": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "denom": {
+                                                                        "type": "string",
+                                                                        "amount": "uaura"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "string",
+                                                                        "amount": "1000000"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.network.chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1548,8 +2528,8 @@
                 "tags": [
                     "Param"
                 ],
-                "summary": "Get param",
-                "description": "Get param",
+                "summary": "Get param in each module Cosmos SDK",
+                "description": "Get param in each module Cosmos SDK",
                 "parameters": [
                     {
                         "in": "query",
@@ -1620,10 +2600,106 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "Module's param",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "result": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "module": {
+                                                            "type": "string",
+                                                            "example": "bank"
+                                                        },
+                                                        "params": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "send_enabled": {
+                                                                    "type": "array"
+                                                                },
+                                                                "default_send_enabled": {
+                                                                    "type": "boolean",
+                                                                    "example": true
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.params"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1710,7 +2786,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Result list proposal",
+                        "description": "List proposal",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1934,8 +3010,8 @@
                 "tags": [
                     "Transaction"
                 ],
-                "summary": "Get latest transaction",
-                "description": "Get latest transaction",
+                "summary": "Get latest transaction or get with condition",
+                "description": "Get latest transaction or get with condition",
                 "parameters": [
                     {
                         "in": "query",
@@ -2099,10 +3175,470 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "List transaction",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "transaction": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "tx": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "body": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "messages": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "@type": {
+                                                                                        "type": "string",
+                                                                                        "example": "/cosmos.staking.v1beta1.MsgDelegate"
+                                                                                    },
+                                                                                    "delegator_address": {
+                                                                                        "type": "string",
+                                                                                        "example": "aura123123123123"
+                                                                                    },
+                                                                                    "validator_address": {
+                                                                                        "type": "string",
+                                                                                        "example": "aura123123123123"
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "extension_options": {
+                                                                            "type": "array"
+                                                                        },
+                                                                        "non_critical_extension_options": {
+                                                                            "type": "array"
+                                                                        },
+                                                                        "memo": {
+                                                                            "type": "string",
+                                                                            "example": "This is Aura Tx"
+                                                                        },
+                                                                        "timeout_height": {
+                                                                            "type": "string",
+                                                                            "example": "0"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "auth_info": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "fee": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "amount": {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "properties": {
+                                                                                            "denom": {
+                                                                                                "type": "string",
+                                                                                                "example": "uaura"
+                                                                                            },
+                                                                                            "amount": {
+                                                                                                "type": "string",
+                                                                                                "example": "1000000"
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "gas_limit": {
+                                                                                    "type": "string",
+                                                                                    "example": "100000"
+                                                                                },
+                                                                                "payer": {
+                                                                                    "type": "string",
+                                                                                    "example": ""
+                                                                                },
+                                                                                "granter": {
+                                                                                    "type": "string",
+                                                                                    "example": ""
+                                                                                }
+                                                                            },
+                                                                            "signer_infos": {
+                                                                                "type": "array",
+                                                                                "items": {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "mode_info": {
+                                                                                            "type": "object",
+                                                                                            "properties": {
+                                                                                                "single": {
+                                                                                                    "type": "object",
+                                                                                                    "properties": {
+                                                                                                        "mode": {
+                                                                                                            "type": "string",
+                                                                                                            "example": "SIGN_MODE_DIRECT"
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        "public_key": {
+                                                                                            "type": "object",
+                                                                                            "properties": {
+                                                                                                "@type": {
+                                                                                                    "type": "string",
+                                                                                                    "example": "/cosmos.crypto.secp256k1.PubKey"
+                                                                                                },
+                                                                                                "key": {
+                                                                                                    "type": "string",
+                                                                                                    "example": "xxxxxxxxxxxxxxxxxxxx"
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        "sequence": {
+                                                                                            "type": "string",
+                                                                                            "example": "1000000"
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "signatures": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string",
+                                                                        "example": "xxxxxxxxxxxxxxx"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "tx_response": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "height": {
+                                                                    "type": "number",
+                                                                    "example": 10000
+                                                                },
+                                                                "txhash": {
+                                                                    "type": "string",
+                                                                    "example": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                                },
+                                                                "codespace": {
+                                                                    "type": "string",
+                                                                    "example": ""
+                                                                },
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "example": "0"
+                                                                },
+                                                                "data": {
+                                                                    "type": "string",
+                                                                    "example": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                                },
+                                                                "raw_log": {
+                                                                    "type": "string",
+                                                                    "example": "[{\\\"events\\\":[{\\\"type\\\":\\\"coin_received\\\",\\\"attributes\\\":[{\\\"key\\\":\\\"receiver\\\",\\\"value\\\":\\\"xxxxx\\\"}]"
+                                                                },
+                                                                "logs": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "msg_index": {
+                                                                                "type": "number",
+                                                                                "example": 0
+                                                                            },
+                                                                            "log": {
+                                                                                "type": "string",
+                                                                                "example": ""
+                                                                            },
+                                                                            "events": {
+                                                                                "type": "array",
+                                                                                "items": {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "type": {
+                                                                                            "type": "string",
+                                                                                            "example": "coin_received"
+                                                                                        },
+                                                                                        "attributes": {
+                                                                                            "type": "array",
+                                                                                            "items": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "key": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "receiver"
+                                                                                                    },
+                                                                                                    "value": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "aura123123123123123"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "info": {
+                                                                    "type": "string"
+                                                                },
+                                                                "gas_wanted": {
+                                                                    "type": "string",
+                                                                    "example": "200000"
+                                                                },
+                                                                "gas_used": {
+                                                                    "type": "string",
+                                                                    "example": "150000"
+                                                                },
+                                                                "tx": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "@type": {
+                                                                            "type": "string",
+                                                                            "example": "/cosmos.tx.v1beta1.Tx"
+                                                                        },
+                                                                        "body": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "messages": {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "@type": {
+                                                                                                "type": "string",
+                                                                                                "example": "/cosmos.staking.v1beta1.MsgDelegate"
+                                                                                            },
+                                                                                            "delegator_address": {
+                                                                                                "type": "string",
+                                                                                                "example": "aura123123123123123"
+                                                                                            },
+                                                                                            "validator_address": {
+                                                                                                "type": "string",
+                                                                                                "example": "aura123123123123123123"
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "memo": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "timeout_height": {
+                                                                                    "type": "string",
+                                                                                    "example": "0"
+                                                                                },
+                                                                                "extension_options": {
+                                                                                    "type": "array"
+                                                                                },
+                                                                                "non_critical_extension_options": {
+                                                                                    "type": "array"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "auth_info": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "fee": {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "amount": {
+                                                                                            "type": "array",
+                                                                                            "items": {
+                                                                                                "properties": {
+                                                                                                    "denom": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "uaura"
+                                                                                                    },
+                                                                                                    "amount": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "1000000"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        "gas_limit": {
+                                                                                            "type": "string",
+                                                                                            "example": "100000"
+                                                                                        },
+                                                                                        "payer": {
+                                                                                            "type": "string",
+                                                                                            "example": ""
+                                                                                        },
+                                                                                        "granter": {
+                                                                                            "type": "string",
+                                                                                            "example": ""
+                                                                                        }
+                                                                                    },
+                                                                                    "signer_infos": {
+                                                                                        "type": "array",
+                                                                                        "items": {
+                                                                                            "type": "object",
+                                                                                            "properties": {
+                                                                                                "mode_info": {
+                                                                                                    "type": "object",
+                                                                                                    "properties": {
+                                                                                                        "single": {
+                                                                                                            "type": "object",
+                                                                                                            "properties": {
+                                                                                                                "mode": {
+                                                                                                                    "type": "string",
+                                                                                                                    "example": "SIGN_MODE_DIRECT"
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                },
+                                                                                                "public_key": {
+                                                                                                    "type": "object",
+                                                                                                    "properties": {
+                                                                                                        "@type": {
+                                                                                                            "type": "string",
+                                                                                                            "example": "/cosmos.crypto.secp256k1.PubKey"
+                                                                                                        },
+                                                                                                        "key": {
+                                                                                                            "type": "string",
+                                                                                                            "example": "xxxxxxxxxxxxxxxxxxxx"
+                                                                                                        }
+                                                                                                    }
+                                                                                                },
+                                                                                                "sequence": {
+                                                                                                    "type": "string",
+                                                                                                    "example": "1000000"
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "signatures": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "string",
+                                                                                "example": "xxxxxxxxxxxxxxx"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "timestamp": {
+                                                                    "type": "string",
+                                                                    "example": "2022-09-13T03:17:45.000Z"
+                                                                },
+                                                                "events": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "type": {
+                                                                                "type": "string",
+                                                                                "example": "coin_received"
+                                                                            },
+                                                                            "attributes": {
+                                                                                "type": "array",
+                                                                                "items": {
+                                                                                    "properties": {
+                                                                                        "key": {
+                                                                                            "type": "string",
+                                                                                            "example": "c3BlbmRlcg=="
+                                                                                        },
+                                                                                        "value": {
+                                                                                            "type": "string",
+                                                                                            "example": "xxxxxxxxxxxxxxxxxxxxxx"
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "count": {
+                                                    "type": "number",
+                                                    "example": 10
+                                                },
+                                                "nextKey": {
+                                                    "type": "string",
+                                                    "example": "abc"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.transaction"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2185,10 +3721,470 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "List transaction",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "transaction": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "tx": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "body": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "messages": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "@type": {
+                                                                                        "type": "string",
+                                                                                        "example": "/cosmos.staking.v1beta1.MsgDelegate"
+                                                                                    },
+                                                                                    "delegator_address": {
+                                                                                        "type": "string",
+                                                                                        "example": "aura123123123123"
+                                                                                    },
+                                                                                    "validator_address": {
+                                                                                        "type": "string",
+                                                                                        "example": "aura123123123123"
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "extension_options": {
+                                                                            "type": "array"
+                                                                        },
+                                                                        "non_critical_extension_options": {
+                                                                            "type": "array"
+                                                                        },
+                                                                        "memo": {
+                                                                            "type": "string",
+                                                                            "example": "This is Aura Tx"
+                                                                        },
+                                                                        "timeout_height": {
+                                                                            "type": "string",
+                                                                            "example": "0"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "auth_info": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "fee": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "amount": {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "properties": {
+                                                                                            "denom": {
+                                                                                                "type": "string",
+                                                                                                "example": "uaura"
+                                                                                            },
+                                                                                            "amount": {
+                                                                                                "type": "string",
+                                                                                                "example": "1000000"
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "gas_limit": {
+                                                                                    "type": "string",
+                                                                                    "example": "100000"
+                                                                                },
+                                                                                "payer": {
+                                                                                    "type": "string",
+                                                                                    "example": ""
+                                                                                },
+                                                                                "granter": {
+                                                                                    "type": "string",
+                                                                                    "example": ""
+                                                                                }
+                                                                            },
+                                                                            "signer_infos": {
+                                                                                "type": "array",
+                                                                                "items": {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "mode_info": {
+                                                                                            "type": "object",
+                                                                                            "properties": {
+                                                                                                "single": {
+                                                                                                    "type": "object",
+                                                                                                    "properties": {
+                                                                                                        "mode": {
+                                                                                                            "type": "string",
+                                                                                                            "example": "SIGN_MODE_DIRECT"
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        "public_key": {
+                                                                                            "type": "object",
+                                                                                            "properties": {
+                                                                                                "@type": {
+                                                                                                    "type": "string",
+                                                                                                    "example": "/cosmos.crypto.secp256k1.PubKey"
+                                                                                                },
+                                                                                                "key": {
+                                                                                                    "type": "string",
+                                                                                                    "example": "xxxxxxxxxxxxxxxxxxxx"
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        "sequence": {
+                                                                                            "type": "string",
+                                                                                            "example": "1000000"
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "signatures": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string",
+                                                                        "example": "xxxxxxxxxxxxxxx"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "tx_response": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "height": {
+                                                                    "type": "number",
+                                                                    "example": 10000
+                                                                },
+                                                                "txhash": {
+                                                                    "type": "string",
+                                                                    "example": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                                },
+                                                                "codespace": {
+                                                                    "type": "string",
+                                                                    "example": ""
+                                                                },
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "example": "0"
+                                                                },
+                                                                "data": {
+                                                                    "type": "string",
+                                                                    "example": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                                },
+                                                                "raw_log": {
+                                                                    "type": "string",
+                                                                    "example": "[{\\\"events\\\":[{\\\"type\\\":\\\"coin_received\\\",\\\"attributes\\\":[{\\\"key\\\":\\\"receiver\\\",\\\"value\\\":\\\"xxxxx\\\"}]"
+                                                                },
+                                                                "logs": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "msg_index": {
+                                                                                "type": "number",
+                                                                                "example": 0
+                                                                            },
+                                                                            "log": {
+                                                                                "type": "string",
+                                                                                "example": ""
+                                                                            },
+                                                                            "events": {
+                                                                                "type": "array",
+                                                                                "items": {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "type": {
+                                                                                            "type": "string",
+                                                                                            "example": "coin_received"
+                                                                                        },
+                                                                                        "attributes": {
+                                                                                            "type": "array",
+                                                                                            "items": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "key": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "receiver"
+                                                                                                    },
+                                                                                                    "value": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "aura123123123123123"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "info": {
+                                                                    "type": "string"
+                                                                },
+                                                                "gas_wanted": {
+                                                                    "type": "string",
+                                                                    "example": "200000"
+                                                                },
+                                                                "gas_used": {
+                                                                    "type": "string",
+                                                                    "example": "150000"
+                                                                },
+                                                                "tx": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "@type": {
+                                                                            "type": "string",
+                                                                            "example": "/cosmos.tx.v1beta1.Tx"
+                                                                        },
+                                                                        "body": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "messages": {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "@type": {
+                                                                                                "type": "string",
+                                                                                                "example": "/cosmos.staking.v1beta1.MsgDelegate"
+                                                                                            },
+                                                                                            "delegator_address": {
+                                                                                                "type": "string",
+                                                                                                "example": "aura123123123123123"
+                                                                                            },
+                                                                                            "validator_address": {
+                                                                                                "type": "string",
+                                                                                                "example": "aura123123123123123123"
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "memo": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "timeout_height": {
+                                                                                    "type": "string",
+                                                                                    "example": "0"
+                                                                                },
+                                                                                "extension_options": {
+                                                                                    "type": "array"
+                                                                                },
+                                                                                "non_critical_extension_options": {
+                                                                                    "type": "array"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "auth_info": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "fee": {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "amount": {
+                                                                                            "type": "array",
+                                                                                            "items": {
+                                                                                                "properties": {
+                                                                                                    "denom": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "uaura"
+                                                                                                    },
+                                                                                                    "amount": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "1000000"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        "gas_limit": {
+                                                                                            "type": "string",
+                                                                                            "example": "100000"
+                                                                                        },
+                                                                                        "payer": {
+                                                                                            "type": "string",
+                                                                                            "example": ""
+                                                                                        },
+                                                                                        "granter": {
+                                                                                            "type": "string",
+                                                                                            "example": ""
+                                                                                        }
+                                                                                    },
+                                                                                    "signer_infos": {
+                                                                                        "type": "array",
+                                                                                        "items": {
+                                                                                            "type": "object",
+                                                                                            "properties": {
+                                                                                                "mode_info": {
+                                                                                                    "type": "object",
+                                                                                                    "properties": {
+                                                                                                        "single": {
+                                                                                                            "type": "object",
+                                                                                                            "properties": {
+                                                                                                                "mode": {
+                                                                                                                    "type": "string",
+                                                                                                                    "example": "SIGN_MODE_DIRECT"
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                },
+                                                                                                "public_key": {
+                                                                                                    "type": "object",
+                                                                                                    "properties": {
+                                                                                                        "@type": {
+                                                                                                            "type": "string",
+                                                                                                            "example": "/cosmos.crypto.secp256k1.PubKey"
+                                                                                                        },
+                                                                                                        "key": {
+                                                                                                            "type": "string",
+                                                                                                            "example": "xxxxxxxxxxxxxxxxxxxx"
+                                                                                                        }
+                                                                                                    }
+                                                                                                },
+                                                                                                "sequence": {
+                                                                                                    "type": "string",
+                                                                                                    "example": "1000000"
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "signatures": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "string",
+                                                                                "example": "xxxxxxxxxxxxxxx"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "timestamp": {
+                                                                    "type": "string",
+                                                                    "example": "2022-09-13T03:17:45.000Z"
+                                                                },
+                                                                "events": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "type": {
+                                                                                "type": "string",
+                                                                                "example": "coin_received"
+                                                                            },
+                                                                            "attributes": {
+                                                                                "type": "array",
+                                                                                "items": {
+                                                                                    "properties": {
+                                                                                        "key": {
+                                                                                            "type": "string",
+                                                                                            "example": "c3BlbmRlcg=="
+                                                                                        },
+                                                                                        "value": {
+                                                                                            "type": "string",
+                                                                                            "example": "xxxxxxxxxxxxxxxxxxxxxx"
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "count": {
+                                                    "type": "number",
+                                                    "example": 10
+                                                },
+                                                "nextKey": {
+                                                    "type": "string",
+                                                    "example": "abc"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.transaction"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2198,8 +4194,8 @@
                 "tags": [
                     "Validator"
                 ],
-                "summary": "Get validator",
-                "description": "Get validator",
+                "summary": "Get validator information in a network",
+                "description": "Get validator information in a network",
                 "parameters": [
                     {
                         "in": "query",
@@ -2276,10 +4272,252 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "List validator",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "validators": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "consensus_pubkey": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "@type": {
+                                                                        "type": "string",
+                                                                        "example": "/cosmos.crypto.ed25519.PubKey"
+                                                                    },
+                                                                    "key": {
+                                                                        "type": "string",
+                                                                        "example": "xxxxxxxxxxxxxxxxxxxxxxxx"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "description": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "moniker": {
+                                                                        "type": "string",
+                                                                        "example": "validator one"
+                                                                    },
+                                                                    "identity": {
+                                                                        "type": "string",
+                                                                        "example": "validator one, earth"
+                                                                    },
+                                                                    "website": {
+                                                                        "type": "string",
+                                                                        "example": "validatorone.aura"
+                                                                    },
+                                                                    "security_contact": {
+                                                                        "type": "string",
+                                                                        "example": "validate@one.aura"
+                                                                    },
+                                                                    "details": {
+                                                                        "type": "string",
+                                                                        "example": "validator one details"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "commission": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "commission_rates": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "rate": {
+                                                                                "type": "string",
+                                                                                "example": "0.00050000000"
+                                                                            },
+                                                                            "max_rate": {
+                                                                                "type": "string",
+                                                                                "example": "0.20000000000"
+                                                                            },
+                                                                            "max_change_rate": {
+                                                                                "type": "string",
+                                                                                "example": "0.05000000000"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "update_time": {
+                                                                        "type": "string",
+                                                                        "example": "2022-07-13T02:00:00Z"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "val_signing_info": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "address": {
+                                                                        "type": "string",
+                                                                        "example": "aura123123123123123123"
+                                                                    },
+                                                                    "start_height": {
+                                                                        "type": "string",
+                                                                        "example": "0"
+                                                                    },
+                                                                    "index_offset": {
+                                                                        "type": "string",
+                                                                        "example": "100000"
+                                                                    },
+                                                                    "jailed_until": {
+                                                                        "type": "string",
+                                                                        "example": "2022-07-13T02:00:00Z"
+                                                                    },
+                                                                    "tombstoned": {
+                                                                        "type": "boolean",
+                                                                        "example": false
+                                                                    },
+                                                                    "missed_blocks_counter": {
+                                                                        "type": "string",
+                                                                        "example": "0"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "self_delegation_balance": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "denom": {
+                                                                        "type": "string",
+                                                                        "example": "uaura"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "string",
+                                                                        "example": "10000000000"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "custom_info": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "chain_id": {
+                                                                        "type": "string",
+                                                                        "example": "aura"
+                                                                    },
+                                                                    "chain_name": {
+                                                                        "type": "string",
+                                                                        "example": "Aura network"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "operator_address": {
+                                                                "type": "string",
+                                                                "example": "auravaloper123123123123"
+                                                            },
+                                                            "jailed": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "BOND_STATUS_BONDED"
+                                                            },
+                                                            "delegator_shares": {
+                                                                "type": "string",
+                                                                "example": "1"
+                                                            },
+                                                            "unbonding_height": {
+                                                                "type": "string",
+                                                                "example": "0"
+                                                            },
+                                                            "unbonding_time": {
+                                                                "type": "string",
+                                                                "example": "1970-01-01T00:00:00Z"
+                                                            },
+                                                            "min_self_delegation": {
+                                                                "type": "string",
+                                                                "example": "1"
+                                                            },
+                                                            "consensus_hex_address": {
+                                                                "type": "string",
+                                                                "example": "CCCCCCCCCCCCCCCCCCC"
+                                                            },
+                                                            "uptime": {
+                                                                "type": "number",
+                                                                "example": 100
+                                                            },
+                                                            "account_address": {
+                                                                "type": "string",
+                                                                "example": "aura123123123123123123"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Missing parameters"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.validator"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

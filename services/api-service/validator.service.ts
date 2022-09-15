@@ -38,8 +38,8 @@ export default class ValidatorService extends MoleculerDBService<
 	 *    get:
 	 *      tags:
 	 *        - Validator
-	 *      summary: Get validator
-	 *      description: Get validator
+	 *      summary: Get validator information in a network
+	 *      description: Get validator information in a network
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
@@ -83,10 +83,180 @@ export default class ValidatorService extends MoleculerDBService<
 	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
-	 *          description: OK
-	 *        '422':
-	 *          description: Missing parameters
+	 *          description: List validator
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      validators:
+	 *                        type: array
+	 *                        items:
+	 *                          type: object
+	 *                          properties:
+	 *                            consensus_pubkey:
+	 *                              type: object
+	 *                              properties:
+	 *                                '@type':
+	 *                                  type: string
+	 *                                  example: '/cosmos.crypto.ed25519.PubKey'
+	 *                                key:
+	 *                                  type: string
+	 *                                  example: 'xxxxxxxxxxxxxxxxxxxxxxxx'
+	 *                            description:
+	 *                              type: object
+	 *                              properties:
+	 *                                moniker:
+	 *                                  type: string
+	 *                                  example: 'validator one'
+	 *                                identity:
+	 *                                  type: string
+	 *                                  example: 'validator one, earth'
+	 *                                website:
+	 *                                  type: string
+	 *                                  example: 'validatorone.aura'
+	 *                                security_contact:
+	 *                                  type: string
+	 *                                  example: 'validate@one.aura'
+	 *                                details:
+	 *                                  type: string
+	 *                                  example: 'validator one details'
+	 *                            commission:
+	 *                              type: object
+	 *                              properties:
+	 *                                commission_rates:
+	 *                                  type: object
+	 *                                  properties:
+	 *                                    rate:
+	 *                                      type: string
+	 *                                      example: '0.00050000000'
+	 *                                    max_rate:
+	 *                                      type: string
+	 *                                      example: '0.20000000000'
+	 *                                    max_change_rate:
+	 *                                      type: string
+	 *                                      example: '0.05000000000'
+	 *                                update_time:
+	 *                                  type: string
+	 *                                  example: '2022-07-13T02:00:00Z'
+	 *                            val_signing_info:
+	 *                              type: object
+	 *                              properties:
+	 *                                address:
+	 *                                  type: string
+	 *                                  example: 'aura123123123123123123'
+	 *                                start_height:
+	 *                                  type: string
+	 *                                  example: '0'
+	 *                                index_offset:
+	 *                                  type: string
+	 *                                  example: '100000'
+	 *                                jailed_until:
+	 *                                  type: string
+	 *                                  example: '2022-07-13T02:00:00Z'
+	 *                                tombstoned:
+	 *                                  type: boolean
+	 *                                  example: false
+	 *                                missed_blocks_counter:
+	 *                                  type: string
+	 *                                  example: '0'
+	 *                            self_delegation_balance:
+	 *                              type: object
+	 *                              properties:
+	 *                                denom:
+	 *                                  type: string
+	 *                                  example: 'uaura'
+	 *                                amount:
+	 *                                  type: string
+	 *                                  example: '10000000000'
+	 *                            custom_info:
+	 *                              type: object
+	 *                              properties:
+	 *                                chain_id:
+	 *                                  type: string
+	 *                                  example: 'aura'
+	 *                                chain_name:
+	 *                                  type: string
+	 *                                  example: 'Aura network'
+	 *                            operator_address:
+	 *                              type: string
+	 *                              example: 'auravaloper123123123123'
+	 *                            jailed:
+	 *                              type: boolean
+	 *                              example: false
+	 *                            status:
+	 *                              type: string
+	 *                              example: 'BOND_STATUS_BONDED'
+	 *                            delegator_shares:
+	 *                              type: string
+	 *                              example: '1'
+	 *                            unbonding_height:
+	 *                              type: string
+	 *                              example: '0'
+	 *                            unbonding_time:
+	 *                              type: string
+	 *                              example: '1970-01-01T00:00:00Z'
+	 *                            min_self_delegation:
+	 *                              type: string
+	 *                              example: '1'
+	 *                            consensus_hex_address:
+	 *                              type: string
+	 *                              example: 'CCCCCCCCCCCCCCCCCCC'
+	 *                            uptime:
+	 *                              type: number
+	 *                              example: 100
+	 *                            account_address:
+	 *                              type: string
+	 *                              example: 'aura123123123123123123'
 	 *
+	 *        '422':
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.validator"
 	 */
 	@Get('/', {
 		name: 'getByChain',

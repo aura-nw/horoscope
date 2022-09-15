@@ -48,8 +48,8 @@ export default class BlockService extends MoleculerDBService<
 	 *    get:
 	 *      tags:
 	 *        - Transaction
-	 *      summary: Get latest transaction
-	 *      description: Get latest transaction
+	 *      summary: Get latest transaction or get with condition
+	 *      description: Get latest transaction or get with condition
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
@@ -144,10 +144,323 @@ export default class BlockService extends MoleculerDBService<
 	 *          description: "reverse is true if you want to get the oldest record first, default is false"
 	 *      responses:
 	 *        '200':
-	 *          description: OK
+	 *          description: List transaction
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      transaction:
+	 *                        type: object
+	 *                        properties:
+	 *                          tx:
+	 *                            type: object
+	 *                            properties:
+	 *                              body:
+	 *                                type: object
+	 *                                properties:
+	 *                                  messages:
+	 *                                    type: array
+	 *                                    items:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        '@type':
+	 *                                          type: string
+	 *                                          example: '/cosmos.staking.v1beta1.MsgDelegate'
+	 *                                        delegator_address:
+	 *                                          type: string
+	 *                                          example: 'aura123123123123'
+	 *                                        validator_address:
+	 *                                          type: string
+	 *                                          example: 'aura123123123123'
+	 *                                  extension_options:
+	 *                                    type: array
+	 *                                  non_critical_extension_options:
+	 *                                    type: array
+	 *                                  memo:
+	 *                                    type: string
+	 *                                    example: "This is Aura Tx"
+	 *                                  timeout_height:
+	 *                                    type: string
+	 *                                    example: "0"
+	 *                              auth_info:
+	 *                                type: object
+	 *                                properties:
+	 *                                  fee:
+	 *                                    type: object
+	 *                                    properties:
+	 *                                      amount:
+	 *                                        type: array
+	 *                                        items:
+	 *                                          properties:
+	 *                                            denom:
+	 *                                              type: string
+	 *                                              example: 'uaura'
+	 *                                            amount:
+	 *                                              type: string
+	 *                                              example: '1000000'
+	 *                                      gas_limit:
+	 *                                        type: string
+	 *                                        example: '100000'
+	 *                                      payer:
+	 *                                        type: string
+	 *                                        example: ''
+	 *                                      granter:
+	 *                                        type: string
+	 *                                        example: ''
+	 *                                    signer_infos:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        type: object
+	 *                                        properties:
+	 *                                          mode_info:
+	 *                                            type: object
+	 *                                            properties:
+	 *                                              single:
+	 *                                                type: object
+	 *                                                properties:
+	 *                                                  mode:
+	 *                                                    type: string
+	 *                                                    example: "SIGN_MODE_DIRECT"
+	 *                                          public_key:
+	 *                                            type: object
+	 *                                            properties:
+	 *                                              '@type':
+	 *                                                type: string
+	 *                                                example: '/cosmos.crypto.secp256k1.PubKey'
+	 *                                              key:
+	 *                                                type: string
+	 *                                                example: 'xxxxxxxxxxxxxxxxxxxx'
+	 *                                          sequence:
+	 *                                            type: string
+	 *                                            example: '1000000'
+	 *                              signatures:
+	 *                                type: array
+	 *                                items:
+	 *                                  type: string
+	 *                                  example: 'xxxxxxxxxxxxxxx'
+	 *                          tx_response:
+	 *                            type: object
+	 *                            properties:
+	 *                              height:
+	 *                                type: number
+	 *                                example: 10000
+	 *                              txhash:
+	 *                                type: string
+	 *                                example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+	 *                              codespace:
+	 *                                type: string
+	 *                                example: ''
+	 *                              code:
+	 *                                type: string
+	 *                                example: '0'
+	 *                              data:
+	 *                                type: string
+	 *                                example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+	 *                              raw_log:
+	 *                                type: string
+	 *                                example: '[{\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"xxxxx\"}]'
+	 *                              logs:
+	 *                                type: array
+	 *                                items:
+	 *                                  type: object
+	 *                                  properties:
+	 *                                    msg_index:
+	 *                                      type: number
+	 *                                      example: 0
+	 *                                    log:
+	 *                                      type: string
+	 *                                      example: ''
+	 *                                    events:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        type: object
+	 *                                        properties:
+	 *                                          'type':
+	 *                                            type: string
+	 *                                            example: 'coin_received'
+	 *                                          attributes:
+	 *                                            type: array
+	 *                                            items:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                key:
+	 *                                                  type: string
+	 *                                                  example: receiver
+	 *                                                value:
+	 *                                                  type: string
+	 *                                                  example: 'aura123123123123123'
+	 *                              info:
+	 *                                type: string
+	 *                              gas_wanted:
+	 *                                type: string
+	 *                                example: "200000"
+	 *                              gas_used:
+	 *                                type: string
+	 *                                example: "150000"
+	 *                              tx:
+	 *                                type: object
+	 *                                properties:
+	 *                                  '@type':
+	 *                                    type: string
+	 *                                    example: '/cosmos.tx.v1beta1.Tx'
+	 *                                  body:
+	 *                                    type: object
+	 *                                    properties:
+	 *                                      messages:
+	 *                                        type: array
+	 *                                        items:
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            '@type':
+	 *                                              type: string
+	 *                                              example: '/cosmos.staking.v1beta1.MsgDelegate'
+	 *                                            delegator_address:
+	 *                                              type: string
+	 *                                              example: 'aura123123123123123'
+	 *                                            validator_address:
+	 *                                              type: string
+	 *                                              example: 'aura123123123123123123'
+	 *                                      memo:
+	 *                                        type: string
+	 *                                      timeout_height:
+	 *                                        type: string
+	 *                                        example: '0'
+	 *                                      extension_options:
+	 *                                        type: array
+	 *                                      non_critical_extension_options:
+	 *                                        type: array
+	 *                                  auth_info:
+	 *                                    type: object
+	 *                                    properties:
+	 *                                      fee:
+	 *                                        type: object
+	 *                                        properties:
+	 *                                          amount:
+	 *                                            type: array
+	 *                                            items:
+	 *                                              properties:
+	 *                                                denom:
+	 *                                                  type: string
+	 *                                                  example: 'uaura'
+	 *                                                amount:
+	 *                                                  type: string
+	 *                                                  example: '1000000'
+	 *                                          gas_limit:
+	 *                                            type: string
+	 *                                            example: '100000'
+	 *                                          payer:
+	 *                                            type: string
+	 *                                            example: ''
+	 *                                          granter:
+	 *                                            type: string
+	 *                                            example: ''
+	 *                                        signer_infos:
+	 *                                          type: array
+	 *                                          items:
+	 *                                            type: object
+	 *                                            properties:
+	 *                                              mode_info:
+	 *                                                type: object
+	 *                                                properties:
+	 *                                                  single:
+	 *                                                    type: object
+	 *                                                    properties:
+	 *                                                      mode:
+	 *                                                        type: string
+	 *                                                        example: "SIGN_MODE_DIRECT"
+	 *                                              public_key:
+	 *                                                type: object
+	 *                                                properties:
+	 *                                                  '@type':
+	 *                                                    type: string
+	 *                                                    example: '/cosmos.crypto.secp256k1.PubKey'
+	 *                                                  key:
+	 *                                                    type: string
+	 *                                                    example: 'xxxxxxxxxxxxxxxxxxxx'
+	 *                                              sequence:
+	 *                                                type: string
+	 *                                                example: '1000000'
+	 *                                  signatures:
+	 *                                    type: array
+	 *                                    items:
+	 *                                      type: string
+	 *                                      example: 'xxxxxxxxxxxxxxx'
+	 *                              timestamp:
+	 *                                type: string
+	 *                                example: '2022-09-13T03:17:45.000Z'
+	 *                              events:
+	 *                                type: array
+	 *                                items:
+	 *                                  type: object
+	 *                                  properties:
+	 *                                    'type':
+	 *                                      type: string
+	 *                                      example: 'coin_received'
+	 *                                    attributes:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        properties:
+	 *                                          key:
+	 *                                            type: string
+	 *                                            example: 'c3BlbmRlcg=='
+	 *                                          value:
+	 *                                            type: string
+	 *                                            example: 'xxxxxxxxxxxxxxxxxxxxxx'
+	 *                      count:
+	 *                        type: number
+	 *                        example: 10
+	 *                      nextKey:
+	 *                        type: string
+	 *                        example: 'abc'
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.transaction"
 	 */
 	@Get('/', {
 		name: 'getByChain',
@@ -254,12 +567,13 @@ export default class BlockService extends MoleculerDBService<
 		const queryParam = ctx.params.query;
 		const addressInContract = ctx.params.addressInContract;
 		let findOne = false;
+		let projection: any = { indexes: 0, custom_info: 0 };
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
 		// ctx.params.countTotal = false;
 		// const sort = ctx.params.reverse ? '_id' : '-_id';
 
-		const sort = '-_id';
+		const sort = '-indexes.height';
 		let query: QueryOptions = {};
 		if (ctx.params.txHash) {
 			ctx.params.nextKey = undefined;
@@ -276,15 +590,15 @@ export default class BlockService extends MoleculerDBService<
 		}
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
+		} else {
+			projection['tx.body.messages'] = { $slice: 3 };
+			projection['tx_response.tx.body.messages'] = { $slice: 3 };
+			projection['tx_response.events'] = { $slice: 3 };
+			projection['tx_response.logs'] = 0;
+			projection['tx_response.data'] = 0;
+			projection['tx_response.raw_log'] = 0;
 		}
 
-		// if (searchType) {
-		// 	query['tx_response.events.type'] = searchType;
-		// }
-		// if (searchKey && searchValue) {
-		// 	query['tx_response.events.attributes.key'] = toBase64(toUtf8(searchKey));
-		// 	query['tx_response.events.attributes.value'] = toBase64(toUtf8(searchValue));
-		// }
 		let listQueryAnd: any[] = [];
 		let listQueryOr: any[] = [];
 
@@ -297,30 +611,11 @@ export default class BlockService extends MoleculerDBService<
 
 		if (queryParam) {
 			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
-			// this.logger.info('queryParam: ', JSON.stringify(queryParamFormat));
 			let queryAnd: any[] = [];
 			queryParamFormat.forEach((e: any) => {
 				let tempQuery = {
 					[`indexes.${e.type}_${e.key}`]: { $exists: true, $eq: e.value },
 				};
-				// let tempQuery = {
-				// 	'tx_response.events.type': e.type,
-				// 	'tx_response.events.attributes.key': toBase64(toUtf8(e.key)),
-				// 	'tx_response.events.attributes.value': toBase64(toUtf8(e.value)),
-				// };
-				// let tempQuery = {
-				// 	'tx_response.events': {
-				// 		$elemMatch: {
-				// 			type: e.type,
-				// 			attributes: {
-				// 				$elemMatch: {
-				// 					key: toBase64(toUtf8(e.key)),
-				// 					value: toBase64(toUtf8(e.value)),
-				// 				},
-				// 			},
-				// 		},
-				// 	},
-				// };
 				queryAnd.push(tempQuery);
 			});
 			listQueryAnd.push(...queryAnd);
@@ -330,54 +625,12 @@ export default class BlockService extends MoleculerDBService<
 				{ 'indexes.transfer_recipient': { $exists: true, $eq: address } },
 				{ 'indexes.transfer_sender': { $exists: true, $eq: address } },
 			);
-			// listQueryAnd.push(
-			// 	{ 'tx_response.events.type': 'transfer' },
-			// 	{
-			// 		$or: [
-			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.RECIPIENT },
-			// 			{ 'tx_response.events.attributes.key': BASE_64_ENCODE.SENDER },
-			// 		],
-			// 	},
-			// 	{
-			// 		'tx_response.events.attributes.value': toBase64(toUtf8(address)),
-			// 	},
-			// );
-			// listQueryAnd.push({
-			// 	$or: [
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'transfer',
-			// 					attributes: {
-			// 						$elemMatch: {
-			// 							key: BASE_64_ENCODE.RECIPIENT,
-			// 							value: toBase64(toUtf8(address)),
-			// 						},
-			// 					},
-			// 				},
-			// 			},
-			// 		},
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'transfer',
-			// 					attributes: {
-			// 						$elemMatch: {
-			// 							key: BASE_64_ENCODE.SENDER,
-			// 							value: toBase64(toUtf8(address)),
-			// 						},
-			// 					},
-			// 				},
-			// 			},
-			// 		},
-			// 	],
-			// });
 		}
 		if (addressInContract) {
 			listQueryOr.push(
 				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
 				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
-				// { 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
+				{ 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
 			);
 		}
 		if (listQueryAnd.length > 0) {
@@ -389,10 +642,10 @@ export default class BlockService extends MoleculerDBService<
 		}
 		this.logger.info('query: ', JSON.stringify(query));
 		let listPromise = [];
-
 		listPromise.push(
 			this.adapter.lean({
 				query: query,
+				projection: projection,
 				// @ts-ignore
 				sort: sort,
 				limit: ctx.params.pageLimit + 1,
@@ -489,10 +742,10 @@ export default class BlockService extends MoleculerDBService<
 
 			let nextKey = null;
 			if (result.length > 0) {
-				await result.forEach((tx: any) => {
-					delete tx['custom_info'];
-					delete tx['indexes'];
-				});
+				// await result.forEach((tx: any) => {
+				// 	delete tx['custom_info'];
+				// 	delete tx['indexes'];
+				// });
 				if (result.length == 1) {
 					nextKey = result[result.length - 1]?._id;
 				} else {
@@ -580,10 +833,323 @@ export default class BlockService extends MoleculerDBService<
 	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
-	 *          description: OK
+	 *          description: List transaction
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      transaction:
+	 *                        type: object
+	 *                        properties:
+	 *                          tx:
+	 *                            type: object
+	 *                            properties:
+	 *                              body:
+	 *                                type: object
+	 *                                properties:
+	 *                                  messages:
+	 *                                    type: array
+	 *                                    items:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        '@type':
+	 *                                          type: string
+	 *                                          example: '/cosmos.staking.v1beta1.MsgDelegate'
+	 *                                        delegator_address:
+	 *                                          type: string
+	 *                                          example: 'aura123123123123'
+	 *                                        validator_address:
+	 *                                          type: string
+	 *                                          example: 'aura123123123123'
+	 *                                  extension_options:
+	 *                                    type: array
+	 *                                  non_critical_extension_options:
+	 *                                    type: array
+	 *                                  memo:
+	 *                                    type: string
+	 *                                    example: "This is Aura Tx"
+	 *                                  timeout_height:
+	 *                                    type: string
+	 *                                    example: "0"
+	 *                              auth_info:
+	 *                                type: object
+	 *                                properties:
+	 *                                  fee:
+	 *                                    type: object
+	 *                                    properties:
+	 *                                      amount:
+	 *                                        type: array
+	 *                                        items:
+	 *                                          properties:
+	 *                                            denom:
+	 *                                              type: string
+	 *                                              example: 'uaura'
+	 *                                            amount:
+	 *                                              type: string
+	 *                                              example: '1000000'
+	 *                                      gas_limit:
+	 *                                        type: string
+	 *                                        example: '100000'
+	 *                                      payer:
+	 *                                        type: string
+	 *                                        example: ''
+	 *                                      granter:
+	 *                                        type: string
+	 *                                        example: ''
+	 *                                    signer_infos:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        type: object
+	 *                                        properties:
+	 *                                          mode_info:
+	 *                                            type: object
+	 *                                            properties:
+	 *                                              single:
+	 *                                                type: object
+	 *                                                properties:
+	 *                                                  mode:
+	 *                                                    type: string
+	 *                                                    example: "SIGN_MODE_DIRECT"
+	 *                                          public_key:
+	 *                                            type: object
+	 *                                            properties:
+	 *                                              '@type':
+	 *                                                type: string
+	 *                                                example: '/cosmos.crypto.secp256k1.PubKey'
+	 *                                              key:
+	 *                                                type: string
+	 *                                                example: 'xxxxxxxxxxxxxxxxxxxx'
+	 *                                          sequence:
+	 *                                            type: string
+	 *                                            example: '1000000'
+	 *                              signatures:
+	 *                                type: array
+	 *                                items:
+	 *                                  type: string
+	 *                                  example: 'xxxxxxxxxxxxxxx'
+	 *                          tx_response:
+	 *                            type: object
+	 *                            properties:
+	 *                              height:
+	 *                                type: number
+	 *                                example: 10000
+	 *                              txhash:
+	 *                                type: string
+	 *                                example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+	 *                              codespace:
+	 *                                type: string
+	 *                                example: ''
+	 *                              code:
+	 *                                type: string
+	 *                                example: '0'
+	 *                              data:
+	 *                                type: string
+	 *                                example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+	 *                              raw_log:
+	 *                                type: string
+	 *                                example: '[{\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"xxxxx\"}]'
+	 *                              logs:
+	 *                                type: array
+	 *                                items:
+	 *                                  type: object
+	 *                                  properties:
+	 *                                    msg_index:
+	 *                                      type: number
+	 *                                      example: 0
+	 *                                    log:
+	 *                                      type: string
+	 *                                      example: ''
+	 *                                    events:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        type: object
+	 *                                        properties:
+	 *                                          'type':
+	 *                                            type: string
+	 *                                            example: 'coin_received'
+	 *                                          attributes:
+	 *                                            type: array
+	 *                                            items:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                key:
+	 *                                                  type: string
+	 *                                                  example: receiver
+	 *                                                value:
+	 *                                                  type: string
+	 *                                                  example: 'aura123123123123123'
+	 *                              info:
+	 *                                type: string
+	 *                              gas_wanted:
+	 *                                type: string
+	 *                                example: "200000"
+	 *                              gas_used:
+	 *                                type: string
+	 *                                example: "150000"
+	 *                              tx:
+	 *                                type: object
+	 *                                properties:
+	 *                                  '@type':
+	 *                                    type: string
+	 *                                    example: '/cosmos.tx.v1beta1.Tx'
+	 *                                  body:
+	 *                                    type: object
+	 *                                    properties:
+	 *                                      messages:
+	 *                                        type: array
+	 *                                        items:
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            '@type':
+	 *                                              type: string
+	 *                                              example: '/cosmos.staking.v1beta1.MsgDelegate'
+	 *                                            delegator_address:
+	 *                                              type: string
+	 *                                              example: 'aura123123123123123'
+	 *                                            validator_address:
+	 *                                              type: string
+	 *                                              example: 'aura123123123123123123'
+	 *                                      memo:
+	 *                                        type: string
+	 *                                      timeout_height:
+	 *                                        type: string
+	 *                                        example: '0'
+	 *                                      extension_options:
+	 *                                        type: array
+	 *                                      non_critical_extension_options:
+	 *                                        type: array
+	 *                                  auth_info:
+	 *                                    type: object
+	 *                                    properties:
+	 *                                      fee:
+	 *                                        type: object
+	 *                                        properties:
+	 *                                          amount:
+	 *                                            type: array
+	 *                                            items:
+	 *                                              properties:
+	 *                                                denom:
+	 *                                                  type: string
+	 *                                                  example: 'uaura'
+	 *                                                amount:
+	 *                                                  type: string
+	 *                                                  example: '1000000'
+	 *                                          gas_limit:
+	 *                                            type: string
+	 *                                            example: '100000'
+	 *                                          payer:
+	 *                                            type: string
+	 *                                            example: ''
+	 *                                          granter:
+	 *                                            type: string
+	 *                                            example: ''
+	 *                                        signer_infos:
+	 *                                          type: array
+	 *                                          items:
+	 *                                            type: object
+	 *                                            properties:
+	 *                                              mode_info:
+	 *                                                type: object
+	 *                                                properties:
+	 *                                                  single:
+	 *                                                    type: object
+	 *                                                    properties:
+	 *                                                      mode:
+	 *                                                        type: string
+	 *                                                        example: "SIGN_MODE_DIRECT"
+	 *                                              public_key:
+	 *                                                type: object
+	 *                                                properties:
+	 *                                                  '@type':
+	 *                                                    type: string
+	 *                                                    example: '/cosmos.crypto.secp256k1.PubKey'
+	 *                                                  key:
+	 *                                                    type: string
+	 *                                                    example: 'xxxxxxxxxxxxxxxxxxxx'
+	 *                                              sequence:
+	 *                                                type: string
+	 *                                                example: '1000000'
+	 *                                  signatures:
+	 *                                    type: array
+	 *                                    items:
+	 *                                      type: string
+	 *                                      example: 'xxxxxxxxxxxxxxx'
+	 *                              timestamp:
+	 *                                type: string
+	 *                                example: '2022-09-13T03:17:45.000Z'
+	 *                              events:
+	 *                                type: array
+	 *                                items:
+	 *                                  type: object
+	 *                                  properties:
+	 *                                    'type':
+	 *                                      type: string
+	 *                                      example: 'coin_received'
+	 *                                    attributes:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        properties:
+	 *                                          key:
+	 *                                            type: string
+	 *                                            example: 'c3BlbmRlcg=='
+	 *                                          value:
+	 *                                            type: string
+	 *                                            example: 'xxxxxxxxxxxxxxxxxxxxxx'
+	 *                      count:
+	 *                        type: number
+	 *                        example: 10
+	 *                      nextKey:
+	 *                        type: string
+	 *                        example: 'abc'
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.transaction"
 	 */
 	@Get('/power-event', {
 		name: 'getPowerEvent',
@@ -658,47 +1224,9 @@ export default class BlockService extends MoleculerDBService<
 
 		let listQueryAnd: any[] = [];
 		let listQueryOr: any[] = [];
+		let projection: any = { indexes: 0, custom_info: 0 };
+
 		if (address) {
-			// listQueryAnd.push({
-			// 	$or: [
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'delegate',
-			// 					'attributes.key': BASE_64_ENCODE.VALIDATOR,
-			// 					'attributes.value': toBase64(toUtf8(address)),
-			// 				},
-			// 			},
-			// 		},
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'redelegate',
-			// 					'attributes.key': BASE_64_ENCODE.SOURCE_VALIDATOR,
-			// 					'attributes.value': toBase64(toUtf8(address)),
-			// 				},
-			// 			},
-			// 		},
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'redelegate',
-			// 					'attributes.key': BASE_64_ENCODE.DESTINATION_VALIDATOR,
-			// 					'attributes.value': toBase64(toUtf8(address)),
-			// 				},
-			// 			},
-			// 		},
-			// 		{
-			// 			'tx_response.events': {
-			// 				$elemMatch: {
-			// 					type: 'unbond',
-			// 					'attributes.key': BASE_64_ENCODE.VALIDATOR,
-			// 					'attributes.value': toBase64(toUtf8(address)),
-			// 				},
-			// 			},
-			// 		},
-			// 	],
-			// });
 			listQueryOr.push(
 				{ 'indexes.delegate_validator': { $exists: true, $eq: address } },
 				{ 'indexes.redelegate_source_validator': { $exists: true, $eq: address } },
@@ -720,6 +1248,7 @@ export default class BlockService extends MoleculerDBService<
 		listPromise.push(
 			this.adapter.lean({
 				query: query,
+				projection: projection,
 				// @ts-ignore
 				sort: sort,
 				limit: ctx.params.pageLimit + 1,
@@ -743,10 +1272,10 @@ export default class BlockService extends MoleculerDBService<
 
 			let nextKey = null;
 			if (result.length > 0) {
-				await result.forEach((tx: any) => {
-					delete tx['custom_info'];
-					delete tx['indexes'];
-				});
+				// await result.forEach((tx: any) => {
+				// 	delete tx['custom_info'];
+				// 	delete tx['indexes'];
+				// });
 
 				if (result.length == 1) {
 					nextKey = result[result.length - 1]?._id;

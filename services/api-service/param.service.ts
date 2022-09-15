@@ -36,8 +36,8 @@ export default class ParamService extends MoleculerDBService<
 	 *    get:
 	 *      tags:
 	 *        - Param
-	 *      summary: Get param
-	 *      description: Get param
+	 *      summary: Get param in each module Cosmos SDK
+	 *      description: Get param in each module Cosmos SDK
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
@@ -75,10 +75,74 @@ export default class ParamService extends MoleculerDBService<
 	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
-	 *          description: OK
+	 *          description: Module's param
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      result:
+	 *                        type: object
+	 *                        properties:
+	 *                          module:
+	 *                            type: string
+	 *                            example: 'bank'
+	 *                          params:
+	 *                            type: object
+	 *                            properties:
+	 *                              send_enabled:
+	 *                                type: array
+	 *                              default_send_enabled:
+	 *                                type: boolean
+	 *                                example: true
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.params"
 	 */
 	@Get('/', {
 		name: 'getByChain',

@@ -42,6 +42,7 @@ export interface GetAssetByOwnerAddressRequest extends ChainIdParams, PageLimit 
 	tokenName: string;
 	contractAddress: string;
 	contractType: string;
+	isBurned: boolean;
 }
 
 export interface GetAssetByContractTypeAddressRequest extends ChainIdParams, PageLimit {
