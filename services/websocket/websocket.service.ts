@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Context, CallingOptions, Service, ServiceBroker } from 'moleculer';
+import { Context, Service, ServiceBroker } from 'moleculer';
 import SocketIOMixin from 'moleculer-io';
 import ApiGatewayService from 'moleculer-web';
 import { Config } from '../../common';
@@ -135,7 +135,7 @@ export default class WebsocketService extends Service {
 			});
 
 			//Broadcast message to websocket channel using broker call io service what is defined in constructor
-			if (sameTx.length > 0) {
+			if (true) {
 				await this.broker?.call('v1.io.broadcast', {
 					namespace: '/register',
 					event: 'hello',
