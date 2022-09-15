@@ -32,6 +32,7 @@ export const CONST_CHAR = {
 	COIN_RECEIVED: 'coin_received',
 	WITHDRAW_REWARDS: 'withdraw_rewards',
 	AMOUNT: 'amount',
+	VALIDATOR: 'validator',
 };
 
 export const MSG_TYPE = {

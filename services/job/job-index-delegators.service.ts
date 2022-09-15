@@ -377,6 +377,7 @@ export default class IndexDelegatorsService extends Service {
             { title: "lkskrn", address: "auravaloper18udxtfaemz8rc6g5qjamur4kxkp72egv3723nk" },
             { title: "-STAKECRAFT-", address: "auravaloper1my2s84cetqudfswymd5dwngh808xpzev9zm5sp" },
             { title: "hodl_global_new", address: "auravaloper12zydfqfj500x63npllnhtn97gx3gte4avydcn0" },
+            { title: "hodl_global", address: "auravaloper1py944hzfjxyfxaurklsw7gtlq6va5mh3rdvt82" }
         ];
         const vote_counts = await knex('validators')
             .select('validators.operator_address')
