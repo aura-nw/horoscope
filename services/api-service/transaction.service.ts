@@ -573,7 +573,7 @@ export default class BlockService extends MoleculerDBService<
 		// ctx.params.countTotal = false;
 		// const sort = ctx.params.reverse ? '_id' : '-_id';
 
-		const sort = '-_id';
+		const sort = '-indexes.height';
 		let query: QueryOptions = {};
 		if (ctx.params.txHash) {
 			ctx.params.nextKey = undefined;
