@@ -2,12 +2,10 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { AccountInfoEntity, ITransaction, UnbondingResponse } from '../../entities';
-import { Utils } from '../../utils/utils';
-import { CrawlAccountInfoParams, ListTxCreatedParams } from '../../types';
+import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
@@ -99,7 +97,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		const chain = LIST_NETWORK.find(x => x.chainId === chainId);
 		try {
 			for (let tx of listTx) {
-				this.logger.info(tx);
 				const userAddress = tx.tx.body.messages[0].delegator_address;
 				let account: AccountInfoEntity = await this.adapter.findOne({
 					address: userAddress,
@@ -124,11 +121,12 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)!.amount.toString(), 10)
 									+ parseInt(amount, 10)).toString();
 						} else {
+							account.account_claimed_rewards = [] as Rewards[];
 							account.account_claimed_rewards.push({
 								validator_address: validatorAddress,
 								denom: claimedReward !== '' ? claimedReward.match(/[a-zA-Z]+/g)[0] : '',
 								amount,
-							});
+							} as Rewards);
 						}
 						listAccounts.push(account);
 						break;
@@ -145,11 +143,12 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount.toString(), 10)
 										+ parseInt(srcAmount, 10)).toString();
 							} else {
+								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
 									validator_address: valSrcAddress,
 									denom: srcClaimedReward !== '' ? srcClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
 									amount: srcAmount,
-								});
+								} as Rewards);
 							}
 						} else if (coinReceived.length > 2) {
 							const srcClaimedReward = coinReceived[1].value;
@@ -163,22 +162,24 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount.toString(), 10)
 										+ parseInt(srcAmount, 10)).toString();
 							} else {
+								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
 									validator_address: valSrcAddress,
 									denom: srcClaimedReward !== '' ? srcClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
 									amount: srcAmount,
-								});
+								} as Rewards);
 							}
 							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)) {
 								account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)!.amount
 									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)!.amount.toString(), 10)
 										+ parseInt(dstAmount, 10)).toString();
 							} else {
+								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
 									validator_address: valDstAddress,
 									denom: dstClaimedReward !== '' ? dstClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
 									amount: dstAmount,
-								});
+								} as Rewards);
 							}
 						}
 						listAccounts.push(account);
@@ -197,11 +198,12 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)!.amount.toString(), 10)
 									+ parseInt(undelegateAmount, 10)).toString();
 						} else {
+							account.account_claimed_rewards = [] as Rewards[];
 							account.account_claimed_rewards.push({
 								validator_address: undelegateValAddress,
 								denom: undelegateClaimedReward !== '' ? undelegateClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
 								amount: undelegateAmount,
-							});
+							} as Rewards);
 						}
 						listAccounts.push(account);
 						break;
@@ -219,11 +221,12 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)!.amount.toString(), 10)
 										+ parseInt(amount, 10)).toString();
 							} else {
+								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
 									validator_address: msg.validator_address,
 									denom: claimedReward !== '' ? claimedReward.match(/[a-zA-Z]+/g)[0] : '',
 									amount,
-								});
+								} as Rewards);
 							}
 						});
 						listAccounts.push(account);

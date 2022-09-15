@@ -198,7 +198,7 @@ export class RedelegationResponse implements IRedelegationResponse {
     entries: RedelegateEntry[] = [];
 }
 
-class Rewards implements IReward {
+export class Rewards implements IReward {
 	validator_address: String = '';
 	amount: String = '';
 	denom: String  = '';

@@ -167,8 +167,8 @@ export default class HandleAddressService extends Service {
 				}
 			}
 
+			let listUniqueAddresses = listAddresses.filter(this.onlyUnique);
 			try {
-				let listUniqueAddresses = listAddresses.filter(this.onlyUnique);
 				listUniqueAddresses.map((address) => {
 					const account: AccountInfoEntity = {} as AccountInfoEntity;
 					account.address = address;
@@ -188,7 +188,7 @@ export default class HandleAddressService extends Service {
 				this.logger.error(error);
 			}
 			listUpdateInfo.map((item) => {
-				this.broker.emit(item, { listAddresses, chainId });
+				this.broker.emit(item, { listUniqueAddresses, chainId });
 			});
 			this.broker.emit('account-info.upsert-claimed-rewards', {
 				listTx,
