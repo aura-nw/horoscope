@@ -69,7 +69,7 @@ export default class HandleDelayJobService extends Service {
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
 							let oldRedelegates =
-									updateRedelegates.redelegation_responses[0].entries,
+								updateRedelegates.redelegation_responses[0].entries,
 								removeRedelegate = oldRedelegates.find(
 									(x: RedelegateEntry) =>
 										new Date(
@@ -106,6 +106,18 @@ export default class HandleDelayJobService extends Service {
 							);
 						} catch (error) {
 							this.logger.error(error);
+							listUpdateQueries.push(
+								delayJob.updateOne(
+									{
+										_id: job._id,
+									},
+									{
+										$set: {
+											status: DELAY_JOB_STATUS.DONE,
+										},
+									},
+								),
+							);
 						}
 						break;
 					case DELAY_JOB_TYPE.UNBOND:
@@ -162,6 +174,18 @@ export default class HandleDelayJobService extends Service {
 							);
 						} catch (error) {
 							this.logger.error(error);
+							listUpdateQueries.push(
+								delayJob.updateOne(
+									{
+										_id: job._id,
+									},
+									{
+										$set: {
+											status: DELAY_JOB_STATUS.DONE,
+										},
+									},
+								),
+							);
 						}
 						break;
 					case DELAY_JOB_TYPE.DELAYED_VESTING:
@@ -209,6 +233,18 @@ export default class HandleDelayJobService extends Service {
 							);
 						} catch (error) {
 							this.logger.error(error);
+							listUpdateQueries.push(
+								delayJob.updateOne(
+									{
+										_id: job._id,
+									},
+									{
+										$set: {
+											status: DELAY_JOB_STATUS.DONE,
+										},
+									},
+								),
+							);
 						}
 						break;
 					case DELAY_JOB_TYPE.PERIODIC_VESTING:
@@ -241,7 +277,7 @@ export default class HandleDelayJobService extends Service {
 								job.expire_time.getTime() >=
 								new Date(
 									parseInt(updateInfo.account_auth.result.value.end_time, 10) *
-										1000,
+									1000,
 								).getTime()
 							)
 								updateJob = {
@@ -257,7 +293,7 @@ export default class HandleDelayJobService extends Service {
 												.length,
 											10,
 										)) *
-										1000,
+									1000,
 								);
 								updateJob = {
 									$set: {
@@ -285,6 +321,18 @@ export default class HandleDelayJobService extends Service {
 							);
 						} catch (error) {
 							this.logger.error(error);
+							listUpdateQueries.push(
+								delayJob.updateOne(
+									{
+										_id: job._id,
+									},
+									{
+										$set: {
+											status: DELAY_JOB_STATUS.DONE,
+										},
+									},
+								),
+							);
 						}
 						break;
 				}
