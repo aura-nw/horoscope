@@ -116,6 +116,7 @@ const listLCD = LIST_NETWORK.map((e) => {
 					'v1.test.*',
 					'v1.account-info.getAccountInfo',
 					'v1.account-info.getAccountDelegationInfo',
+					'v1.account-info.getAccountStake',
 					'v1.account-unbonds.getByAddress',
 					'v1.proposal.getByChain',
 					'v1.validator.getByChain',

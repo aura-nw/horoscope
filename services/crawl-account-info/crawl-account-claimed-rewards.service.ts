@@ -6,10 +6,14 @@ import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
+import RedisMixin from '../../mixins/redis/redis.mixin';
+import * as mongoose from 'mongoose';
+import * as mongodb from 'mongodb';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
+	private redisMixin = new RedisMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
 
 	public constructor(public broker: ServiceBroker) {
@@ -26,6 +30,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
+				this.redisMixin,
 			],
 			queues: {
 				'crawl.account-claimed-rewards': {
@@ -95,8 +100,15 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
 		const chain = LIST_NETWORK.find(x => x.chainId === chainId);
+		let handledRewardRedis = await this.redisClient.get(Config.REDIS_KEY_START_TX_REWARDS);
 		try {
 			for (let tx of listTx) {
+				let startTimeStamp = Math.floor(new Date(tx.tx_response.timestamp).getTime() / 1000);
+				let id = mongodb.ObjectId.createFromTime(startTimeStamp).toString();
+				if (!handledRewardRedis || 
+					new mongodb.ObjectId(handledRewardRedis).getTimestamp() > new Date(tx.tx_response.timestamp)) {
+					await this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, id); 
+				}
 				const userAddress = tx.tx.body.messages[0].delegator_address;
 				let account: AccountInfoEntity = await this.adapter.findOne({
 					address: userAddress,
@@ -256,6 +268,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 	}
 
 	async _start() {
+		this.redisClient = await this.getRedisClient();
 		this.getQueue('crawl.account-claimed-rewards').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
