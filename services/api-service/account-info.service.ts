@@ -507,29 +507,23 @@ export default class AccountInfoService extends MoleculerDBService<
 		},
 	})
 	async getAccountDelegationInfoByAddress(ctx: Context<AccountInfoRequest>) {
-		this.mongoDBClient = await this.connectToDB();
-		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let accountInfoCollection = await db.collection('account_info');
-
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
 		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
-			accountInfoCollection.findOne(
-				{
+			this.adapter.lean({
+				query: {
 					address: ctx.params.address,
 					'custom_info.chain_id': ctx.params.chainId,
 				},
-				{
-					projection: {
-						address: 1,
-						account_balances: 1,
-						account_delegations: 1,
-						custom_info: 1,
-					},
-				},
-			),
+				projection: {
+					address: 1,
+					account_balances: 1,
+					account_delegations: 1,
+					custom_info: 1,
+				}
+			}),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
 		let result: ResponseDto;
@@ -539,8 +533,8 @@ export default class AccountInfoService extends MoleculerDBService<
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
 			});
-			accountInfo.account_delegate_rewards = accountRewards;
-			const data = accountInfo;
+			let data = Object.assign({}, accountInfo);
+			data.account_delegate_rewards = accountRewards;
 			result = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
