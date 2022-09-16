@@ -78,6 +78,11 @@ export interface INetworkInfo {
 	prefixAddress: string;
 }
 
+export interface IVoteAnswer {
+	label: string;
+	value: string;
+}
+
 export interface ISearchTxQuery {
 	type: string;
 	key: string;
