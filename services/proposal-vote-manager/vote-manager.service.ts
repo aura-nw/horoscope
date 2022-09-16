@@ -16,7 +16,7 @@ export default class VoteHandlerService extends Service {
 							`ctx.params proposal-vote-manager insert ${JSON.stringify(ctx.params)}`,
 						);
 						// @ts-ignore
-						const result = await this.adapter.insert(ctx.params);
+						const result = await this.adapter.insertMany(ctx.params);
 						return result;
 					},
 				},

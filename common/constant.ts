@@ -47,6 +47,12 @@ export const MSG_TYPE = {
 };
 
 export const LIST_NETWORK: INetworkInfo[] = require('../network.json');
+export const LIST_VOTE_ANSWER: string[] = [
+	'VOTE_OPTION_YES',
+	'VOTE_OPTION_NO',
+	'VOTE_OPTION_NO_WITH_VETO',
+	'VOTE_OPTION_ABSTAIN',
+];
 
 export const EVENT_TYPE = {
 	WASM: 'wasm',

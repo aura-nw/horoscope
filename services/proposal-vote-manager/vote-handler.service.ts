@@ -3,8 +3,9 @@ import { dbVoteMixin } from '@Mixins/dbMixinMongoose/db-vote.mixin';
 import { Job } from 'bull';
 const QueueService = require('moleculer-bull');
 import { Config } from 'common';
-import { VOTE_MANAGER_ACTION } from 'common/constant';
+import { LIST_NETWORK, VOTE_MANAGER_ACTION } from 'common/constant';
 import { ITransaction } from 'entities';
+import { CustomInfo } from 'entities/custom-info.entity';
 import { VoteEntity } from 'entities/vote.entity';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
@@ -44,12 +45,15 @@ export default class VoteHandlerService extends Service {
 				},
 			},
 			events: {
+				// listen to event from tx-handler
 				'list-tx.upsert': {
 					handler: (ctx: any) => {
+						// create job to handle vote
 						this.createJob(
 							'proposal.vote',
 							{
 								listTx: ctx.params.listTx,
+								chainId: ctx.params.chainId,
 							},
 							{
 								removeOnComplete: true,
@@ -60,6 +64,7 @@ export default class VoteHandlerService extends Service {
 				},
 			},
 			actions: {
+				// action to take vote from tx
 				'act-take-vote': {
 					async handler(ctx: Context<TakeVoteRequest>): Promise<any> {
 						const { listTx } = ctx.params;
@@ -71,13 +76,21 @@ export default class VoteHandlerService extends Service {
 		});
 	}
 
-	async handleJob(listTx: any) {
+	async handleJob(listTx: any, chainId?: string) {
+		const votes: VoteEntity[] = [];
 		for (const tx of listTx) {
+			// continue if tx is not vote
 			if (
 				tx.tx_response.logs[0]?.events[0]?.attributes[0]?.value !==
 				'/cosmos.gov.v1beta1.MsgVote'
 			)
 				continue;
+
+			// continue if chainId is not found
+			if (!chainId && !tx.custom_info.chain_id) continue;
+			const chain = chainId || tx.custom_info.chain_id;
+
+			// create vote entity
 			const voteMsg = tx.tx_response.tx.body.messages[0];
 			const proposal_id = Number(voteMsg.proposal_id);
 			const answer = voteMsg.option;
@@ -85,6 +98,11 @@ export default class VoteHandlerService extends Service {
 			const txhash = tx.tx_response.txhash;
 			const timestamp = tx.tx_response.timestamp;
 			const height = tx.tx_response.height;
+			const chainInfo: CustomInfo = {
+				chain_id: chain,
+				chain_name:
+					LIST_NETWORK.find((x) => x.chainId == Config.CHAIN_ID)?.chainName || 'unknown',
+			};
 			const vote = {
 				voter_address,
 				proposal_id,
@@ -92,9 +110,13 @@ export default class VoteHandlerService extends Service {
 				txhash,
 				timestamp,
 				height,
+				custom_info: chainInfo,
 			};
 			const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
-			this.broker.call(VOTE_MANAGER_ACTION.INSERT, voteEntity);
+			votes.push(voteEntity);
 		}
+
+		// call action to save votes
+		if (votes.length > 0) this.broker.call(VOTE_MANAGER_ACTION.INSERT, votes);
 	}
 }
