@@ -2,7 +2,7 @@ import { Config } from '../../common';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
 import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
-import { ListTxCreatedParams } from 'types';
+import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
 import { AccountInfoEntity, ITransaction } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
@@ -167,8 +167,8 @@ export default class HandleAddressService extends Service {
 				}
 			}
 
+			let listUniqueAddresses = listAddresses.filter(this.onlyUnique);
 			try {
-				let listUniqueAddresses = listAddresses.filter(this.onlyUnique);
 				listUniqueAddresses.map((address) => {
 					const account: AccountInfoEntity = {} as AccountInfoEntity;
 					account.address = address;
@@ -188,8 +188,13 @@ export default class HandleAddressService extends Service {
 				this.logger.error(error);
 			}
 			listUpdateInfo.map((item) => {
-				this.broker.emit(item, { listAddresses, chainId });
+				this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });
 			});
+			if (source !== CONST_CHAR.API)
+				this.broker.emit('account-info.upsert-claimed-rewards', {
+					listTx,
+					chainId,
+				} as CrawlAccountClaimedRewardsParams);
 		}
 	}
 

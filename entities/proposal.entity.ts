@@ -20,6 +20,7 @@ export interface IProposal {
 	voting_end_time: Date | null;
 	proposer_address: String | null;
 	proposer_name: String | null;
+	initial_deposit: ICoin[];
 }
 
 export interface IDepositTx {
@@ -88,8 +89,8 @@ export interface IContent {
 	title: String;
 	description: String;
 	changes: Changes[];
-	recipient: String;
-	amount: Coin[];
+	recipient: String | null;
+	amount: ICoin[] | null;
 }
 @JsonObject('content')
 export class Content implements IContent {
@@ -134,6 +135,8 @@ export class ProposalEntity implements IProposal {
 	deposit: IDeposit = {} as IDeposit;
 	proposer_address: String | null = null;
 	proposer_name: String | null = null;
+	initial_deposit: Coin[] = [];
+
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

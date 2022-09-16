@@ -968,10 +968,10 @@
                                 "CW20",
                                 "CW721"
                             ],
-                            "type": "string"
+                            "type": "string",
+                            "default": "CW20"
                         },
-                        "description": "Type asset need to query",
-                        "default": "CW20"
+                        "description": "Type asset need to query"
                     },
                     {
                         "in": "query",
@@ -2015,11 +2015,11 @@
                                                                                 "type": "string",
                                                                                 "example": "7D045310732FBDB9DB3C31CE644E831BA450B89C6FC46E298B1589AE6BC61FCE"
                                                                             }
-                                                                        },
-                                                                        "hash": {
-                                                                            "type": "string",
-                                                                            "example": "0FC0669C5CC9F8C7A891F6BCE43334D5391BA36F1E178D0C10C2E77BAA5CFB9F"
                                                                         }
+                                                                    },
+                                                                    "hash": {
+                                                                        "type": "string",
+                                                                        "example": "0FC0669C5CC9F8C7A891F6BCE43334D5391BA36F1E178D0C10C2E77BAA5CFB9F"
                                                                     }
                                                                 }
                                                             },
@@ -2128,7 +2128,10 @@
                                                                 "type": "object",
                                                                 "properties": {
                                                                     "evidence": {
-                                                                        "type": "array"
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object"
+                                                                        }
                                                                     }
                                                                 }
                                                             },
@@ -2425,11 +2428,11 @@
                                                                 "properties": {
                                                                     "amount": {
                                                                         "type": "string",
-                                                                        "amount": "100000"
+                                                                        "example": "100000"
                                                                     },
                                                                     "denom": {
                                                                         "type": "string",
-                                                                        "amount": "uaura"
+                                                                        "example": "uaura"
                                                                     }
                                                                 }
                                                             }
@@ -2446,11 +2449,11 @@
                                                                 "properties": {
                                                                     "denom": {
                                                                         "type": "string",
-                                                                        "amount": "uaura"
+                                                                        "example": "uaura"
                                                                     },
                                                                     "amount": {
                                                                         "type": "string",
-                                                                        "amount": "1000000"
+                                                                        "example": "1000000"
                                                                     }
                                                                 }
                                                             }
@@ -2628,7 +2631,10 @@
                                                             "type": "object",
                                                             "properties": {
                                                                 "send_enabled": {
-                                                                    "type": "array"
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object"
+                                                                    }
                                                                 },
                                                                 "default_send_enabled": {
                                                                     "type": "boolean",
@@ -3222,10 +3228,16 @@
                                                                             }
                                                                         },
                                                                         "extension_options": {
-                                                                            "type": "array"
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "object"
+                                                                            }
                                                                         },
                                                                         "non_critical_extension_options": {
-                                                                            "type": "array"
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "object"
+                                                                            }
                                                                         },
                                                                         "memo": {
                                                                             "type": "string",
@@ -3270,43 +3282,43 @@
                                                                                     "type": "string",
                                                                                     "example": ""
                                                                                 }
-                                                                            },
-                                                                            "signer_infos": {
-                                                                                "type": "array",
-                                                                                "items": {
-                                                                                    "type": "object",
-                                                                                    "properties": {
-                                                                                        "mode_info": {
-                                                                                            "type": "object",
-                                                                                            "properties": {
-                                                                                                "single": {
-                                                                                                    "type": "object",
-                                                                                                    "properties": {
-                                                                                                        "mode": {
-                                                                                                            "type": "string",
-                                                                                                            "example": "SIGN_MODE_DIRECT"
-                                                                                                        }
+                                                                            }
+                                                                        },
+                                                                        "signer_infos": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "mode_info": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "single": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "mode": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "SIGN_MODE_DIRECT"
                                                                                                     }
                                                                                                 }
                                                                                             }
-                                                                                        },
-                                                                                        "public_key": {
-                                                                                            "type": "object",
-                                                                                            "properties": {
-                                                                                                "@type": {
-                                                                                                    "type": "string",
-                                                                                                    "example": "/cosmos.crypto.secp256k1.PubKey"
-                                                                                                },
-                                                                                                "key": {
-                                                                                                    "type": "string",
-                                                                                                    "example": "xxxxxxxxxxxxxxxxxxxx"
-                                                                                                }
-                                                                                            }
-                                                                                        },
-                                                                                        "sequence": {
-                                                                                            "type": "string",
-                                                                                            "example": "1000000"
                                                                                         }
+                                                                                    },
+                                                                                    "public_key": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "@type": {
+                                                                                                "type": "string",
+                                                                                                "example": "/cosmos.crypto.secp256k1.PubKey"
+                                                                                            },
+                                                                                            "key": {
+                                                                                                "type": "string",
+                                                                                                "example": "xxxxxxxxxxxxxxxxxxxx"
+                                                                                            }
+                                                                                        }
+                                                                                    },
+                                                                                    "sequence": {
+                                                                                        "type": "string",
+                                                                                        "example": "1000000"
                                                                                     }
                                                                                 }
                                                                             }
@@ -3442,10 +3454,16 @@
                                                                                     "example": "0"
                                                                                 },
                                                                                 "extension_options": {
-                                                                                    "type": "array"
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "object"
+                                                                                    }
                                                                                 },
                                                                                 "non_critical_extension_options": {
-                                                                                    "type": "array"
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "object"
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         },
@@ -3482,43 +3500,43 @@
                                                                                             "type": "string",
                                                                                             "example": ""
                                                                                         }
-                                                                                    },
-                                                                                    "signer_infos": {
-                                                                                        "type": "array",
-                                                                                        "items": {
-                                                                                            "type": "object",
-                                                                                            "properties": {
-                                                                                                "mode_info": {
-                                                                                                    "type": "object",
-                                                                                                    "properties": {
-                                                                                                        "single": {
-                                                                                                            "type": "object",
-                                                                                                            "properties": {
-                                                                                                                "mode": {
-                                                                                                                    "type": "string",
-                                                                                                                    "example": "SIGN_MODE_DIRECT"
-                                                                                                                }
+                                                                                    }
+                                                                                },
+                                                                                "signer_infos": {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "mode_info": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "single": {
+                                                                                                        "type": "object",
+                                                                                                        "properties": {
+                                                                                                            "mode": {
+                                                                                                                "type": "string",
+                                                                                                                "example": "SIGN_MODE_DIRECT"
                                                                                                             }
                                                                                                         }
                                                                                                     }
-                                                                                                },
-                                                                                                "public_key": {
-                                                                                                    "type": "object",
-                                                                                                    "properties": {
-                                                                                                        "@type": {
-                                                                                                            "type": "string",
-                                                                                                            "example": "/cosmos.crypto.secp256k1.PubKey"
-                                                                                                        },
-                                                                                                        "key": {
-                                                                                                            "type": "string",
-                                                                                                            "example": "xxxxxxxxxxxxxxxxxxxx"
-                                                                                                        }
-                                                                                                    }
-                                                                                                },
-                                                                                                "sequence": {
-                                                                                                    "type": "string",
-                                                                                                    "example": "1000000"
                                                                                                 }
+                                                                                            },
+                                                                                            "public_key": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "@type": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "/cosmos.crypto.secp256k1.PubKey"
+                                                                                                    },
+                                                                                                    "key": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "xxxxxxxxxxxxxxxxxxxx"
+                                                                                                    }
+                                                                                                }
+                                                                                            },
+                                                                                            "sequence": {
+                                                                                                "type": "string",
+                                                                                                "example": "1000000"
                                                                                             }
                                                                                         }
                                                                                     }
@@ -3768,10 +3786,16 @@
                                                                             }
                                                                         },
                                                                         "extension_options": {
-                                                                            "type": "array"
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "object"
+                                                                            }
                                                                         },
                                                                         "non_critical_extension_options": {
-                                                                            "type": "array"
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "object"
+                                                                            }
                                                                         },
                                                                         "memo": {
                                                                             "type": "string",
@@ -3816,43 +3840,43 @@
                                                                                     "type": "string",
                                                                                     "example": ""
                                                                                 }
-                                                                            },
-                                                                            "signer_infos": {
-                                                                                "type": "array",
-                                                                                "items": {
-                                                                                    "type": "object",
-                                                                                    "properties": {
-                                                                                        "mode_info": {
-                                                                                            "type": "object",
-                                                                                            "properties": {
-                                                                                                "single": {
-                                                                                                    "type": "object",
-                                                                                                    "properties": {
-                                                                                                        "mode": {
-                                                                                                            "type": "string",
-                                                                                                            "example": "SIGN_MODE_DIRECT"
-                                                                                                        }
+                                                                            }
+                                                                        },
+                                                                        "signer_infos": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "mode_info": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "single": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "mode": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "SIGN_MODE_DIRECT"
                                                                                                     }
                                                                                                 }
                                                                                             }
-                                                                                        },
-                                                                                        "public_key": {
-                                                                                            "type": "object",
-                                                                                            "properties": {
-                                                                                                "@type": {
-                                                                                                    "type": "string",
-                                                                                                    "example": "/cosmos.crypto.secp256k1.PubKey"
-                                                                                                },
-                                                                                                "key": {
-                                                                                                    "type": "string",
-                                                                                                    "example": "xxxxxxxxxxxxxxxxxxxx"
-                                                                                                }
-                                                                                            }
-                                                                                        },
-                                                                                        "sequence": {
-                                                                                            "type": "string",
-                                                                                            "example": "1000000"
                                                                                         }
+                                                                                    },
+                                                                                    "public_key": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "@type": {
+                                                                                                "type": "string",
+                                                                                                "example": "/cosmos.crypto.secp256k1.PubKey"
+                                                                                            },
+                                                                                            "key": {
+                                                                                                "type": "string",
+                                                                                                "example": "xxxxxxxxxxxxxxxxxxxx"
+                                                                                            }
+                                                                                        }
+                                                                                    },
+                                                                                    "sequence": {
+                                                                                        "type": "string",
+                                                                                        "example": "1000000"
                                                                                     }
                                                                                 }
                                                                             }
@@ -3988,10 +4012,16 @@
                                                                                     "example": "0"
                                                                                 },
                                                                                 "extension_options": {
-                                                                                    "type": "array"
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "object"
+                                                                                    }
                                                                                 },
                                                                                 "non_critical_extension_options": {
-                                                                                    "type": "array"
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "object"
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         },
@@ -4028,43 +4058,43 @@
                                                                                             "type": "string",
                                                                                             "example": ""
                                                                                         }
-                                                                                    },
-                                                                                    "signer_infos": {
-                                                                                        "type": "array",
-                                                                                        "items": {
-                                                                                            "type": "object",
-                                                                                            "properties": {
-                                                                                                "mode_info": {
-                                                                                                    "type": "object",
-                                                                                                    "properties": {
-                                                                                                        "single": {
-                                                                                                            "type": "object",
-                                                                                                            "properties": {
-                                                                                                                "mode": {
-                                                                                                                    "type": "string",
-                                                                                                                    "example": "SIGN_MODE_DIRECT"
-                                                                                                                }
+                                                                                    }
+                                                                                },
+                                                                                "signer_infos": {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "mode_info": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "single": {
+                                                                                                        "type": "object",
+                                                                                                        "properties": {
+                                                                                                            "mode": {
+                                                                                                                "type": "string",
+                                                                                                                "example": "SIGN_MODE_DIRECT"
                                                                                                             }
                                                                                                         }
                                                                                                     }
-                                                                                                },
-                                                                                                "public_key": {
-                                                                                                    "type": "object",
-                                                                                                    "properties": {
-                                                                                                        "@type": {
-                                                                                                            "type": "string",
-                                                                                                            "example": "/cosmos.crypto.secp256k1.PubKey"
-                                                                                                        },
-                                                                                                        "key": {
-                                                                                                            "type": "string",
-                                                                                                            "example": "xxxxxxxxxxxxxxxxxxxx"
-                                                                                                        }
-                                                                                                    }
-                                                                                                },
-                                                                                                "sequence": {
-                                                                                                    "type": "string",
-                                                                                                    "example": "1000000"
                                                                                                 }
+                                                                                            },
+                                                                                            "public_key": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "@type": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "/cosmos.crypto.secp256k1.PubKey"
+                                                                                                    },
+                                                                                                    "key": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "xxxxxxxxxxxxxxxxxxxx"
+                                                                                                    }
+                                                                                                }
+                                                                                            },
+                                                                                            "sequence": {
+                                                                                                "type": "string",
+                                                                                                "example": "1000000"
                                                                                             }
                                                                                         }
                                                                                     }

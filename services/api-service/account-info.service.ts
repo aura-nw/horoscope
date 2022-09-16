@@ -1,7 +1,7 @@
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Get, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { Config } from '../../common';
-import { CONST_CHAR, URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from '../../common/constant';
+import { CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from '../../common/constant';
 import { Context } from 'moleculer';
 import {
 	AccountInfoRequest,
@@ -9,6 +9,7 @@ import {
 	ResponseDto,
 	ErrorCode,
 	ErrorMessage,
+	GetAccountStakeParams,
 } from '../../types';
 import { Utils } from '../../utils/utils';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
@@ -507,29 +508,23 @@ export default class AccountInfoService extends MoleculerDBService<
 		},
 	})
 	async getAccountDelegationInfoByAddress(ctx: Context<AccountInfoRequest>) {
-		this.mongoDBClient = await this.connectToDB();
-		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let accountInfoCollection = await db.collection('account_info');
-
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
 		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
-			accountInfoCollection.findOne(
-				{
+			this.adapter.lean({
+				query: {
 					address: ctx.params.address,
 					'custom_info.chain_id': ctx.params.chainId,
 				},
-				{
-					projection: {
-						address: 1,
-						account_balances: 1,
-						account_delegations: 1,
-						custom_info: 1,
-					},
-				},
-			),
+				projection: {
+					address: 1,
+					account_balances: 1,
+					account_delegations: 1,
+					custom_info: 1,
+				}
+			}),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
 		let result: ResponseDto;
@@ -539,8 +534,8 @@ export default class AccountInfoService extends MoleculerDBService<
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
 			});
-			accountInfo.account_delegate_rewards = accountRewards;
-			const data = accountInfo;
+			let data = Object.assign({}, accountInfo);
+			data.account_delegate_rewards = accountRewards;
 			result = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
@@ -568,5 +563,216 @@ export default class AccountInfoService extends MoleculerDBService<
 			}
 		}
 		return result;
+	}
+
+	/**
+	 *  @swagger
+	 *  /v1/account-info/stake:
+	 *    get:
+	 *      tags:
+	 *        - Account Info
+	 *      summary: Get account stake info
+	 *      description: Get account stake info
+	 *      parameters:
+	 *        - in: query
+	 *          name: chainId
+	 *          required: true
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          description: "Chain Id of network need to query"
+	 *        - in: query
+	 *          name: address
+	 *          required: true
+	 *          schema:
+	 *            type: string
+	 *          description: "Address need to query"
+	 *        - in: query
+	 *          name: type
+	 *          required: true
+	 *          schema:
+	 *            type: string
+	 *            enum: ["Delegations","Unbondings","Redelegations","Vestings"]
+	 *          description: "Type of stake need to query"
+	 *        - in: query
+	 *          name: limit
+	 *          required: true
+	 *          schema:
+	 *            type: number
+	 *            default: 10
+	 *          description: Limit number of data returned
+	 *        - in: query
+	 *          name: offset
+	 *          required: true
+	 *          schema:
+	 *            type: number
+	 *            default: 0
+	 *          description: Number of data to skip
+	 *      responses:
+	 *        '200':
+	 *          description: Account information
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      account_unbonding:
+	 *                        type: object
+	 *                        properties:
+	 *                          delegator_address:
+	 *                            type: string
+	 *                            example: 'aura123123123123'
+	 *                          validator_address:
+	 *                            type: string
+	 *                            example: 'auravaloper123123123'
+	 *                          entries:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                creation_height:
+	 *                                  type: string
+	 *                                  example: '100000'
+	 *                                completion_time:
+	 *                                  type: string
+	 *                                  example: '2022-09-13T09:23:12.018Z'
+	 *                                initial_balance:
+	 *                                  type: string
+	 *                                  example: '100000000'
+	 *                                balance:
+	 *                                  type: string
+	 *                                  example: '100000000'
+	 *        '422':
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.account-info"
+	 */
+	@Get('/stake', {
+		name: 'getAccountStake',
+		params: {
+			address: { type: 'string', required: true },
+			chainId: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+			type: { type: 'string', required: true },
+			limit: {
+				type: 'number',
+				required: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			offset: {
+				type: 'number',
+				required: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+		},
+	})
+	async getAccountStake(ctx: Context<GetAccountStakeParams, Record<string, unknown>>) {
+		let projection: any = [
+			{
+				$match: {
+					address: ctx.params.address,
+					'custom_info.chain_id': ctx.params.chainId,
+				}
+			}
+		];
+		switch (ctx.params.type) {
+			case 'Delegations':
+				projection.push(...[
+					{ $project: { account_delegations: 1 } },
+					{ $unwind: '$account_delegations' },
+					{ $skip: ctx.params.offset },
+					{ $limit: ctx.params.limit },
+				]);
+				break;
+			case 'Unbondings':
+				projection.push(...[
+					{ $project: { account_unbonding: 1 } },
+					{ $unwind: '$account_unbonding' },
+					{ $skip: ctx.params.offset },
+					{ $limit: ctx.params.limit },
+				]);
+				break;
+			case 'Redelegations':
+				projection.push(...[
+					{ $project: { account_redelegations: 1 } },
+					{ $unwind: '$account_redelegations' },
+					{ $skip: ctx.params.offset },
+					{ $limit: ctx.params.limit },
+				]);
+				break;
+			case 'Vestings':
+				projection.push(...[
+					{ $project: { account_auth: 1 } },
+					{ $unwind: '$account_auth' },
+				]);
+				projection['$project'] = { account_auth: 1 };
+				break;
+		}
+
+		let data = await this.adapter.aggregate(projection);
+		this.logger.info(data)
+		let response = {
+			code: ErrorCode.SUCCESSFUL,
+			message: ErrorMessage.SUCCESSFUL,
+			data,
+		};
+		return response;
 	}
 }

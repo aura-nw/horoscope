@@ -144,9 +144,9 @@ export default class BlockService extends MoleculerDBService<
 	 *                                    hash:
 	 *                                      type: string
 	 *                                      example: "7D045310732FBDB9DB3C31CE644E831BA450B89C6FC46E298B1589AE6BC61FCE"
-	 *                                  hash:
-	 *                                    type: string
-	 *                                    example: "0FC0669C5CC9F8C7A891F6BCE43334D5391BA36F1E178D0C10C2E77BAA5CFB9F"
+	 *                                hash:
+	 *                                  type: string
+	 *                                  example: "0FC0669C5CC9F8C7A891F6BCE43334D5391BA36F1E178D0C10C2E77BAA5CFB9F"
 	 *                            block:
 	 *                              type: object
 	 *                              properties:
@@ -223,7 +223,8 @@ export default class BlockService extends MoleculerDBService<
 	 *                               properties:
 	 *                                 evidence:
 	 *                                   type: array
-	 *
+	 *                                   items:
+	 *                                     type: object
 	 *                            custom_info:
 	 *                              type: object
 	 *                              properties:

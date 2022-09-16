@@ -2,16 +2,18 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { AccountInfoEntity, ITransaction, UnbondingResponse } from '../../entities';
-import { Utils } from '../../utils/utils';
-import { CrawlAccountInfoParams, ListTxCreatedParams } from '../../types';
+import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
+import RedisMixin from '../../mixins/redis/redis.mixin';
+import * as mongoose from 'mongoose';
+import * as mongodb from 'mongodb';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
+	private redisMixin = new RedisMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
 
 	public constructor(public broker: ServiceBroker) {
@@ -28,6 +30,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
+				this.redisMixin,
 			],
 			queues: {
 				'crawl.account-claimed-rewards': {
@@ -42,8 +45,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				},
 			},
 			events: {
-				'list-tx.upsert': {
-					handler: (ctx: Context<ListTxCreatedParams>) => {
+				'account-info.upsert-claimed-rewards': {
+					handler: (ctx: Context<CrawlAccountClaimedRewardsService>) => {
 						this.logger.debug(`Crawl account total claimed rewards`);
 						const listTx = ctx.params.listTx.filter((tx: ITransaction) => {
 							function checkValidClaimRewardsTx(tx: ITransaction) {
@@ -93,15 +96,21 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		});
 	}
 
-	async handleJob(listTx: ITransaction[], chainId: string) {
+	async handleJob(listTx: any[], chainId: string) {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
 		const chain = LIST_NETWORK.find(x => x.chainId === chainId);
+		let handledRewardRedis = await this.redisClient.get(Config.REDIS_KEY_START_TX_REWARDS);
 		try {
-			listTx.map((tx: any) => {
-				this.logger.info(tx);
+			for (let tx of listTx) {
+				let startTimeStamp = Math.floor(new Date(tx.tx_response.timestamp).getTime() / 1000);
+				let id = mongodb.ObjectId.createFromTime(startTimeStamp).toString();
+				if (!handledRewardRedis || 
+					new mongodb.ObjectId(handledRewardRedis).getTimestamp() > new Date(tx.tx_response.timestamp)) {
+					await this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, id); 
+				}
 				const userAddress = tx.tx.body.messages[0].delegator_address;
-				let account = this.adapter.findOne({
+				let account: AccountInfoEntity = await this.adapter.findOne({
 					address: userAddress,
 					'custom_info.chain_id': chainId,
 				});
@@ -112,122 +121,137 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				switch (tx.tx.body.messages[0]['@type']) {
 					case MSG_TYPE.MSG_DELEGATE:
 						const validatorAddress = tx.tx.body.messages[0].validator_address;
-						const indexReward = tx.logs[0].events[0]
+						const indexReward = tx.tx_response.logs[0].events
 							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes
 							.findIndex((x: any) => x.value === userAddress);
-						const claimedReward = tx.logs[0].events[0]
+						const claimedReward = tx.tx_response.logs[0].events
 							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes[indexReward + 1].value;
-						const amount = claimedReward.match(/\d+/g)[0];
+						let amount = '';
+						if (claimedReward !== '') amount = claimedReward.match(/\d+/g)[0];
 						if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)) {
-							account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress).amount
-								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress).amount.toString(), 10)
+							account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)!.amount
+								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)!.amount.toString(), 10)
 									+ parseInt(amount, 10)).toString();
 						} else {
+							account.account_claimed_rewards = [] as Rewards[];
 							account.account_claimed_rewards.push({
 								validator_address: validatorAddress,
-								denom: claimedReward.match(/[a-zA-Z]+/g)[0],
+								denom: claimedReward !== '' ? claimedReward.match(/[a-zA-Z]+/g)[0] : '',
 								amount,
-							});
+							} as Rewards);
 						}
 						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_REDELEGATE:
 						const valSrcAddress = tx.tx.body.messages[0].validator_src_address;
 						const valDstAddress = tx.tx.body.messages[0].validator_dst_address;
-						const coinReceived = tx.logs[0].events[0].find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes;
+						const coinReceived = tx.tx_response.logs[0].events.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes;
 						if (coinReceived.length === 2) {
 							const srcClaimedReward = coinReceived.find((x: any) => x.key === CONST_CHAR.AMOUNT).value;
-							const srcAmount = srcClaimedReward.match(/\d+/g)[0];
+							let srcAmount = '';
+							if (srcClaimedReward !== '') srcAmount = srcClaimedReward.match(/\d+/g)[0];
 							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
-								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress).amount
-									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress).amount.toString(), 10)
+								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount
+									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount.toString(), 10)
 										+ parseInt(srcAmount, 10)).toString();
 							} else {
+								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
-									validator_address: validatorAddress,
-									denom: srcClaimedReward.match(/[a-zA-Z]+/g)[0],
+									validator_address: valSrcAddress,
+									denom: srcClaimedReward !== '' ? srcClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
 									amount: srcAmount,
-								});
+								} as Rewards);
 							}
 						} else if (coinReceived.length > 2) {
 							const srcClaimedReward = coinReceived[1].value;
 							const dstClaimedReward = coinReceived[3].value;
-							const srcAmount = srcClaimedReward.match(/\d+/g)[0];
-							const dstAmount = dstClaimedReward.match(/\d+/g)[0];
+							let srcAmount = '';
+							if (srcClaimedReward !== '') srcAmount = srcClaimedReward.match(/\d+/g)[0];
+							let dstAmount = '';
+							if (dstClaimedReward !== '') dstAmount = dstClaimedReward.match(/\d+/g)[0];
 							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
-								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress).amount
-									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress).amount.toString(), 10)
+								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount
+									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount.toString(), 10)
 										+ parseInt(srcAmount, 10)).toString();
 							} else {
+								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
-									validator_address: validatorAddress,
-									denom: srcClaimedReward.match(/[a-zA-Z]+/g)[0],
+									validator_address: valSrcAddress,
+									denom: srcClaimedReward !== '' ? srcClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
 									amount: srcAmount,
-								});
+								} as Rewards);
 							}
 							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)) {
-								account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress).amount
-									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress).amount.toString(), 10)
+								account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)!.amount
+									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)!.amount.toString(), 10)
 										+ parseInt(dstAmount, 10)).toString();
 							} else {
+								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
-									validator_address: validatorAddress,
-									denom: dstClaimedReward.match(/[a-zA-Z]+/g)[0],
+									validator_address: valDstAddress,
+									denom: dstClaimedReward !== '' ? dstClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
 									amount: dstAmount,
-								});
+								} as Rewards);
 							}
 						}
 						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_UNDELEGATE:
 						const undelegateValAddress = tx.tx.body.messages[0].validator_address;
-						const undelegateIndexReward = tx.logs[0].events[0]
+						const undelegateIndexReward = tx.tx_response.logs[0].events
 							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes
 							.findIndex((x: any) => x.value === userAddress);
-						const undelegateClaimedReward = tx.logs[0].events[0]
+						const undelegateClaimedReward = tx.tx_response.logs[0].events
 							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes[undelegateIndexReward + 1].value;
-						const undelegateAmount = undelegateClaimedReward.match(/\d+/g)[0];
+						let undelegateAmount = '';
+						if (undelegateClaimedReward !== '') undelegateAmount = undelegateClaimedReward.match(/\d+/g)[0];
 						if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)) {
-							account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress).amount
-								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress).amount.toString(), 10)
+							account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)!.amount
+								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)!.amount.toString(), 10)
 									+ parseInt(undelegateAmount, 10)).toString();
 						} else {
+							account.account_claimed_rewards = [] as Rewards[];
 							account.account_claimed_rewards.push({
-								validator_address: validatorAddress,
-								denom: undelegateClaimedReward.match(/[a-zA-Z]+/g)[0],
+								validator_address: undelegateValAddress,
+								denom: undelegateClaimedReward !== '' ? undelegateClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
 								amount: undelegateAmount,
-							});
+							} as Rewards);
 						}
 						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_WITHDRAW_REWARDS:
 						tx.tx.body.messages.map((msg: any) => {
-							const log = tx.logs.find((log: any) => {
+							const log = tx.tx_response.logs.find((log: any) =>
 								log.events.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS).attributes
-									.find((attr: any) => attr.value === msg.validator_address);
-							});
+									.find((attr: any) => attr.key === CONST_CHAR.VALIDATOR).value === msg.validator_address);
 							const claimedReward = log.events.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS)
 								.attributes.find((attr: any) => attr.key === CONST_CHAR.AMOUNT).value;
-							const amount = claimedReward.match(/\d+/g)[0];
+							let amount = '';
+							if (claimedReward !== '') amount = claimedReward.match(/\d+/g)[0];
 							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)) {
-								account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address).amount
-									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address).amount.toString(), 10)
+								account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)!.amount
+									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)!.amount.toString(), 10)
 										+ parseInt(amount, 10)).toString();
 							} else {
+								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
 									validator_address: msg.validator_address,
-									denom: claimedReward.match(/[a-zA-Z]+/g)[0],
+									denom: claimedReward !== '' ? claimedReward.match(/[a-zA-Z]+/g)[0] : '',
 									amount,
-								});
+								} as Rewards);
 							}
 						});
 						listAccounts.push(account);
 						break;
 				}
-			});
-
+			};
 			listAccounts.map((element) => {
-				if (element._id) listUpdateQueries.push(this.adapter.updateById(element._id, { $set: { account_claimed_rewards: element.account_claimed_rewards } }));
+				if (element._id)
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_claimed_rewards: element.account_claimed_rewards }
+						})
+					);
 				else {
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(element, AccountInfoEntity);
 					item.custom_info = {
@@ -237,12 +261,14 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
+			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
 		}
 	}
 
 	async _start() {
+		this.redisClient = await this.getRedisClient();
 		this.getQueue('crawl.account-claimed-rewards').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});

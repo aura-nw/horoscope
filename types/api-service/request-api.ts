@@ -77,6 +77,14 @@ export interface CrawlAccountInfoParams {
 	chainId: string;
 }
 
+export interface GetAccountStakeParams {
+	address: string;
+	chainId: string;
+	type: string;
+	limit: number;
+	offset: number;
+}
+
 export interface GetProposalRequest extends ChainIdParams, PageLimit {
 	proposalId: string;
 }
