@@ -184,8 +184,12 @@ export default class BlockService extends MoleculerDBService<
 	 *                                          example: 'aura123123123123'
 	 *                                  extension_options:
 	 *                                    type: array
+	 *                                    items:
+	 *                                      type: object
 	 *                                  non_critical_extension_options:
 	 *                                    type: array
+	 *                                    items:
+	 *                                      type: object
 	 *                                  memo:
 	 *                                    type: string
 	 *                                    example: "This is Aura Tx"
@@ -217,32 +221,32 @@ export default class BlockService extends MoleculerDBService<
 	 *                                      granter:
 	 *                                        type: string
 	 *                                        example: ''
-	 *                                    signer_infos:
-	 *                                      type: array
-	 *                                      items:
-	 *                                        type: object
-	 *                                        properties:
-	 *                                          mode_info:
-	 *                                            type: object
-	 *                                            properties:
-	 *                                              single:
-	 *                                                type: object
-	 *                                                properties:
-	 *                                                  mode:
-	 *                                                    type: string
-	 *                                                    example: "SIGN_MODE_DIRECT"
-	 *                                          public_key:
-	 *                                            type: object
-	 *                                            properties:
-	 *                                              '@type':
-	 *                                                type: string
-	 *                                                example: '/cosmos.crypto.secp256k1.PubKey'
-	 *                                              key:
-	 *                                                type: string
-	 *                                                example: 'xxxxxxxxxxxxxxxxxxxx'
-	 *                                          sequence:
-	 *                                            type: string
-	 *                                            example: '1000000'
+	 *                                  signer_infos:
+	 *                                    type: array
+	 *                                    items:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        mode_info:
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            single:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                mode:
+	 *                                                  type: string
+	 *                                                  example: "SIGN_MODE_DIRECT"
+	 *                                        public_key:
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            '@type':
+	 *                                              type: string
+	 *                                              example: '/cosmos.crypto.secp256k1.PubKey'
+	 *                                            key:
+	 *                                              type: string
+	 *                                              example: 'xxxxxxxxxxxxxxxxxxxx'
+	 *                                        sequence:
+	 *                                          type: string
+	 *                                          example: '1000000'
 	 *                              signatures:
 	 *                                type: array
 	 *                                items:
@@ -337,8 +341,12 @@ export default class BlockService extends MoleculerDBService<
 	 *                                        example: '0'
 	 *                                      extension_options:
 	 *                                        type: array
+	 *                                        items:
+	 *                                          type: object
 	 *                                      non_critical_extension_options:
 	 *                                        type: array
+	 *                                        items:
+	 *                                          type: object
 	 *                                  auth_info:
 	 *                                    type: object
 	 *                                    properties:
@@ -364,32 +372,32 @@ export default class BlockService extends MoleculerDBService<
 	 *                                          granter:
 	 *                                            type: string
 	 *                                            example: ''
-	 *                                        signer_infos:
-	 *                                          type: array
-	 *                                          items:
-	 *                                            type: object
-	 *                                            properties:
-	 *                                              mode_info:
-	 *                                                type: object
-	 *                                                properties:
-	 *                                                  single:
-	 *                                                    type: object
-	 *                                                    properties:
-	 *                                                      mode:
-	 *                                                        type: string
-	 *                                                        example: "SIGN_MODE_DIRECT"
-	 *                                              public_key:
-	 *                                                type: object
-	 *                                                properties:
-	 *                                                  '@type':
-	 *                                                    type: string
-	 *                                                    example: '/cosmos.crypto.secp256k1.PubKey'
-	 *                                                  key:
-	 *                                                    type: string
-	 *                                                    example: 'xxxxxxxxxxxxxxxxxxxx'
-	 *                                              sequence:
-	 *                                                type: string
-	 *                                                example: '1000000'
+	 *                                      signer_infos:
+	 *                                        type: array
+	 *                                        items:
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            mode_info:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                single:
+	 *                                                  type: object
+	 *                                                  properties:
+	 *                                                    mode:
+	 *                                                      type: string
+	 *                                                      example: "SIGN_MODE_DIRECT"
+	 *                                            public_key:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                '@type':
+	 *                                                  type: string
+	 *                                                  example: '/cosmos.crypto.secp256k1.PubKey'
+	 *                                                key:
+	 *                                                  type: string
+	 *                                                  example: 'xxxxxxxxxxxxxxxxxxxx'
+	 *                                            sequence:
+	 *                                              type: string
+	 *                                              example: '1000000'
 	 *                                  signatures:
 	 *                                    type: array
 	 *                                    items:
@@ -591,7 +599,7 @@ export default class BlockService extends MoleculerDBService<
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
 		} else {
-			projection['tx.body.messages'] = { $slice: 3 };
+			projection['tx'] = 0;
 			projection['tx_response.tx.body.messages'] = { $slice: 3 };
 			projection['tx_response.events'] = { $slice: 3 };
 			projection['tx_response.logs'] = 0;
@@ -653,79 +661,6 @@ export default class BlockService extends MoleculerDBService<
 			}),
 		);
 
-		// find all from db
-		// if (Object.keys(query).length == 1 && query['custom_info.chain_id'] != undefined) {
-		// 	this.logger.debug('query all tx');
-		// 	listPromise.push(
-		// 		this.adapter.find({
-		// 			query: query,
-		// 			// @ts-ignore
-		// 			sort: sort,
-		// 			limit: ctx.params.pageLimit,
-		// 			offset: ctx.params.pageOffset,
-		// 		}),
-		// 	);
-		// }
-
-		// listPromise.push(
-		// 	Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
-		// 		let listTxHash: any[] = [];
-
-		// 		array.map((res: ResponseFromRPC) => {
-		// 			if (res) {
-		// 				listTxHash.push(
-		// 					...res.result.txs.map((e: any) => {
-		// 						return e.hash;
-		// 					}),
-		// 				);
-		// 			}
-		// 		});
-		// 		return this.adapter.find({
-		// 			query: {
-		// 				'tx_response.txhash': { $in: listTxHash },
-		// 			},
-		// 			// @ts-ignore
-		// 			sort: sort,
-		// 		});
-		// 	}),
-		// );
-
-		// if (ctx.params.nextKey) {
-		// 	this.logger.debug('get tx from db');
-		// 	if (listPromise.length == 0) {
-		// 		listPromise.push(
-		// 			this.adapter.find({
-		// 				query: query,
-		// 				// @ts-ignore
-		// 				sort: sort,
-		// 				limit: ctx.params.pageLimit,
-		// 				offset: ctx.params.pageOffset,
-		// 			}),
-		// 		);
-		// 	}
-		// } else {
-		// 	this.logger.debug('get tx hash from lcd');
-		// 	listPromise.push(
-		// 		Promise.all([...this.findTxFromLcd(ctx)]).then((array: ResponseFromRPC[]) => {
-		// 			// this.logger.info(array);
-		// 			let listTxHash: any[] = [];
-		// 			array.map((res: ResponseFromRPC) => {
-		// 				listTxHash.push(
-		// 					...res.result.txs.map((e: any) => {
-		// 						return e.hash;
-		// 					}),
-		// 				);
-		// 			});
-		// 			return this.adapter.find({
-		// 				query: {
-		// 					'tx_response.txhash': { $in: listTxHash },
-		// 				},
-		// 				// @ts-ignore
-		// 				sort: sort,
-		// 			});
-		// 		}),
-		// 	);
-		// }
 		try {
 			// @ts-ignore
 			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
@@ -742,10 +677,6 @@ export default class BlockService extends MoleculerDBService<
 
 			let nextKey = null;
 			if (result.length > 0) {
-				// await result.forEach((tx: any) => {
-				// 	delete tx['custom_info'];
-				// 	delete tx['indexes'];
-				// });
 				if (result.length == 1) {
 					nextKey = result[result.length - 1]?._id;
 				} else {
@@ -873,8 +804,12 @@ export default class BlockService extends MoleculerDBService<
 	 *                                          example: 'aura123123123123'
 	 *                                  extension_options:
 	 *                                    type: array
+	 *                                    items:
+	 *                                      type: object
 	 *                                  non_critical_extension_options:
 	 *                                    type: array
+	 *                                    items:
+	 *                                      type: object
 	 *                                  memo:
 	 *                                    type: string
 	 *                                    example: "This is Aura Tx"
@@ -906,32 +841,32 @@ export default class BlockService extends MoleculerDBService<
 	 *                                      granter:
 	 *                                        type: string
 	 *                                        example: ''
-	 *                                    signer_infos:
-	 *                                      type: array
-	 *                                      items:
-	 *                                        type: object
-	 *                                        properties:
-	 *                                          mode_info:
-	 *                                            type: object
-	 *                                            properties:
-	 *                                              single:
-	 *                                                type: object
-	 *                                                properties:
-	 *                                                  mode:
-	 *                                                    type: string
-	 *                                                    example: "SIGN_MODE_DIRECT"
-	 *                                          public_key:
-	 *                                            type: object
-	 *                                            properties:
-	 *                                              '@type':
-	 *                                                type: string
-	 *                                                example: '/cosmos.crypto.secp256k1.PubKey'
-	 *                                              key:
-	 *                                                type: string
-	 *                                                example: 'xxxxxxxxxxxxxxxxxxxx'
-	 *                                          sequence:
-	 *                                            type: string
-	 *                                            example: '1000000'
+	 *                                  signer_infos:
+	 *                                    type: array
+	 *                                    items:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        mode_info:
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            single:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                mode:
+	 *                                                  type: string
+	 *                                                  example: "SIGN_MODE_DIRECT"
+	 *                                        public_key:
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            '@type':
+	 *                                              type: string
+	 *                                              example: '/cosmos.crypto.secp256k1.PubKey'
+	 *                                            key:
+	 *                                              type: string
+	 *                                              example: 'xxxxxxxxxxxxxxxxxxxx'
+	 *                                        sequence:
+	 *                                          type: string
+	 *                                          example: '1000000'
 	 *                              signatures:
 	 *                                type: array
 	 *                                items:
@@ -1026,8 +961,12 @@ export default class BlockService extends MoleculerDBService<
 	 *                                        example: '0'
 	 *                                      extension_options:
 	 *                                        type: array
+	 *                                        items:
+	 *                                          type: object
 	 *                                      non_critical_extension_options:
 	 *                                        type: array
+	 *                                        items:
+	 *                                          type: object
 	 *                                  auth_info:
 	 *                                    type: object
 	 *                                    properties:
@@ -1053,32 +992,32 @@ export default class BlockService extends MoleculerDBService<
 	 *                                          granter:
 	 *                                            type: string
 	 *                                            example: ''
-	 *                                        signer_infos:
-	 *                                          type: array
-	 *                                          items:
-	 *                                            type: object
-	 *                                            properties:
-	 *                                              mode_info:
-	 *                                                type: object
-	 *                                                properties:
-	 *                                                  single:
-	 *                                                    type: object
-	 *                                                    properties:
-	 *                                                      mode:
-	 *                                                        type: string
-	 *                                                        example: "SIGN_MODE_DIRECT"
-	 *                                              public_key:
-	 *                                                type: object
-	 *                                                properties:
-	 *                                                  '@type':
-	 *                                                    type: string
-	 *                                                    example: '/cosmos.crypto.secp256k1.PubKey'
-	 *                                                  key:
-	 *                                                    type: string
-	 *                                                    example: 'xxxxxxxxxxxxxxxxxxxx'
-	 *                                              sequence:
-	 *                                                type: string
-	 *                                                example: '1000000'
+	 *                                      signer_infos:
+	 *                                        type: array
+	 *                                        items:
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            mode_info:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                single:
+	 *                                                  type: object
+	 *                                                  properties:
+	 *                                                    mode:
+	 *                                                      type: string
+	 *                                                      example: "SIGN_MODE_DIRECT"
+	 *                                            public_key:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                '@type':
+	 *                                                  type: string
+	 *                                                  example: '/cosmos.crypto.secp256k1.PubKey'
+	 *                                                key:
+	 *                                                  type: string
+	 *                                                  example: 'xxxxxxxxxxxxxxxxxxxx'
+	 *                                            sequence:
+	 *                                              type: string
+	 *                                              example: '1000000'
 	 *                                  signatures:
 	 *                                    type: array
 	 *                                    items:
@@ -1224,7 +1163,16 @@ export default class BlockService extends MoleculerDBService<
 
 		let listQueryAnd: any[] = [];
 		let listQueryOr: any[] = [];
-		let projection: any = { indexes: 0, custom_info: 0 };
+		let projection: any = {
+			indexes: 0,
+			custom_info: 0,
+			tx: 0,
+			'tx_response.tx.body.messages': { $slice: 3 },
+			'tx_response.events': 0,
+			'tx_response.logs': 0,
+			'tx_response.data': 0,
+			'tx_response.raw_log': 0,
+		};
 
 		if (address) {
 			listQueryOr.push(

@@ -85,10 +85,10 @@ export default class NetworkService extends MoleculerDBService<
 	 *                              properties:
 	 *                                amount:
 	 *                                  type: string
-	 *                                  amount: "100000"
+	 *                                  example: "100000"
 	 *                                denom:
 	 *                                  type: string
-	 *                                  amount: "uaura"
+	 *                                  example: "uaura"
 	 *                      supply:
 	 *                        type: object
 	 *                        properties:
@@ -99,10 +99,10 @@ export default class NetworkService extends MoleculerDBService<
 	 *                              properties:
 	 *                                denom:
 	 *                                  type: string
-	 *                                  amount: "uaura"
+	 *                                  example: "uaura"
 	 *                                amount:
 	 *                                  type: string
-	 *                                  amount: "1000000"
+	 *                                  example: "1000000"
 	 *        '422':
 	 *          description: Bad request
 	 *          content:
