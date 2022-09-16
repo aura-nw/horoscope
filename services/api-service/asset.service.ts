@@ -251,8 +251,8 @@ export default class BlockService extends MoleculerDBService<
 	 *          schema:
 	 *            enum: ["CW20","CW721"]
 	 *            type: string
+	 *            default: "CW20"
 	 *          description: "Type asset need to query"
-	 *          default: "CW20"
 	 *        - in: query
 	 *          name: tokenName
 	 *          required: false

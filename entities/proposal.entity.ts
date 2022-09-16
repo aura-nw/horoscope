@@ -20,6 +20,9 @@ export interface IProposal {
 	voting_end_time: Date | null;
 	proposer_address: String | null;
 	proposer_name: String | null;
+	initial_deposit: ICoin[];
+	recipient: String | null;
+	amount: ICoin[] | null;
 }
 
 export interface IDepositTx {
@@ -129,11 +132,17 @@ export class ProposalEntity implements IProposal {
 	voting_start_time = null;
 	@JsonProperty('voting_end_time', DateConverter)
 	voting_end_time = null;
+	@JsonProperty('recipient', String, true)
+	recipient: String | null = null;
+	@JsonProperty('total_deposit', [Coin], true)
+	amount: Coin[] | null = null;
 
 	tally: IFinalTallyResult = {} as IFinalTallyResult;
 	deposit: IDeposit = {} as IDeposit;
 	proposer_address: String | null = null;
 	proposer_name: String | null = null;
+	initial_deposit: Coin[] = [];
+
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

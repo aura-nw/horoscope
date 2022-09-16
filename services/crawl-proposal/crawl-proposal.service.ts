@@ -71,7 +71,7 @@ export default class CrawlProposalService extends Service {
 
 		this.logger.debug(`result: ${JSON.stringify(listProposal)}`);
 
-		let listProposalInDB: ProposalEntity[] = await this.adapter.find({
+		let listProposalInDB: ProposalEntity[] = await this.adapter.lean({
 			query: {
 				'custom_info.chain_id': Config.CHAIN_ID,
 			},
@@ -101,7 +101,10 @@ export default class CrawlProposalService extends Service {
 				try {
 					if (foundProposal) {
 						proposal._id = foundProposal._id;
-						if (foundProposal.proposal_id && !foundProposal.proposer_address) {
+						if (
+							foundProposal.proposal_id &&
+							(!foundProposal.proposer_address || !foundProposal.initial_deposit)
+						) {
 							let proposer = await this.getProposerBySearchTx(
 								foundProposal.proposal_id,
 							);
@@ -110,6 +113,9 @@ export default class CrawlProposalService extends Service {
 							}
 							if (proposer?.proposalAddress) {
 								proposal.proposer_address = proposer.proposalAddress;
+							}
+							if (proposer?.initialDeposit) {
+								proposal.initial_deposit = proposer.initialDeposit;
 							}
 						}
 						listPromise.push(this.adapter.updateById(foundProposal._id, proposal));
@@ -151,6 +157,7 @@ export default class CrawlProposalService extends Service {
 			`${Config.GET_TX_API_EVENTS}?events=submit_proposal.proposal_id=${proposalId}`,
 		);
 		try {
+			const initialDeposit = resultCallApi.txs[0].body.messages[0].initial_deposit;
 			const proposerAddress = resultCallApi.txs[0].body.messages[0].proposer;
 			let result: any = await this.broker.call('v1.crawlValidator.find', {
 				query: {
@@ -160,10 +167,15 @@ export default class CrawlProposalService extends Service {
 			});
 			if (result && result.length > 0) {
 				const nameValidator = result[0].description.moniker;
-				return { proposalAddress: proposerAddress, nameValidator: nameValidator };
+				return {
+					proposalAddress: proposerAddress,
+					nameValidator: nameValidator,
+					initialDeposit: initialDeposit,
+				};
 			} else {
 				return {
 					proposalAddress: proposerAddress,
+					initialDeposit: initialDeposit,
 				};
 			}
 		} catch (error) {

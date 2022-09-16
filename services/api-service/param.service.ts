@@ -101,6 +101,8 @@ export default class ParamService extends MoleculerDBService<
 	 *                            properties:
 	 *                              send_enabled:
 	 *                                type: array
+	 *                                items:
+	 *                                  type: object
 	 *                              default_send_enabled:
 	 *                                type: boolean
 	 *                                example: true
