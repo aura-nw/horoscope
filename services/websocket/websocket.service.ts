@@ -93,7 +93,7 @@ export default class WebsocketService extends Service {
 				'broadcast': {
 					async handler(ctx: Context<ListTxInBlockParams>) {
 						// @ts-ignore
-						await ctx.broadcast("listTx", ctx.params.listTx);
+						await this.io.emit("listTx", ctx.params.listTx);
 					},
 				},
 			},
