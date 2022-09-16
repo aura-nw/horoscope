@@ -92,6 +92,7 @@ export default class WebsocketService extends Service {
 				},
 				'broadcast': {
 					async handler(ctx: Context<ListTxInBlockParams>) {
+						// @ts-ignore
 						await ctx.broadcast("listTx", ctx.params.listTx);
 					},
 				},
@@ -105,10 +106,7 @@ export default class WebsocketService extends Service {
 
 		this.logger.info('Tx need to crawl' + ctx.params.txHashArr);
 
-		await redisClient.SADD(
-			SORTEDSET,
-			ctx.params.txHashArr,
-		);
+		await redisClient.SADD(SORTEDSET, ctx.params.txHashArr);
 	}
 
 	async handleNewBlock(listTx: ITransaction[]): Promise<any[]> {
@@ -122,13 +120,13 @@ export default class WebsocketService extends Service {
 
 			//Get all tx of a block
 			let listInsideTx: string[] = [];
-			listTx.forEach(x => {
+			listTx.forEach((x) => {
 				listInsideTx.push(x.tx_response.txhash.toString());
 			});
 
 			let sameTx: any[] = [];
 
-			syncTx.forEach(tx => {
+			syncTx.forEach((tx) => {
 				if (listInsideTx.indexOf(tx) > 0) {
 					sameTx.push(tx);
 				}
@@ -139,7 +137,7 @@ export default class WebsocketService extends Service {
 				await this.broker?.call('v1.io.broadcast', {
 					namespace: '/register',
 					event: 'hello',
-					args: [sameTx]
+					args: [listTx],
 				});
 			}
 
