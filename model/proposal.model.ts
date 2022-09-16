@@ -20,6 +20,13 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 				value: String,
 			},
 		],
+		recipient: String,
+		amount: [
+			{
+				denom: String,
+				amount: String,
+			},
+		],
 	},
 	status: String,
 	tally: {
@@ -59,13 +66,6 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 	proposer_address: String || null,
 	proposer_name: String || null,
 	initial_deposit: [
-		{
-			denom: String,
-			amount: String,
-		},
-	],
-	recipient: String || null,
-	amount: [
 		{
 			denom: String,
 			amount: String,
