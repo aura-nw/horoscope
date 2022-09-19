@@ -33,10 +33,10 @@ export default class IndexTxService extends Service {
 			queues: {
 				'index.tx': {
 					concurrency: 10,
-					process(job: Job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						this.handleJob(job.data.lastId);
+						await this.handleJob(job.data.lastId);
 						job.progress(100);
 						return true;
 					},
@@ -46,34 +46,39 @@ export default class IndexTxService extends Service {
 	}
 
 	async handleJob(lastId: string) {
-		// let listTx = await this.adapter.find({
-		// 	query: {
-		// 		_id: {
-		// 			$gt: new ObjectID('630b9f100000000000000000'),
-		// 			// $lt: new ObjectID('630bf202acc31a0012577ffd'),
-		// 		},
-		// 	},
-		// 	limit: 5000,
-		// 	//@ts-ignore
-		// 	sort: '-_id',
-		// });
 		let listTx = await this.adapter.find({
-			query: { 'indexes.message_action': { $regex: /[_]/g } },
-			limit: 5000,
+			query: {
+				'custom_info.chain_id': 'euphoria-1',
+				'indexes.height': { $type: 'string' },
+			},
+			limit: 500,
+			sort: '-indexes.height',
 		});
+		// let listTx = await this.adapter.find({
+		// 	query: { 'indexes.message_action': { $regex: /[_]/g } },
+		// 	limit: 5000,
+		// });
 		this.logger.info(1);
 		let bulkOps: any[] = [];
 		listTx.forEach(async (tx: any) => {
 			this.logger.info(tx._id.toString());
-			const actions = tx.indexes.message_action;
-			let newActions = actions.map((action: string) => {
-				return action.replace(/\_/g, '.');
-			});
+			let indexes: any = {};
+			indexes['timestamp'] = tx.tx_response.timestamp;
+			indexes['height'] = tx.tx_response.height;
+			// const actions = tx.indexes.message_action;
+			// let newActions = actions.map((action: string) => {
+			// 	return action.replace(/\_/g, '.');
+			// });
 
 			bulkOps.push({
 				updateOne: {
 					filter: { _id: tx._id },
-					update: { $set: { 'indexes.message_action': newActions } },
+					update: {
+						$set: {
+							'indexes.timestamp': indexes['timestamp'],
+							'indexes.height': indexes['height'],
+						},
+					},
 				},
 			});
 			if (bulkOps.length === 500) {
@@ -103,15 +108,15 @@ export default class IndexTxService extends Service {
 		// const account_address = bech32.encode('cosmos', bech32.toWords(wordsByte));
 		// this.logger.info('account_address:', account_address);
 		// this.redisClient = await this.getRedisClient();
-		// this.createJob(
-		// 	'index.tx',
-		// 	{
-		// 		lastId: '0',
-		// 	},
-		// 	{
-		// 		removeOnComplete: true,
-		// 	},
-		// );
+		this.createJob(
+			'index.tx',
+			{
+				lastId: '0',
+			},
+			{
+				removeOnComplete: true,
+			},
+		);
 
 		let operatorHexAddress = 'B00D6A3D473A303E8058810754074F8106804767';
 
