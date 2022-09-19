@@ -535,13 +535,13 @@ export default class AccountInfoService extends MoleculerDBService<
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
 		let result: ResponseDto;
-		if (accountInfo) {
+		if (accountInfo.length > 0) {
 			this.broker.call('v1.handleAddress.accountinfoupsert', {
 				listTx: [{ address: ctx.params.address, message: '' }],
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
 			});
-			let data = Object.assign({}, accountInfo);
+			let data = Object.assign({}, accountInfo[0]);
 			data.account_delegate_rewards = accountRewards;
 			result = {
 				code: ErrorCode.SUCCESSFUL,

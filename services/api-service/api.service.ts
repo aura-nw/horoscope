@@ -127,6 +127,7 @@ const listLCD = LIST_NETWORK.map((e) => {
 					'v1.transaction.getByChain',
 					'v1.transaction.getPowerEvent',
 					'v1.param.getByChain',
+					'v1.votes.getVotes',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 				use: [swMiddleware],
