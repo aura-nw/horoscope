@@ -1,6 +1,6 @@
 'use strict';
 
-import { voteMongoModel } from 'model/vote.model';
+import { voteMongoModel } from '../../model/vote.model';
 import { Config } from '../../common';
 import { DbBaseMixin } from './db-base.mixin';
 
