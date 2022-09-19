@@ -9,7 +9,7 @@ import { Config } from '../../common';
 import { DBInfo } from '../../types';
 // import { MongooseDbAdapter } from 'moleculer-db-adapter-mongoose';
 import MongooseDbAdapter = require('moleculer-db-adapter-mongoose');
-import CustomMongooseDbAdapter = require('../customMongoose');
+import CustomMongooseDbAdapter = require('../customMongooseAdapter');
 const SqlAdapter = require('moleculer-db-adapter-sequelize');
 export interface BaseMixinConfig {
 	name: string;
@@ -19,7 +19,7 @@ export interface BaseMixinConfig {
 }
 
 export class DbBaseMixin {
-	// public cacheCleanEventName: string;
+	public cacheCleanEventName: string;
 	private readonly mixName: string;
 	private readonly collection: string;
 	private readonly mixModel: Model<any>;
@@ -31,7 +31,7 @@ export class DbBaseMixin {
 		this.mixModel = info.model;
 		this.collection = info.collection;
 		this.dbInfo = info.dbInfo;
-		// this.cacheCleanEventName = `cache.clean.${this.dbInfo.dbname}.${this.dbInfo.collection}`;
+		this.cacheCleanEventName = `cache.clean.${this.dbInfo.dbname}.${this.dbInfo.collection}`;
 	}
 
 	public getMixin(seedDBFunction?: (adapter: DbAdapter) => Promise<void>): ServiceSchema {
@@ -87,12 +87,12 @@ export class DbBaseMixin {
 				 *
 				 * @param {Context} ctx
 				 */
-				// async [this.cacheCleanEventName]() {
-				// 	const broker: any = this.broker;
-				// 	if (broker.cacher) {
-				// 		await broker.cacher.clean(`${this.fullName}.*`);
-				// 	}
-				// },
+				async [this.cacheCleanEventName]() {
+					const broker: any = this.broker;
+					if (broker.cacher) {
+						await broker.cacher.clean(`${this.fullName}.*`);
+					}
+				},
 			},
 
 			methods: {
@@ -137,12 +137,16 @@ export class DbBaseMixin {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private getDBUri() {
 		let listParamUri = [`${this.dbInfo.dialect}://`];
-		if (this.dbInfo.user && this.dbInfo.password){
-			listParamUri.push(`${this.dbInfo.user}:${this.dbInfo.password}@`)
+		if (this.dbInfo.user && this.dbInfo.password) {
+			listParamUri.push(`${this.dbInfo.user}:${this.dbInfo.password}@`);
 		}
-		listParamUri.push(`${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`)
+		listParamUri.push(
+			`${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`,
+		);
 		if (this.dbInfo.replicaSet != '') {
-			listParamUri.push(`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`);
+			listParamUri.push(
+				`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`,
+			);
 		}
 		let uri = listParamUri.join('');
 		return uri;
@@ -201,7 +205,7 @@ export class DbBaseMixin {
 				dialect: 'mysql',
 				define: {
 					timestamps: false,
-				}
+				},
 			}),
 			collection: this.collection,
 			model: this.mixModel,

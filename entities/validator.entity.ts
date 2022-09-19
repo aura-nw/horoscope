@@ -48,6 +48,7 @@ export interface IValidator {
 	uptime: Number;
 	val_signing_info: ISigningInfo;
 	account_address: String;
+	percent_voting_power: Number;
 }
 
 @JsonObject('ConsensusPubkey')
@@ -133,6 +134,7 @@ export class ValidatorEntity implements IValidator {
 	public uptime: Number = 0;
 	public val_signing_info: ISigningInfo = {} as ISigningInfo;
 	public account_address: String = '';
+	public percent_voting_power: Number = 0;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle
