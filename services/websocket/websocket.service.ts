@@ -134,11 +134,11 @@ export default class WebsocketService extends Service {
 			});
 
 			//Broadcast message to websocket channel using broker call io service what is defined in constructor
-			if (true) {
+			if (sameTx.length > 0) {
 				await this.broker?.call('v1.io.broadcast', {
 					namespace: '/register',
 					event: 'broadcast-message',
-					args: [listTx],
+					args: [syncTx],
 				});
 			}
 
