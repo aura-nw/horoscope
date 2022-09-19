@@ -113,6 +113,7 @@ export default class CrawlValidatorService extends Service {
 			}
 		});
 		let result = await this.adapter.bulkWrite(listBulk);
+		// await this.adapter.clearCache();
 		this.logger.info(`Bulkwrite validator: ${listValidator.length}`, result);
 		let listAddress: string[] = listValidator.map((item) => item.operator_address.toString());
 		if (listAddress.length > 0) {
@@ -147,6 +148,23 @@ export default class CrawlValidatorService extends Service {
 					resultCallApiDelegation.delegation_response.balance;
 			}
 
+			let poolResult: any = await this.broker.call(
+				'v1.crawlPool.find',
+				{
+					query: {
+						'custom_info.chain_id': Config.CHAIN_ID,
+					},
+				},
+				{ meta: { $cache: false } },
+			);
+			if (poolResult && poolResult.length > 0) {
+				const percent_voting_power =
+					Number(
+						(BigInt(validator.tokens.toString()) * BigInt(100000000)) /
+							BigInt(poolResult[0].bonded_tokens),
+					) / 1000000;
+				validator.percent_voting_power = percent_voting_power;
+			}
 			this.logger.debug(`result: ${JSON.stringify(resultCallApiDelegation)}`);
 		} catch (error) {
 			this.logger.error(error);

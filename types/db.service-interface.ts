@@ -1,5 +1,5 @@
 /* eslint-disable no-shadow */
-import { IDbAdapterCustom } from '../mixins/customMongoose/IDBAdapterCustom';
+import { IDbAdapterCustom } from '../mixins/customMongooseAdapter/IDBAdapterCustom';
 import moleculer, { Context } from 'moleculer';
 import { DbAdapter, DbContextParameters } from 'moleculer-db';
 
