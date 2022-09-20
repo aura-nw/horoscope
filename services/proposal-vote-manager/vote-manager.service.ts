@@ -1,5 +1,5 @@
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { dbVoteMixin } from '@Mixins/dbMixinMongoose/db-vote.mixin';
+import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
 
 export default class VoteHandlerService extends Service {
 	public constructor(public broker: ServiceBroker) {

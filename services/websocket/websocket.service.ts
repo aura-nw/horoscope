@@ -76,7 +76,7 @@ export default class WebsocketService extends Service {
 						'/register': {
 							events: {
 								call: {
-									whitelist: ['v1.io.client-register', 'v1.io.broadcast'],
+									whitelist: ['v1.io.*', 'io.*'],
 								},
 							},
 						},
@@ -90,10 +90,11 @@ export default class WebsocketService extends Service {
 						await this.clientRegister(ctx);
 					},
 				},
-				'broadcast': {
-					async handler(ctx: Context<ListTxInBlockParams>) {
+				'broadcast-message': {
+					async handler(ctx: Context) {
 						// @ts-ignore
-						await this.io.emit("listTx", ctx.params.args);
+						await this.broker?.call("v1.io.broadcast", ctx.params.args);
+						// return ctx.params?.args;
 					},
 				},
 			},
@@ -133,11 +134,11 @@ export default class WebsocketService extends Service {
 			});
 
 			//Broadcast message to websocket channel using broker call io service what is defined in constructor
-			if (true) {
+			if (sameTx.length > 0) {
 				await this.broker?.call('v1.io.broadcast', {
 					namespace: '/register',
-					event: 'hello',
-					args: [listTx],
+					event: 'broadcast-message',
+					args: [syncTx],
 				});
 			}
 

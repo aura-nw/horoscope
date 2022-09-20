@@ -1,5 +1,5 @@
-import { dbVoteMixin } from '@Mixins/dbMixinMongoose/db-vote.mixin';
-import { redisMixin } from '@Mixins/redis/redis.mixin';
+import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
+import { redisMixin } from './../../mixins/redis/redis.mixin';
 import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
 import { LIST_NETWORK } from 'common/constant';
 import { IVote } from 'entities/vote.entity';
