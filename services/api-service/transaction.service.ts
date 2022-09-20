@@ -84,6 +84,12 @@ export default class BlockService extends MoleculerDBService<
 	 *            type: string
 	 *          description: "Address in transaction with token from smart contract"
 	 *        - in: query
+	 *          name: sequenceIBC
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *          description: "Sequence in transaction IBC"
+	 *        - in: query
 	 *          name: searchType
 	 *          required: false
 	 *          schema:
@@ -485,6 +491,7 @@ export default class BlockService extends MoleculerDBService<
 			txHash: { type: 'string', optional: true },
 			address: { type: 'string', optional: true },
 			addressInContract: { type: 'string', optional: true },
+			sequenceIBC: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -575,6 +582,7 @@ export default class BlockService extends MoleculerDBService<
 		const searchValue = ctx.params.searchValue;
 		const queryParam = ctx.params.query;
 		const addressInContract = ctx.params.addressInContract;
+		const sequenceIBC = ctx.params.sequenceIBC;
 		let findOne = false;
 		let projection: any = { indexes: 0, custom_info: 0 };
 		//TODO: fix slow when count in query
@@ -612,7 +620,6 @@ export default class BlockService extends MoleculerDBService<
 		let listQueryOr: any[] = [];
 
 		if (searchType && searchKey && searchValue) {
-			// query[`indexes.${searchType}_${searchKey}`] = searchValue;
 			listQueryAnd.push({
 				[`indexes.${searchType}_${searchKey}`]: { $exists: true, $eq: searchValue },
 			});
@@ -640,6 +647,16 @@ export default class BlockService extends MoleculerDBService<
 				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
 				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
 				{ 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
+			);
+		}
+		if (sequenceIBC) {
+			listQueryOr.push(
+				{
+					'indexes.send_packet_packet_sequence': { $exists: true, $eq: sequenceIBC },
+				},
+				{
+					'indexes.recv_packet_packet_sequence': { $exists: true, $eq: sequenceIBC },
+				},
 			);
 		}
 		if (listQueryAnd.length > 0) {
