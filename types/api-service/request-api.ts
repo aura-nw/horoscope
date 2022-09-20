@@ -68,9 +68,14 @@ export interface GetTxRequest
 	searchValue: string;
 	query: string;
 	addressInContract: string;
-	sequenceIBC: string;
 }
 export interface GetPowerEventTxRequest extends ChainIdParams, PageLimit, AddressParams {}
+
+export interface GetIBCTxRequest extends PageLimit {
+	sequenceIBC: string;
+	chainid1: string;
+	chainid2: string;
+}
 export interface AccountInfoRequest {
 	address: string;
 	chainId: string;

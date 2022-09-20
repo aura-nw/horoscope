@@ -1,12 +1,12 @@
 import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
 import { redisMixin } from './../../mixins/redis/redis.mixin';
 import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
-import { LIST_NETWORK } from 'common/constant';
-import { IVote } from 'entities/vote.entity';
+import { LIST_NETWORK } from '../../common/constant';
+import { IVote } from '../../entities/vote.entity';
 import { Context } from 'moleculer';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
-import { ErrorCode, ErrorMessage, GetVoteRequest, MoleculerDBService } from 'types';
+import { ErrorCode, ErrorMessage, GetVoteRequest, MoleculerDBService } from '../../types';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
