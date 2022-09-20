@@ -15,7 +15,6 @@ import http from "k6/http";
 import { group, check, sleep } from "k6";
 import { randomItem, randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
 
-
 // const BASE_URL = "https://indexer.dev.aurascan.io/api";
 const BASE_URL = "https://indexer-test.dev.aurascan.io/api";
 // Sleep duration between successive requests.
@@ -28,7 +27,8 @@ const PAGE_LIMIT = "100"
 const PAGE_OFFSET = "1"
 const OPERATOR_ADDRESS = "euphoria-1"
 const CONTRACT_TYPE = "CW721"
-const address = JSON.parse(open("./data/account_serenity.json"));
+// const address = JSON.parse(open("./data/account_serenity.json"));
+const address = JSON.parse(open("./data/account_has_tx.json"));
 const validator_status = JSON.parse(open("./data/validator_status.json"));
 const module = JSON.parse(open("./data/module.json"));
 const contractAddressList = JSON.parse(open("./data/contract.json"));
@@ -37,11 +37,12 @@ export const options = {
     // vus: 10,
     // iterations: 10,
     stages: [
-        { target: 100, duration: '5s' },
-        { target: 150, duration: '10s' },
-        { target: 200, duration: '15s' },
-        { target: 250, duration: '20s' },
-        { target: 300, duration: '25s' },
+        // { target: 100, duration: '5s' },
+        // { target: 150, duration: '10s' },
+        // { target: 200, duration: '15s' },
+        // { target: 250, duration: '20s' },
+        // { target: 300, duration: '25s' },
+        { target: 1000, duration: '300s' },
       ],
 };
 

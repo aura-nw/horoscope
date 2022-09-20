@@ -28,7 +28,8 @@ const PAGE_LIMIT = "100"
 const PAGE_OFFSET = "1"
 const OPERATOR_ADDRESS = "euphoria-1"
 const CONTRACT_TYPE = "CW721"
-const address = JSON.parse(open("./data/account_serenity.json"));
+// const address = JSON.parse(open("./data/account_serenity.json"));
+const validator = JSON.parse(open("./data/validator.json"));
 const validator_status = JSON.parse(open("./data/validator_status.json"));
 const module = JSON.parse(open("./data/module.json"));
 const contractAddressList = JSON.parse(open("./data/contract.json"));
@@ -37,18 +38,20 @@ export const options = {
     // vus: 10,
     // iterations: 10,
     stages: [
-        { target: 100, duration: '5s' },
-        { target: 150, duration: '10s' },
-        { target: 200, duration: '15s' },
-        { target: 250, duration: '20s' },
-        { target: 300, duration: '25s' },
+        // { target: 100, duration: '5s' },
+        // { target: 150, duration: '10s' },
+        // { target: 200, duration: '15s' },
+        // { target: 250, duration: '20s' },
+        // { target: 300, duration: '25s' },
+        // { target: 1, duration: '3s' },
+        { target: 300, duration: '60s' },
       ],
 };
 
 export default function () {
     group("/v1/transaction/power-event", () => {
-        let pageLimit = '20'; // 
-        let rdAddress = randomItem(address); // 
+        let pageLimit = '100'; // 
+        let rdAddress = randomItem(validator); // 
         let chainid = CHAIN_ID; // 
         let pageOffset = ''; // 
         let countTotal = 'true'; // 
@@ -73,7 +76,10 @@ export default function () {
                 url = url + `&countTotal=${countTotal}`;
             }
             let request = http.get(url);
-
+            if (JSON.parse(request.body).code !== 200) {
+                console.log(request);
+            
+            }
             check(request, {
                 "OK": (r) => r.status === 200
             });

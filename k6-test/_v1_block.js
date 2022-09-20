@@ -34,11 +34,16 @@ export const options = {
     // vus: 10,
     // iterations: 10,
     stages: [
-        { target: 100, duration: '5s' },
-        { target: 150, duration: '10s' },
-        { target: 200, duration: '15s' },
-        { target: 250, duration: '20s' },
-        { target: 300, duration: '25s' },
+        // { target: 100, duration: '5s' },
+        // { target: 150, duration: '10s' },
+        // { target: 200, duration: '15s' },
+        // { target: 250, duration: '20s' },
+        // { target: 300, duration: '25s' },
+        { target: 500, duration: '300s' },
+        // { target: 150, duration: '10s' },
+        // { target: 200, duration: '15s' },
+        // { target: 250, duration: '20s' },
+        // { target: 300, duration: '25s' },
     ],
 };
 
@@ -96,14 +101,15 @@ export default function () {
 
         // Request No. 2
         {
-            blockHeight = randomIntBetween(1,3587793);
+            blockHeight = randomIntBetween(1,4000000);
             if (blockHeight != '') {
                 url = url + `&blockHeight=${blockHeight}`;
             }
             let request = http.get(url);
-
+            // console.log(JSON.parse(request.body).code);
             check(request, {
-                "Block result": (r) => r.status === 200
+                // "Block result": (r) => r.status === 200,
+                "Code result": (r) => JSON.parse(r.body).code === 200
             });
         }
     });

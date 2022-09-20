@@ -26,20 +26,32 @@ const PAGE_LIMIT = "100"
 const PAGE_OFFSET = "1"
 const OPERATOR_ADDRESS = "euphoria-1"
 const CONTRACT_TYPE = "CW721"
-const address = JSON.parse(open("./data/account_serenity.json"));
+// const address = JSON.parse(open("./data/account_serenity.json"));
+const address = JSON.parse(open("./data/account_has_cw721.json"));
 const validator_status = JSON.parse(open("./data/validator_status.json"));
 const module = JSON.parse(open("./data/module.json"));
 const contractAddressList = JSON.parse(open("./data/contract.json"));
 export const options = {
     // vus: 10,
     // iterations: 10,
-    stages: [
-        { target: 100, duration: '5s' },
-        { target: 150, duration: '10s' },
-        { target: 200, duration: '15s' },
-        { target: 250, duration: '20s' },
-        { target: 300, duration: '25s' },
-      ],
+    // stages: [
+    //     // { target: 100, duration: '5s' },
+    //     // { target: 150, duration: '10s' },
+    //     // { target: 200, duration: '15s' },
+    //     // { target: 250, duration: '20s' },
+    //     // { target: 300, duration: '25s' },
+    //     { target: 10000, duration: '300s' },
+    //   ],
+    scenarios: {
+        constant_request_rate: {
+            executor: 'constant-arrival-rate',
+            rate: 10000,
+            timeUnit: '1s', // 1000 iterations per second, i.e. 1000 RPS
+            duration: '300s',
+            preAllocatedVUs: 100, // how large the initial pool of VUs would be
+            maxVUs: 2000, // if the preAllocatedVUs are not enough, we can initialize more
+        },
+    },
 };
 
 export default function () {
@@ -48,8 +60,10 @@ export default function () {
         let tokenId = ''; // 
         let chainid = CHAIN_ID; // 
         let tokenName = ''; // 
-        let contractAddress = randomItem(contractAddressList); // 
+        // let contractAddress = randomItem(contractAddressList); // 
+        let contractAddress = ''; // 
         let countTotal = 'true'; // 
+        let contractType = CONTRACT_TYPE; // 
 
         // Request No. 1
         {
@@ -66,10 +80,19 @@ export default function () {
             if (countTotal != '') {
                 url = url + `&countTotal=${countTotal}`;
             }
+            if (contractType != '') {
+                url = url + `&contractType=${contractType}`;
+            }
             let request = http.get(url);
 
+            // check(request, {
+            //     "OK": (r) => r.status === 200
+            // });
+            // console.log(owner,JSON.parse(request.body));
+            // console.log(request);
             check(request, {
-                "OK": (r) => r.status === 200
+                // "Block result": (r) => r.status === 200,
+                "Code result": (r) => JSON.parse(r.body).code === 200
             });
         }
     });
