@@ -102,18 +102,22 @@ export class Common {
 		let uri_handled = '';
 		let file_name = '';
 		let media_link_key = '';
+		let hostname = '';
+		let path = '';
 		if (parsed.protocol === IPFS_PREFIX) {
 			const cid = parsed.host;
 			const cidBase32 = new CID(cid).toV1().toString('base32');
 			uri_handled = `${IPFS_GATEWAY}${cidBase32}`;
 			file_name = cid;
 			media_link_key = cid;
+			hostname = IPFS_GATEWAY;
+			path = cidBase32;
 		} else {
 			uri_handled = uri;
 			file_name = uri.replace(/^.*[\\\/]/, '');
 			media_link_key = Common.hash(uri);
 		}
-		return [uri_handled, file_name, media_link_key];
+		return [uri_handled, file_name, media_link_key, hostname, path];
 	}
 
 	public static createCW721AssetObject = function (

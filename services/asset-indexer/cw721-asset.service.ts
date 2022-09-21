@@ -26,8 +26,8 @@ const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
-const VALIDATE_CODEID_PREFIX = "validate_codeid";
-const HANDLE_CODEID_PREFIX = "handle_codeid";
+const VALIDATE_CODEID_PREFIX = 'validate_codeid';
+const HANDLE_CODEID_PREFIX = 'handle_codeid';
 
 const callApiMixin = new CallApiMixin().start();
 
@@ -45,7 +45,7 @@ const callApiMixin = new CallApiMixin().start();
 				const chain_id = ctx.params.chain_id;
 				// const contract_type = ctx.params.contract_type;
 				const URL = ctx.params.URL;
-				const cacheKey =`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`;
+				const cacheKey = `${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`;
 				// @ts-ignore
 				this.logger.info('ctx.params', code_id, chain_id, CONTRACT_TYPE.CW721);
 				// @ts-ignore
@@ -170,8 +170,8 @@ export default class CrawlAssetService extends moleculer.Service {
 				OPTs,
 			);
 			const insertInforPromises = await Promise.all(
-				contractList.map(async (address: String) => {
-					await this.broker.call(
+				contractList.map((address: String) => {
+					return this.broker.call(
 						CW721_ACTION.ENRICH_DATA,
 						[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
 						OPTs,
@@ -208,15 +208,17 @@ export default class CrawlAssetService extends moleculer.Service {
 						OPTs,
 					);
 					if (tokenInfo != null) {
-						let [uri, file_name, media_link_key] = ['', '', ''];
+						let [uri, file_name, media_link_key, hostname, path] = ['', '', '', '', ''];
 						if (tokenInfo.data.info.token_uri) {
-							[uri, file_name, media_link_key] = Common.getKeyFromUri(
+							[uri, file_name, media_link_key, hostname, path] = Common.getKeyFromUri(
 								tokenInfo.data.info.token_uri,
 							);
 							this.broker.emit('CW721-media.get-media-link', {
 								uri,
 								file_name,
 								media_link_key,
+								hostname,
+								path,
 							});
 						}
 						const asset = await Common.createCW721AssetObject(
