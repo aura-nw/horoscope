@@ -125,16 +125,14 @@ export default class WebsocketService extends Service {
 				listInsideTx.push(x.tx_response.txhash.toString());
 			});
 
-			let sameTx: any[] = [];
-
-			syncTx.forEach((tx) => {
-				if (listInsideTx.indexOf(tx) > 0) {
-					sameTx.push(tx);
+			let txHadCrawl: any[] = await this.broker?.call('v1.transaction.find', {
+				query: {
+					'tx_response.txhash': {$in: syncTx},
 				}
 			});
 
 			//Broadcast message to websocket channel using broker call io service what is defined in constructor
-			if (sameTx.length > 0) {
+			if (txHadCrawl.length > 0) {
 				await this.broker?.call('v1.io.broadcast', {
 					namespace: '/register',
 					event: 'broadcast-message',
