@@ -1,10 +1,10 @@
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-import { dbTransactionMixin } from '@Mixins/dbMixinMongoose';
-import RedisMixin from '@Mixins/redis/redis.mixin';
+import { dbTransactionMixin } from './../../mixins/dbMixinMongoose';
+import RedisMixin from './../../mixins/redis/redis.mixin';
 import { Job } from 'bull';
 import { ObjectId } from 'mongodb';
-import { ITransaction } from 'entities';
+import { ITransaction } from '../../entities';
 const QueueService = require('moleculer-bull');
 
 export default class InitVotingData extends Service {
@@ -28,7 +28,7 @@ export default class InitVotingData extends Service {
 						job.progress(10);
 
 						// @ts-ignore
-						this.handleJob(job.data.lastId, job.data.currentSmallestVoteId);
+						this.handleJob(job.data.lastId, job.data.stopPoint);
 						job.progress(100);
 						return true;
 					},
@@ -37,16 +37,20 @@ export default class InitVotingData extends Service {
 		});
 	}
 
-	async handleJob(lastTxId: string, currentSmallestVoteId?: string) {
-		const smallestVoteId =
-			currentSmallestVoteId ||
-			(await this.broker.call('v1.proposal-vote-manager.act-find-smallest-id'));
+	async handleJob(lastTxId: string, stopPoint?: string) {
+		
+		let query: any = {};
+		if (lastTxId !== '0') query = { _id: { $gt: new ObjectId(lastTxId) } }
 
-		if (smallestVoteId && lastTxId > smallestVoteId) return true;
-		const query =
-			lastTxId === '0'
-				? { _id: { $lt: new ObjectId(smallestVoteId) } }
-				: { _id: { $gt: new ObjectId(lastTxId), $lt: new ObjectId(smallestVoteId) } };
+		this.logger.info(`stopPoint: ${stopPoint}, lastTxId: ${lastTxId}`);
+		if (stopPoint && lastTxId > stopPoint) return true;
+		if (stopPoint) {
+			query =
+				lastTxId === '0'
+					? { _id: { $lt: new ObjectId(stopPoint) } }
+					: { _id: { $gt: new ObjectId(lastTxId), $lt: new ObjectId(stopPoint) } };
+		}
+		
 		const listTx: ITransaction[] = await this.adapter.find({
 			query,
 			sort: '_id',
@@ -56,9 +60,11 @@ export default class InitVotingData extends Service {
 
 		if (listTx.length > 0) {
 			const lastId = listTx.at(-1)?._id;
+			this.logger.info(`lastId: ${lastId}`);
 			this.redisClient.set(Config.REDIS_KEY_VOTE_LAST_TX_ID, lastId?.toString());
-			this.createJob('init.voting.data', { lastId }, { removeOnComplete: true });
-			await this.broker.call('v1.vote-handler.act-take-vote', { listTx });
+			const stopPoint = Config.SCAN_TX_STOP_POINT;
+			this.createJob('init.voting.data', { lastId, stopPoint }, { removeOnComplete: true });
+			await this.broker.call(Config.SCAN_TX_ACTION, { listTx });
 		}
 		return true;
 	}

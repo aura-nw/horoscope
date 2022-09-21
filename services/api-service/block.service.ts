@@ -51,6 +51,7 @@ export default class BlockService extends MoleculerDBService<
 	 *            type: string
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
+	 *          example: "aura-testnet"
 	 *        - in: query
 	 *          name: blockHeight
 	 *          required: false
@@ -367,7 +368,10 @@ export default class BlockService extends MoleculerDBService<
 			const blockHash = ctx.params.blockHash;
 			const operatorAddress = ctx.params.operatorAddress;
 			const consensusHexAddress = ctx.params.consensusHexAddress;
-			const sort = ctx.params.reverse ? '_id' : '-_id';
+
+			// const sort = ctx.params.reverse ? '_id' : '-_id';
+			const sort = '-_id';
+
 			let needNextKey = true;
 			if (blockHeight) {
 				query['block.header.height'] = blockHeight;

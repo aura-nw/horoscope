@@ -53,6 +53,12 @@ export const MSG_TYPE = {
 	MSG_IBC_TRANSFER: '/ibc.applications.transfer.v1.MsgTransfer',
 	MSG_IBC_RECEIVE: '/ibc.core.channel.v1.MsgRecvPacket',
 	MSG_IBC_ACKNOWLEDGEMENT: '/ibc.core.channel.v1.MsgAcknowledgement',
+	MSG_IBC_CHANNEL_OPEN_ACK: '/ibc.core.channel.v1.MsgChannelOpenAck',
+	MSG_IBC_CHANNEL_OPEN_INIT: '/ibc.core.channel.v1.MsgChannelOpenInit',
+	MSG_IBC_CREATE_CLIENT: '/ibc.core.client.v1.MsgCreateClient',
+	MSG_IBC_UPDATE_CLIENT: '/ibc.core.client.v1.MsgUpdateClient',
+	MSG_IBC_CONNECTION_OPEN_ACK: '/ibc.core.connection.v1.MsgConnectionOpenAck',
+	MSG_IBC_CONNECTION_OPEN_INIT: '/ibc.core.connection.v1.MsgConnectionOpenInit',
 };
 
 export const LIST_NETWORK: INetworkInfo[] = require('../network.json');

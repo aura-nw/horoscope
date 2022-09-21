@@ -1,7 +1,12 @@
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Get, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from '../../common/constant';
+import {
+	CONST_CHAR,
+	LIST_NETWORK,
+	URL_TYPE_CONSTANTS,
+	VESTING_ACCOUNT_TYPE,
+} from '../../common/constant';
 import { Context } from 'moleculer';
 import {
 	AccountInfoRequest,
@@ -57,6 +62,7 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *            type: string
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
+	 *          example: "aura-testnet"
 	 *      responses:
 	 *        '200':
 	 *          description: Account information
@@ -374,6 +380,7 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *            type: string
 	 *          description: "Chain Id of network need to query"
+	 *          example: "aura-testnet"
 	 *      responses:
 	 *        '200':
 	 *          description: Account information
@@ -523,18 +530,18 @@ export default class AccountInfoService extends MoleculerDBService<
 					account_balances: 1,
 					account_delegations: 1,
 					custom_info: 1,
-				}
+				},
 			}),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
 		let result: ResponseDto;
-		if (accountInfo) {
+		if (accountInfo.length > 0) {
 			this.broker.call('v1.handleAddress.accountinfoupsert', {
 				listTx: [{ address: ctx.params.address, message: '' }],
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
 			});
-			let data = Object.assign({}, accountInfo);
+			let data = Object.assign({}, accountInfo[0]);
 			data.account_delegate_rewards = accountRewards;
 			result = {
 				code: ErrorCode.SUCCESSFUL,
@@ -581,6 +588,7 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *            type: string
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
+	 *          example: "aura-testnet"
 	 *        - in: query
 	 *          name: address
 	 *          required: true
@@ -729,45 +737,50 @@ export default class AccountInfoService extends MoleculerDBService<
 				$match: {
 					address: ctx.params.address,
 					'custom_info.chain_id': ctx.params.chainId,
-				}
-			}
+				},
+			},
 		];
 		switch (ctx.params.type) {
 			case 'Delegations':
-				projection.push(...[
-					{ $project: { account_delegations: 1 } },
-					{ $unwind: '$account_delegations' },
-					{ $skip: ctx.params.offset },
-					{ $limit: ctx.params.limit },
-				]);
+				projection.push(
+					...[
+						{ $project: { account_delegations: 1 } },
+						{ $unwind: '$account_delegations' },
+						{ $skip: ctx.params.offset },
+						{ $limit: ctx.params.limit },
+					],
+				);
 				break;
 			case 'Unbondings':
-				projection.push(...[
-					{ $project: { account_unbonding: 1 } },
-					{ $unwind: '$account_unbonding' },
-					{ $skip: ctx.params.offset },
-					{ $limit: ctx.params.limit },
-				]);
+				projection.push(
+					...[
+						{ $project: { account_unbonding: 1 } },
+						{ $unwind: '$account_unbonding' },
+						{ $skip: ctx.params.offset },
+						{ $limit: ctx.params.limit },
+					],
+				);
 				break;
 			case 'Redelegations':
-				projection.push(...[
-					{ $project: { account_redelegations: 1 } },
-					{ $unwind: '$account_redelegations' },
-					{ $skip: ctx.params.offset },
-					{ $limit: ctx.params.limit },
-				]);
+				projection.push(
+					...[
+						{ $project: { account_redelegations: 1 } },
+						{ $unwind: '$account_redelegations' },
+						{ $skip: ctx.params.offset },
+						{ $limit: ctx.params.limit },
+					],
+				);
 				break;
 			case 'Vestings':
-				projection.push(...[
-					{ $project: { account_auth: 1 } },
-					{ $unwind: '$account_auth' },
-				]);
+				projection.push(
+					...[{ $project: { account_auth: 1 } }, { $unwind: '$account_auth' }],
+				);
 				projection['$project'] = { account_auth: 1 };
 				break;
 		}
 
 		let data = await this.adapter.aggregate(projection);
-		this.logger.info(data)
+		this.logger.info(data);
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,

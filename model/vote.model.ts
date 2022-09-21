@@ -22,7 +22,7 @@ export const voteMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection: collection,
 	});
+	schema.index({ 'custom_info.chain_id': 1, proposal_id: -1, answer: 1 });
 	schema.index({ 'custom_info.chain_id': 1, proposal_id: -1 });
-	schema.index({ 'custom_info.chain_id': 1, height: 1 });
 	return models[collection] || model(collection, schema);
 };

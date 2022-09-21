@@ -1,12 +1,12 @@
-import CallApiMixin from '@Mixins/callApi/call-api.mixin';
-import { dbVoteMixin } from '@Mixins/dbMixinMongoose/db-vote.mixin';
+import CallApiMixin from './../../mixins/callApi/call-api.mixin';
+import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
 import { Job } from 'bull';
 const QueueService = require('moleculer-bull');
-import { Config } from 'common';
-import { LIST_NETWORK, VOTE_MANAGER_ACTION } from 'common/constant';
-import { ITransaction } from 'entities';
-import { CustomInfo } from 'entities/custom-info.entity';
-import { VoteEntity } from 'entities/vote.entity';
+import { Config } from '../../common';
+import { LIST_NETWORK, VOTE_MANAGER_ACTION } from '../../common/constant';
+import { ITransaction } from '../../entities';
+import { CustomInfo } from '../../entities/custom-info.entity';
+import { VoteEntity } from '../../entities/vote.entity';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 
@@ -80,11 +80,17 @@ export default class VoteHandlerService extends Service {
 		const votes: VoteEntity[] = [];
 		for (const tx of listTx) {
 			// continue if tx is not vote
-			if (
-				tx.tx_response.logs[0]?.events[0]?.attributes[0]?.value !==
-				'/cosmos.gov.v1beta1.MsgVote'
-			)
-				continue;
+			const messageEvent = tx.tx_response.logs[0]?.events.find(
+				(event: any) => event.type === 'message',
+			);
+			let actionName = '';
+			if (messageEvent) {
+				const actionAttribute = messageEvent.attributes.find(
+					(attribute: any) => attribute.key === 'action',
+				);
+				actionName = actionAttribute.value;
+			}
+			if (actionName !== '/cosmos.gov.v1beta1.MsgVote') continue;
 
 			// continue if chainId is not found
 			if (!chainId && !tx.custom_info.chain_id) continue;
@@ -101,7 +107,7 @@ export default class VoteHandlerService extends Service {
 			const chainInfo: CustomInfo = {
 				chain_id: chain,
 				chain_name:
-					LIST_NETWORK.find((x) => x.chainId == Config.CHAIN_ID)?.chainName || 'unknown',
+					LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
 			};
 			const vote = {
 				voter_address,
@@ -113,6 +119,7 @@ export default class VoteHandlerService extends Service {
 				custom_info: chainInfo,
 			};
 			const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
+			this.logger.info('voteEntity', JSON.stringify(voteEntity));
 			votes.push(voteEntity);
 		}
 

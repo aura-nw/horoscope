@@ -7,6 +7,7 @@ import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
 	ErrorMessage,
+	GetIBCTxRequest,
 	GetPowerEventTxRequest,
 	GetTxRequest,
 	ISearchTxQuery,
@@ -42,6 +43,506 @@ export default class BlockService extends MoleculerDBService<
 	},
 	ITransaction
 > {
+	@Get('/', {
+		name: 'getByChain',
+		params: {
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+			blockHeight: { type: 'number', optional: true, convert: true },
+			txHash: { type: 'string', optional: true },
+			address: { type: 'string', optional: true },
+			addressInContract: { type: 'string', optional: true },
+			sequenceIBC: { type: 'string', optional: true },
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			searchType: {
+				type: 'string',
+				optional: true,
+				default: null,
+				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => {
+					return e.type;
+				}),
+			},
+			searchKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => {
+					return e.key;
+				}),
+			},
+			searchValue: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+			query: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+			countTotal: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+		},
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getByChain(ctx: Context<GetTxRequest, Record<string, unknown>>) {
+		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
+
+		const blockHeight = ctx.params.blockHeight;
+		const txHash = ctx.params.txHash;
+		const address = ctx.params.address;
+		const searchType = ctx.params.searchType;
+		const searchKey = ctx.params.searchKey;
+		const searchValue = ctx.params.searchValue;
+		const queryParam = ctx.params.query;
+		const addressInContract = ctx.params.addressInContract;
+		const sequenceIBC = ctx.params.sequenceIBC;
+		let findOne = false;
+		let projection: any = { indexes: 0, custom_info: 0 };
+		//TODO: fix slow when count in query
+		// const countTotal = ctx.params.countTotal;
+		// ctx.params.countTotal = false;
+		// const sort = ctx.params.reverse ? '_id' : '-_id';
+
+		const sort = '-indexes.height';
+		let query: QueryOptions = {};
+		if (ctx.params.txHash) {
+			ctx.params.nextKey = undefined;
+			ctx.params.countTotal = false;
+			ctx.params.pageOffset = 0;
+			findOne = true;
+		}
+		if (ctx.params.nextKey) {
+			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+		}
+		query['custom_info.chain_id'] = ctx.params.chainid;
+		if (blockHeight) {
+			query['tx_response.height'] = blockHeight;
+		}
+		if (txHash) {
+			query['tx_response.txhash'] = txHash;
+		} else {
+			projection['tx'] = 0;
+			projection['tx_response.tx.body.messages'] = { $slice: 3 };
+			projection['tx_response.events'] = { $slice: 3 };
+			projection['tx_response.logs'] = 0;
+			projection['tx_response.data'] = 0;
+			projection['tx_response.raw_log'] = 0;
+		}
+
+		let listQueryAnd: any[] = [];
+		let listQueryOr: any[] = [];
+
+		if (searchType && searchKey && searchValue) {
+			listQueryAnd.push({
+				[`indexes.${searchType}_${searchKey}`]: { $exists: true, $eq: searchValue },
+			});
+		}
+
+		if (queryParam) {
+			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
+			let queryAnd: any[] = [];
+			queryParamFormat.forEach((e: any) => {
+				let tempQuery = {
+					[`indexes.${e.type}_${e.key}`]: { $exists: true, $eq: e.value },
+				};
+				queryAnd.push(tempQuery);
+			});
+			listQueryAnd.push(...queryAnd);
+		}
+		if (address) {
+			listQueryOr.push(
+				{ 'indexes.message_sender': { $exists: true, $eq: address } },
+				{ 'indexes.transfer_recipient': { $exists: true, $eq: address } },
+			);
+		}
+		if (addressInContract) {
+			listQueryOr.push(
+				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
+				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
+				{ 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
+			);
+		}
+
+		if (sequenceIBC) {
+			listQueryOr.push(
+				{
+					'indexes.send_packet_packet_sequence': {
+						$exists: true,
+						$eq: sequenceIBC,
+					},
+				},
+				{
+					'indexes.recv_packet_packet_sequence': {
+						$exists: true,
+						$eq: sequenceIBC,
+					},
+				},
+			);
+		}
+		if (listQueryAnd.length > 0) {
+			query['$and'] = listQueryAnd;
+		}
+
+		if (listQueryOr.length > 0) {
+			query['$or'] = listQueryOr;
+		}
+		this.logger.info('query: ', JSON.stringify(query));
+		let listPromise = [];
+		listPromise.push(
+			this.adapter.lean({
+				query: query,
+				projection: projection,
+				// @ts-ignore
+				sort: sort,
+				limit: ctx.params.pageLimit + 1,
+				offset: ctx.params.pageOffset,
+			}),
+		);
+
+		try {
+			// @ts-ignore
+			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
+				Promise.race(listPromise),
+				//@ts-ignore
+				ctx.params.countTotal === true
+					? this.adapter.countWithSkipLimit({
+							query: query,
+							skip: 0,
+							limit: ctx.params.pageLimit * 5,
+					  })
+					: 0,
+			]);
+
+			let nextKey = null;
+			if (result.length > 0) {
+				if (result.length == 1) {
+					nextKey = result[result.length - 1]?._id;
+				} else {
+					nextKey = ctx.params.txHash ? null : result[result.length - 2]?._id;
+				}
+				if (result.length <= ctx.params.pageLimit) {
+					nextKey = null;
+				}
+
+				if (nextKey) {
+					result.pop();
+				}
+			}
+
+			response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					transactions: result,
+					count: count,
+					nextKey: nextKey,
+				},
+			};
+		} catch (error) {
+			response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					error,
+				},
+			};
+		}
+
+		return response;
+	}
+
+	@Get('/power-event', {
+		name: 'getPowerEvent',
+		params: {
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+			address: { type: 'string', optional: false },
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+			countTotal: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+		},
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getPowerEvent(ctx: Context<GetPowerEventTxRequest, Record<string, unknown>>) {
+		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
+
+		const address = ctx.params.address;
+
+		const sort = '-indexes.height';
+		let query: QueryOptions = {};
+
+		if (ctx.params.nextKey) {
+			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+		}
+		query['custom_info.chain_id'] = ctx.params.chainid;
+
+		let listQueryAnd: any[] = [];
+		let listQueryOr: any[] = [];
+		let projection: any = {
+			indexes: 0,
+			custom_info: 0,
+			tx: 0,
+			'tx_response.tx.body.messages': { $slice: 3 },
+			'tx_response.events': 0,
+			'tx_response.logs': 0,
+			'tx_response.data': 0,
+			'tx_response.raw_log': 0,
+		};
+
+		if (address) {
+			listQueryOr.push(
+				{ 'indexes.delegate_validator': { $exists: true, $eq: address } },
+				{ 'indexes.redelegate_source_validator': { $exists: true, $eq: address } },
+				{ 'indexes.redelegate_destination_validator': { $exists: true, $eq: address } },
+				{ 'indexes.unbond_validator': { $exists: true, $eq: address } },
+			);
+		}
+
+		if (listQueryAnd.length > 0) {
+			query['$and'] = listQueryAnd;
+		}
+		if (listQueryOr.length > 0) {
+			query['$or'] = listQueryOr;
+		}
+
+		this.logger.info('query: ', JSON.stringify(query));
+		let listPromise = [];
+
+		listPromise.push(
+			this.adapter.lean({
+				query: query,
+				projection: projection,
+				// @ts-ignore
+				sort: sort,
+				limit: ctx.params.pageLimit + 1,
+				offset: ctx.params.pageOffset,
+			}),
+		);
+
+		try {
+			// @ts-ignore
+			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
+				Promise.race(listPromise),
+				//@ts-ignore
+				ctx.params.countTotal === true
+					? this.adapter.countWithSkipLimit({
+							query: query,
+							skip: 0,
+							limit: ctx.params.pageLimit * 5,
+					  })
+					: 0,
+			]);
+
+			let nextKey = null;
+			if (result.length > 0) {
+				if (result.length == 1) {
+					nextKey = result[result.length - 1]?._id;
+				} else {
+					nextKey = result[result.length - 2]?._id;
+				}
+				if (result.length <= ctx.params.pageLimit) {
+					nextKey = null;
+				}
+
+				if (nextKey) {
+					result.pop();
+				}
+			}
+
+			response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					transactions: result,
+					count: count,
+					nextKey: nextKey,
+				},
+			};
+		} catch (error) {
+			response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					error,
+				},
+			};
+		}
+
+		return response;
+	}
+
+	findTxFromLcd(ctx: Context<GetTxRequest, Record<string, unknown>>): any[] {
+		const blockHeight = ctx.params.blockHeight;
+		const txHash = ctx.params.txHash;
+		const address = ctx.params.address;
+		const searchType = ctx.params.searchType;
+		const searchKey = ctx.params.searchKey;
+		const searchValue = ctx.params.searchValue;
+		const queryParam = ctx.params.query;
+		const pageOffset = ctx.params.pageOffset + 1;
+		const pageLimit = ctx.params.pageLimit;
+		const sort = ctx.params.reverse === true ? 'asc' : 'desc';
+		const url = Utils.getUrlByChainIdAndType(ctx.params.chainid, URL_TYPE_CONSTANTS.RPC);
+		let listPromise = [];
+		let query = [];
+		if (blockHeight) {
+			query.push(`tx.height=${blockHeight}`);
+		}
+		if (txHash) {
+			query.push(`tx.hash='${txHash}'`);
+		}
+		if (searchKey && searchValue && searchType) {
+			query.push(`${searchType}.${searchKey}='${searchValue}'`);
+		}
+
+		if (queryParam) {
+			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
+			queryParamFormat.forEach((e: any) => {
+				query.push(`${e.type}.${e.key}=${e.value}`);
+			});
+		}
+		if (address) {
+			const querySender = [...query, `transfer.sender='${address}'`];
+			const queryRecipient = [...query, `transfer.recipient='${address}'`];
+			this.logger.debug(
+				`${Config.GET_TX_SEARCH}?query="${querySender.join(
+					' AND ',
+				)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+			);
+			this.logger.debug(
+				`${Config.GET_TX_SEARCH}?query="${queryRecipient.join(
+					' AND ',
+				)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+			);
+			listPromise.push(
+				this.callApiFromDomain(
+					url,
+					`${Config.GET_TX_SEARCH}?query="${querySender.join(
+						' AND ',
+					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+					0,
+				),
+				this.callApiFromDomain(
+					url,
+					`${Config.GET_TX_SEARCH}?query="${queryRecipient.join(
+						' AND ',
+					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+					0,
+				),
+			);
+		} else {
+			listPromise.push(
+				this.callApiFromDomain(
+					url,
+					`${Config.GET_TX_SEARCH}?query="${query.join(
+						' AND ',
+					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
+					0,
+				),
+			);
+		}
+		return listPromise;
+	}
+
 	/**
 	 *  @swagger
 	 *  /v1/transaction:
@@ -58,6 +559,7 @@ export default class BlockService extends MoleculerDBService<
 	 *            type: string
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
+	 *          example: "aura-testnet"
 	 *        - in: query
 	 *          name: blockHeight
 	 *          required: false
@@ -82,6 +584,12 @@ export default class BlockService extends MoleculerDBService<
 	 *          schema:
 	 *            type: string
 	 *          description: "Address in transaction with token from smart contract"
+	 *        - in: query
+	 *          name: sequenceIBC
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *          description: "Sequence IBC in IBC transaction"
 	 *        - in: query
 	 *          name: searchType
 	 *          required: false
@@ -470,248 +978,6 @@ export default class BlockService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1.transaction"
 	 */
-	@Get('/', {
-		name: 'getByChain',
-		params: {
-			chainid: {
-				type: 'string',
-				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
-			},
-			blockHeight: { type: 'number', optional: true, convert: true },
-			txHash: { type: 'string', optional: true },
-			address: { type: 'string', optional: true },
-			addressInContract: { type: 'string', optional: true },
-			pageLimit: {
-				type: 'number',
-				optional: true,
-				default: 10,
-				integer: true,
-				convert: true,
-				min: 1,
-				max: 100,
-			},
-			searchType: {
-				type: 'string',
-				optional: true,
-				default: null,
-				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => {
-					return e.type;
-				}),
-			},
-			searchKey: {
-				type: 'string',
-				optional: true,
-				default: null,
-				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => {
-					return e.key;
-				}),
-			},
-			searchValue: {
-				type: 'string',
-				optional: true,
-				default: null,
-			},
-			query: {
-				type: 'string',
-				optional: true,
-				default: null,
-			},
-			pageOffset: {
-				type: 'number',
-				optional: true,
-				default: 0,
-				integer: true,
-				convert: true,
-				min: 0,
-				max: 100,
-			},
-			countTotal: {
-				type: 'boolean',
-				optional: true,
-				default: false,
-				convert: true,
-			},
-			nextKey: {
-				type: 'string',
-				optional: true,
-				default: null,
-			},
-			reverse: {
-				type: 'boolean',
-				optional: true,
-				default: false,
-				convert: true,
-			},
-		},
-		cache: {
-			ttl: 10,
-		},
-	})
-	async getByChain(ctx: Context<GetTxRequest, Record<string, unknown>>) {
-		let response: ResponseDto = {} as ResponseDto;
-		if (ctx.params.nextKey) {
-			try {
-				new ObjectId(ctx.params.nextKey);
-			} catch (error) {
-				return (response = {
-					code: ErrorCode.WRONG,
-					message: ErrorMessage.VALIDATION_ERROR,
-					data: {
-						message: 'The nextKey is not a valid ObjectId',
-					},
-				});
-			}
-		}
-
-		const blockHeight = ctx.params.blockHeight;
-		const txHash = ctx.params.txHash;
-		const address = ctx.params.address;
-		const searchType = ctx.params.searchType;
-		const searchKey = ctx.params.searchKey;
-		const searchValue = ctx.params.searchValue;
-		const queryParam = ctx.params.query;
-		const addressInContract = ctx.params.addressInContract;
-		let findOne = false;
-		let projection: any = { indexes: 0, custom_info: 0 };
-		//TODO: fix slow when count in query
-		// const countTotal = ctx.params.countTotal;
-		// ctx.params.countTotal = false;
-		// const sort = ctx.params.reverse ? '_id' : '-_id';
-
-		const sort = '-indexes.height';
-		let query: QueryOptions = {};
-		if (ctx.params.txHash) {
-			ctx.params.nextKey = undefined;
-			ctx.params.countTotal = false;
-			ctx.params.pageOffset = 0;
-			findOne = true;
-		}
-		if (ctx.params.nextKey) {
-			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
-		}
-		query['custom_info.chain_id'] = ctx.params.chainid;
-		if (blockHeight) {
-			query['tx_response.height'] = blockHeight;
-		}
-		if (txHash) {
-			query['tx_response.txhash'] = txHash;
-		} else {
-			projection['tx'] = 0;
-			projection['tx_response.tx.body.messages'] = { $slice: 3 };
-			projection['tx_response.events'] = { $slice: 3 };
-			projection['tx_response.logs'] = 0;
-			projection['tx_response.data'] = 0;
-			projection['tx_response.raw_log'] = 0;
-		}
-
-		let listQueryAnd: any[] = [];
-		let listQueryOr: any[] = [];
-
-		if (searchType && searchKey && searchValue) {
-			// query[`indexes.${searchType}_${searchKey}`] = searchValue;
-			listQueryAnd.push({
-				[`indexes.${searchType}_${searchKey}`]: { $exists: true, $eq: searchValue },
-			});
-		}
-
-		if (queryParam) {
-			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
-			let queryAnd: any[] = [];
-			queryParamFormat.forEach((e: any) => {
-				let tempQuery = {
-					[`indexes.${e.type}_${e.key}`]: { $exists: true, $eq: e.value },
-				};
-				queryAnd.push(tempQuery);
-			});
-			listQueryAnd.push(...queryAnd);
-		}
-		if (address) {
-			listQueryOr.push(
-				{ 'indexes.transfer_recipient': { $exists: true, $eq: address } },
-				{ 'indexes.transfer_sender': { $exists: true, $eq: address } },
-			);
-		}
-		if (addressInContract) {
-			listQueryOr.push(
-				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
-				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
-				{ 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
-			);
-		}
-		if (listQueryAnd.length > 0) {
-			query['$and'] = listQueryAnd;
-		}
-
-		if (listQueryOr.length > 0) {
-			query['$or'] = listQueryOr;
-		}
-		this.logger.info('query: ', JSON.stringify(query));
-		let listPromise = [];
-		listPromise.push(
-			this.adapter.lean({
-				query: query,
-				projection: projection,
-				// @ts-ignore
-				sort: sort,
-				limit: ctx.params.pageLimit + 1,
-				offset: ctx.params.pageOffset,
-			}),
-		);
-
-		try {
-			// @ts-ignore
-			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
-				Promise.race(listPromise),
-				//@ts-ignore
-				ctx.params.countTotal === true
-					? this.adapter.countWithSkipLimit({
-							query: query,
-							skip: 0,
-							limit: ctx.params.pageLimit * 5,
-					  })
-					: 0,
-			]);
-
-			let nextKey = null;
-			if (result.length > 0) {
-				if (result.length == 1) {
-					nextKey = result[result.length - 1]?._id;
-				} else {
-					nextKey = ctx.params.txHash ? null : result[result.length - 2]?._id;
-				}
-				if (result.length <= ctx.params.pageLimit) {
-					nextKey = null;
-				}
-
-				if (nextKey) {
-					result.pop();
-				}
-			}
-
-			response = {
-				code: ErrorCode.SUCCESSFUL,
-				message: ErrorMessage.SUCCESSFUL,
-				data: {
-					transactions: result,
-					count: count,
-					nextKey: nextKey,
-				},
-			};
-		} catch (error) {
-			response = {
-				code: ErrorCode.WRONG,
-				message: ErrorMessage.WRONG,
-				data: {
-					error,
-				},
-			};
-		}
-
-		return response;
-	}
 
 	/**
 	 *  @swagger
@@ -729,6 +995,7 @@ export default class BlockService extends MoleculerDBService<
 	 *            type: string
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
+	 *          example: "aura-testnet"
 	 *        - in: query
 	 *          name: address
 	 *          required: true
@@ -1090,247 +1357,4 @@ export default class BlockService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1.transaction"
 	 */
-	@Get('/power-event', {
-		name: 'getPowerEvent',
-		params: {
-			chainid: {
-				type: 'string',
-				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
-			},
-			address: { type: 'string', optional: false },
-			pageLimit: {
-				type: 'number',
-				optional: true,
-				default: 10,
-				integer: true,
-				convert: true,
-				min: 1,
-				max: 100,
-			},
-			pageOffset: {
-				type: 'number',
-				optional: true,
-				default: 0,
-				integer: true,
-				convert: true,
-				min: 0,
-				max: 100,
-			},
-			countTotal: {
-				type: 'boolean',
-				optional: true,
-				default: false,
-				convert: true,
-			},
-			nextKey: {
-				type: 'string',
-				optional: true,
-				default: null,
-			},
-		},
-		cache: {
-			ttl: 10,
-		},
-	})
-	async getPowerEvent(ctx: Context<GetPowerEventTxRequest, Record<string, unknown>>) {
-		let response: ResponseDto = {} as ResponseDto;
-		if (ctx.params.nextKey) {
-			try {
-				new ObjectId(ctx.params.nextKey);
-			} catch (error) {
-				return (response = {
-					code: ErrorCode.WRONG,
-					message: ErrorMessage.VALIDATION_ERROR,
-					data: {
-						message: 'The nextKey is not a valid ObjectId',
-					},
-				});
-			}
-		}
-
-		const address = ctx.params.address;
-
-		const sort = '-_id';
-		let query: QueryOptions = {};
-
-		if (ctx.params.nextKey) {
-			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
-		}
-		query['custom_info.chain_id'] = ctx.params.chainid;
-
-		let listQueryAnd: any[] = [];
-		let listQueryOr: any[] = [];
-		let projection: any = {
-			indexes: 0,
-			custom_info: 0,
-			tx: 0,
-			'tx_response.tx.body.messages': { $slice: 3 },
-			'tx_response.events': 0,
-			'tx_response.logs': 0,
-			'tx_response.data': 0,
-			'tx_response.raw_log': 0,
-		};
-
-		if (address) {
-			listQueryOr.push(
-				{ 'indexes.delegate_validator': { $exists: true, $eq: address } },
-				{ 'indexes.redelegate_source_validator': { $exists: true, $eq: address } },
-				{ 'indexes.redelegate_destination_validator': { $exists: true, $eq: address } },
-				{ 'indexes.unbond_validator': { $exists: true, $eq: address } },
-			);
-		}
-
-		if (listQueryAnd.length > 0) {
-			query['$and'] = listQueryAnd;
-		}
-		if (listQueryOr.length > 0) {
-			query['$or'] = listQueryOr;
-		}
-
-		this.logger.info('query: ', JSON.stringify(query));
-		let listPromise = [];
-
-		listPromise.push(
-			this.adapter.lean({
-				query: query,
-				projection: projection,
-				// @ts-ignore
-				sort: sort,
-				limit: ctx.params.pageLimit + 1,
-				offset: ctx.params.pageOffset,
-			}),
-		);
-
-		try {
-			// @ts-ignore
-			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
-				Promise.race(listPromise),
-				//@ts-ignore
-				ctx.params.countTotal === true
-					? this.adapter.countWithSkipLimit({
-							query: query,
-							skip: 0,
-							limit: ctx.params.pageLimit * 5,
-					  })
-					: 0,
-			]);
-
-			let nextKey = null;
-			if (result.length > 0) {
-				// await result.forEach((tx: any) => {
-				// 	delete tx['custom_info'];
-				// 	delete tx['indexes'];
-				// });
-
-				if (result.length == 1) {
-					nextKey = result[result.length - 1]?._id;
-				} else {
-					nextKey = result[result.length - 2]?._id;
-				}
-				if (result.length <= ctx.params.pageLimit) {
-					nextKey = null;
-				}
-
-				if (nextKey) {
-					result.pop();
-				}
-			}
-
-			response = {
-				code: ErrorCode.SUCCESSFUL,
-				message: ErrorMessage.SUCCESSFUL,
-				data: {
-					transactions: result,
-					count: count,
-					nextKey: nextKey,
-				},
-			};
-		} catch (error) {
-			response = {
-				code: ErrorCode.WRONG,
-				message: ErrorMessage.WRONG,
-				data: {
-					error,
-				},
-			};
-		}
-
-		return response;
-	}
-
-	findTxFromLcd(ctx: Context<GetTxRequest, Record<string, unknown>>): any[] {
-		const blockHeight = ctx.params.blockHeight;
-		const txHash = ctx.params.txHash;
-		const address = ctx.params.address;
-		const searchType = ctx.params.searchType;
-		const searchKey = ctx.params.searchKey;
-		const searchValue = ctx.params.searchValue;
-		const queryParam = ctx.params.query;
-		const pageOffset = ctx.params.pageOffset + 1;
-		const pageLimit = ctx.params.pageLimit;
-		const sort = ctx.params.reverse === true ? 'asc' : 'desc';
-		const url = Utils.getUrlByChainIdAndType(ctx.params.chainid, URL_TYPE_CONSTANTS.RPC);
-		let listPromise = [];
-		let query = [];
-		if (blockHeight) {
-			query.push(`tx.height=${blockHeight}`);
-		}
-		if (txHash) {
-			query.push(`tx.hash='${txHash}'`);
-		}
-		if (searchKey && searchValue && searchType) {
-			query.push(`${searchType}.${searchKey}='${searchValue}'`);
-		}
-
-		if (queryParam) {
-			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
-			queryParamFormat.forEach((e: any) => {
-				query.push(`${e.type}.${e.key}=${e.value}`);
-			});
-		}
-		if (address) {
-			const querySender = [...query, `transfer.sender='${address}'`];
-			const queryRecipient = [...query, `transfer.recipient='${address}'`];
-			this.logger.debug(
-				`${Config.GET_TX_SEARCH}?query="${querySender.join(
-					' AND ',
-				)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
-			);
-			this.logger.debug(
-				`${Config.GET_TX_SEARCH}?query="${queryRecipient.join(
-					' AND ',
-				)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
-			);
-			listPromise.push(
-				this.callApiFromDomain(
-					url,
-					`${Config.GET_TX_SEARCH}?query="${querySender.join(
-						' AND ',
-					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
-					0,
-				),
-				this.callApiFromDomain(
-					url,
-					`${Config.GET_TX_SEARCH}?query="${queryRecipient.join(
-						' AND ',
-					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
-					0,
-				),
-			);
-		} else {
-			listPromise.push(
-				this.callApiFromDomain(
-					url,
-					`${Config.GET_TX_SEARCH}?query="${query.join(
-						' AND ',
-					)}"&page=${pageOffset}&per_page=${pageLimit}&order_by="${sort}"`,
-					0,
-				),
-			);
-		}
-		return listPromise;
-	}
 }

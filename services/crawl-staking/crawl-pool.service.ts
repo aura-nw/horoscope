@@ -62,7 +62,9 @@ export default class CrawlPoolService extends Service {
 			try {
 				if (foundPool) {
 					item._id = foundPool._id;
-					await this.adapter.updateById(foundPool._id, item);
+					// await this.adapter.clearCache();
+					// await this.adapter.updateById(foundPool._id, item);
+					await this.actions.update(item);
 				} else {
 					await this.adapter.insert(item);
 				}
@@ -73,7 +75,6 @@ export default class CrawlPoolService extends Service {
 			this.logger.error(error);
 		}
 	}
-
 	async _start() {
 		this.createJob(
 			'crawl.pool',
