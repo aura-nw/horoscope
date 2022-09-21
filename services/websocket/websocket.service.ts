@@ -52,22 +52,6 @@ export default class WebsocketService extends Service {
 					},
 				},
 			},
-			events: {
-				'list-tx.upsert': {
-					handler: (ctx: any) => {
-						this.createJob(
-							'websocket.tx-handle',
-							{
-								listTx: ctx.params.listTx,
-							},
-							{
-								removeOnComplete: true,
-							},
-						);
-						return;
-					},
-				},
-			},
 			settings: {
 				port: 3000,
 				io: {
@@ -119,12 +103,6 @@ export default class WebsocketService extends Service {
 
 			this.logger.info('ListTx ' + syncTx);
 
-			//Get all tx of a block
-			let listInsideTx: string[] = [];
-			listTx.forEach((x) => {
-				listInsideTx.push(x.tx_response.txhash.toString());
-			});
-
 			let txHadCrawl: any[] = await this.broker?.call('v1.transaction.find', {
 				query: {
 					'tx_response.txhash': {$in: syncTx},
@@ -136,12 +114,12 @@ export default class WebsocketService extends Service {
 				await this.broker?.call('v1.io.broadcast', {
 					namespace: '/register',
 					event: 'broadcast-message',
-					args: [syncTx],
+					args: [txHadCrawl],
 				});
 
-				await Promise.all(syncTx.map(async tx => {
-					await redisClient.SPOP(tx);
-				}))
+				await Promise.all(txHadCrawl.map(async tx => {
+					await redisClient.SREM(SORTEDSET, tx.tx_response.txhash);
+				}));
 
 			}
 
@@ -153,6 +131,21 @@ export default class WebsocketService extends Service {
 	}
 
 	async _start() {
+		this.createJob(
+			'websocket.tx-handle',
+			{
+				param: `param`,
+			},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
+				repeat: {
+					every: parseInt(Config.MILISECOND_CRAWL_BLOCK, 10),
+				},
+			},
+		);
 		this.getQueue('websocket.tx-handle').on('completed', (job: Job) => {
 			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
