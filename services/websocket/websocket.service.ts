@@ -140,6 +140,11 @@ export default class WebsocketService extends Service {
 					event: 'broadcast-message',
 					args: [syncTx],
 				});
+
+				await Promise.all(syncTx.map(async tx => {
+					await redisClient.SPOP(tx);
+				}))
+
 			}
 
 			return [];

@@ -34,6 +34,13 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
+	 *          name: proposalid
+	 *          required: true
+	 *          schema:
+	 *            type: number
+	 *            default: 1
+	 *          description: "Proposal Id"
+	 *        - in: query
 	 *          name: answer
 	 *          required: false
 	 *          schema:
@@ -167,6 +174,13 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 					return e.chainId;
 				}),
 			},
+			proposalid: {
+				type: 'number',
+				optional: false,
+				default: 1,
+				integer: true,
+				convert: true,
+			},
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -207,6 +221,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 		}
 		try {
 			let query: QueryOptions = {};
+			query['proposal_id'] = ctx.params.proposalid;
 			const chainId = ctx.params.chainid;
 			if (ctx.params.answer) query.answer = ctx.params.answer;
 
@@ -248,6 +263,193 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				data: {
 					votes,
 					nextKey,
+				},
+			};
+		} catch (err) {
+			return {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					err,
+				},
+			};
+		}
+	}
+
+	/**
+	 *  @swagger
+	 *  /v1/votes/validators:
+	 *    get:
+	 *      tags:
+	 *        - Vote
+	 *      summary: Get validator votes
+	 *      description: Get validator votes
+	 *      parameters:
+	 *        - in: query
+	 *          name: chainid
+	 *          required: true
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          description: "Chain Id of network need to query"
+	 *        - in: query
+	 *          name: proposalid
+	 *          required: true
+	 *          schema:
+	 *            type: number
+	 *            default: 1
+	 *          description: "Proposal Id"
+	 *        - in: query
+	 *          name: answer
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *            enum: ['VOTE_OPTION_YES', 'VOTE_OPTION_NO', 'VOTE_OPTION_NO_WITH_VETO', 'VOTE_OPTION_ABSTAIN', 'DID_NOT_VOTE']
+	 *          description: "Chain Id of network need to query"
+	 *      responses:
+	 *        '200':
+	 *          description: Validator Vote result
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      votes:
+	 *                        type: array
+	 *                        items:
+	 *                          type: object
+	 *                          properties:
+	 *                            voter_address:
+	 *                              type: string
+	 *                              example: 'aura1hctj3tpmucmuv02umf9252enjedkce7mml69k8'
+	 *                            proposal_id:
+	 *                              type: number
+	 *                              example: 1
+	 *                            answer:
+	 *                              type: string
+	 *                              example: 'Yes'
+	 *                            txhash:
+	 *                              type: string
+	 *                              example: '698185B1800A077B30A61ADBC42958CFCCFE5C3DA0D32E0AF314C0098684CCC6'
+	 *                            timestamp:
+	 *                              type: string
+	 *                              example: '2021-05-20T09:00:00.000Z'
+	 *                            custom_info:
+	 *                              type: object
+	 *                              properties:
+	 *                                chain_id:
+	 *                                  type: string
+	 *                                  example: 'aura-testnet'
+	 *                                chain_name:
+	 *                                  type: string
+	 *                                  example: 'Aura Testnet'
+	 *                      nextKey:
+	 *                        type: string
+	 *                        example: '63218f7c8c9c740a4dcefaf2'
+	 *        422:
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1"
+	 */
+	@Get('/validators', {
+		name: 'getValidatorVote',
+		params: {
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+			proposalid: {
+				type: 'number',
+				optional: false,
+				default: 1,
+				integer: true,
+				convert: true,
+			},
+		},
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getValidatorVote(ctx: Context<GetVoteRequest, Record<string, unknown>>) {
+		try {
+			const chainId = ctx.params.chainid;
+			const validators: any[] = await this.broker.call('v1.validator.find', {
+				query: {
+					'custom_info.chain_id': chainId,
+				},
+				sort: 'status -percent_voting_power',
+			});
+			const validatorAccountAddress = validators.map((e) => {
+				return e.account_address;
+			});
+			let query: QueryOptions = {
+				'custom_info.chain_id': chainId,
+				proposal_id: ctx.params.proposalid,
+				voter_address: { $in: validatorAccountAddress },
+			};
+			if (ctx.params.answer) query.answer = ctx.params.answer;
+			const votes: any[] = await this.adapter.find({ query });
+
+			const result = [];
+			for (const validator of validators) {
+				const vote = votes.find((e) => {
+					return e.voter_address === validator.account_address;
+				});
+				validator.vote = vote || null;
+				result.push(validator);
+			}
+			return {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					result,
 				},
 			};
 		} catch (err) {
