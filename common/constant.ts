@@ -33,6 +33,8 @@ export const CONST_CHAR = {
 	WITHDRAW_REWARDS: 'withdraw_rewards',
 	AMOUNT: 'amount',
 	VALIDATOR: 'validator',
+	RECV_PACKET: 'recv_packet',
+	PACKET_DATA: 'packet_data',
 };
 
 export const MSG_TYPE = {
@@ -48,6 +50,9 @@ export const MSG_TYPE = {
 	MSG_DELEGATE: '/cosmos.staking.v1beta1.MsgDelegate',
 	MSG_REDELEGATE: '/cosmos.staking.v1beta1.MsgBeginRedelegate',
 	MSG_UNDELEGATE: '/cosmos.staking.v1beta1.MsgUndelegate',
+	MSG_IBC_TRANSFER: '/ibc.applications.transfer.v1.MsgTransfer',
+	MSG_IBC_RECEIVE: '/ibc.core.channel.v1.MsgRecvPacket',
+	MSG_IBC_ACKNOWLEDGEMENT: '/ibc.core.channel.v1.MsgAcknowledgement',
 };
 
 export const LIST_NETWORK: INetworkInfo[] = require('../network.json');
