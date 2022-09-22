@@ -27,13 +27,6 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 					type: String,
 					index: true,
 				},
-				validator_description: {
-					moniker: String,
-					identity: String,
-					website: String,
-					details: String,
-					security_contact: String,
-				},
 				shares: String,
 			},
 			balance: {
@@ -81,6 +74,13 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 		{
 			delegator_address: String,
 			validator_address: String,
+			validator_description: {
+				moniker: String,
+				identity: String,
+				website: String,
+				details: String,
+				security_contact: String,
+			},
 			entries: [
 				{
 					creation_height: String,

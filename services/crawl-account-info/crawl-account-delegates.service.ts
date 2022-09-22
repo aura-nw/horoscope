@@ -73,8 +73,6 @@ export default class CrawlAccountDelegatesService extends Service {
 			for (let address of listAddresses) {
 				let listDelegates: DelegationResponse[] = [];
 
-				const validators: ValidatorEntity[] = await this.broker.call('v1.validator.getAllByChain', { chainId });
-
 				const param = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
@@ -102,12 +100,6 @@ export default class CrawlAccountDelegatesService extends Service {
 						)}`;
 					}
 				}
-
-				listDelegates.map((delegate) => {
-					delegate.delegation.validator_description = validators.find(
-						(validator) => validator.operator_address === delegate.delegation.validator_address,
-					)?.description!;
-				});
 
 				if (listDelegates) {
 					accountInfo.account_delegations = listDelegates;
