@@ -242,7 +242,8 @@ export default class BlockService extends MoleculerDBService<
 		this.logger.info('query: ', JSON.stringify(query));
 		let listPromise = [];
 		listPromise.push(
-			this.adapter.lean({
+			//@ts-ignore
+			this.adapter.listAdapter[ctx.params.chainid].lean({
 				query: query,
 				projection: projection,
 				// @ts-ignore

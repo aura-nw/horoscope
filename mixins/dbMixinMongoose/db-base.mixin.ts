@@ -10,6 +10,7 @@ import { DBInfo } from '../../types';
 // import { MongooseDbAdapter } from 'moleculer-db-adapter-mongoose';
 import MongooseDbAdapter = require('moleculer-db-adapter-mongoose');
 import CustomMongooseDbAdapter = require('../customMongooseAdapter');
+import { LIST_NETWORK } from '../../common/constant';
 const SqlAdapter = require('moleculer-db-adapter-sequelize');
 export interface BaseMixinConfig {
 	name: string;
@@ -176,15 +177,33 @@ export class DbBaseMixin {
 		// import('moleculer-db-adapter-mongoose').then(
 		// 	(AdapterMongo) => (MongoAdapter = AdapterMongo),
 		// );
+		const listAdapterName = LIST_NETWORK.map((e) => {
+			return `${e.chainId}_adapter`.replace(/\-/g, '_');
+		}).flat();
+		let listAdapter: any = {};
+		listAdapterName.map((name: string) => {
+			// listAdapter[`${name}`] = new CustomMongooseDbAdapter(this.getDBUri(), {
+			// 	useUnifiedTopology: true,
+			// 	authSource: 'admin',
+			// 	dbName: name,
+			// 	useCreateIndex: true,
+			// 	autoIndex: true,
+			// });
+			listAdapter[`${name}`] = {
+				uri: this.getDBUri(),
+				opts: {
+					useUnifiedTopology: true,
+					authSource: 'admin',
+					dbName: name,
+					useCreateIndex: true,
+					autoIndex: true,
+				},
+			};
+		});
+
 		return {
 			...schema,
-			adapter: new CustomMongooseDbAdapter(this.getDBUri(), {
-				useUnifiedTopology: true,
-				authSource: 'admin',
-				dbName: this.dbInfo.dbname,
-				useCreateIndex: true,
-				autoIndex: true,
-			}),
+			adapter: new CustomMongooseDbAdapter(listAdapter),
 			collection: this.collection,
 			model: this.mixModel,
 		};
