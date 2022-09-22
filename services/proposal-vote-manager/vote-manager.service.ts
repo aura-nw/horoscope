@@ -1,7 +1,6 @@
 // import { VoteEntity } from 'entities/vote.entity';
 import { VoteEntity } from '../../entities/vote.entity';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { FindVote } from '../../types';
 import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
 
 export default class VoteHandlerService extends Service {
