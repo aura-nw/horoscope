@@ -99,6 +99,7 @@ export default class ConfigClass {
 	public static DB_BLOCK_AGGREGATE: any;
 	public static DB_ACCOUNT_REWARDS: any;
 	public static DB_DELAY_JOB: any;
+	public static DB_IBC_DENOM: any;
 
 	public constructor() {
 		Object.keys(configObj).forEach((key: string) => {
@@ -138,6 +139,7 @@ export default class ConfigClass {
 		this.DB_BLOCK_AGGREGATE = genericDbInfo('BLOCK_AGGREGATE');
 		this.DB_ACCOUNT_REWARDS = genericDbInfo('ACCOUNT_REWARDS');
 		this.DB_DELAY_JOB = genericDbInfo('DELAY_JOB');
+		this.DB_IBC_DENOM = genericDbInfo('IBC_DENOM');
 		this.DB_VOTE = genericDbInfo('VOTE');
 	}
 }
