@@ -134,11 +134,11 @@ export default class HandleDelayJobService extends Service {
 										new Date(x.completion_time!).getTime() ===
 										new Date(job.expire_time).getTime(),
 								);
-							newBalances[0].amount = (
+							newBalances.find((balance: any) => balance.denom === Config.NETWORK_DENOM).amount = (
 								parseInt(newBalances[0].amount, 10) +
 								parseInt(removeUnbond.balance, 10)
 							).toString();
-							newSpendableBalances[0].amount = (
+							newSpendableBalances.find((balance: any) => balance.denom === Config.NETWORK_DENOM).amount = (
 								parseInt(newSpendableBalances[0].amount, 10) +
 								parseInt(removeUnbond.balance, 10)
 							).toString();

@@ -126,3 +126,8 @@ export interface GetTotalRewardsByAddress extends ChainIdParams {
 	operatorAddress: string;
 	delegatorAddress: string;
 }
+
+export interface QueryIBCDenomParams {
+	hash: string;
+	denom: string;
+}
