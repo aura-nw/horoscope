@@ -69,6 +69,8 @@ export default class CrawlAccountDelegatesService extends Service {
 	async handleJob(listAddresses: string[], chainId: string) {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
+		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
+		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
 				let listDelegates: DelegationResponse[] = [];
@@ -117,7 +119,6 @@ export default class CrawlAccountDelegatesService extends Service {
 						}),
 					);
 				else {
-					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 						element,
 						AccountInfoEntity,

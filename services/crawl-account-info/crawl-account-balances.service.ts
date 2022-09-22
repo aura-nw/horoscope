@@ -70,6 +70,8 @@ export default class CrawlAccountBalancesService extends Service {
 	async handleJob(listAddresses: string[], chainId: string) {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
+		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
+		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
 				let listBalances: any[] = [];
@@ -136,7 +138,6 @@ export default class CrawlAccountBalancesService extends Service {
 						}),
 					);
 				else {
-					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 						element,
 						AccountInfoEntity,
