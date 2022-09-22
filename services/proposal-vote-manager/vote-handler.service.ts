@@ -77,7 +77,6 @@ export default class VoteHandlerService extends Service {
 	}
 
 	async handleJob(listTx: any, chainId?: string) {
-		const votes: VoteEntity[] = [];
 		for (const tx of listTx) {
 			// continue if tx is not vote
 			const messageEvent = tx.tx_response.logs[0]?.events.find(
@@ -106,8 +105,7 @@ export default class VoteHandlerService extends Service {
 			const height = tx.tx_response.height;
 			const chainInfo: CustomInfo = {
 				chain_id: chain,
-				chain_name:
-					LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
+				chain_name: LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
 			};
 			const vote = {
 				voter_address,
@@ -120,10 +118,8 @@ export default class VoteHandlerService extends Service {
 			};
 			const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
 			this.logger.info('voteEntity', JSON.stringify(voteEntity));
-			votes.push(voteEntity);
+			// call action to save votes
+			this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
 		}
-
-		// call action to save votes
-		if (votes.length > 0) this.broker.call(VOTE_MANAGER_ACTION.INSERT, votes);
 	}
 }

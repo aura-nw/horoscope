@@ -106,6 +106,7 @@ export const VOTE_MANAGER_ACTION = {
 	CHECK_STATUS: 'v1.proposal-vote-manager.checkStatus',
 	// CREATE: 'v1.vote-handler.act-create',
 	INSERT: 'v1.proposal-vote-manager.act-insert',
+	INSERT_ON_DUPLICATE_UPDATE: 'v1.proposal-vote-manager.act-insert-on-duplicate-update',
 };
 
 export const CW20_MANAGER_ACTION = {
