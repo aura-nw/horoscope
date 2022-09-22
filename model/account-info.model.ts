@@ -12,20 +12,28 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 			value: Object,
 		}
 	},
-    account_balances: [
+	account_balances: [
 		{
 			denom: String,
+			minimal_denom: String,
 			amount: String,
 		},
 	],
-    account_delegations: [
+	account_delegations: [
 		{
 			delegation: {
 				delegator_address: String,
 				validator_address: {
-                    type: String,
-                    index: true,
-                },
+					type: String,
+					index: true,
+				},
+				validator_description: {
+					moniker: String,
+					identity: String,
+					website: String,
+					details: String,
+					security_contact: String,
+				},
 				shares: String,
 			},
 			balance: {
@@ -34,7 +42,7 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 			},
 		},
 	],
-    account_redelegations: [
+	account_redelegations: [
 		{
 			redelegation: {
 				delegator_address: String,
@@ -62,13 +70,14 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 			],
 		},
 	],
-    account_spendable_balances: [
+	account_spendable_balances: [
 		{
 			denom: String,
+			minimal_denom: String,
 			amount: String,
 		},
 	],
-    account_unbonding: [
+	account_unbonding: [
 		{
 			delegator_address: String,
 			validator_address: String,
@@ -82,7 +91,7 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 			],
 		},
 	],
-    account_claimed_rewards: [
+	account_claimed_rewards: [
 		{
 			validator_address: String,
 			denom: String,
@@ -96,7 +105,7 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 });
 
 export const accountInfoMongoModel = (collection: string): unknown => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	const schema = new Schema<IAccountInfo>(definition(collection), {
 		autoIndex: true,
