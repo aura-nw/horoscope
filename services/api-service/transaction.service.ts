@@ -622,7 +622,6 @@ export default class BlockService extends MoleculerDBService<
 		projection['indexes.fungible_token_packet_receiver'] = 0;
 		projection['indexes.fungible_token_packet_denom'] = 0;
 		projection['indexes.fungible_token_packet_amount'] = 0;
-		projection['indexes.fungible_token_packet_success'] = 0;
 		projection['indexes.write_acknowledgement_packet_data'] = 0;
 		projection['indexes.write_acknowledgement_packet_data_hex'] = 0;
 		projection['indexes.write_acknowledgement_packet_timeout_height'] = 0;
