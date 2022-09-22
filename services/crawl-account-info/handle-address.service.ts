@@ -76,6 +76,7 @@ export default class HandleAddressService extends Service {
 		let listAddresses: any[] = [];
 		let listUpdateInfo: string[] = [];
 		let listInsert: any[] = [];
+		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		listUpdateInfo.push(
 			...[

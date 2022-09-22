@@ -83,6 +83,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [],
 			listDelayJobs: DelayJobEntity[] = [];
+		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
@@ -120,33 +121,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 				if (listRedelegates) {
 					accountInfo.account_redelegations = listRedelegates;
 					listRedelegates.map(async (redelegate: RedelegationResponse) => {
-						// let expireTime = new Date(
-						// 	redelegate.entries[0].redelegation_entry.completion_time.toString(),
-						// );
-						// let delay = expireTime.getTime() - new Date().getTime();
-						// const apiKeyQueue = new Bull(
-						// 	'handle.address',
-						// 	{
-						// 		redis: {
-						// 			host: Config.REDIS_HOST,
-						// 			port: Config.REDIS_PORT,
-						// 			username: Config.REDIS_USERNAME,
-						// 			password: Config.REDIS_PASSWORD,
-						// 			db: Config.REDIS_DB_NUMBER,
-						// 		},
-						// 		prefix: 'handle.address',
-						// 		defaultJobOptions: {
-						// 			jobId: `${address}_${chainId}_${redelegate.entries[0].redelegation_entry.completion_time}`,
-						// 			removeOnComplete: true,
-						// 			delay,
-						// 		}
-						// 	}
-						// );
-						// apiKeyQueue.add({
-						// 	listTx: [address],
-						// 	source: CONST_CHAR.API,
-						// 	chainId
-						// });
 						let newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.REDELEGATE;
