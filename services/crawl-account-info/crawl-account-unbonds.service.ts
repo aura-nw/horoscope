@@ -10,7 +10,7 @@ import {
 } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { UnbondingResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
+import { UnbondingResponse, DelayJobEntity, AccountInfoEntity, ValidatorEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
@@ -88,6 +88,8 @@ export default class CrawlAccountUnbondsService extends Service {
 			for (let address of listAddresses) {
 				let listUnbonds: UnbondingResponse[] = [];
 
+				const validators: ValidatorEntity[] = await this.broker.call('v1.validator.getAllByChain', { chainId });
+
 				const param =
 					Config.GET_PARAMS_DELEGATOR +
 					`/${address}/unbonding_delegations?pagination.limit=100`;
@@ -117,6 +119,12 @@ export default class CrawlAccountUnbondsService extends Service {
 						)}`;
 					}
 				}
+
+				listUnbonds.map((unbond) => {
+					unbond.validator_description = validators.find(
+						(validator) => validator.operator_address === unbond.validator_address,
+					)?.description!;
+				});
 
 				if (listUnbonds) {
 					accountInfo.account_unbonding = listUnbonds;
