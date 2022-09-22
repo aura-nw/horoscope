@@ -369,4 +369,16 @@ export default class ValidatorService extends MoleculerDBService<
 
 		return response;
 	}
+
+	@Action({
+		name: 'getAllByChain',
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getAllByChain(ctx: Context<DbContextParameters>) {
+		const params = await this.sanitizeParams(ctx, ctx.params);
+		let result = await this.adapter.find({ query: { 'custom_info.chain_id': params.chainId } });
+		return result;
+	}
 }

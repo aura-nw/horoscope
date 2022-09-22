@@ -72,7 +72,7 @@ export default class CrawlAccountBalancesService extends Service {
 			listUpdateQueries: any[] = [];
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
-				let listBalances: Coin[] = [];
+				let listBalances: any[] = [];
 
 				const param = Config.GET_PARAMS_BALANCE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
@@ -110,9 +110,11 @@ export default class CrawlAccountBalancesService extends Service {
 								let ibcDenom: IBCDenomEntity = await this.broker.call('v1.ibc-denom.getByHash', { hash: balance.denom, denom: '' });
 								if (ibcDenom) {
 									balance.denom = ibcDenom.denom;
+									balance.minimal_denom = ibcDenom.hash;
 								} else {
 									const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
 									let denomResult = await this.callApiFromDomain(url, hashParam);
+									balance.minimal_denom = balance.denom;
 									balance.denom = denomResult.denom_trace.base_denom;
 									this.broker.call('v1.ibc-denom.addNewDenom', { hash: `ibc/${hash}`, denom: balance.denom });
 								}
