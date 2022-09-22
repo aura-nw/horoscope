@@ -8,7 +8,7 @@ import { Context, Service, ServiceBroker } from 'moleculer';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { Coin } from '../../entities/coin.entity';
-import { AccountInfoEntity } from '../../entities';
+import { AccountInfoEntity, IBCDenomEntity } from '../../entities';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountSpendableBalancesService extends Service {
@@ -84,6 +84,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				});
 				if (!accountInfo) {
 					accountInfo = {} as AccountInfoEntity;
+					accountInfo.address = address;
 				}
 
 				let urlToCall = param;
@@ -103,8 +104,23 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				}
 
 				if (listSpendableBalances) {
-					accountInfo.account_spendable_balances = listSpendableBalances;
-					accountInfo.address = address;
+					if (listSpendableBalances.length > 1) {
+						await Promise.all(listSpendableBalances.map(async (balance) => {
+							if (balance.denom.startsWith('ibc/')) {
+								let hash = balance.denom.split('/')[1];
+								let ibcDenom: IBCDenomEntity = await this.broker.call('v1.ibc-denom.getByHash', { hash: balance.denom, denom: '' });
+								if (ibcDenom) {
+									balance.denom = ibcDenom.denom;
+								} else {
+									const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
+									let denomResult = await this.callApiFromDomain(url, hashParam);
+									balance.denom = denomResult.denom_trace.base_denom;
+									this.broker.call('v1.ibc-denom.addNewDenom', { hash: `ibc/${hash}`, denom: balance.denom });
+								}
+							}
+						}));
+						accountInfo.account_spendable_balances = listSpendableBalances;
+					}
 				}
 
 				listAccounts.push(accountInfo);

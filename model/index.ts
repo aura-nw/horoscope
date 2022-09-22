@@ -13,3 +13,4 @@ export * from './supply.model';
 export * from './cw20-asset.model';
 export * from './delay-job.model';
 export * from './account-info.model';
+export * from './ibc-denom.model';

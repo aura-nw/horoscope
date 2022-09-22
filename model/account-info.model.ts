@@ -1,7 +1,6 @@
 import { IAccountInfo } from "entities/account-info.entity";
 import { model, models, Types, Schema } from "mongoose";
 import { definitionType } from "types";
-const mongoose = require('mongoose');
 
 const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -99,10 +98,11 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 export const accountInfoMongoModel = (collection: string): unknown => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	const schema = new mongoose.Schema<IAccountInfo>(definition(collection), {
+	const schema = new Schema<IAccountInfo>(definition(collection), {
 		autoIndex: true,
 		collection: collection,
 	});
+	// @ts-ignore
 	schema.index({ 'address': 1, 'custom_info.chain_id': 1 }, { unique: true });
 	return models[collection] || model(collection, schema);
 };
