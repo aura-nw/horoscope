@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 import { CustomInfo, ICustomInfo } from "./custom-info.entity";
 import { Coin, ICoin } from "./coin.entity";
 import { DateConverter } from "./converters/date.converter";
+import { Description, IDescription } from "./validator.entity";
 
 export interface IAccountInfo {
     _id: Types.ObjectId | string | null;
@@ -43,6 +44,7 @@ export interface IAccount {
 export interface IDelegation {
     delegator_address: String;
     validator_address: String;
+    validator_description: IDescription;
     shares: String;
 }
 
@@ -131,6 +133,8 @@ export class Delegation implements IDelegation {
     delegator_address: String = '';
     @JsonProperty('validator_address', String)
     validator_address: String = '';
+    @JsonProperty('validator_description', Description)
+    validator_description = {} as Description;
     @JsonProperty('shares', String)
     shares: String = '';
 }
