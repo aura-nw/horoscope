@@ -10,7 +10,7 @@ import {
 } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { UnbondingResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
+import { UnbondingResponse, DelayJobEntity, AccountInfoEntity, ValidatorEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
@@ -83,10 +83,13 @@ export default class CrawlAccountUnbondsService extends Service {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [],
 			listDelayJobs: DelayJobEntity[] = [];
+		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
 				let listUnbonds: UnbondingResponse[] = [];
+
+				const validators: ValidatorEntity[] = await this.broker.call('v1.validator.getAllByChain', { chainId });
 
 				const param =
 					Config.GET_PARAMS_DELEGATOR +
@@ -118,34 +121,15 @@ export default class CrawlAccountUnbondsService extends Service {
 					}
 				}
 
+				listUnbonds.map((unbond) => {
+					unbond.validator_description = validators.find(
+						(validator) => validator.operator_address === unbond.validator_address,
+					)?.description!;
+				});
+
 				if (listUnbonds) {
 					accountInfo.account_unbonding = listUnbonds;
 					listUnbonds.map((unbond: UnbondingResponse) => {
-						// let expireTime = new Date(unbond.entries[0].completion_time.toString());
-						// let delay = expireTime.getTime() - new Date().getTime();
-						// const apiKeyQueue = new Bull(
-						// 	'handle.address',
-						// 	{
-						// 		redis: {
-						// 			host: Config.REDIS_HOST,
-						// 			port: Config.REDIS_PORT,
-						// 			username: Config.REDIS_USERNAME,
-						// 			password: Config.REDIS_PASSWORD,
-						// 			db: Config.REDIS_DB_NUMBER,
-						// 		},
-						// 		prefix: 'handle.address',
-						// 		defaultJobOptions: {
-						// 			jobId: `${address}_${chainId}_${unbond.entries[0].completion_time}`,
-						// 			removeOnComplete: true,
-						// 			delay,
-						// 		}
-						// 	}
-						// );
-						// apiKeyQueue.add({
-						// 	listTx: [address],
-						// 	source: CONST_CHAR.API,
-						// 	chainId
-						// });
 						let newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.UNBOND;

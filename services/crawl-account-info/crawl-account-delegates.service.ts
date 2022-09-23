@@ -69,11 +69,11 @@ export default class CrawlAccountDelegatesService extends Service {
 	async handleJob(listAddresses: string[], chainId: string) {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
+		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
+		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
 				let listDelegates: DelegationResponse[] = [];
-
-				const validators: ValidatorEntity[] = await this.broker.call('v1.validator.getAllByChain', { chainId });
 
 				const param = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
@@ -103,12 +103,6 @@ export default class CrawlAccountDelegatesService extends Service {
 					}
 				}
 
-				listDelegates.map((delegate) => {
-					delegate.delegation.validator_description = validators.find(
-						(validator) => validator.operator_address === delegate.delegation.validator_address,
-					)?.description!;
-				});
-
 				if (listDelegates) {
 					accountInfo.account_delegations = listDelegates;
 				}
@@ -125,7 +119,6 @@ export default class CrawlAccountDelegatesService extends Service {
 						}),
 					);
 				else {
-					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 						element,
 						AccountInfoEntity,

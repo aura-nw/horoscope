@@ -44,7 +44,6 @@ export interface IAccount {
 export interface IDelegation {
     delegator_address: String;
     validator_address: String;
-    validator_description: IDescription;
     shares: String;
 }
 
@@ -87,6 +86,7 @@ export interface IUndelegateEntry {
 export interface IUnbondingResponse {
     delegator_address: String;
     validator_address: String;
+    validator_description: IDescription;
     entries: IUndelegateEntry[];
 }
 
@@ -133,8 +133,6 @@ export class Delegation implements IDelegation {
     delegator_address: String = '';
     @JsonProperty('validator_address', String)
     validator_address: String = '';
-    @JsonProperty('validator_description', Description)
-    validator_description = {} as Description;
     @JsonProperty('shares', String)
     shares: String = '';
 }
@@ -191,6 +189,8 @@ export class UnbondingResponse implements IUnbondingResponse {
     delegator_address: String = '';
     @JsonProperty('validator_address', String)
     validator_address: String = '';
+    @JsonProperty('validator_description', Description)
+    validator_description = {} as Description;
     @JsonProperty('entries', [UndelegateEntry])
     entries: UndelegateEntry[] = [];
 }

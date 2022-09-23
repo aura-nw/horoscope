@@ -99,15 +99,16 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 	async handleJob(listTx: any[], chainId: string) {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
-		const chain = LIST_NETWORK.find(x => x.chainId === chainId);
+		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		let handledRewardRedis = await this.redisClient.get(Config.REDIS_KEY_START_TX_REWARDS);
 		try {
 			for (let tx of listTx) {
+				if (tx.custom_info.chain_id) chainId = tx.custom_info.chain_id;
 				let startTimeStamp = Math.floor(new Date(tx.tx_response.timestamp).getTime() / 1000);
 				let id = mongodb.ObjectId.createFromTime(startTimeStamp).toString();
-				if (!handledRewardRedis || 
+				if (!handledRewardRedis ||
 					new mongodb.ObjectId(handledRewardRedis).getTimestamp() > new Date(tx.tx_response.timestamp)) {
-					await this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, id); 
+					await this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, id);
 				}
 				const userAddress = tx.tx.body.messages[0].delegator_address;
 				let account: AccountInfoEntity = await this.adapter.findOne({
@@ -117,6 +118,10 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				if (!account) {
 					account = {} as AccountInfoEntity;
 					account.address = userAddress;
+					account.custom_info = {
+						chain_id: chainId,
+						chain_name: ''
+					};
 				}
 				switch (tx.tx.body.messages[0]['@type']) {
 					case MSG_TYPE.MSG_DELEGATE:
@@ -128,12 +133,12 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes[indexReward + 1].value;
 						let amount = '';
 						if (claimedReward !== '') amount = claimedReward.match(/\d+/g)[0];
-						if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)) {
+						if (account.account_claimed_rewards && amount !== ''
+							&& account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)) {
 							account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)!.amount
 								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)!.amount.toString(), 10)
 									+ parseInt(amount, 10)).toString();
 						} else {
-							account.account_claimed_rewards = [] as Rewards[];
 							account.account_claimed_rewards.push({
 								validator_address: validatorAddress,
 								denom: claimedReward !== '' ? claimedReward.match(/[a-zA-Z]+/g)[0] : '',
@@ -150,12 +155,12 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 							const srcClaimedReward = coinReceived.find((x: any) => x.key === CONST_CHAR.AMOUNT).value;
 							let srcAmount = '';
 							if (srcClaimedReward !== '') srcAmount = srcClaimedReward.match(/\d+/g)[0];
-							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
+							if (account.account_claimed_rewards && srcAmount !== ''
+								&& account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
 								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount
 									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount.toString(), 10)
 										+ parseInt(srcAmount, 10)).toString();
 							} else {
-								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
 									validator_address: valSrcAddress,
 									denom: srcClaimedReward !== '' ? srcClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
@@ -169,24 +174,24 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 							if (srcClaimedReward !== '') srcAmount = srcClaimedReward.match(/\d+/g)[0];
 							let dstAmount = '';
 							if (dstClaimedReward !== '') dstAmount = dstClaimedReward.match(/\d+/g)[0];
-							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
+							if (account.account_claimed_rewards && srcAmount !== ''
+								&& account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
 								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount
 									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount.toString(), 10)
 										+ parseInt(srcAmount, 10)).toString();
 							} else {
-								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
 									validator_address: valSrcAddress,
 									denom: srcClaimedReward !== '' ? srcClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
 									amount: srcAmount,
 								} as Rewards);
 							}
-							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)) {
+							if (account.account_claimed_rewards && dstAmount !== ''
+								&& account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)) {
 								account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)!.amount
 									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)!.amount.toString(), 10)
 										+ parseInt(dstAmount, 10)).toString();
 							} else {
-								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
 									validator_address: valDstAddress,
 									denom: dstClaimedReward !== '' ? dstClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
@@ -205,12 +210,12 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes[undelegateIndexReward + 1].value;
 						let undelegateAmount = '';
 						if (undelegateClaimedReward !== '') undelegateAmount = undelegateClaimedReward.match(/\d+/g)[0];
-						if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)) {
+						if (account.account_claimed_rewards && undelegateAmount !== ''
+							&& account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)) {
 							account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)!.amount
 								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)!.amount.toString(), 10)
 									+ parseInt(undelegateAmount, 10)).toString();
 						} else {
-							account.account_claimed_rewards = [] as Rewards[];
 							account.account_claimed_rewards.push({
 								validator_address: undelegateValAddress,
 								denom: undelegateClaimedReward !== '' ? undelegateClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
@@ -228,12 +233,12 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								.attributes.find((attr: any) => attr.key === CONST_CHAR.AMOUNT).value;
 							let amount = '';
 							if (claimedReward !== '') amount = claimedReward.match(/\d+/g)[0];
-							if (account.account_claimed_rewards && account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)) {
+							if (account.account_claimed_rewards && amount !== ''
+								&& account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)) {
 								account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)!.amount
 									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)!.amount.toString(), 10)
 										+ parseInt(amount, 10)).toString();
 							} else {
-								account.account_claimed_rewards = [] as Rewards[];
 								account.account_claimed_rewards.push({
 									validator_address: msg.validator_address,
 									denom: claimedReward !== '' ? claimedReward.match(/[a-zA-Z]+/g)[0] : '',
@@ -253,6 +258,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						})
 					);
 				else {
+					const chain = LIST_NETWORK.find((x) => x.chainId === element.custom_info.chain_id);
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(element, AccountInfoEntity);
 					item.custom_info = {
 						chain_id: chainId,
