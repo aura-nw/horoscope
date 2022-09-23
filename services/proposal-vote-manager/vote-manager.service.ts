@@ -2,6 +2,7 @@
 import { VoteEntity } from '../../entities/vote.entity';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
+import { CountVoteParams, CountVoteResponse } from '../../types';
 
 export default class VoteHandlerService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -66,6 +67,49 @@ export default class VoteHandlerService extends Service {
 						});
 
 						return smallestVote?._id.toString();
+					},
+				},
+				'act-count-votes': {
+					async handler(ctx: Context<CountVoteParams>): Promise<CountVoteResponse[]> {
+						// @ts-ignore
+						this.logger.debug(
+							`ctx.params proposal-vote-manager count votes ${JSON.stringify(
+								ctx.params,
+							)}`,
+						);
+
+						const { chain_id, proposal_id } = ctx.params;
+
+						// @ts-ignore
+						const data = await this.adapter.aggregate([
+							{
+								$match: {
+									'custom_info.chain_id': chain_id,
+									proposal_id,
+								},
+							},
+							{
+								$group: {
+									_id: {
+										answer: '$answer',
+									},
+									count: {
+										$sum: 1,
+									},
+								},
+							},
+						]);
+						const countVoteResult = [];
+						for (const item of data) {
+							const countVoteType: CountVoteResponse = {
+								answer: item._id.answer,
+								count: item.count,
+							};
+							countVoteResult.push(countVoteType);
+						}
+						console.log(countVoteResult);
+
+						return countVoteResult;
 					},
 				},
 			},

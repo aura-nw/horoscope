@@ -5,3 +5,4 @@ export * from './response-api';
 export * from './api-service/';
 export * from './redis.service-interface';
 export * from './event';
+export * from './vote';
