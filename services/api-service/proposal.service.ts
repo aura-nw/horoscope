@@ -5,6 +5,7 @@ import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import {
+	CountVoteParams,
 	ErrorCode,
 	ErrorMessage,
 	getActionConfig,
@@ -17,6 +18,7 @@ import { DbContextParameters, QueryOptions } from 'moleculer-db';
 import { IProposal, ProposalEntity } from '../../entities';
 import { LIST_NETWORK, PROPOSAL_STATUS } from '../../common/constant';
 import { ObjectId } from 'bson';
+import { Config } from '../../common';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -318,7 +320,7 @@ export default class ProposalService extends MoleculerDBService<
 			}
 
 			let [result, count]: [any[], number] = await Promise.all([
-				this.adapter.find({
+				this.adapter.lean({
 					query: query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
@@ -330,6 +332,21 @@ export default class ProposalService extends MoleculerDBService<
 				}),
 			]);
 
+			// count votes
+			if (proposalId) {
+				const countVoteParams: CountVoteParams = {
+					chain_id: ctx.params.chainid,
+					proposal_id: Number(proposalId),
+				};
+				const countVoteResponse = await this.broker.call(
+					Config.COUNT_VOTES_ACTION,
+					countVoteParams,
+				);
+				const data = Object.assign({}, result[0]);
+				// result[0] = result[0].toObject();
+				data.total_vote = countVoteResponse;
+				result[0] = data;
+			}
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
