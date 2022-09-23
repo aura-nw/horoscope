@@ -4,6 +4,7 @@ import { LogLevels } from 'moleculer';
 import dotenvFlow from 'dotenv-flow';
 import _ from 'lodash';
 import { DBDialog, DBInfo } from '../types';
+import { PATH_COSMOS_SDK } from './constant';
 require('dotenv').config();
 
 const processEnv = process.env;
@@ -100,39 +101,53 @@ export default class ConfigClass {
 	public static DB_IBC_DENOM: any;
 
 	public ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
-	public GET_LATEST_BLOCK_API = process.env.GET_LATEST_BLOCK_API || '/block?latest';
-	public GET_BLOCK_BY_HEIGHT_API = process.env.GET_BLOCK_BY_HEIGHT_API || '/block?height=';
-	public GET_ALL_PROPOSAL = process.env.GET_ALL_PROPOSAL || '/cosmos/gov/v1beta1/proposals';
-	public GET_PARAMS_BANK = process.env.GET_PARAMS_BANK || '/cosmos/bank/v1beta1/params';
+
+	public GET_LATEST_BLOCK_API =
+		process.env.GET_LATEST_BLOCK_API || PATH_COSMOS_SDK.GET_LATEST_BLOCK_API;
+	public GET_BLOCK_BY_HEIGHT_API =
+		process.env.GET_BLOCK_BY_HEIGHT_API || PATH_COSMOS_SDK.GET_BLOCK_BY_HEIGHT_API;
+	public GET_ALL_PROPOSAL = process.env.GET_ALL_PROPOSAL || PATH_COSMOS_SDK.GET_ALL_PROPOSAL;
+	public GET_PARAMS_BANK = process.env.GET_PARAMS_BANK || PATH_COSMOS_SDK.GET_PARAMS_BANK;
 	public GET_PARAMS_DISTRIBUTION =
-		process.env.GET_PARAMS_DISTRIBUTION || '/cosmos/distribution/v1beta1/params';
+		process.env.GET_PARAMS_DISTRIBUTION || PATH_COSMOS_SDK.GET_PARAMS_DISTRIBUTION;
 	public GET_PARAMS_GOV_VOTING =
-		process.env.GET_PARAMS_GOV_VOTING || '/cosmos/gov/v1beta1/params/voting';
+		process.env.GET_PARAMS_GOV_VOTING || PATH_COSMOS_SDK.GET_PARAMS_GOV_VOTING;
 	public GET_PARAMS_GOV_TALLYING =
-		process.env.GET_PARAMS_GOV_TALLYING || '/cosmos/gov/v1beta1/params/tallying';
+		process.env.GET_PARAMS_GOV_TALLYING || PATH_COSMOS_SDK.GET_PARAMS_GOV_TALLYING;
 	public GET_PARAMS_GOV_DEPOSIT =
-		process.env.GET_PARAMS_GOV_DEPOSIT || '/cosmos/gov/v1beta1/params/deposit';
+		process.env.GET_PARAMS_GOV_DEPOSIT || PATH_COSMOS_SDK.GET_PARAMS_GOV_DEPOSIT;
 	public GET_PARAMS_SLASHING =
-		process.env.GET_PARAMS_SLASHING || '/cosmos/slashing/v1beta1/params';
-	public GET_PARAMS_STAKING = process.env.GET_PARAMS_STAKING || '/cosmos/staking/v1beta1/params';
+		process.env.GET_PARAMS_SLASHING || PATH_COSMOS_SDK.GET_PARAMS_SLASHING;
+	public GET_PARAMS_STAKING =
+		process.env.GET_PARAMS_STAKING || PATH_COSMOS_SDK.GET_PARAMS_STAKING;
 	public GET_PARAMS_IBC_TRANSFER =
-		process.env.GET_PARAMS_IBC_TRANSFER || '/ibc/apps/transfer/v1/params';
-	public GET_PARAMS_MINT = process.env.GET_PARAMS_MINT || '/cosmos/mint/v1beta1/params';
-	public GET_TX_API = process.env.GET_TX_API || '/cosmos/tx/v1beta1/txs/';
-	public GET_ALL_VALIDATOR =
-		process.env.GET_ALL_VALIDATOR || '/cosmos/staking/v1beta1/validators';
-	public GET_POOL = process.env.GET_POOL || '/cosmos/staking/v1beta1/pool';
+		process.env.GET_PARAMS_IBC_TRANSFER || PATH_COSMOS_SDK.GET_PARAMS_IBC_TRANSFER;
+	public GET_PARAMS_MINT = process.env.GET_PARAMS_MINT || PATH_COSMOS_SDK.GET_PARAMS_MINT;
+	public GET_TX_API = process.env.GET_TX_API || PATH_COSMOS_SDK.GET_TX_API;
+	public GET_ALL_VALIDATOR = process.env.GET_ALL_VALIDATOR || PATH_COSMOS_SDK.GET_ALL_VALIDATOR;
+	public GET_POOL = process.env.GET_POOL || PATH_COSMOS_SDK.GET_POOL;
 	public GET_COMMUNITY_POOL =
-		process.env.GET_COMMUNITY_POOL || '/cosmos/distribution/v1beta1/community_pool';
-	public CODE_ID_URI = process.env.CODE_ID_URI || '/cosmwasm/wasm/v1/code/';
-	public CONTRACT_URI = process.env.CONTRACT_URI || '/cosmwasm/wasm/v1/contract/';
-	public GET_SIGNING_INFO =
-		process.env.GET_SIGNING_INFO || '/cosmos/slashing/v1beta1/signing_infos';
-	public GET_INFLATION = process.env.GET_INFLATION || '/cosmos/mint/v1beta1/inflation';
+		process.env.GET_COMMUNITY_POOL || PATH_COSMOS_SDK.GET_COMMUNITY_POOL;
+	public CODE_ID_URI = process.env.CODE_ID_URI || PATH_COSMOS_SDK.CODE_ID_URI;
+	public CONTRACT_URI = process.env.CONTRACT_URI || PATH_COSMOS_SDK.CONTRACT_URI;
+	public GET_SIGNING_INFO = process.env.GET_SIGNING_INFO || PATH_COSMOS_SDK.GET_SIGNING_INFO;
+	public GET_INFLATION = process.env.GET_INFLATION || PATH_COSMOS_SDK.GET_INFLATION;
 	public GET_PARAMS_DELEGATE_REWARDS =
-		process.env.GET_PARAMS_DELEGATE_REWARDS || '/cosmos/distribution/v1beta1/delegators';
-	public GET_TX_API_EVENTS = process.env.GET_TX_API_EVENTS || '/cosmos/tx/v1beta1/txs';
-	public GET_TX_SEARCH = process.env.GET_TX_SEARCH || '/tx_search';
+		process.env.GET_PARAMS_DELEGATE_REWARDS || PATH_COSMOS_SDK.GET_PARAMS_DELEGATE_REWARDS;
+	public GET_TX_API_EVENTS = process.env.GET_TX_API_EVENTS || PATH_COSMOS_SDK.GET_TX_API_EVENTS;
+	public GET_TX_SEARCH = process.env.GET_TX_SEARCH || PATH_COSMOS_SDK.GET_TX_SEARCH;
+	public GET_PARAMS_BALANCE =
+		process.env.GET_PARAMS_BALANCE || PATH_COSMOS_SDK.GET_PARAMS_BALANCE;
+	public GET_PARAMS_DELEGATE =
+		process.env.GET_PARAMS_DELEGATE || PATH_COSMOS_SDK.GET_PARAMS_DELEGATE;
+	public GET_PARAMS_DELEGATOR =
+		process.env.GET_PARAMS_DELEGATOR || PATH_COSMOS_SDK.GET_PARAMS_DELEGATOR;
+	public GET_PARAMS_AUTH_INFO =
+		process.env.GET_PARAMS_AUTH_INFO || PATH_COSMOS_SDK.GET_PARAMS_AUTH_INFO;
+	public GET_PARAMS_SPENDABLE_BALANCE =
+		process.env.GET_PARAMS_SPENDABLE_BALANCE || PATH_COSMOS_SDK.GET_PARAMS_SPENDABLE_BALANCE;
+	public GET_PARAMS_IBC_DENOM =
+		process.env.GET_PARAMS_IBC_DENOM || PATH_COSMOS_SDK.GET_PARAMS_IBC_DENOM;
 
 	// Dynamic property key
 	[index: string]: any;
