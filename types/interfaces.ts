@@ -24,6 +24,7 @@ export interface DBInfo {
 	retryWrites: string;
 	replicaSet: string;
 	readPreference: string;
+	maxPoolSize: number;
 }
 
 export interface RouteSchemaOpts {
