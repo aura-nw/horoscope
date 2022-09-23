@@ -47,11 +47,10 @@ const genericDbInfo = (where: string): DBInfo => ({
 	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false'),
 	replicaSet: getDbInfo(where, 'REPLICA_SET', ''),
 	readPreference: getDbInfo(where, 'READ_PREFERENCE', 'primary'),
+	maxPoolSize: +getDbInfo(where, 'MAX_POOL_SIZE', '10'),
 });
 
 export default class ConfigClass {
-	// Dynamic property key
-	[index: string]: any;
 	public static NODE_ENV: string;
 	// public static IS_TEST = ConfigClass.NODE_ENV === 'test';
 	// public static HOST = process.env.HOST || '0.0.0.0';
@@ -75,7 +74,6 @@ export default class ConfigClass {
 	public static RATE_LIMIT_WINDOW = +(process.env.RATE_LIMIT_WINDOW || 10000);
 	public static STRATEGY = process.env.STRATEGY || 'RoundRobin'; // "RoundRobin", "Random", "CpuUsage", "Latency", "Shard"
 	// public static JWT_SECRET = process.env.JWT_SECRET || 'dummy-secret';
-	public static ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
 	public static DB_USER: any;
 	public static DB_PRODUCT: any;
 	public static DB_TRANSACTION: any;
@@ -100,6 +98,44 @@ export default class ConfigClass {
 	public static DB_ACCOUNT_REWARDS: any;
 	public static DB_DELAY_JOB: any;
 	public static DB_IBC_DENOM: any;
+
+	public ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
+	public GET_LATEST_BLOCK_API = process.env.GET_LATEST_BLOCK_API || '/block?latest';
+	public GET_BLOCK_BY_HEIGHT_API = process.env.GET_BLOCK_BY_HEIGHT_API || '/block?height=';
+	public GET_ALL_PROPOSAL = process.env.GET_ALL_PROPOSAL || '/cosmos/gov/v1beta1/proposals';
+	public GET_PARAMS_BANK = process.env.GET_PARAMS_BANK || '/cosmos/bank/v1beta1/params';
+	public GET_PARAMS_DISTRIBUTION =
+		process.env.GET_PARAMS_DISTRIBUTION || '/cosmos/distribution/v1beta1/params';
+	public GET_PARAMS_GOV_VOTING =
+		process.env.GET_PARAMS_GOV_VOTING || '/cosmos/gov/v1beta1/params/voting';
+	public GET_PARAMS_GOV_TALLYING =
+		process.env.GET_PARAMS_GOV_TALLYING || '/cosmos/gov/v1beta1/params/tallying';
+	public GET_PARAMS_GOV_DEPOSIT =
+		process.env.GET_PARAMS_GOV_DEPOSIT || '/cosmos/gov/v1beta1/params/deposit';
+	public GET_PARAMS_SLASHING =
+		process.env.GET_PARAMS_SLASHING || '/cosmos/slashing/v1beta1/params';
+	public GET_PARAMS_STAKING = process.env.GET_PARAMS_STAKING || '/cosmos/staking/v1beta1/params';
+	public GET_PARAMS_IBC_TRANSFER =
+		process.env.GET_PARAMS_IBC_TRANSFER || '/ibc/apps/transfer/v1/params';
+	public GET_PARAMS_MINT = process.env.GET_PARAMS_MINT || '/cosmos/mint/v1beta1/params';
+	public GET_TX_API = process.env.GET_TX_API || '/cosmos/tx/v1beta1/txs/';
+	public GET_ALL_VALIDATOR =
+		process.env.GET_ALL_VALIDATOR || '/cosmos/staking/v1beta1/validators';
+	public GET_POOL = process.env.GET_POOL || '/cosmos/staking/v1beta1/pool';
+	public GET_COMMUNITY_POOL =
+		process.env.GET_COMMUNITY_POOL || '/cosmos/distribution/v1beta1/community_pool';
+	public CODE_ID_URI = process.env.CODE_ID_URI || '/cosmwasm/wasm/v1/code/';
+	public CONTRACT_URI = process.env.CONTRACT_URI || '/cosmwasm/wasm/v1/contract/';
+	public GET_SIGNING_INFO =
+		process.env.GET_SIGNING_INFO || '/cosmos/slashing/v1beta1/signing_infos';
+	public GET_INFLATION = process.env.GET_INFLATION || '/cosmos/mint/v1beta1/inflation';
+	public GET_PARAMS_DELEGATE_REWARDS =
+		process.env.GET_PARAMS_DELEGATE_REWARDS || '/cosmos/distribution/v1beta1/delegators';
+	public GET_TX_API_EVENTS = process.env.GET_TX_API_EVENTS || '/cosmos/tx/v1beta1/txs';
+	public GET_TX_SEARCH = process.env.GET_TX_SEARCH || '/tx_search';
+
+	// Dynamic property key
+	[index: string]: any;
 
 	public constructor() {
 		Object.keys(configObj).forEach((key: string) => {
