@@ -6,7 +6,7 @@ import { IVote } from '../../entities/vote.entity';
 import { Context } from 'moleculer';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
-import { ErrorCode, ErrorMessage, GetVoteRequest, MoleculerDBService } from '../../types';
+import { ErrorCode, ErrorMessage, GetVoteRequest, MoleculerDBService, ValidatorVoteResponse } from '../../types';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -437,20 +437,31 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			if (ctx.params.answer) query.answer = ctx.params.answer;
 			const votes: any[] = await this.adapter.find({ query });
 
-			const result = [];
-			for (const validator of validators) {
+			const validatorVotes: ValidatorVoteResponse[] = [];
+			for (let i = 0; i < validators.length; i++) {
+				const validator = validators[i];
 				const vote = votes.find((e) => {
 					return e.voter_address === validator.account_address;
 				});
-				validator.vote = vote || null;
-				result.push(validator);
+				const tx_hash = vote ? vote.txhash : '';
+				const answer = vote ? vote.answer : '';
+				const timestamp = vote ? vote.timestamp : '';
+				validatorVotes.push({
+					rank: (i + 1).toString(),
+					percent_voting_power: validator.percent_voting_power,
+					validator_address: validator.account_address,
+					operator_address: validator.operator_address,
+					validator_identity: validator.description.identity,
+					validator_name: validator.description.moniker,
+					answer,
+					tx_hash,
+					timestamp,
+				});
 			}
 			return {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
-				data: {
-					result,
-				},
+				data: validatorVotes,
 			};
 		} catch (err) {
 			return {
