@@ -122,8 +122,8 @@ export default class CrawlAccountBalancesService extends Service {
 								}
 							}
 						}));
-						accountInfo.account_balances = listBalances;
 					}
+					accountInfo.account_balances = listBalances;
 				}
 
 				listAccounts.push(accountInfo);

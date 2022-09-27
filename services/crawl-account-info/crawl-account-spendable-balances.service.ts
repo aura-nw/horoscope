@@ -123,8 +123,8 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 								}
 							}
 						}));
-						accountInfo.account_spendable_balances = listSpendableBalances;
 					}
+					accountInfo.account_spendable_balances = listSpendableBalances;
 				}
 
 				listAccounts.push(accountInfo);
