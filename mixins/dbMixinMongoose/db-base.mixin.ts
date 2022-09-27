@@ -138,7 +138,7 @@ export class DbBaseMixin {
 	private getDBUri() {
 		let listParamUri = [`${this.dbInfo.dialect}://`];
 		if (this.dbInfo.user && this.dbInfo.password) {
-			listParamUri.push(`${this.dbInfo.user}:${this.dbInfo.password}@`);
+			listParamUri.push(`${this.dbInfo.user}:${encodeURIComponent(this.dbInfo.password)}@`);
 		}
 		listParamUri.push(
 			`${this.dbInfo.host}:${this.dbInfo.port}/?maxPoolSize=${this.dbInfo.maxPoolSize}`,
