@@ -100,6 +100,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
+		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		let handledRewardRedis = await this.redisClient.get(Config.REDIS_KEY_START_TX_REWARDS);
 		try {
 			for (let tx of listTx) {
@@ -118,10 +119,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				if (!account) {
 					account = {} as AccountInfoEntity;
 					account.address = userAddress;
-					account.custom_info = {
-						chain_id: chainId,
-						chain_name: ''
-					};
+					account.account_claimed_rewards = [] as Rewards[];
 				}
 				switch (tx.tx.body.messages[0]['@type']) {
 					case MSG_TYPE.MSG_DELEGATE:
@@ -145,7 +143,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								amount,
 							} as Rewards);
 						}
-						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_REDELEGATE:
 						const valSrcAddress = tx.tx.body.messages[0].validator_src_address;
@@ -199,7 +196,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								} as Rewards);
 							}
 						}
-						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_UNDELEGATE:
 						const undelegateValAddress = tx.tx.body.messages[0].validator_address;
@@ -222,7 +218,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								amount: undelegateAmount,
 							} as Rewards);
 						}
-						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_WITHDRAW_REWARDS:
 						tx.tx.body.messages.map((msg: any) => {
@@ -246,9 +241,9 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								} as Rewards);
 							}
 						});
-						listAccounts.push(account);
 						break;
 				}
+				listAccounts.push(account);
 			};
 			listAccounts.map((element) => {
 				if (element._id)
@@ -258,7 +253,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						})
 					);
 				else {
-					const chain = LIST_NETWORK.find((x) => x.chainId === element.custom_info.chain_id);
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(element, AccountInfoEntity);
 					item.custom_info = {
 						chain_id: chainId,

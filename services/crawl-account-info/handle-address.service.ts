@@ -73,9 +73,9 @@ export default class HandleAddressService extends Service {
 	}
 
 	async handleJob(listTx: any[], source: string, chainId: string) {
-		let listAddresses: any[] = [];
-		let listUpdateInfo: string[] = [];
-		let listInsert: any[] = [];
+		let listAddresses: any[] = [],
+			listUpdateInfo: string[] = [],
+			listInsert: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		listUpdateInfo.push(
@@ -195,7 +195,7 @@ export default class HandleAddressService extends Service {
 				const result = await this.adapter.bulkWrite(listInsert);
 				this.logger.info(`${JSON.stringify(result)}`);
 			} catch (error) {
-				this.logger.error(error);
+				this.logger.error(`Account(s) already exists`);
 			}
 			listUpdateInfo.map((item) => {
 				this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });
