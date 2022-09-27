@@ -94,7 +94,7 @@ export default class VoteHandlerService extends Service {
 			const voter_address = voteMsg.voter;
 			const txhash = tx.tx_response.txhash;
 			const timestamp = tx.tx_response.timestamp;
-			const height = tx.tx_response.height;
+			const height = Number(tx.tx_response.height);
 			const chainInfo: CustomInfo = {
 				chain_id: chain,
 				chain_name: LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
