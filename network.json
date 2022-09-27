@@ -69,7 +69,7 @@
 		"chainName":"Evmos Testnet",
 		"chainId":"evmos_9000-4",
 		"RPC":[
-			"https://eth.bd.evmos.dev:8545"
+			"https://tendermint.bd.evmos.dev:26657"
 			
 		],
 		"LCD":[
