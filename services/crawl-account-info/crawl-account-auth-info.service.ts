@@ -105,37 +105,9 @@ export default class CrawlAccountAuthInfoService extends Service {
 						resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC ||
 						resultCallApi.result.type === VESTING_ACCOUNT_TYPE.DELAYED
 					) {
-						// let delay = resultCallApi.result.value.base_vesting_account.end_time - new Date().getTime();
-						// const apiKeyQueue = new Bull(
-						//     'handle.address',
-						//     {
-						//         redis: {
-						//             host: Config.REDIS_HOST,
-						//             port: Config.REDIS_PORT,
-						//             username: Config.REDIS_USERNAME,
-						//             password: Config.REDIS_PASSWORD,
-						//             db: Config.REDIS_DB_NUMBER,
-						//         },
-						//         prefix: 'handle.address',
-						//         defaultJobOptions: {
-						//             jobId: `${address}_${chainId}_${resultCallApi.result.value.base_vesting_account.end_time}`,
-						//             removeOnComplete: true,
-						//             delay,
-						//         }
-						//     }
-						// );
-						// apiKeyQueue.add({
-						//     listTx: [
-						//         {
-						//             address,
-						//         }
-						//     ],
-						//     source: CONST_CHAR.API,
-						//     chainId,
-						// });
 						const existsJob = await delayJob.findOne({
 							'content.address': address,
-							type: DELAY_JOB_TYPE.PERIODIC_VESTING,
+							type: [DELAY_JOB_TYPE.PERIODIC_VESTING, DELAY_JOB_TYPE.DELAYED_VESTING],
 							'custom_info.chain_id': chainId,
 						});
 						if (!existsJob) {
@@ -216,9 +188,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
-			listDelayJobs.map((element) => {
-				listUpdateQueries.push(delayJob.insertMany([element]));
-			});
+			listUpdateQueries.push(delayJob.insertMany(listDelayJobs));
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
