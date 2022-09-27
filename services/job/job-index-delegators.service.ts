@@ -8,6 +8,7 @@ import { ListTxCreatedParams } from "../../types";
 import { ObjectId } from "mongodb";
 import { mongoDBMixin } from "../../mixins/dbMixinMongoDB/mongodb.mixin";
 import { dbTransactionMixin } from "../../mixins/dbMixinMongoose";
+import { ITransaction } from "entities";
 const QueueService = require('moleculer-bull');
 const knex = require('../../config/database');
 const mongo = require('mongodb');
@@ -40,7 +41,7 @@ export default class IndexDelegatorsService extends Service {
                     process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
-                        this.handleJob(job.data.lastId);
+                        this.handleJob(job.data.lastId, job.data.stopPoint);
                         job.progress(100);
                         return true;
                     },
@@ -49,7 +50,7 @@ export default class IndexDelegatorsService extends Service {
         });
     }
 
-    async handleJob(lastId: string) {
+    async handleJob(lastTxId: string, stopPoint?: string) {
         // const listAddresses = [
         //     "aura1zcsmykewyuwr25d4egmjmvuc3xpf38fupunthq",
         //     "aura1letj04jee803tddhcllj8lp6y6fzcctw2aex0y",
@@ -411,40 +412,35 @@ export default class IndexDelegatorsService extends Service {
         //     console.log(`${validator.title},${validator.address},${addresses},${vote_count}/${total_votes}`);
         // };
 
-        let query: any = {
-            'custom_info.chain_id': 'serenity-testnet-001', // , 'euphoria-1', 'aura-testnet'
-            'tx.body.messages.@type': {
-                $in: [MSG_TYPE.MSG_DELEGATE, MSG_TYPE.MSG_REDELEGATE, MSG_TYPE.MSG_UNDELEGATE, MSG_TYPE.MSG_WITHDRAW_REWARDS]
-            }
-        };
-        query['indexes'] = { $eq: null };
-        if (lastId == '0') {
-        } else {
-            query['_id'] = { $gt: new ObjectId(lastId) };
-        }
-        const listTx = await this.adapter.find({
-            query,
-            sort: '_id',
-            limit: 100,
-            offset: 0,
-        });
-        if (listTx.length > 0) {
-            this.logger.info(`Last tx id: ${listTx[listTx.length - 1]._id.toString()}`);
-            this.createJob(
-                'index.delegators',
-                {
-                    //@ts-ignore
-                    lastId: listTx[listTx.length - 1]._id.toString(),
-                },
-                {
-                    removeOnComplete: true,
-                },
-            );
-        }
-        this.broker.emit('account-info.upsert-claimed-rewards', {
-            listTx,
-            chainId: 'serenity-testnet-001',
-        });
+        let query: any = {};
+		if (lastTxId !== '0') query = { _id: { $gt: new ObjectId(lastTxId) } }
+
+		this.logger.info(`stopPoint: ${stopPoint}, lastTxId: ${lastTxId}`);
+		if (stopPoint && lastTxId > stopPoint) return true;
+		if (stopPoint) {
+			query =
+				lastTxId === '0'
+					? { _id: { $lt: new ObjectId(stopPoint) } }
+					: { _id: { $gt: new ObjectId(lastTxId), $lt: new ObjectId(stopPoint) } };
+		}
+        query['indexes.message_action'] = { $in: [MSG_TYPE.MSG_DELEGATE, MSG_TYPE.MSG_REDELEGATE, MSG_TYPE.MSG_UNDELEGATE, MSG_TYPE.MSG_WITHDRAW_REWARDS] };
+		
+		const listTx: ITransaction[] = await this.adapter.find({
+			query,
+			sort: '_id',
+			limit: 100,
+			skip: 0,
+		});
+
+		if (listTx.length > 0) {
+			const lastId = listTx.at(-1)?._id;
+			this.logger.info(`lastId: ${lastId}`);
+			this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, lastId?.toString());
+			const stopPoint = Config.SCAN_TX_STOP_POINT;
+			await this.broker.call('v1.handleAddress.accountinfoupsert', { listTx, source: CONST_CHAR.CRAWL, chainId: '' });
+            this.createJob('index.delegators', { lastId, stopPoint }, { removeOnComplete: true });
+		}
+		return true;
 
         // const listVestingAccounts = await this.adapter.find({
         //     query: {
@@ -466,18 +462,13 @@ export default class IndexDelegatorsService extends Service {
         // });
     }
 
-    sleep(ms: number) {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms);
-        });
-    }
-
     async _start() {
         this.redisClient = await this.getRedisClient();
+        let lastId = (await this.redisClient.get(Config.REDIS_KEY_START_TX_REWARDS)) || '0';
         this.createJob(
             'index.delegators',
             {
-                lastId: '0',
+                lastId,
             },
             {
                 removeOnComplete: true,
