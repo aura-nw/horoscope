@@ -143,7 +143,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								amount,
 							} as Rewards);
 						}
-						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_REDELEGATE:
 						const valSrcAddress = tx.tx.body.messages[0].validator_src_address;
@@ -197,7 +196,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								} as Rewards);
 							}
 						}
-						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_UNDELEGATE:
 						const undelegateValAddress = tx.tx.body.messages[0].validator_address;
@@ -220,7 +218,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								amount: undelegateAmount,
 							} as Rewards);
 						}
-						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_WITHDRAW_REWARDS:
 						tx.tx.body.messages.map((msg: any) => {
@@ -244,9 +241,9 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								} as Rewards);
 							}
 						});
-						listAccounts.push(account);
 						break;
 				}
+				listAccounts.push(account);
 			};
 			listAccounts.map((element) => {
 				if (element._id)
