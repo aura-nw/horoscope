@@ -10,7 +10,12 @@ import {
 } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { UnbondingResponse, DelayJobEntity, AccountInfoEntity, ValidatorEntity } from '../../entities';
+import {
+	UnbondingResponse,
+	DelayJobEntity,
+	AccountInfoEntity,
+	ValidatorEntity,
+} from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
@@ -89,7 +94,14 @@ export default class CrawlAccountUnbondsService extends Service {
 			for (let address of listAddresses) {
 				let listUnbonds: UnbondingResponse[] = [];
 
-				const validators: ValidatorEntity[] = await this.broker.call('v1.validator.getAllByChain', { chainId });
+				const validators: ValidatorEntity[] = await this.broker.call(
+					'v1.crawlValidator.find',
+					{
+						query: {
+							'custom_info.chain_id': chainId,
+						},
+					},
+				);
 
 				const param =
 					Config.GET_PARAMS_DELEGATOR +

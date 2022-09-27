@@ -77,27 +77,18 @@ export default class VoteHandlerService extends Service {
 	}
 
 	async handleJob(listTx: any, chainId?: string) {
-		const votes: VoteEntity[] = [];
 		for (const tx of listTx) {
 			// continue if tx is not vote
-			const messageEvent = tx.tx_response.logs[0]?.events.find(
-				(event: any) => event.type === 'message',
+			const voteMsg = tx.tx.body.messages.find(
+				(msg: any) => msg['@type'] === '/cosmos.gov.v1beta1.MsgVote',
 			);
-			let actionName = '';
-			if (messageEvent) {
-				const actionAttribute = messageEvent.attributes.find(
-					(attribute: any) => attribute.key === 'action',
-				);
-				actionName = actionAttribute.value;
-			}
-			if (actionName !== '/cosmos.gov.v1beta1.MsgVote') continue;
+			if (!voteMsg) continue;
 
 			// continue if chainId is not found
-			if (!chainId && !tx.custom_info.chain_id) continue;
-			const chain = chainId || tx.custom_info.chain_id;
+			const chain = chainId || tx.custom_info.chain_id || Config.CHAIN_ID;
+			if (!chain) throw new Error('ChainId is not found');
 
 			// create vote entity
-			const voteMsg = tx.tx_response.tx.body.messages[0];
 			const proposal_id = Number(voteMsg.proposal_id);
 			const answer = voteMsg.option;
 			const voter_address = voteMsg.voter;
@@ -106,8 +97,7 @@ export default class VoteHandlerService extends Service {
 			const height = tx.tx_response.height;
 			const chainInfo: CustomInfo = {
 				chain_id: chain,
-				chain_name:
-					LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
+				chain_name: LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
 			};
 			const vote = {
 				voter_address,
@@ -120,10 +110,8 @@ export default class VoteHandlerService extends Service {
 			};
 			const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
 			this.logger.info('voteEntity', JSON.stringify(voteEntity));
-			votes.push(voteEntity);
+			// call action to save votes
+			this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
 		}
-
-		// call action to save votes
-		if (votes.length > 0) this.broker.call(VOTE_MANAGER_ACTION.INSERT, votes);
 	}
 }

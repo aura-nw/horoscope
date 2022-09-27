@@ -174,12 +174,19 @@ export default class BlockService extends MoleculerDBService<
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
 		} else {
+			// project field when get list tx
 			projection['tx'] = 0;
 			projection['tx_response.tx.body.messages'] = { $slice: 3 };
 			projection['tx_response.events'] = { $slice: 3 };
 			projection['tx_response.logs'] = 0;
 			projection['tx_response.data'] = 0;
 			projection['tx_response.raw_log'] = 0;
+
+			//only show ibc token denom when search IBC tx
+			if (sequenceIBC) {
+				delete projection['indexes'];
+				projection = this.setProjectionForIBC(projection);
+			}
 		}
 
 		let listQueryAnd: any[] = [];
@@ -230,6 +237,18 @@ export default class BlockService extends MoleculerDBService<
 						$eq: sequenceIBC,
 					},
 				},
+				{
+					'indexes.acknowledge_packet_packet_sequence': {
+						$exists: true,
+						$eq: sequenceIBC,
+					},
+				},
+				// {
+				// 	'indexes.timeout_packet_packet_sequence': {
+				// 		$exists: true,
+				// 		$eq: sequenceIBC,
+				// 	},
+				// },
 			);
 		}
 		if (listQueryAnd.length > 0) {
@@ -541,6 +560,81 @@ export default class BlockService extends MoleculerDBService<
 			);
 		}
 		return listPromise;
+	}
+
+	private setProjectionForIBC(projection: any) {
+		projection['indexes.timestamp'] = 0;
+		projection['indexes.height'] = 0;
+		projection['indexes.acknowledge_packet_packet_timeout_height'] = 0;
+		projection['indexes.acknowledge_packet_packet_timeout_timestamp'] = 0;
+		projection['indexes.acknowledge_packet_packet_sequence'] = 0;
+		projection['indexes.acknowledge_packet_packet_src_port'] = 0;
+		projection['indexes.acknowledge_packet_packet_src_channel'] = 0;
+		projection['indexes.acknowledge_packet_packet_dst_port'] = 0;
+		projection['indexes.acknowledge_packet_packet_dst_channel'] = 0;
+		projection['indexes.acknowledge_packet_packet_channel_ordering'] = 0;
+		projection['indexes.acknowledge_packet_packet_connection'] = 0;
+		projection['indexes.fungible_token_packet_module'] = 0;
+		projection['indexes.fungible_token_packet_acknowledgement'] = 0;
+		projection['indexes.send_packet_packet_data'] = 0;
+		projection['indexes.send_packet_packet_data_hex'] = 0;
+		projection['indexes.send_packet_packet_timeout_height'] = 0;
+		projection['indexes.send_packet_packet_timeout_timestamp'] = 0;
+		projection['indexes.send_packet_packet_sequence'] = 0;
+		projection['indexes.send_packet_packet_src_port'] = 0;
+		projection['indexes.send_packet_packet_src_channel'] = 0;
+		projection['indexes.send_packet_packet_dst_port'] = 0;
+		projection['indexes.send_packet_packet_dst_channel'] = 0;
+		projection['indexes.send_packet_packet_channel_ordering'] = 0;
+		projection['indexes.send_packet_packet_connection'] = 0;
+		projection['indexes.ibc_transfer_sender'] = 0;
+		projection['indexes.ibc_transfer_receiver'] = 0;
+		projection['indexes.coin_spent_amount'] = 0;
+		projection['indexes.coin_spent_spender'] = 0;
+		projection['indexes.coin_received_receiver'] = 0;
+		projection['indexes.coin_received_amount'] = 0;
+		projection['indexes.transfer_recipient'] = 0;
+		projection['indexes.transfer_sender'] = 0;
+		projection['indexes.transfer_amount'] = 0;
+		projection['indexes.message_sender'] = 0;
+		projection['indexes.tx_fee'] = 0;
+		projection['indexes.tx_acc_seq'] = 0;
+		projection['indexes.tx_signature'] = 0;
+		projection['indexes.message_action'] = 0;
+		projection['indexes.update_client_client_id'] = 0;
+		projection['indexes.update_client_client_type'] = 0;
+		projection['indexes.update_client_consensus_height'] = 0;
+		projection['indexes.update_client_header'] = 0;
+		projection['indexes.message_module'] = 0;
+		projection['indexes.recv_packet_packet_data'] = 0;
+		projection['indexes.recv_packet_packet_data_hex'] = 0;
+		projection['indexes.recv_packet_packet_timeout_height'] = 0;
+		projection['indexes.recv_packet_packet_timeout_timestamp'] = 0;
+		projection['indexes.recv_packet_packet_sequence'] = 0;
+		projection['indexes.recv_packet_packet_src_port'] = 0;
+		projection['indexes.recv_packet_packet_src_channel'] = 0;
+		projection['indexes.recv_packet_packet_dst_port'] = 0;
+		projection['indexes.recv_packet_packet_dst_channel'] = 0;
+		projection['indexes.recv_packet_packet_channel_ordering'] = 0;
+		projection['indexes.recv_packet_packet_connection'] = 0;
+		projection['indexes.denomination_trace_trace_hash'] = 0;
+		projection['indexes.coinbase_minter'] = 0;
+		projection['indexes.fungible_token_packet_receiver'] = 0;
+		projection['indexes.fungible_token_packet_denom'] = 0;
+		projection['indexes.fungible_token_packet_amount'] = 0;
+		projection['indexes.write_acknowledgement_packet_data'] = 0;
+		projection['indexes.write_acknowledgement_packet_data_hex'] = 0;
+		projection['indexes.write_acknowledgement_packet_timeout_height'] = 0;
+		projection['indexes.write_acknowledgement_packet_timeout_timestamp'] = 0;
+		projection['indexes.write_acknowledgement_packet_sequence'] = 0;
+		projection['indexes.write_acknowledgement_packet_src_port'] = 0;
+		projection['indexes.write_acknowledgement_packet_src_channel'] = 0;
+		projection['indexes.write_acknowledgement_packet_dst_port'] = 0;
+		projection['indexes.write_acknowledgement_packet_dst_channel'] = 0;
+		projection['indexes.write_acknowledgement_packet_ack'] = 0;
+		projection['indexes.write_acknowledgement_packet_ack_hex'] = 0;
+		projection['indexes.write_acknowledgement_packet_connection'] = 0;
+		return projection;
 	}
 
 	/**

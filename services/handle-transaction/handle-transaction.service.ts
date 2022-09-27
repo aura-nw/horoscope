@@ -132,7 +132,7 @@ export default class HandleTransactionService extends Service {
 					this.broker.emit('list-tx.upsert', {
 						listTx: listTransactionNeedSaveToDb,
 						source: CONST_CHAR.CRAWL,
-						chainId: '',
+						chainId: Config.CHAIN_ID,
 					} as ListTxCreatedParams);
 
 					await this.handleListTransaction(listTransactionNeedSaveToDb);

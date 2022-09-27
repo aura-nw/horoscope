@@ -141,8 +141,11 @@ export class DbBaseMixin {
 			listParamUri.push(`${this.dbInfo.user}:${this.dbInfo.password}@`);
 		}
 		listParamUri.push(
-			`${this.dbInfo.host}:${this.dbInfo.port}/?retryWrites=${this.dbInfo.retryWrites}`,
+			`${this.dbInfo.host}:${this.dbInfo.port}/?maxPoolSize=${this.dbInfo.maxPoolSize}`,
 		);
+		if (this.dbInfo.retryWrites != '') {
+			listParamUri.push(`&retryWrites=${this.dbInfo.retryWrites}`);
+		}
 		if (this.dbInfo.replicaSet != '') {
 			listParamUri.push(
 				`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`,
