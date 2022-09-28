@@ -7,10 +7,7 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 	address: String,
 	account_auth: {
 		height: String,
-		result: {
-			type: { type: String },
-			value: Object,
-		}
+		result: Object
 	},
 	account_balances: [
 		{

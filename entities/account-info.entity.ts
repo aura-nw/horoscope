@@ -38,7 +38,7 @@ export interface IAccountResult {
 
 export interface IAccount {
     height: String;
-    result: IAccountResult;
+    result: Object;
 }
 
 export interface IDelegation {
@@ -124,8 +124,8 @@ export class AccountResult implements IAccountResult {
 export class Account implements IAccount {
     @JsonProperty('height', String)
     height: String = '';
-    @JsonProperty('result', AccountResult)
-    result = {} as AccountResult;
+    @JsonProperty('result', Object, true)
+    result = {} as Object;
 }
 
 export class Delegation implements IDelegation {
