@@ -77,10 +77,30 @@ export default class CrawlProposalService extends Service {
 			proposal_id: `${proposalId}`,
 			'custom_info.chain_id': Config.CHAIN_ID,
 		});
+		let foundStakingPool: any[] = await this.broker.call('v1.crawlPool.find', {
+			query: {
+				'custom_info.chain_id': Config.CHAIN_ID,
+			},
+		});
 		if (foundProposal) {
 			try {
+				let adding: any = { tally: result.tally };
+				let tally = foundProposal.final_tally_result || foundProposal.tally;
+				if (foundStakingPool && foundStakingPool.length > 0) {
+					let turnout =
+						Number(
+							((BigInt(tally.yes) +
+								BigInt(tally.no) +
+								BigInt(tally.abstain) +
+								BigInt(tally.no_with_veto)) *
+								BigInt(100000000)) /
+								BigInt(foundStakingPool[0].bonded_tokens),
+						) / 1000000;
+					adding['turnout'] = turnout;
+				}
+
 				let res = await this.adapter.updateById(foundProposal._id, {
-					$set: { tally: result.tally },
+					$set: adding,
 				});
 				this.logger.debug(res);
 			} catch (error) {

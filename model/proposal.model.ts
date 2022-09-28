@@ -71,6 +71,7 @@ const definition: definitionType<IProposal> = (collection?: string) => ({
 			amount: String,
 		},
 	],
+	turnout: String,
 });
 
 export const proposalMongoModel = (collection: string): unknown => {
