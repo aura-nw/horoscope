@@ -7,8 +7,6 @@ import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
 import RedisMixin from '../../mixins/redis/redis.mixin';
-import * as mongoose from 'mongoose';
-import * as mongodb from 'mongodb';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
@@ -101,16 +99,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			listUpdateQueries: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		let handledRewardRedis = await this.redisClient.get(Config.REDIS_KEY_START_TX_REWARDS);
 		try {
 			for (let tx of listTx) {
-				if (tx.custom_info.chain_id) chainId = tx.custom_info.chain_id;
-				let startTimeStamp = Math.floor(new Date(tx.tx_response.timestamp).getTime() / 1000);
-				let id = mongodb.ObjectId.createFromTime(startTimeStamp).toString();
-				if (!handledRewardRedis ||
-					new mongodb.ObjectId(handledRewardRedis).getTimestamp() > new Date(tx.tx_response.timestamp)) {
-					await this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, id);
-				}
 				const userAddress = tx.tx.body.messages[0].delegator_address;
 				let account: AccountInfoEntity = await this.adapter.findOne({
 					address: userAddress,
