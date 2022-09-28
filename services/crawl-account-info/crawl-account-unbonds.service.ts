@@ -178,7 +178,7 @@ export default class CrawlAccountUnbondsService extends Service {
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
-			listUpdateQueries.push(delayJob.insertMany(listDelayJobs));
+			if (listDelayJobs.length > 0) listUpdateQueries.push(delayJob.insertMany(listDelayJobs));
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
