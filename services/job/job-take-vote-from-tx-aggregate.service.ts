@@ -46,6 +46,7 @@ export default class InitVotingData extends Service {
 		} else {
 			query = {
 				_id: { $gt: new ObjectId(lastTxId) },
+				'custom_info.chain_id': { $ne: 'cosmoshub-4' },
 				'tx.body.messages.@type': '/cosmos.gov.v1beta1.MsgVote',
 			};
 		}
