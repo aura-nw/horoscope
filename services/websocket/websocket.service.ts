@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
-/* eslint-disable @typescript-eslint/member-ordering */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { Context, Service, ServiceBroker } from 'moleculer';
 import SocketIOMixin from 'moleculer-io';
@@ -12,13 +10,7 @@ import { ListTxInBlockParams, TransactionArrayParam } from 'types';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from 'redis';
 import { ITransaction } from 'entities';
-import createBullService from '../../mixins/customMoleculerBull';
-
-/**
- * @typedef {import('moleculer').Context} Context Moleculer's Context
- * @typedef {import('http').IncomingMessage} IncomingRequest Incoming HTTP Request
- * @typedef {import('http').ServerResponse} ServerResponse HTTP Server Response
- */
+const createBullService = require('../../mixins/customMoleculerBull');
 
 const SORTEDSET = Config.WEBOSCKET_SORTEDSET;
 
