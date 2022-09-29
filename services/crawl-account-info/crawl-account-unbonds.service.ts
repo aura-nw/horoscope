@@ -19,7 +19,7 @@ import {
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 const Bull = require('bull');
 
 export default class CrawlAccountUnbondsService extends Service {
@@ -33,7 +33,7 @@ export default class CrawlAccountUnbondsService extends Service {
 			name: 'crawlAccountUnbonds',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.account-unbonds',
@@ -178,7 +178,8 @@ export default class CrawlAccountUnbondsService extends Service {
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
-			if (listDelayJobs.length > 0) listUpdateQueries.push(delayJob.insertMany(listDelayJobs));
+			if (listDelayJobs.length > 0)
+				listUpdateQueries.push(delayJob.insertMany(listDelayJobs));
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);

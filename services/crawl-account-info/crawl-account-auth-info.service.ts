@@ -15,7 +15,7 @@ import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, DelayJobEntity } from '../../entities';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 export default class CrawlAccountAuthInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -28,7 +28,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 			name: 'crawlAccountAuthInfo',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.account-auth-info',
@@ -118,7 +118,8 @@ export default class CrawlAccountAuthInfoService extends Service {
 									newDelayJob.type = DELAY_JOB_TYPE.DELAYED_VESTING;
 									newDelayJob.expire_time = new Date(
 										parseInt(
-											resultCallApi.result.value.base_vesting_account.end_time,
+											resultCallApi.result.value.base_vesting_account
+												.end_time,
 											10,
 										) * 1000,
 									);
@@ -137,15 +138,17 @@ export default class CrawlAccountAuthInfoService extends Service {
 									let expire_time =
 										start_time +
 										number_of_periods *
-										parseInt(
-											resultCallApi.result.value.vesting_periods[0].length,
-											10,
-										) *
-										1000;
+											parseInt(
+												resultCallApi.result.value.vesting_periods[0]
+													.length,
+												10,
+											) *
+											1000;
 									if (expire_time < new Date().getTime())
 										expire_time +=
 											parseInt(
-												resultCallApi.result.value.vesting_periods[0].length,
+												resultCallApi.result.value.vesting_periods[0]
+													.length,
 												10,
 											) * 1000;
 									newDelayJob.expire_time = new Date(expire_time);
@@ -188,7 +191,8 @@ export default class CrawlAccountAuthInfoService extends Service {
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
-			if (listDelayJobs.length > 0) listUpdateQueries.push(delayJob.insertMany(listDelayJobs));
+			if (listDelayJobs.length > 0)
+				listUpdateQueries.push(delayJob.insertMany(listDelayJobs));
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);

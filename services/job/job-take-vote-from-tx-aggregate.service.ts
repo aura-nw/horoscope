@@ -5,7 +5,7 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { Job } from 'bull';
 import { ObjectId } from 'mongodb';
 import { ITransaction } from '../../entities';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 export default class InitVotingData extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -15,7 +15,7 @@ export default class InitVotingData extends Service {
 			name: 'job-init-voting-data',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 				),
 				dbTransactionAggregateMixin,
