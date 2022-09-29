@@ -12,7 +12,7 @@ import { ListTxInBlockParams, TransactionArrayParam } from 'types';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from 'redis';
 import { ITransaction } from 'entities';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -31,7 +31,7 @@ export default class WebsocketService extends Service {
 			name: 'io',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'websocket.tx-handle',
@@ -77,7 +77,7 @@ export default class WebsocketService extends Service {
 				'broadcast-message': {
 					async handler(ctx: Context) {
 						// @ts-ignore
-						await this.broker?.call("v1.io.broadcast", ctx.params.args);
+						await this.broker?.call('v1.io.broadcast', ctx.params.args);
 						// return ctx.params?.args;
 					},
 				},
@@ -105,8 +105,8 @@ export default class WebsocketService extends Service {
 
 			let txHadCrawl: any[] = await this.broker?.call('v1.transaction.find', {
 				query: {
-					'tx_response.txhash': {$in: syncTx},
-				}
+					'tx_response.txhash': { $in: syncTx },
+				},
 			});
 
 			//Broadcast message to websocket channel using broker call io service what is defined in constructor
@@ -117,10 +117,11 @@ export default class WebsocketService extends Service {
 					args: [txHadCrawl],
 				});
 
-				await Promise.all(txHadCrawl.map(async tx => {
-					await redisClient.SREM(SORTEDSET, tx.tx_response.txhash);
-				}));
-
+				await Promise.all(
+					txHadCrawl.map(async (tx) => {
+						await redisClient.SREM(SORTEDSET, tx.tx_response.txhash);
+					}),
+				);
 			}
 
 			return [];
@@ -139,7 +140,7 @@ export default class WebsocketService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_BLOCK, 10),

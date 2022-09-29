@@ -5,7 +5,7 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { Job } from 'bull';
 import { ObjectId } from 'mongodb';
 import { ITransaction } from '../../entities';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 export default class InitVotingData extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -15,7 +15,7 @@ export default class InitVotingData extends Service {
 			name: 'job-take-vote-from-tx',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 				),
 				dbTransactionMixin,
@@ -38,12 +38,12 @@ export default class InitVotingData extends Service {
 	}
 
 	async handleJob(lastTxId: string, stopPoint?: string) {
-		
 		let query: any = {};
-		if (lastTxId !== '0') query = { 
-			_id: {$gt: new ObjectId(lastTxId)},
-			'indexes.message_action': '/cosmos.gov.v1beta1.MsgVote'
-		 }
+		if (lastTxId !== '0')
+			query = {
+				_id: { $gt: new ObjectId(lastTxId) },
+				'indexes.message_action': '/cosmos.gov.v1beta1.MsgVote',
+			};
 
 		this.logger.info(`stopPoint: ${stopPoint}, lastTxId: ${lastTxId}`);
 		if (stopPoint && lastTxId > stopPoint) return true;
@@ -53,7 +53,7 @@ export default class InitVotingData extends Service {
 					? { _id: { $lt: new ObjectId(stopPoint) } }
 					: { _id: { $gt: new ObjectId(lastTxId), $lt: new ObjectId(stopPoint) } };
 		}
-		
+
 		const listTx: ITransaction[] = await this.adapter.find({
 			query,
 			sort: '_id',
