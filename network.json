@@ -70,10 +70,9 @@
 		"chainId":"evmos_9000-4",
 		"RPC":[
 			"https://evmos-testnet-rpc.polkachu.com:443"
-			
 		],
 		"LCD":[
-			"https://rest.bd.evmos.dev:1317"
+			"https://evmos-testnet-api.polkachu.com"
 		],
 		"prefixAddress":"evmos"
 	},
