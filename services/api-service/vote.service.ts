@@ -425,7 +425,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 					'custom_info.chain_id': chainId,
 					'status': 'BOND_STATUS_BONDED',
 				},
-				sort: 'status -percent_voting_power',
+				sort: '-percent_voting_power',
 			});
 			const validatorAccountAddress = validators.map((e) => {
 				return e.account_address;
