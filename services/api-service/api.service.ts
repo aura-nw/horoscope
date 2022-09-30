@@ -23,7 +23,7 @@ import {
 import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
 import { LIST_NETWORK } from '../../common/constant';
-const BullBoard = require('../mixins/bullBoard/bull-board');
+const BullBoard = require('../../mixins/bullBoard/bull-board');
 
 const tlBucket = 60000;
 const swMiddleware = swStats.getMiddleware({
