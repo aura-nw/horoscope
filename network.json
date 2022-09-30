@@ -72,7 +72,7 @@
 			"https://rpc.evmos.aura.network"
 		],
 		"LCD":[
-			"https://lcd.evmos.aura.network"
+			"http://18.214.105.67:1317"
 		],
 		"prefixAddress":"evmos"
 	},
