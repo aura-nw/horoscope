@@ -72,11 +72,14 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 			delegator_address: String,
 			validator_address: String,
 			validator_description: {
-				moniker: String,
-				identity: String,
-				website: String,
-				details: String,
-				security_contact: String,
+				description: {
+					moniker: String,
+					identity: String,
+					website: String,
+					details: String,
+					security_contact: String,
+				},
+				jailed: Boolean,
 			},
 			entries: [
 				{

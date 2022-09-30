@@ -159,6 +159,12 @@ export default class HandleAddressService extends Service {
 										.find((attribute: any) => attribute.key === CONST_CHAR.PACKET_DATA).value);
 									listAddresses.push(data.receiver);
 									break;
+								case MSG_TYPE.MSG_MULTI_SEND:
+									listAddresses.push(message.inputs[0].address);
+									message.outputs.map((output: any) => {
+										listAddresses.push(output.address);
+									});
+									break;
 							}
 						});
 					} catch (error) {

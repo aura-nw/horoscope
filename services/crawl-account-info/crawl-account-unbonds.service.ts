@@ -134,9 +134,12 @@ export default class CrawlAccountUnbondsService extends Service {
 				}
 
 				listUnbonds.map((unbond) => {
-					unbond.validator_description = validators.find(
+					unbond.validator_description.description = validators.find(
 						(validator) => validator.operator_address === unbond.validator_address,
 					)?.description!;
+					unbond.validator_description.jailed = validators.find(
+						(validator) => validator.operator_address === unbond.validator_address,
+					)?.jailed!;
 				});
 
 				if (listUnbonds) {
