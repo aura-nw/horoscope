@@ -7,10 +7,7 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 	address: String,
 	account_auth: {
 		height: String,
-		result: {
-			type: { type: String },
-			value: Object,
-		}
+		result: Object
 	},
 	account_balances: [
 		{
@@ -75,11 +72,14 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 			delegator_address: String,
 			validator_address: String,
 			validator_description: {
-				moniker: String,
-				identity: String,
-				website: String,
-				details: String,
-				security_contact: String,
+				description: {
+					moniker: String,
+					identity: String,
+					website: String,
+					details: String,
+					security_contact: String,
+				},
+				jailed: Boolean,
 			},
 			entries: [
 				{
