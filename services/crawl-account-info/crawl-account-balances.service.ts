@@ -176,6 +176,8 @@ export default class CrawlAccountBalancesService extends Service {
 		this.getQueue('crawl.account-balances').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		await this.broker.waitForServices(['api']);
+		await this.broker.call('api.add_queue', { queue_name: 'crawl.account-balances', prefix: 'crawl.account-balances' });
 		return super._start();
 	}
 }

@@ -4,7 +4,7 @@ const Queue = require('bull');
 const { createBullBoard } = require('@bull-board/api');
 const { BullAdapter } = require('@bull-board/api/bullAdapter');
 const { ExpressAdapter } = require('@bull-board/express');
-const queueConfig = require('@config/queue').QueueConfig;
+const { Config } = require('../../common');
 
 module.exports = {
   actions: {
@@ -13,7 +13,14 @@ module.exports = {
         queue_name: 'string|min:1'
       },
       async handler(ctx) {
-        const newQueue = Queue(ctx.params.queue_name, queueConfig.url, queueConfig.opts);
+        const redisUrl = `redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`;
+        const newQueue = Queue(
+          ctx.params.queue_name, 
+          redisUrl, 
+          {
+						prefix: ctx.params.prefix,
+					}
+        );
         this.addQueue(new BullAdapter(newQueue));
       }
 

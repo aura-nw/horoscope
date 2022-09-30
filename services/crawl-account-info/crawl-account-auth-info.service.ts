@@ -63,9 +63,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 							},
 							{
 								removeOnComplete: true,
-								removeOnFail: {
-									count: 10,
-								},
 							},
 						);
 						return;
@@ -210,7 +207,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
 		await this.broker.waitForServices(['api']);
-		await this.broker.call('api.add_queue', { queue_name: 'crawl.account-auth-info' });
+		await this.broker.call('api.add_queue', { queue_name: 'crawl.account-auth-info', prefix: 'crawl.account-auth-info' });
 		return super._start();
 	}
 }

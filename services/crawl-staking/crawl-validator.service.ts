@@ -199,7 +199,8 @@ export default class CrawlValidatorService extends Service {
 		this.getQueue('crawl.staking.validator').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-
+		await this.broker.waitForServices(['api']);
+		await this.broker.call('api.add_queue', { queue_name: 'crawl.staking.validator', prefix: 'crawl.staking.validator' });
 		return super._start();
 	}
 }
