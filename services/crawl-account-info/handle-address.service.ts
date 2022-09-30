@@ -6,7 +6,7 @@ import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
 import { AccountInfoEntity, ITransaction } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 export default class HandleAddressService extends Service {
 	private dbAccountInfoMixin = dbAccountInfoMixin;
@@ -17,7 +17,7 @@ export default class HandleAddressService extends Service {
 			name: 'handleAddress',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'handle.address',
@@ -99,10 +99,7 @@ export default class HandleAddressService extends Service {
 						element.tx.body.messages.map((message: any) => {
 							switch (message['@type']) {
 								case MSG_TYPE.MSG_SEND:
-									listAddresses.push(
-										message.from_address,
-										message.to_address,
-									);
+									listAddresses.push(message.from_address, message.to_address);
 									break;
 								case MSG_TYPE.MSG_DELEGATE:
 									listAddresses.push(message.delegator_address);
@@ -132,10 +129,7 @@ export default class HandleAddressService extends Service {
 									listAddresses.push(message.sender);
 									break;
 								case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
-									listAddresses.push(
-										message.from_address,
-										message.to_address,
-									);
+									listAddresses.push(message.from_address, message.to_address);
 									break;
 								case MSG_TYPE.MSG_DEPOSIT:
 									listAddresses.push(message.depositor);
@@ -153,10 +147,23 @@ export default class HandleAddressService extends Service {
 									listAddresses.push(message.sender);
 									break;
 								case MSG_TYPE.MSG_IBC_RECEIVE:
-									let data = JSON.parse(element.tx_response.logs.find((log: any) =>
-										log.events.find((event: any) => event.type === CONST_CHAR.RECV_PACKET)).events
-										.find((event: any) => event.type === CONST_CHAR.RECV_PACKET).attributes
-										.find((attribute: any) => attribute.key === CONST_CHAR.PACKET_DATA).value);
+									let data = JSON.parse(
+										element.tx_response.logs
+											.find((log: any) =>
+												log.events.find(
+													(event: any) =>
+														event.type === CONST_CHAR.RECV_PACKET,
+												),
+											)
+											.events.find(
+												(event: any) =>
+													event.type === CONST_CHAR.RECV_PACKET,
+											)
+											.attributes.find(
+												(attribute: any) =>
+													attribute.key === CONST_CHAR.PACKET_DATA,
+											).value,
+									);
 									listAddresses.push(data.receiver);
 									break;
 								case MSG_TYPE.MSG_MULTI_SEND:

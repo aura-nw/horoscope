@@ -136,7 +136,7 @@ export class ProposalEntity implements IProposal {
 	proposer_address: String | null = null;
 	proposer_name: String | null = null;
 	initial_deposit: Coin[] = [];
-
+	turnout: String | null = null;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle

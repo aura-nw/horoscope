@@ -3,7 +3,7 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 import { Job } from 'bull';
 import { dbTransactionAggregateMixin } from '../../mixins/dbMixinMongoose';
 import { ITransaction } from 'entities';
@@ -15,7 +15,7 @@ export default class TxAggregateService extends Service {
 			name: 'transactionAggregate',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'listtx.create',

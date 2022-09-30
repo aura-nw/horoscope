@@ -423,6 +423,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			const validators: any[] = await this.broker.call('v1.validator.find', {
 				query: {
 					'custom_info.chain_id': chainId,
+					'status': 'BOND_STATUS_BONDED',
 				},
 				sort: 'status -percent_voting_power',
 			});

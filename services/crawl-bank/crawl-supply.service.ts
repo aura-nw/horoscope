@@ -13,7 +13,7 @@ import { ISupplyResponseFromLCD } from '../../types';
 import { JsonConvert } from 'json2typescript';
 import { SupplyEntity } from '../../entities';
 import { Coin } from '../../entities/coin.entity';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 export default class CrawlSupplyService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -25,7 +25,7 @@ export default class CrawlSupplyService extends Service {
 			name: 'crawlSupply',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.supply',
@@ -98,7 +98,7 @@ export default class CrawlSupplyService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_SUPPLY, 10),
