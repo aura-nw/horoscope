@@ -6,7 +6,13 @@ import { IVote } from '../../entities/vote.entity';
 import { Context } from 'moleculer';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
-import { ErrorCode, ErrorMessage, GetVoteRequest, MoleculerDBService, ValidatorVoteResponse } from '../../types';
+import {
+	ErrorCode,
+	ErrorMessage,
+	GetVoteRequest,
+	MoleculerDBService,
+	ValidatorVoteResponse,
+} from '../../types';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -420,13 +426,17 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	async getValidatorVote(ctx: Context<GetVoteRequest, Record<string, unknown>>) {
 		try {
 			const chainId = ctx.params.chainid;
-			const validators: any[] = await this.broker.call('v1.validator.find', {
-				query: {
-					'custom_info.chain_id': chainId,
-					'status': 'BOND_STATUS_BONDED',
+			const validators: any[] = await this.broker.call(
+				'v1.validator.find',
+				{
+					query: {
+						'custom_info.chain_id': chainId,
+						status: 'BOND_STATUS_BONDED',
+					},
+					sort: '-percent_voting_power',
 				},
-				sort: '-percent_voting_power',
-			});
+				{ meta: { $cache: false } },
+			);
 			const validatorAccountAddress = validators.map((e) => {
 				return e.account_address;
 			});
