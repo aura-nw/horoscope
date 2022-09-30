@@ -39,6 +39,7 @@ export const CONST_CHAR = {
 
 export const MSG_TYPE = {
 	MSG_SEND: '/cosmos.bank.v1beta1.MsgSend',
+	MSG_MULTI_SEND: '/cosmos.bank.v1beta1.MsgMultiSend',
 	MSG_VOTE: '/cosmos.gov.v1beta1.MsgVote',
 	MSG_DEPOSIT: '/cosmos.gov.v1beta1.MsgDeposit',
 	MSG_SUBMIT_PROPOSAL: '/cosmos.gov.v1beta1.MsgSubmitProposal',
