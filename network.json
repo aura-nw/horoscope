@@ -69,10 +69,10 @@
 		"chainName":"Evmos Testnet",
 		"chainId":"evmos_9000-4",
 		"RPC":[
-			"https://rpc.evmos.aura.network:443"
+			"https://rpc.evmos.aura.network"
 		],
 		"LCD":[
-			"https://lcd.evmos.aura.network:443"
+			"https://lcd.evmos.aura.network"
 		],
 		"prefixAddress":"evmos"
 	},
