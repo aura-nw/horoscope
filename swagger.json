@@ -35,7 +35,7 @@
             "description": "Osmosis Mainnet LCD"
         },
         {
-            "url": "https://rest.bd.evmos.dev:1317",
+            "url": "https://lcd.evmos.aura.network",
             "description": "Evmos Testnet LCD"
         },
         {
@@ -2975,7 +2975,7 @@
                         "name": "nextKey",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "number"
                         },
                         "description": "key for next page"
                     },

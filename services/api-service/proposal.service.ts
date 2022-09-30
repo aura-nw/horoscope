@@ -34,6 +34,135 @@ export default class ProposalService extends MoleculerDBService<
 	},
 	IProposal
 > {
+	@Get('/', {
+		name: 'getByChain',
+		params: {
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+			proposalId: { type: 'string', optional: true, default: null },
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+			nextKey: {
+				type: 'number',
+				optional: true,
+				default: null,
+				convert: true,
+			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
+		},
+		cache: {
+			ttl: 5,
+		},
+	})
+	async getByChain(ctx: Context<GetProposalRequest, Record<string, unknown>>) {
+		let response: ResponseDto = {} as ResponseDto;
+		try {
+			const proposalId = ctx.params.proposalId;
+			const sort = ctx.params.reverse ? 'proposal_id' : '-proposal_id';
+			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			let needNextKey = true;
+			if (proposalId) {
+				query['proposal_id'] = { $eq: Number(proposalId) };
+				needNextKey = false;
+			} else {
+				query['status'] = { $ne: PROPOSAL_STATUS.PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT };
+			}
+			if (ctx.params.nextKey) {
+				if (ctx.params.reverse) {
+					if (query['proposal_id']) {
+						query['proposal_id'].push({ $gt: Number(ctx.params.nextKey) });
+					} else {
+						query['proposal_id'] = { $gt: Number(ctx.params.nextKey) };
+					}
+				} else {
+					if (query['proposal_id']) {
+						query['proposal_id'].push({ $lt: Number(ctx.params.nextKey) });
+					} else {
+						query['proposal_id'] = { $lt: Number(ctx.params.nextKey) };
+					}
+				}
+
+				ctx.params.pageOffset = 0;
+				ctx.params.countTotal = false;
+			}
+
+			let [result, count]: [any[], number] = await Promise.all([
+				this.adapter.lean({
+					query: query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					// @ts-ignore
+					sort: sort,
+				}),
+				this.adapter.count({
+					query: query,
+				}),
+			]);
+
+			// count votes
+			if (proposalId && result.length > 0) {
+				const countVoteParams: CountVoteParams = {
+					chain_id: ctx.params.chainid,
+					proposal_id: Number(proposalId),
+				};
+				const countVoteResponse = await this.broker.call(
+					Config.COUNT_VOTES_ACTION,
+					countVoteParams,
+				);
+				const data = Object.assign({}, result[0]);
+				// result[0] = result[0].toObject();
+				data.total_vote = countVoteResponse;
+				result[0] = data;
+			}
+			response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					proposals: result,
+					count: count,
+					nextKey:
+						needNextKey && result.length ? result[result.length - 1].proposal_id : null,
+				},
+			};
+		} catch (error) {
+			response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					error,
+				},
+			};
+		}
+
+		return response;
+	}
+
 	/**
 	 *  @swagger
 	 *  /v1/proposal:
@@ -75,7 +204,7 @@ export default class ProposalService extends MoleculerDBService<
 	 *          name: nextKey
 	 *          required: false
 	 *          schema:
-	 *            type: string
+	 *            type: number
 	 *          description: "key for next page"
 	 *        - in: query
 	 *          name: reverse
@@ -237,135 +366,4 @@ export default class ProposalService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1.block.chain"
 	 */
-	@Get('/', {
-		name: 'getByChain',
-		params: {
-			chainid: {
-				type: 'string',
-				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
-			},
-			proposalId: { type: 'string', optional: true, default: null },
-			pageLimit: {
-				type: 'number',
-				optional: true,
-				default: 10,
-				integer: true,
-				convert: true,
-				min: 1,
-				max: 100,
-			},
-			pageOffset: {
-				type: 'number',
-				optional: true,
-				default: 0,
-				integer: true,
-				convert: true,
-				min: 0,
-				max: 100,
-			},
-			nextKey: {
-				type: 'string',
-				optional: true,
-				default: null,
-			},
-			reverse: {
-				type: 'boolean',
-				optional: true,
-				default: false,
-				convert: true,
-			},
-		},
-		cache: {
-			ttl: 5,
-		},
-	})
-	async getByChain(ctx: Context<GetProposalRequest, Record<string, unknown>>) {
-		let response: ResponseDto = {} as ResponseDto;
-		if (ctx.params.nextKey) {
-			try {
-				new ObjectId(ctx.params.nextKey);
-			} catch (error) {
-				return (response = {
-					code: ErrorCode.WRONG,
-					message: ErrorMessage.VALIDATION_ERROR,
-					data: {
-						message: 'The nextKey is not a valid ObjectId',
-					},
-				});
-			}
-		}
-		try {
-			const proposalId = ctx.params.proposalId;
-			const sort = ctx.params.reverse ? '_id' : '-_id';
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
-			let needNextKey = true;
-			if (proposalId) {
-				query['proposal_id'] = proposalId;
-				needNextKey = false;
-			} else {
-				query['status'] = { $ne: PROPOSAL_STATUS.PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT };
-			}
-			if (ctx.params.nextKey) {
-				if (ctx.params.reverse) {
-					query._id = { $gt: new ObjectId(ctx.params.nextKey) };
-				} else {
-					query._id = { $lt: new ObjectId(ctx.params.nextKey) };
-				}
-
-				ctx.params.pageOffset = 0;
-				ctx.params.countTotal = false;
-			}
-
-			let [result, count]: [any[], number] = await Promise.all([
-				this.adapter.lean({
-					query: query,
-					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset,
-					// @ts-ignore
-					sort: sort,
-				}),
-				this.adapter.count({
-					query: query,
-				}),
-			]);
-
-			// count votes
-			if (proposalId) {
-				const countVoteParams: CountVoteParams = {
-					chain_id: ctx.params.chainid,
-					proposal_id: Number(proposalId),
-				};
-				const countVoteResponse = await this.broker.call(
-					Config.COUNT_VOTES_ACTION,
-					countVoteParams,
-				);
-				const data = Object.assign({}, result[0]);
-				// result[0] = result[0].toObject();
-				data.total_vote = countVoteResponse;
-				result[0] = data;
-			}
-			response = {
-				code: ErrorCode.SUCCESSFUL,
-				message: ErrorMessage.SUCCESSFUL,
-				data: {
-					proposals: result,
-					count: count,
-					nextKey: needNextKey && result.length ? result[result.length - 1]._id : null,
-				},
-			};
-		} catch (error) {
-			response = {
-				code: ErrorCode.WRONG,
-				message: ErrorMessage.WRONG,
-				data: {
-					error,
-				},
-			};
-		}
-
-		return response;
-	}
 }
