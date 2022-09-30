@@ -209,6 +209,8 @@ export default class CrawlAccountAuthInfoService extends Service {
 		this.getQueue('crawl.account-auth-info').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		await this.broker.waitForServices(['api']);
+		await this.broker.call('api.add_queue', { queue_name: 'crawl.account-auth-info' });
 		return super._start();
 	}
 }
