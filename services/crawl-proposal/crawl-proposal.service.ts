@@ -3,7 +3,7 @@
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 import { IProposal, ProposalEntity } from '../../entities/proposal.entity';
@@ -23,7 +23,7 @@ export default class CrawlProposalService extends Service {
 			name: 'crawlProposal',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.proposal',
@@ -193,7 +193,7 @@ export default class CrawlProposalService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_PROPOSAL, 10),

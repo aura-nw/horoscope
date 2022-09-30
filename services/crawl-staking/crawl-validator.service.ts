@@ -3,7 +3,7 @@
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
@@ -23,7 +23,7 @@ export default class CrawlValidatorService extends Service {
 			name: 'crawlValidator',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.staking.validator',
@@ -182,7 +182,7 @@ export default class CrawlValidatorService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_VALIDATOR, 10),

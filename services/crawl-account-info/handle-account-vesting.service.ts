@@ -7,7 +7,7 @@ import { AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { Coin } from 'entities/coin.entity';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 export default class HandleAccountVestingService extends Service {
 	private dbAccountInfoMixin = dbAccountInfoMixin;
@@ -19,7 +19,7 @@ export default class HandleAccountVestingService extends Service {
 			name: 'handleAccountVesting',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'handle.account-vesting',
@@ -94,7 +94,7 @@ export default class HandleAccountVestingService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_CONTINUOUS_VESTING, 10),

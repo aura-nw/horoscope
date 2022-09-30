@@ -9,7 +9,7 @@ import { RedelegateEntry, DelayJobEntity, RedelegationEntry } from '../../entiti
 import { Service, ServiceBroker } from 'moleculer';
 import { Coin } from 'entities/coin.entity';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 export default class HandleDelayJobService extends Service {
 	private mongoDBMixin = mongoDBMixin;
@@ -20,7 +20,7 @@ export default class HandleDelayJobService extends Service {
 			name: 'handleDelayJob',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'handle.delay-job',
@@ -69,7 +69,7 @@ export default class HandleDelayJobService extends Service {
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
 							let oldRedelegates =
-								updateRedelegates.redelegation_responses[0].entries,
+									updateRedelegates.redelegation_responses[0].entries,
 								removeRedelegate = oldRedelegates.find(
 									(x: RedelegateEntry) =>
 										new Date(
@@ -134,11 +134,15 @@ export default class HandleDelayJobService extends Service {
 										new Date(x.completion_time!).getTime() ===
 										new Date(job.expire_time).getTime(),
 								);
-							newBalances.find((balance: any) => balance.denom === Config.NETWORK_DENOM).amount = (
+							newBalances.find(
+								(balance: any) => balance.denom === Config.NETWORK_DENOM,
+							).amount = (
 								parseInt(newBalances[0].amount, 10) +
 								parseInt(removeUnbond.balance, 10)
 							).toString();
-							newSpendableBalances.find((balance: any) => balance.denom === Config.NETWORK_DENOM).amount = (
+							newSpendableBalances.find(
+								(balance: any) => balance.denom === Config.NETWORK_DENOM,
+							).amount = (
 								parseInt(newSpendableBalances[0].amount, 10) +
 								parseInt(removeUnbond.balance, 10)
 							).toString();
@@ -277,7 +281,7 @@ export default class HandleDelayJobService extends Service {
 								job.expire_time.getTime() >=
 								new Date(
 									parseInt(updateInfo.account_auth.result.value.end_time, 10) *
-									1000,
+										1000,
 								).getTime()
 							)
 								updateJob = {
@@ -293,7 +297,7 @@ export default class HandleDelayJobService extends Service {
 												.length,
 											10,
 										)) *
-									1000,
+										1000,
 								);
 								updateJob = {
 									$set: {
@@ -349,7 +353,7 @@ export default class HandleDelayJobService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_DELAY_JOB, 10),

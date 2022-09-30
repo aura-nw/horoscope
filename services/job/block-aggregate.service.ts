@@ -3,7 +3,7 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 import { Job } from 'bull';
 import { dbBlockAggregateMixin } from '../../mixins/dbMixinMongoose';
 import { IBlock } from 'entities';
@@ -15,7 +15,7 @@ export default class BlockAggregateService extends Service {
 			name: 'blockAggregate',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'listblock.create',

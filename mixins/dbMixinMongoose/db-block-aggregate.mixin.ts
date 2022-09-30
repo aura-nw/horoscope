@@ -13,6 +13,7 @@ const dbBaseMixin = new DbBaseMixin({
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	model: blockMongoModel(dbInfo.collection),
+	idField: '_id',
 });
 
 export const dbBlockAggregateMixin = dbBaseMixin.getMixin();

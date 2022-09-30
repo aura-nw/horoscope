@@ -8,7 +8,7 @@ import { Context, Service, ServiceBroker } from 'moleculer';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, DelegationResponse, ValidatorEntity } from '../../entities';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 export default class CrawlAccountDelegatesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -20,7 +20,7 @@ export default class CrawlAccountDelegatesService extends Service {
 			name: 'crawlAccountDelegates',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.account-delegates',

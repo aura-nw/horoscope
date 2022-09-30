@@ -9,7 +9,7 @@ import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { Coin } from '../../entities/coin.entity';
 import { AccountInfoEntity, IBCDenomEntity } from '../../entities';
-const QueueService = require('moleculer-bull');
+import createBullService from '../../mixins/customMoleculerBull';
 
 export default class CrawlAccountBalancesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -21,7 +21,7 @@ export default class CrawlAccountBalancesService extends Service {
 			name: 'crawlAccountBalances',
 			version: 1,
 			mixins: [
-				QueueService(
+				createBullService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.account-balances',
@@ -106,22 +106,33 @@ export default class CrawlAccountBalancesService extends Service {
 
 				if (listBalances) {
 					if (listBalances.length > 1) {
-						await Promise.all(listBalances.map(async (balance) => {
-							if (balance.denom.startsWith('ibc/')) {
-								let hash = balance.denom.split('/')[1];
-								let ibcDenom: IBCDenomEntity = await this.broker.call('v1.ibc-denom.getByHash', { hash: balance.denom, denom: '' });
-								if (ibcDenom) {
-									balance.denom = ibcDenom.denom;
-									balance.minimal_denom = ibcDenom.hash;
-								} else {
-									const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
-									let denomResult = await this.callApiFromDomain(url, hashParam);
-									balance.minimal_denom = balance.denom;
-									balance.denom = denomResult.denom_trace.base_denom;
-									this.broker.call('v1.ibc-denom.addNewDenom', { hash: `ibc/${hash}`, denom: balance.denom });
+						await Promise.all(
+							listBalances.map(async (balance) => {
+								if (balance.denom.startsWith('ibc/')) {
+									let hash = balance.denom.split('/')[1];
+									let ibcDenom: IBCDenomEntity = await this.broker.call(
+										'v1.ibc-denom.getByHash',
+										{ hash: balance.denom, denom: '' },
+									);
+									if (ibcDenom) {
+										balance.denom = ibcDenom.denom;
+										balance.minimal_denom = ibcDenom.hash;
+									} else {
+										const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
+										let denomResult = await this.callApiFromDomain(
+											url,
+											hashParam,
+										);
+										balance.minimal_denom = balance.denom;
+										balance.denom = denomResult.denom_trace.base_denom;
+										this.broker.call('v1.ibc-denom.addNewDenom', {
+											hash: `ibc/${hash}`,
+											denom: balance.denom,
+										});
+									}
 								}
-							}
-						}));
+							}),
+						);
 					}
 					accountInfo.account_balances = listBalances;
 				}

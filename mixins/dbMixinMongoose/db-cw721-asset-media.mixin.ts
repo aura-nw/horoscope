@@ -13,6 +13,7 @@ const dbCW721MediaBaseMixin = new DbBaseMixin({
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	model: cw721MediaMongoModel(dbInfo.collection),
+	idField: '_id',
 });
 
 export const dbCW721MediaLinkMixin = dbCW721MediaBaseMixin.getMixin();
