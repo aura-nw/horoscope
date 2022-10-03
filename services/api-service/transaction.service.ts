@@ -243,12 +243,12 @@ export default class BlockService extends MoleculerDBService<
 						$eq: sequenceIBC,
 					},
 				},
-				// {
-				// 	'indexes.timeout_packet_packet_sequence': {
-				// 		$exists: true,
-				// 		$eq: sequenceIBC,
-				// 	},
-				// },
+				{
+					'indexes.timeout_packet_packet_sequence': {
+						$exists: true,
+						$eq: sequenceIBC,
+					},
+				},
 			);
 		}
 		if (listQueryAnd.length > 0) {

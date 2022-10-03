@@ -9,6 +9,7 @@ import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, DelegationResponse, ValidatorEntity } from '../../entities';
 import createBullService from '../../mixins/customMoleculerBull';
+import QueueConfig from '../../config/queue';
 
 export default class CrawlAccountDelegatesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -20,12 +21,7 @@ export default class CrawlAccountDelegatesService extends Service {
 			name: 'crawlAccountDelegates',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-delegates',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
@@ -146,6 +142,12 @@ export default class CrawlAccountDelegatesService extends Service {
 		this.getQueue('crawl.account-delegates').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'crawl.account-delegates' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

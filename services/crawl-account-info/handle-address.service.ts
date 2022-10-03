@@ -7,6 +7,7 @@ import { AccountInfoEntity, ITransaction } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 import createBullService from '../../mixins/customMoleculerBull';
+import QueueConfig from '../../config/queue';
 
 export default class HandleAddressService extends Service {
 	private dbAccountInfoMixin = dbAccountInfoMixin;
@@ -17,12 +18,7 @@ export default class HandleAddressService extends Service {
 			name: 'handleAddress',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.address',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 			],
 			queues: {
@@ -235,6 +231,12 @@ export default class HandleAddressService extends Service {
 		this.getQueue('handle.address').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'handle.address' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

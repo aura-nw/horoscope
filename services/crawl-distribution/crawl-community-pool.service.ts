@@ -16,6 +16,7 @@ import {
 import { Job } from 'bull';
 import { CommunityPoolEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
+import QueueConfig from '../../config/queue';
 
 export default class CrawlCommunityPoolService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -27,12 +28,7 @@ export default class CrawlCommunityPoolService extends Service {
 			name: 'crawlCommunityPool',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.pool',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbCommunityPoolMixin,
 			],
@@ -102,7 +98,12 @@ export default class CrawlCommunityPoolService extends Service {
 		this.getQueue('crawl.community-pool').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'crawl.community-pool' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

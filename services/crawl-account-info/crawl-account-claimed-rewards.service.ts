@@ -7,9 +7,8 @@ import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
 import RedisMixin from '../../mixins/redis/redis.mixin';
-import * as mongoose from 'mongoose';
-import * as mongodb from 'mongodb';
 import createBullService from '../../mixins/customMoleculerBull';
+import QueueConfig from '../../config/queue';
 
 export default class CrawlAccountClaimedRewardsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -22,12 +21,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			name: 'crawlAccountClaimedRewards',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-claimed-rewards',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
 				this.redisMixin,
@@ -396,6 +390,12 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		this.getQueue('crawl.account-claimed-rewards').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'crawl.account-claimed-rewards' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

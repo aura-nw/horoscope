@@ -12,6 +12,8 @@ import { Job } from 'bull';
 import { IRedisStreamData, IRedisStreamResponse, ListBlockCreatedParams } from '../../types';
 import { ListTxInBlockParams } from '../../types';
 import { CONST_CHAR } from 'common/constant';
+import QueueConfig from '../../config/queue';
+
 export default class HandleBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbBlockMixin = dbBlockMixin;
@@ -23,12 +25,7 @@ export default class HandleBlockService extends Service {
 			name: 'handleblock',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.block',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.dbBlockMixin,
 			],
@@ -217,6 +214,12 @@ export default class HandleBlockService extends Service {
 		this.getQueue('handle.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'handle.block' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

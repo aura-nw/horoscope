@@ -21,6 +21,7 @@ import { CrawlAccountInfoParams } from '../../types';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 import createBullService from '../../mixins/customMoleculerBull';
 const Bull = require('bull');
+import QueueConfig from '../../config/queue';
 
 export default class CrawlAccountUnbondsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -33,12 +34,7 @@ export default class CrawlAccountUnbondsService extends Service {
 			name: 'crawlAccountUnbonds',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-unbonds',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
@@ -199,6 +195,12 @@ export default class CrawlAccountUnbondsService extends Service {
 		this.getQueue('crawl.account-unbonds').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'crawl.account-unbonds' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

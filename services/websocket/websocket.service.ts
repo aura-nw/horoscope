@@ -11,6 +11,14 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from 'redis';
 import { ITransaction } from 'entities';
 const createBullService = require('../../mixins/customMoleculerBull');
+import { MSG_TYPE } from 'common/constant';
+import QueueConfig from '../../config/queue';
+
+/**
+ * @typedef {import('moleculer').Context} Context Moleculer's Context
+ * @typedef {import('http').IncomingMessage} IncomingRequest Incoming HTTP Request
+ * @typedef {import('http').ServerResponse} ServerResponse HTTP Server Response
+ */
 
 const SORTEDSET = Config.WEBOSCKET_SORTEDSET;
 
@@ -23,12 +31,7 @@ export default class WebsocketService extends Service {
 			name: 'io',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'websocket.tx-handle',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				ApiGatewayService,
 				SocketIOMixin,
 				this.redisMixin,
@@ -39,6 +42,15 @@ export default class WebsocketService extends Service {
 					process(job: Job) {
 						// @ts-ignore
 						this.handleNewBlock(job.data.listTx);
+
+						return true;
+					},
+				},
+				'websocket.safe-tx-handle': {
+					concurrency: parseInt(Config.CONCURRENCY_HANDLE_TX_WEBSOCKET, 10),
+					process(job: Job) {
+						// @ts-ignore
+						this.handleSafeTx(job.data.listTx);
 
 						return true;
 					},
@@ -59,6 +71,22 @@ export default class WebsocketService extends Service {
 					},
 				},
 			},
+			events: {
+				'list-tx.upsert': {
+					handler: (ctx: any) => {
+						this.createJob(
+							'websocket.safe-tx-handle',
+							{
+								listTx: ctx.params.listTx,
+							},
+							{
+								removeOnComplete: true,
+							},
+						);
+						return;
+					},
+				},
+			},
 			actions: {
 				'client-register': {
 					async handler(ctx: Context<TransactionArrayParam>) {
@@ -66,13 +94,19 @@ export default class WebsocketService extends Service {
 						await this.clientRegister(ctx);
 					},
 				},
-				'broadcast-message': {
-					async handler(ctx: Context) {
+				'safe-register': {
+					async handler() {
 						// @ts-ignore
-						await this.broker?.call('v1.io.broadcast', ctx.params.args);
-						// return ctx.params?.args;
+						return true;
 					},
 				},
+				// 'broadcast-message': {
+				// 	async handler(ctx: Context) {
+				// 		// @ts-ignore
+				// 		await this.broker?.call("v1.io.broadcast", ctx.params.args);
+				// 		// return ctx.params?.args;
+				// 	},
+				// },
 			},
 		});
 	}
@@ -123,6 +157,26 @@ export default class WebsocketService extends Service {
 		return [];
 	}
 
+	async handleSafeTx(listTx: ITransaction[]): Promise<any[]> {
+		this.logger.info('Start handle safe tx');
+		try {
+			listTx = listTx.filter(txs =>
+				txs.tx.body.messages.find((m: any) => m['@type'] === MSG_TYPE.MSG_SEND || m['@type'] === MSG_TYPE.MSG_MULTI_SEND)
+			);
+			this.logger.info('List tx need to handle ' + JSON.stringify(listTx));
+			if (listTx.length > 0) {
+				await this.broker?.call('v1.io.broadcast', {
+					namespace: '/register',
+					event: 'broadcast-safe-message',
+					args: [listTx],
+				});
+			}
+		} catch (error) {
+			this.logger.error(error);
+		}
+		return [];
+	}
+
 	async _start() {
 		this.createJob(
 			'websocket.tx-handle',
@@ -148,6 +202,23 @@ export default class WebsocketService extends Service {
 		this.getQueue('websocket.tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+
+		this.getQueue('websocket.safe-tx-handle').on('completed', (job: Job) => {
+			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
+		});
+		this.getQueue('websocket.safe-tx-handle').on('failed', (job: Job) => {
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+		});
+		this.getQueue('websocket.safe-tx-handle').on('progress', (job: Job) => {
+			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
+		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'websocket.tx-handle' });
+			await this.broker.call('api.add_queue', { queue_name: 'websocket.safe-tx-handle' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }
