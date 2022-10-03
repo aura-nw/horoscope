@@ -12,7 +12,7 @@ import { JsonConvert, OperationMode } from 'json2typescript';
 import { InflationEntity, ParamEntity } from '../../entities';
 import { IMintInflationResponseFromLCD } from 'types';
 import { Utils } from '../../utils/utils';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlInflationService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -95,12 +95,6 @@ export default class CrawlInflationService extends Service {
 		this.getQueue('crawl.inflation').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'crawl.inflation' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

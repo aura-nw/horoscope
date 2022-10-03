@@ -14,7 +14,7 @@ import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { BlockResponseFromLCD, ResponseFromRPC } from '../../types';
 import { IBlock } from 'entities';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlBlockService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -179,12 +179,6 @@ export default class CrawlBlockService extends Service {
 		this.getQueue('crawl.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'crawl.block' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

@@ -17,7 +17,7 @@ import {
 	TransactionHashParam,
 } from '../../types';
 import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -262,12 +262,6 @@ export default class HandleTransactionService extends Service {
 		this.getQueue('handle.transaction').on('progress', (job: Job) => {
 			// this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'handle.transaction' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

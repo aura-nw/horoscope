@@ -14,7 +14,7 @@ import { JsonConvert } from 'json2typescript';
 import { SupplyEntity } from '../../entities';
 import { Coin } from '../../entities/coin.entity';
 import createBullService from '../../mixins/customMoleculerBull';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlSupplyService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -111,12 +111,6 @@ export default class CrawlSupplyService extends Service {
 		this.getQueue('crawl.supply').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'crawl.supply' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

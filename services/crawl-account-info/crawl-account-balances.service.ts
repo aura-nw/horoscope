@@ -10,7 +10,7 @@ import { CrawlAccountInfoParams } from '../../types';
 import { Coin } from '../../entities/coin.entity';
 import { AccountInfoEntity, IBCDenomEntity } from '../../entities';
 import createBullService from '../../mixins/customMoleculerBull';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlAccountBalancesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -172,12 +172,6 @@ export default class CrawlAccountBalancesService extends Service {
 		this.getQueue('crawl.account-balances').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'crawl.account-balances' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

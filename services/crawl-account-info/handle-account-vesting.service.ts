@@ -8,7 +8,7 @@ import { Utils } from '../../utils/utils';
 import { Coin } from 'entities/coin.entity';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import createBullService from '../../mixins/customMoleculerBull';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class HandleAccountVestingService extends Service {
 	private dbAccountInfoMixin = dbAccountInfoMixin;
@@ -107,12 +107,6 @@ export default class HandleAccountVestingService extends Service {
 		this.getQueue('handle.account-continuous-vesting').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'handle.account-continuous-vesting' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

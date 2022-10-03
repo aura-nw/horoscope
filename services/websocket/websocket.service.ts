@@ -12,7 +12,7 @@ import { RedisClientType } from 'redis';
 import { ITransaction } from 'entities';
 const createBullService = require('../../mixins/customMoleculerBull');
 import { MSG_TYPE } from 'common/constant';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -212,13 +212,6 @@ export default class WebsocketService extends Service {
 		this.getQueue('websocket.safe-tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'websocket.tx-handle' });
-			await this.broker.call('api.add_queue', { queue_name: 'websocket.safe-tx-handle' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

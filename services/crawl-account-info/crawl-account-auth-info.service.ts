@@ -16,7 +16,7 @@ import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, DelayJobEntity } from '../../entities';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 import createBullService from '../../mixins/customMoleculerBull';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlAccountAuthInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -202,12 +202,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 		this.getQueue('crawl.account-auth-info').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'crawl.account-auth-info' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

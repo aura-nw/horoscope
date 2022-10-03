@@ -11,7 +11,7 @@ import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { IDepositProposalResponseFromLCD, ListTxCreatedParams } from 'types';
 import { IDeposit, IProposal, ITransaction } from 'entities';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -126,12 +126,6 @@ export default class CrawlProposalService extends Service {
 		this.getQueue('crawl.deposit.proposal').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'crawl.deposit.proposal' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

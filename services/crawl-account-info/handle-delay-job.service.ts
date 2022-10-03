@@ -10,7 +10,7 @@ import { Service, ServiceBroker } from 'moleculer';
 import { Coin } from 'entities/coin.entity';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 import createBullService from '../../mixins/customMoleculerBull';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class HandleDelayJobService extends Service {
 	private mongoDBMixin = mongoDBMixin;
@@ -366,12 +366,6 @@ export default class HandleDelayJobService extends Service {
 		this.getQueue('handle.delay-job').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'handle.delay-job' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }
