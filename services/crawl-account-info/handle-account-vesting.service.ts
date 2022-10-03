@@ -7,7 +7,7 @@ import { AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { Coin } from 'entities/coin.entity';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import QueueConfig from '../../config/queue';
 
 export default class HandleAccountVestingService extends Service {
@@ -20,7 +20,7 @@ export default class HandleAccountVestingService extends Service {
 			name: 'handleAccountVesting',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
 				this.callApiMixin,
@@ -109,7 +109,9 @@ export default class HandleAccountVestingService extends Service {
 		});
 		try {
 			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'handle.account-continuous-vesting' });
+			await this.broker.call('api.add_queue', {
+				queue_name: 'handle.account-continuous-vesting',
+			});
 		} catch (error) {
 			this.logger.error(error);
 		}

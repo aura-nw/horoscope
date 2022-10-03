@@ -6,7 +6,7 @@ import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
 import { AccountInfoEntity, ITransaction } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import QueueConfig from '../../config/queue';
 
 export default class HandleAddressService extends Service {
@@ -17,10 +17,7 @@ export default class HandleAddressService extends Service {
 		this.parseServiceSchema({
 			name: 'handleAddress',
 			version: 1,
-			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
-				this.dbAccountInfoMixin,
-			],
+			mixins: [QueueService(QueueConfig.redis, QueueConfig.opts), this.dbAccountInfoMixin],
 			queues: {
 				'handle.address': {
 					concurrency: parseInt(Config.CONCURRENCY_HANDLE_ADDRESS, 10),

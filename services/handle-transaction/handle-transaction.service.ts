@@ -3,7 +3,7 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
@@ -30,7 +30,7 @@ export default class HandleTransactionService extends Service {
 			name: 'handletransaction',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.dbTransactionMixin,
 			],

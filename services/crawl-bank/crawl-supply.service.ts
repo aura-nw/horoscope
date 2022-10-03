@@ -13,7 +13,7 @@ import { ISupplyResponseFromLCD } from '../../types';
 import { JsonConvert } from 'json2typescript';
 import { SupplyEntity } from '../../entities';
 import { Coin } from '../../entities/coin.entity';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import QueueConfig from '../../config/queue';
 
 export default class CrawlSupplyService extends Service {
@@ -26,7 +26,7 @@ export default class CrawlSupplyService extends Service {
 			name: 'crawlSupply',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbSupplyMixin,
 			],

@@ -3,7 +3,7 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import { Job } from 'bull';
 import { dbBlockAggregateMixin } from '../../mixins/dbMixinMongoose';
 import { IBlock } from 'entities';
@@ -15,10 +15,7 @@ export default class BlockAggregateService extends Service {
 		this.parseServiceSchema({
 			name: 'blockAggregate',
 			version: 1,
-			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
-				dbBlockAggregateMixin,
-			],
+			mixins: [QueueService(QueueConfig.redis, QueueConfig.opts), dbBlockAggregateMixin],
 			queues: {
 				'listblock.insert': {
 					concurrency: 10,

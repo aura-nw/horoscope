@@ -3,7 +3,7 @@
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import { dbCommunityPoolMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
@@ -28,7 +28,7 @@ export default class CrawlCommunityPoolService extends Service {
 			name: 'crawlCommunityPool',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbCommunityPoolMixin,
 			],

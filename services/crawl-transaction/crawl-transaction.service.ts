@@ -3,7 +3,7 @@
 'use strict';
 import { Config } from '../../common';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { sha256 } from 'js-sha256';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
@@ -23,7 +23,7 @@ export default class CrawlTransactionService extends Service {
 			name: 'crawltransaction',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.callApiMixin,
 			],

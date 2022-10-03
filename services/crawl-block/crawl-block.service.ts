@@ -4,7 +4,7 @@
 import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
 
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 // import createService from 'moleculer-bull';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import RedisMixin from '../../mixins/redis/redis.mixin';
@@ -28,7 +28,7 @@ export default class CrawlBlockService extends Service {
 			name: 'crawlblock',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.redisMixin,
 			],

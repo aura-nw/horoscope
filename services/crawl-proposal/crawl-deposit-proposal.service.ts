@@ -3,7 +3,7 @@
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, Context, ServiceBroker } from 'moleculer';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
@@ -23,7 +23,7 @@ export default class CrawlProposalService extends Service {
 			name: 'crawlDepositProposal',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbProposalMixin,
 			],

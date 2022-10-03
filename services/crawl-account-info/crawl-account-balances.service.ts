@@ -9,7 +9,7 @@ import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { Coin } from '../../entities/coin.entity';
 import { AccountInfoEntity, IBCDenomEntity } from '../../entities';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import QueueConfig from '../../config/queue';
 
 export default class CrawlAccountBalancesService extends Service {
@@ -22,7 +22,7 @@ export default class CrawlAccountBalancesService extends Service {
 			name: 'crawlAccountBalances',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,

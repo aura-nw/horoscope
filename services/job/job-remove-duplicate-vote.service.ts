@@ -3,7 +3,7 @@ import { Service, ServiceBroker } from 'moleculer';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { Job } from 'bull';
 import { dbVoteMixin } from '../../mixins/dbMixinMongoose/db-vote.mixin';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 
 export default class RemoveDuplicateVotingData extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -13,7 +13,7 @@ export default class RemoveDuplicateVotingData extends Service {
 			name: 'remove-duplicate-vote',
 			version: 1,
 			mixins: [
-				createBullService(
+				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 				),
 				dbVoteMixin,

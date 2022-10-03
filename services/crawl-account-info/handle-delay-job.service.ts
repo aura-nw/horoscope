@@ -9,7 +9,7 @@ import { RedelegateEntry, DelayJobEntity, RedelegationEntry } from '../../entiti
 import { Service, ServiceBroker } from 'moleculer';
 import { Coin } from 'entities/coin.entity';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import QueueConfig from '../../config/queue';
 
 export default class HandleDelayJobService extends Service {
@@ -20,10 +20,7 @@ export default class HandleDelayJobService extends Service {
 		this.parseServiceSchema({
 			name: 'handleDelayJob',
 			version: 1,
-			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
-				this.mongoDBMixin,
-			],
+			mixins: [QueueService(QueueConfig.redis, QueueConfig.opts), this.mongoDBMixin],
 			queues: {
 				'handle.delay-job': {
 					concurrency: parseInt(Config.CONCURRENCY_HANDLE_DELAY_JOB, 10),

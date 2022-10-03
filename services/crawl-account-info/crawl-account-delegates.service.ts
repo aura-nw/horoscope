@@ -8,7 +8,7 @@ import { Context, Service, ServiceBroker } from 'moleculer';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, DelegationResponse, ValidatorEntity } from '../../entities';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import QueueConfig from '../../config/queue';
 
 export default class CrawlAccountDelegatesService extends Service {
@@ -21,7 +21,7 @@ export default class CrawlAccountDelegatesService extends Service {
 			name: 'crawlAccountDelegates',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,

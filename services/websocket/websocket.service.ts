@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-
+const QueueService = require('moleculer-bull');
 import { Context, Service, ServiceBroker } from 'moleculer';
 import SocketIOMixin from 'moleculer-io';
 import ApiGatewayService from 'moleculer-web';
@@ -10,7 +10,6 @@ import { ListTxInBlockParams, TransactionArrayParam } from 'types';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from 'redis';
 import { ITransaction } from 'entities';
-const createBullService = require('../../mixins/customMoleculerBull');
 import { MSG_TYPE } from 'common/constant';
 import QueueConfig from '../../config/queue';
 
@@ -31,7 +30,7 @@ export default class WebsocketService extends Service {
 			name: 'io',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				ApiGatewayService,
 				SocketIOMixin,
 				this.redisMixin,
@@ -160,8 +159,11 @@ export default class WebsocketService extends Service {
 	async handleSafeTx(listTx: ITransaction[]): Promise<any[]> {
 		this.logger.info('Start handle safe tx');
 		try {
-			listTx = listTx.filter(txs =>
-				txs.tx.body.messages.find((m: any) => m['@type'] === MSG_TYPE.MSG_SEND || m['@type'] === MSG_TYPE.MSG_MULTI_SEND)
+			listTx = listTx.filter((txs) =>
+				txs.tx.body.messages.find(
+					(m: any) =>
+						m['@type'] === MSG_TYPE.MSG_SEND || m['@type'] === MSG_TYPE.MSG_MULTI_SEND,
+				),
 			);
 			this.logger.info('List tx need to handle ' + JSON.stringify(listTx));
 			if (listTx.length > 0) {

@@ -19,7 +19,7 @@ import {
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 const Bull = require('bull');
 import QueueConfig from '../../config/queue';
 
@@ -34,7 +34,7 @@ export default class CrawlAccountUnbondsService extends Service {
 			name: 'crawlAccountUnbonds',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,

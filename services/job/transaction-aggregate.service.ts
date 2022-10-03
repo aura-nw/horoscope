@@ -3,7 +3,7 @@
 'use strict';
 import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import { Job } from 'bull';
 import { dbTransactionAggregateMixin } from '../../mixins/dbMixinMongoose';
 import { ITransaction } from 'entities';
@@ -16,7 +16,7 @@ export default class TxAggregateService extends Service {
 			name: 'transactionAggregate',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				dbTransactionAggregateMixin,
 			],
 			queues: {
