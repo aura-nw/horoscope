@@ -11,6 +11,8 @@ import { Job } from 'bull';
 import { ListBlockCreatedParams } from 'types';
 import { IBlock, ITransaction } from 'entities';
 import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
+import QueueConfig from '../../config/queue';
+
 export default class HandleBlockUpsertedService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private callApiMixin = new CallApiMixin().start();
@@ -22,12 +24,7 @@ export default class HandleBlockUpsertedService extends Service {
 			name: 'handle-block-upserted',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.block.upserted',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.callApiMixin,
 				this.dbBlockMixin,
@@ -122,6 +119,12 @@ export default class HandleBlockUpsertedService extends Service {
 		this.getQueue('add-proposer').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'add-proposer' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

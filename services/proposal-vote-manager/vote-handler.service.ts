@@ -9,6 +9,7 @@ import { CustomInfo } from '../../entities/custom-info.entity';
 import { VoteEntity } from '../../entities/vote.entity';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
+import QueueConfig from '../../config/queue';
 
 interface TakeVoteRequest {
 	listTx: ITransaction[];
@@ -24,12 +25,7 @@ export default class VoteHandlerService extends Service {
 			mixins: [
 				dbVoteMixin,
 				this.callApiMixin,
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'proposal.vote',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 			],
 			queues: {
 				'proposal.vote': {
@@ -113,5 +109,24 @@ export default class VoteHandlerService extends Service {
 			// call action to save votes
 			this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
 		}
+	}
+
+	async _start() {
+		this.getQueue('proposal.vote').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
+		});
+		this.getQueue('proposal.vote').on('failed', (job: Job) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+		});
+		this.getQueue('proposal.vote').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
+		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'proposal.vote' });
+		} catch (error) {
+			this.logger.error(error);
+		}
+		return super._start();
 	}
 }

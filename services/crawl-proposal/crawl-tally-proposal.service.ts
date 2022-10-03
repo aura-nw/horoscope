@@ -11,6 +11,7 @@ import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { ListTxCreatedParams } from 'types';
 import { IProposal, ITransaction, IVoteTx } from 'entities';
+import QueueConfig from '../../config/queue';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -22,12 +23,7 @@ export default class CrawlProposalService extends Service {
 			name: 'crawlTallyProposal',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.tally.proposal',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbProposalMixin,
 			],
@@ -118,6 +114,12 @@ export default class CrawlProposalService extends Service {
 		this.getQueue('crawl.tally.proposal').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'crawl.tally.proposal' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

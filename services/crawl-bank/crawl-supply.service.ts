@@ -14,6 +14,7 @@ import { JsonConvert } from 'json2typescript';
 import { SupplyEntity } from '../../entities';
 import { Coin } from '../../entities/coin.entity';
 import createBullService from '../../mixins/customMoleculerBull';
+import QueueConfig from '../../config/queue';
 
 export default class CrawlSupplyService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -25,12 +26,7 @@ export default class CrawlSupplyService extends Service {
 			name: 'crawlSupply',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.supply',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbSupplyMixin,
 			],
@@ -115,7 +111,12 @@ export default class CrawlSupplyService extends Service {
 		this.getQueue('crawl.supply').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'crawl.supply' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

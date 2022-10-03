@@ -14,6 +14,7 @@ const tmhash = require('tendermint/lib/hash');
 import { bech32 } from 'bech32';
 import { Utils } from '../../utils/utils';
 import { JsonConvert } from 'json2typescript';
+import QueueConfig from '../../config/queue';
 
 export default class CrawlSigningInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -25,12 +26,7 @@ export default class CrawlSigningInfoService extends Service {
 			name: 'crawlSigningInfo',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.signinginfo',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbValidatorMixin,
 			],
@@ -159,6 +155,12 @@ export default class CrawlSigningInfoService extends Service {
 		this.getQueue('crawl.signinginfo').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'crawl.signinginfo' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

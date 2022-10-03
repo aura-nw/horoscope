@@ -7,6 +7,7 @@ import createBullService from '../../mixins/customMoleculerBull';
 import { Job } from 'bull';
 import { dbBlockAggregateMixin } from '../../mixins/dbMixinMongoose';
 import { IBlock } from 'entities';
+import QueueConfig from '../../config/queue';
 
 export default class BlockAggregateService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -15,12 +16,7 @@ export default class BlockAggregateService extends Service {
 			name: 'blockAggregate',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'listblock.create',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				dbBlockAggregateMixin,
 			],
 			queues: {
@@ -81,7 +77,12 @@ export default class BlockAggregateService extends Service {
 		this.getQueue('listblock.insert').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'listblock.insert' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

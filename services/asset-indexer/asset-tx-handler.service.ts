@@ -24,6 +24,7 @@ import { IAttribute, IEvent, ITransaction } from 'entities';
 import { toBase64, toUtf8, fromBase64, fromUtf8 } from '@cosmjs/encoding';
 import { Action } from '@ourparentcenter/moleculer-decorators-extended';
 import createBullService from '../../mixins/customMoleculerBull';
+import QueueConfig from '../../config/queue';
 const CONTRACT_URI = Config.CONTRACT_URI;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
@@ -39,12 +40,7 @@ export default class CrawlAccountInfoService extends Service {
 			name: 'handle-asset-tx',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'asset.tx-handle',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAssetMixin,
 				this.callApiMixin,
 			],
@@ -236,6 +232,12 @@ export default class CrawlAccountInfoService extends Service {
 		this.getQueue('asset.tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'asset.tx-handle' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }

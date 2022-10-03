@@ -16,6 +16,7 @@ import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, DelayJobEntity } from '../../entities';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 import createBullService from '../../mixins/customMoleculerBull';
+import QueueConfig from '../../config/queue';
 
 export default class CrawlAccountAuthInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -28,12 +29,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 			name: 'crawlAccountAuthInfo',
 			version: 1,
 			mixins: [
-				createBullService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-auth-info',
-					},
-				),
+				createBullService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
@@ -135,12 +131,12 @@ export default class CrawlAccountAuthInfoService extends Service {
 									let expire_time =
 										start_time +
 										number_of_periods *
-											parseInt(
-												resultCallApi.result.value.vesting_periods[0]
-													.length,
-												10,
-											) *
-											1000;
+										parseInt(
+											resultCallApi.result.value.vesting_periods[0]
+												.length,
+											10,
+										) *
+										1000;
 									if (expire_time < new Date().getTime())
 										expire_time +=
 											parseInt(
@@ -206,8 +202,12 @@ export default class CrawlAccountAuthInfoService extends Service {
 		this.getQueue('crawl.account-auth-info').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		await this.broker.waitForServices(['api']);
-		await this.broker.call('api.add_queue', { queue_name: 'crawl.account-auth-info', prefix: 'crawl.account-auth-info' });
+		try {
+			await this.broker.waitForServices(['api']);
+			await this.broker.call('api.add_queue', { queue_name: 'crawl.account-auth-info' });
+		} catch (error) {
+			this.logger.error(error);
+		}
 		return super._start();
 	}
 }
