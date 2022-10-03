@@ -7,8 +7,8 @@ import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
 import RedisMixin from '../../mixins/redis/redis.mixin';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
-import QueueConfig from '../../config/queue';
 
 export default class CrawlAccountClaimedRewardsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -390,14 +390,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		this.getQueue('crawl.account-claimed-rewards').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', {
-				queue_name: 'crawl.account-claimed-rewards',
-			});
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

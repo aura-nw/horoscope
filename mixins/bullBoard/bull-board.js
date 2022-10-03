@@ -4,23 +4,9 @@ const Queue = require('bull');
 const { createBullBoard } = require('@bull-board/api');
 const { BullAdapter } = require('@bull-board/api/bullAdapter');
 const { ExpressAdapter } = require('@bull-board/express');
-const { Config } = require('../../common');
-const queueConfig = require('../../config/queue');
+const { QueueConfig, queues } = require('../../config/queue');
 
 module.exports = {
-  actions: {
-    add_queue: {
-      params: {
-        queue_name: 'string|min:1'
-      },
-      async handler(ctx) {
-        const newQueue = Queue(ctx.params.queue_name, queueConfig.redis, queueConfig.opts);
-        this.addQueue(new BullAdapter(newQueue));
-      }
-
-    }
-  },
-
   started() {
     const serverAdapter = new ExpressAdapter();
     serverAdapter.setBasePath('/admin/queues');
@@ -30,11 +16,15 @@ module.exports = {
       queues: [],
       serverAdapter: serverAdapter
     });
-    this.addQueue = addQueue;
+    
     this.addRoute({
       path: '/admin/queues',
       use: [serverAdapter.getRouter()]
     });
+    let listQueues = queues.map(queue_name => {
+      return new BullAdapter(Queue(queue_name, QueueConfig.redis, QueueConfig.opts));
+    });
+    setQueues(listQueues);
   }
 
 };

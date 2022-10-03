@@ -9,7 +9,7 @@ import { CustomInfo } from '../../entities/custom-info.entity';
 import { VoteEntity } from '../../entities/vote.entity';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 interface TakeVoteRequest {
 	listTx: ITransaction[];
@@ -121,12 +121,6 @@ export default class VoteHandlerService extends Service {
 		this.getQueue('proposal.vote').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'proposal.vote' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

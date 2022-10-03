@@ -12,7 +12,7 @@ import { IDelegationResponseFromLCD, IValidatorResponseFromLCD } from '../../typ
 import { Job } from 'bull';
 import { IParam, ISlashingParam, IValidator, SlashingParam, ValidatorEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlValidatorService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -195,12 +195,6 @@ export default class CrawlValidatorService extends Service {
 		this.getQueue('crawl.staking.validator').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'crawl.staking.validator' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

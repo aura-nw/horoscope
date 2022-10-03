@@ -8,8 +8,8 @@ import { Context, Service, ServiceBroker } from 'moleculer';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, DelegationResponse, ValidatorEntity } from '../../entities';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
-import QueueConfig from '../../config/queue';
 
 export default class CrawlAccountDelegatesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -142,12 +142,6 @@ export default class CrawlAccountDelegatesService extends Service {
 		this.getQueue('crawl.account-delegates').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'crawl.account-delegates' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

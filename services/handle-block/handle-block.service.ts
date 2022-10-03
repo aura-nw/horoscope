@@ -12,7 +12,7 @@ import { Job } from 'bull';
 import { IRedisStreamData, IRedisStreamResponse, ListBlockCreatedParams } from '../../types';
 import { ListTxInBlockParams } from '../../types';
 import { CONST_CHAR } from 'common/constant';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class HandleBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -214,12 +214,6 @@ export default class HandleBlockService extends Service {
 		this.getQueue('handle.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'handle.block' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

@@ -16,7 +16,7 @@ import { CrawlAccountInfoParams } from '../../types';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 const QueueService = require('moleculer-bull');
 const Bull = require('bull');
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlAccountRedelegatesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -173,12 +173,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 		this.getQueue('crawl.account-redelegates').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'crawl.account-redelegates' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

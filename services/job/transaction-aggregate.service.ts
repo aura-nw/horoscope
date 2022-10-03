@@ -7,7 +7,7 @@ const QueueService = require('moleculer-bull');
 import { Job } from 'bull';
 import { dbTransactionAggregateMixin } from '../../mixins/dbMixinMongoose';
 import { ITransaction } from 'entities';
-import QueueConfig from '../../config/queue';
+import { QueueConfig } from '../../config/queue';
 
 export default class TxAggregateService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -77,12 +77,6 @@ export default class TxAggregateService extends Service {
 		this.getQueue('listtx.insert').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'listtx.insert' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }

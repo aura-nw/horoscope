@@ -6,8 +6,8 @@ import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
 import { AccountInfoEntity, ITransaction } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
-import QueueConfig from '../../config/queue';
 
 export default class HandleAddressService extends Service {
 	private dbAccountInfoMixin = dbAccountInfoMixin;
@@ -228,12 +228,6 @@ export default class HandleAddressService extends Service {
 		this.getQueue('handle.address').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		try {
-			await this.broker.waitForServices(['api']);
-			await this.broker.call('api.add_queue', { queue_name: 'handle.address' });
-		} catch (error) {
-			this.logger.error(error);
-		}
 		return super._start();
 	}
 }
