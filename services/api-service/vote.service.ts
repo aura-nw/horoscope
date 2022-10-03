@@ -235,10 +235,10 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				query['custom_info.chain_id'] = chainId;
 			}
 
-			let sort = '_id';
+			let sort = 'timestamp';
 
 			if (ctx.params.reverse) {
-				sort = '-_id';
+				sort = '-timestamp';
 				if (ctx.params.nextKey) query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 			} else {
 				if (ctx.params.nextKey) query._id = { $gt: new ObjectId(ctx.params.nextKey) };
