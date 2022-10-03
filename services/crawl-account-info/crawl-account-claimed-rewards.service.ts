@@ -7,8 +7,8 @@ import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
 import RedisMixin from '../../mixins/redis/redis.mixin';
-import createBullService from '../../mixins/customMoleculerBull';
 import { QueueConfig } from '../../config/queue';
+const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -21,7 +21,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			name: 'crawlAccountClaimedRewards',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
 				this.redisMixin,

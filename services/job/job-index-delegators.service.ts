@@ -9,7 +9,7 @@ import { ObjectId } from 'mongodb';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { ITransaction } from 'entities';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 const knex = require('../../config/database');
 const mongo = require('mongodb');
 
@@ -23,7 +23,7 @@ export default class IndexDelegatorsService extends Service {
 			name: 'indexDelegators',
 			version: 1,
 			mixins: [
-				createBullService(
+				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'index.delegators',

@@ -7,8 +7,8 @@ import { AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { Coin } from 'entities/coin.entity';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import createBullService from '../../mixins/customMoleculerBull';
 import { QueueConfig } from '../../config/queue';
+const QueueService = require('moleculer-bull');
 
 export default class HandleAccountVestingService extends Service {
 	private dbAccountInfoMixin = dbAccountInfoMixin;
@@ -20,7 +20,7 @@ export default class HandleAccountVestingService extends Service {
 			name: 'handleAccountVesting',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
 				this.callApiMixin,
