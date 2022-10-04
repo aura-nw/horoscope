@@ -23,8 +23,8 @@ import { info } from 'console';
 import { IAttribute, IEvent, ITransaction } from 'entities';
 import { toBase64, toUtf8, fromBase64, fromUtf8 } from '@cosmjs/encoding';
 import { Action } from '@ourparentcenter/moleculer-decorators-extended';
-import createBullService from '../../mixins/customMoleculerBull';
 import { QueueConfig } from '../../config/queue';
+const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
@@ -40,7 +40,7 @@ export default class CrawlAccountInfoService extends Service {
 			name: 'handle-asset-tx',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAssetMixin,
 				this.callApiMixin,
 			],

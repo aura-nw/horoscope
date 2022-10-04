@@ -3,7 +3,7 @@
 'use strict';
 import { Config } from '../../common';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { BASE_64_ENCODE, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
@@ -24,7 +24,7 @@ export default class HandleBlockUpsertedService extends Service {
 			name: 'handle-block-upserted',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.callApiMixin,
 				this.dbBlockMixin,

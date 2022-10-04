@@ -1,7 +1,7 @@
 import CallApiMixin from './../../mixins/callApi/call-api.mixin';
 import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
 import { Job } from 'bull';
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 import { Config } from '../../common';
 import { LIST_NETWORK, VOTE_MANAGER_ACTION } from '../../common/constant';
 import { ITransaction } from '../../entities';
@@ -25,7 +25,7 @@ export default class VoteHandlerService extends Service {
 			mixins: [
 				dbVoteMixin,
 				this.callApiMixin,
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 			],
 			queues: {
 				'proposal.vote': {

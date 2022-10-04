@@ -4,7 +4,7 @@
 import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
 
-import createBullService from '../../mixins/customMoleculerBull';
+const QueueService = require('moleculer-bull');
 // import createService from 'moleculer-bull';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import RedisMixin from '../../mixins/redis/redis.mixin';
@@ -28,7 +28,7 @@ export default class CrawlTxService extends Service {
 			name: 'crawltx',
 			version: 1,
 			mixins: [
-				createBullService(
+				QueueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'crawl.block',

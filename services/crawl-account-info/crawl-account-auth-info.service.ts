@@ -15,8 +15,8 @@ import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, DelayJobEntity } from '../../entities';
 import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
-import createBullService from '../../mixins/customMoleculerBull';
 import { QueueConfig } from '../../config/queue';
+const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountAuthInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -29,7 +29,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 			name: 'crawlAccountAuthInfo',
 			version: 1,
 			mixins: [
-				createBullService(QueueConfig.redis, QueueConfig.opts),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
@@ -131,12 +131,12 @@ export default class CrawlAccountAuthInfoService extends Service {
 									let expire_time =
 										start_time +
 										number_of_periods *
-										parseInt(
-											resultCallApi.result.value.vesting_periods[0]
-												.length,
-											10,
-										) *
-										1000;
+											parseInt(
+												resultCallApi.result.value.vesting_periods[0]
+													.length,
+												10,
+											) *
+											1000;
 									if (expire_time < new Date().getTime())
 										expire_time +=
 											parseInt(
