@@ -77,6 +77,7 @@ export interface INetworkInfo {
 	RPC: string[];
 	LCD: string[];
 	prefixAddress: string;
+	databaseName: string;
 }
 
 export interface IVoteAnswer {

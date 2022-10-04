@@ -1,6 +1,7 @@
 'use strict';
 const _ 		= require("lodash");
 const MongooseDbAdapter = require("moleculer-db-adapter-mongoose");
+const mongoose  = require("mongoose");
 
 class CustomMongooseDbAdapter extends MongooseDbAdapter {
     aggregate(param){
@@ -26,6 +27,11 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
 
     lean(filters) {
 		return this.createCustomCursor(filters).lean();
+	}
+
+	useDb(dbname){
+		let conn = mongoose.connection.useDb(dbname);
+		this.model = conn.model(this.model.modelName, this.model.schema);
 	}
 
     /**

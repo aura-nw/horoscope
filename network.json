@@ -8,7 +8,8 @@
 		"LCD":[
 		   "https://lcd.dev.aura.network"
 		],
-		"prefixAddress":"aura"
+		"prefixAddress":"aura",
+		"databaseName":"horoscope_dev_auratestnet"
 	},
 	{
 		"chainName":"Aura Serenity",
@@ -19,7 +20,8 @@
 		"LCD":[
 		   "https://lcd.serenity.aura.network"
 		],
-		"prefixAddress":"aura"
+		"prefixAddress":"aura",
+		"databaseName":"horoscope_dev_serenitytestnet001"
 	},
 	{
 		"chainName":"Aura Halo",
@@ -41,7 +43,8 @@
 		"LCD":[
 			"https://rest.sentry-01.theta-testnet.polypore.xyz"
 		],
-		"prefixAddress":"cosmos"
+		"prefixAddress":"cosmos",
+		"databaseName":"horoscope_dev_thetatestnet001"
 	},
 	{
 		"chainName":"Osmosis Testnet",
@@ -74,7 +77,8 @@
 		"LCD":[
 			"https://evmos-testnet-api.polkachu.com"
 		],
-		"prefixAddress":"evmos"
+		"prefixAddress":"evmos",
+		"databaseName":"horoscope_dev_evmos90004"
 	},
 	{
 		"chainName":"Aura Euphoria",
@@ -85,7 +89,8 @@
 		"LCD":[
 		   "https://lcd.euphoria.aura.network"
 		],
-		"prefixAddress":"aura"
+		"prefixAddress":"aura",
+		"databaseName":"horoscope_dev_euphoria1"
 	},
 	{
 		"chainName":"Cosmos Mainnet",

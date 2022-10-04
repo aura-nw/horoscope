@@ -260,6 +260,12 @@ export default class BlockService extends MoleculerDBService<
 		}
 		this.logger.info('query: ', JSON.stringify(query));
 		let listPromise = [];
+
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+
 		listPromise.push(
 			this.adapter.lean({
 				query: query,
