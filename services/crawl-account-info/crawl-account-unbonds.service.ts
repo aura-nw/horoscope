@@ -15,6 +15,7 @@ import {
 	DelayJobEntity,
 	AccountInfoEntity,
 	ValidatorEntity,
+	ValidatorDescription,
 } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
@@ -130,6 +131,7 @@ export default class CrawlAccountUnbondsService extends Service {
 				}
 
 				listUnbonds.map((unbond) => {
+					unbond.validator_description = {} as ValidatorDescription;
 					unbond.validator_description.description = validators.find(
 						(validator) => validator.operator_address === unbond.validator_address,
 					)?.description!;
