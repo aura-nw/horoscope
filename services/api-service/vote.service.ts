@@ -243,7 +243,10 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			} else {
 				if (ctx.params.nextKey) query._id = { $gt: new ObjectId(ctx.params.nextKey) };
 			}
-
+			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
 			// find pageLimit + 1 to check if there is a next page
 			const votes: any[] = await this.adapter.find({
 				query,

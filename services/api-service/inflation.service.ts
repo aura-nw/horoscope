@@ -9,6 +9,7 @@ import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
 import { IInflation } from '../../entities';
 import { DbContextParameters } from 'moleculer-db';
 import { ChainIdParams } from '../../types';
+import { LIST_NETWORK } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -38,6 +39,11 @@ export default class InflationService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<DbContextParameters>) {
 		const params = await this.sanitizeParams(ctx, ctx.params);
+		const network = LIST_NETWORK.find((x) => x.chainId == params.chainid);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+
 		let result = await this.adapter.findOne({ 'custom_info.chain_id': params.chainid });
 		return result;
 	}

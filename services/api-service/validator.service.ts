@@ -336,6 +336,10 @@ export default class ValidatorService extends MoleculerDBService<
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
 			}
+			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
 			let [result, count]: [any[], number] = await Promise.all([
 				this.adapter.find({
 					query: query,

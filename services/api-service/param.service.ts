@@ -30,6 +30,116 @@ export default class ParamService extends MoleculerDBService<
 	},
 	IParam
 > {
+	@Get('/', {
+		name: 'getByChain',
+		params: {
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+			module: {
+				type: 'string',
+				optional: true,
+				default: null,
+				enum: Object.values(MODULE_PARAM),
+			},
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+		},
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getByChain(ctx: Context<GetParamRequest, Record<string, unknown>>) {
+		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
+		try {
+			const module = ctx.params.module;
+			let needNextKey = true;
+			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			if (module) {
+				query['module'] = module;
+				needNextKey = false;
+			}
+
+			if (ctx.params.nextKey) {
+				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
+				ctx.params.pageOffset = 0;
+				ctx.params.countTotal = false;
+			}
+			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
+			let [result, count]: [any[], number] = await Promise.all([
+				this.adapter.find({
+					query: query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					// @ts-ignore
+					sort: '_id',
+				}),
+				this.adapter.count({
+					query: query,
+				}),
+			]);
+			response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					result: result,
+					count: count,
+					nextKey: needNextKey && result.length ? result[result.length - 1]._id : null,
+				},
+			};
+		} catch (error) {
+			response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					error,
+				},
+			};
+		}
+
+		return response;
+	}
 	/**
 	 *  @swagger
 	 *  /v1/param:
@@ -147,110 +257,4 @@ export default class ParamService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1.params"
 	 */
-	@Get('/', {
-		name: 'getByChain',
-		params: {
-			chainid: {
-				type: 'string',
-				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
-			},
-			module: {
-				type: 'string',
-				optional: true,
-				default: null,
-				enum: Object.values(MODULE_PARAM),
-			},
-			pageLimit: {
-				type: 'number',
-				optional: true,
-				default: 10,
-				integer: true,
-				convert: true,
-				min: 1,
-				max: 100,
-			},
-			pageOffset: {
-				type: 'number',
-				optional: true,
-				default: 0,
-				integer: true,
-				convert: true,
-				min: 0,
-				max: 100,
-			},
-			nextKey: {
-				type: 'string',
-				optional: true,
-				default: null,
-			},
-		},
-		cache: {
-			ttl: 10,
-		},
-	})
-	async getByChain(ctx: Context<GetParamRequest, Record<string, unknown>>) {
-		let response: ResponseDto = {} as ResponseDto;
-		if (ctx.params.nextKey) {
-			try {
-				new ObjectId(ctx.params.nextKey);
-			} catch (error) {
-				return (response = {
-					code: ErrorCode.WRONG,
-					message: ErrorMessage.VALIDATION_ERROR,
-					data: {
-						message: 'The nextKey is not a valid ObjectId',
-					},
-				});
-			}
-		}
-		try {
-			const module = ctx.params.module;
-			let needNextKey = true;
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
-			if (module) {
-				query['module'] = module;
-				needNextKey = false;
-			}
-
-			if (ctx.params.nextKey) {
-				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
-				ctx.params.pageOffset = 0;
-				ctx.params.countTotal = false;
-			}
-			let [result, count]: [any[], number] = await Promise.all([
-				this.adapter.find({
-					query: query,
-					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset,
-					// @ts-ignore
-					sort: '_id',
-				}),
-				this.adapter.count({
-					query: query,
-				}),
-			]);
-			response = {
-				code: ErrorCode.SUCCESSFUL,
-				message: ErrorMessage.SUCCESSFUL,
-				data: {
-					result: result,
-					count: count,
-					nextKey: needNextKey && result.length ? result[result.length - 1]._id : null,
-				},
-			};
-		} catch (error) {
-			response = {
-				code: ErrorCode.WRONG,
-				message: ErrorMessage.WRONG,
-				data: {
-					error,
-				},
-			};
-		}
-
-		return response;
-	}
 }
