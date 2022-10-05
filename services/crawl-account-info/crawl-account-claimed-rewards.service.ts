@@ -95,6 +95,10 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			listUpdateQueries: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
+		const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		try {
 			for (let tx of listTx) {
 				const userAddress = tx.tx.body.messages[0].delegator_address;
@@ -353,6 +357,10 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						break;
 				}
 				listAccounts.push(account);
+			}
+			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
 			}
 			listAccounts.map((element) => {
 				if (element._id)

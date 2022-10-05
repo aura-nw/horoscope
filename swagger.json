@@ -35,7 +35,7 @@
             "description": "Osmosis Mainnet LCD"
         },
         {
-            "url": "https://lcd.evmos.aura.network",
+            "url": "https://evmos-testnet-api.polkachu.com",
             "description": "Evmos Testnet LCD"
         },
         {

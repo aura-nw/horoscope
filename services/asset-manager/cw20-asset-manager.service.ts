@@ -7,6 +7,7 @@ import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CursorOptions, QueryOptions } from 'moleculer-db';
 import { ICW20Asset } from '@Model';
 import { ObjectID, ObjectId } from 'bson';
+import { LIST_NETWORK } from '../../common/constant';
 
 @Service({
 	name: 'CW20-asset-manager',
@@ -20,6 +21,8 @@ import { ObjectID, ObjectId } from 'bson';
 					`ctx.params cw20-asset-manager insert ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
+				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
+				// @ts-ignore
 				return await this.adapter.insert(ctx.params);
 			},
 		},
@@ -32,6 +35,8 @@ import { ObjectID, ObjectId } from 'bson';
 				this.logger.debug(
 					`ctx.params cw20-asset-manager count ${JSON.stringify(ctx.params)}`,
 				);
+				// @ts-ignore
+				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
 				// @ts-ignore
 				return await this.adapter.count(ctx.params);
 			},
@@ -49,6 +54,8 @@ import { ObjectID, ObjectId } from 'bson';
 					ctx.params.query['_id'] = { $lt: new ObjectID(ctx.params.nextKey) };
 				}
 				// @ts-ignore
+				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
+				// @ts-ignore
 				return await this.adapter.find(ctx.params);
 			},
 		},
@@ -62,6 +69,8 @@ import { ObjectID, ObjectId } from 'bson';
 					`ctx.params cw20-asset-manager list ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
+				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
+				// @ts-ignore
 				return await this.adapter.list(ctx.params);
 			},
 		},
@@ -72,8 +81,21 @@ import { ObjectID, ObjectId } from 'bson';
 					`ctx.params cw20-asset-manager upsert ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
+				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
+				// @ts-ignore
 				return await this.upsert_handler(ctx.params);
 			},
+		},
+		useDb: {
+			async handler(ctx: Context){
+				//@ts-ignore
+				const chainId = ctx.params.query['chainId'];
+				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				if (network && network.databaseName) {
+					// @ts-ignore
+					this.adapter.useDb(network.databaseName);
+				}
+			}
 		},
 	},
 })

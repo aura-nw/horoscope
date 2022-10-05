@@ -42,36 +42,36 @@ const GET_MEDIA_LINK_PREFIX = "get_media_link";
 				// @ts-ignore
 				this.logger.debug('get-media-link ctx.params', uri, media_link_key, CONTRACT_TYPE.CW721);
 
-				// @ts-ignore
-				const processingFlag = (await this.broker.cacher?.get(cacheKey)) ? true : false;
+				// // @ts-ignore
+				// const processingFlag = (await this.broker.cacher?.get(cacheKey)) ? true : false;
 
-				if (!processingFlag) {
-					try {
-						// @ts-ignore
-						// await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
-						// @ts-ignore
-						let locked = await this.broker.cacher?.tryLock(cacheKey, CACHER_INDEXER_TTL);
-						// @ts-ignore
-						try {
-							// @ts-ignore
-							await this.getMediaLink(uri, file_name, media_link_key);
-						} catch (error) {
-							// @ts-ignore
-							this.logger.error("getMediaLink error", media_link_key, error);
-						}
-						// @ts-ignore
-						// await this.broker.cacher?.del(cacheKey);
-						// @ts-ignore
-						await locked();
-						// @ts-ignore
-						this.logger.info("getMediaLink locked",media_link_key);
-						// await this.unlock(cacheKey);
-						// }
-					} catch (e) {
-						// @ts-ignore
-						this.logger.error('tryLock error', cacheKey);
-					}
-				}
+				// if (!processingFlag) {
+				// 	try {
+				// 		// @ts-ignore
+				// 		// await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
+				// 		// @ts-ignore
+				// 		let locked = await this.broker.cacher?.tryLock(cacheKey, CACHER_INDEXER_TTL);
+				// 		// @ts-ignore
+				// 		try {
+				// 			// @ts-ignore
+				// 			await this.getMediaLink(uri, file_name, media_link_key);
+				// 		} catch (error) {
+				// 			// @ts-ignore
+				// 			this.logger.error("getMediaLink error", media_link_key, error);
+				// 		}
+				// 		// @ts-ignore
+				// 		// await this.broker.cacher?.del(cacheKey);
+				// 		// @ts-ignore
+				// 		await locked();
+				// 		// @ts-ignore
+				// 		this.logger.info("getMediaLink locked",media_link_key);
+				// 		// await this.unlock(cacheKey);
+				// 		// }
+				// 	} catch (e) {
+				// 		// @ts-ignore
+				// 		this.logger.error('tryLock error', cacheKey);
+				// 	}
+				// }
 			}
 		},
 	},

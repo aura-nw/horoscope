@@ -14,6 +14,7 @@ import {
 	CW721_ACTION,
 	ENRICH_TYPE,
 	CONTRACT_TYPE,
+	LIST_NETWORK,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
@@ -48,16 +49,19 @@ const callApiMixin = new CallApiMixin().start();
 				const cacheKey = `${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`;
 				// @ts-ignore
 				this.logger.info('ctx.params', code_id, chain_id, CONTRACT_TYPE.CW721);
+
 				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(cacheKey);
-				if (!processingFlag) {
-					// @ts-ignore
-					await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
-					// @ts-ignore
-					await this.checkIfContractImplementInterface(URL, chain_id, code_id);
-					// @ts-ignore
-					await this.broker.cacher?.del(cacheKey);
-				}
+				await this.checkIfContractImplementInterface(URL, chain_id, code_id);
+				// @ts-ignore
+				// const processingFlag = await this.broker.cacher?.get(cacheKey);
+				// if (!processingFlag) {
+				// 	// @ts-ignore
+				// 	await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
+				// 	// @ts-ignore
+				// 	await this.checkIfContractImplementInterface(URL, chain_id, code_id);
+				// 	// @ts-ignore
+				// 	await this.broker.cacher?.del(cacheKey);
+				// }
 			},
 		},
 		'CW721.handle': {
@@ -304,6 +308,10 @@ export default class CrawlAssetService extends moleculer.Service {
 	}
 	@Action()
 	private async addBurnedToAsset(ctx: Context<AddBurnedToAsset>) {
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		const asset = await this.adapter.findOne({
 			'custom_info.chain_id': ctx.params.chainid,
 			contract_address: ctx.params.contractAddress,

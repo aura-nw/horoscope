@@ -6,7 +6,7 @@ import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
 import { Common } from '../asset-indexer/common.service';
 import { MediaStatus } from '../../model/cw721-asset-media.model';
-import { CW721_MEDIA_MANAGER_ACTION } from '../../common/constant';
+import { CW721_MEDIA_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 import { Config } from '../../common';
 
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
@@ -72,6 +72,17 @@ const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ }
 				this.logger.debug('update-media-link ctx.params', uri, file_name, key);
 				// @ts-ignore
 				await this.updateMediaLink(uri, file_name, key);
+			}
+		},
+		useDb: {
+			async handler(ctx: Context){
+				//@ts-ignore
+				const chainId = ctx.params.query['chainId'];
+				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				if (network && network.databaseName) {
+					// @ts-ignore
+					this.adapter.useDb(network.databaseName);
+				}
 			}
 		},
 	},

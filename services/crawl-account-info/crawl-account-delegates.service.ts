@@ -73,7 +73,10 @@ export default class CrawlAccountDelegatesService extends Service {
 
 				const param = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-
+				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				if (network && network.databaseName) {
+					this.adapter.useDb(network.databaseName);
+				}
 				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
 					address,
 					'custom_info.chain_id': chainId,
@@ -105,6 +108,10 @@ export default class CrawlAccountDelegatesService extends Service {
 
 				listAccounts.push(accountInfo);
 			}
+		}
+		const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
 		}
 		try {
 			listAccounts.map((element) => {

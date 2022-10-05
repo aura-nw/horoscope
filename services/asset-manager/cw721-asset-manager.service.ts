@@ -8,6 +8,7 @@ import { GetHolderRequest } from 'types';
 import { CursorOptions, FilterOptions, QueryOptions } from 'moleculer-db';
 import _ from 'lodash';
 import { ObjectID } from 'bson';
+import { LIST_NETWORK } from '../../common/constant';
 
 @Service({
 	name: 'CW721-asset-manager',
@@ -16,6 +17,8 @@ import { ObjectID } from 'bson';
 	actions: {
 		'act-insert': {
 			async handler(ctx: Context): Promise<any> {
+				// @ts-ignore
+				this.actions.useDb({query: {chainId: ctx.params.custom_info.chain_id}});
 				// @ts-ignore
 				this.logger.debug(
 					`ctx.params cw721-asset-manager insert ${JSON.stringify(ctx.params)}`,
@@ -120,6 +123,17 @@ import { ObjectID } from 'bson';
 				// @ts-ignore
 				return await this.upsert_handler(ctx.params);
 			},
+		},
+		useDb: {
+			async handler(ctx: Context){
+				//@ts-ignore
+				const chainId = ctx.params.query['chainId'];
+				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				if (network && network.databaseName) {
+					// @ts-ignore
+					this.adapter.useDb(network.databaseName);
+				}
+			}
 		},
 	},
 })

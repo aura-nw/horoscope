@@ -124,24 +124,6 @@ export default class CrawlTransactionService extends Service {
 	}
 	async _start() {
 		this.redisClient = await this.getRedisClient();
-		const listTx = [
-			'CqsBCowBChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEmwKK2F1cmExamxwOWdlMjQ0dW0ydjdtZG03eHdhbXdzdjl6OXZocGVqNndqaDcSK2F1cmExNTRyNzl3c2ptcmx6eTl4anVhZDV5cTdxOXpzZmp1M2t0cWQzamQaEAoFdWF1cmESBzIwMDAwMDASGlNlbmQgZmF1Y2V0IGZyb20gQXVyYWQgOy0pEmgKUgpGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQPWBNGQSD3NQG482svRAe896fGm+69eoei0d/bR2gDgnRIECgIIARic4AUSEgoMCgV1YXVyYRIDNDAwEOCnEhpARyy+aLlxbRguCU6OLAywby/mhFm9eI912C8M47WxBE0Yy4D0hcfEAfthpCuo9uzWVvov8Uh62HtgJSXPvToCcA==',
-		];
-		this.logger.info(`Crawl list transaction: ${JSON.stringify(listTx)}`);
-		if (listTx && listTx.length > 0) {
-			this.createJob(
-				'crawl.transaction',
-				{
-					listTx: listTx,
-				},
-				{
-					removeOnComplete: true,
-					removeOnFail: {
-						count: 10,
-					},
-				},
-			);
-		}
 		this.getQueue('crawl.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
