@@ -259,6 +259,9 @@ export default class CrawlAccountStatsService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 3,
+				},
 				repeat: {
 					cron: '0 0 0 * * ?'
 				},

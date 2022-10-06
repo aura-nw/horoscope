@@ -187,6 +187,9 @@ export default class CrawlDailyTxService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 3,
+				},
 				repeat: {
 					cron: '0 0 0 * * ?'
 				},
