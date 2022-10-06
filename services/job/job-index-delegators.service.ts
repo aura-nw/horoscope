@@ -1,21 +1,15 @@
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { Service, ServiceBroker } from 'moleculer';
 import { Config } from '../../common';
-import { dbAccountDelegationsMixin } from '../../mixins/dbMixinMongoose/db-account-delegations.mixin';
 import { Job } from 'bull';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
-import { ListTxCreatedParams } from '../../types';
-import { ObjectId } from 'mongodb';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
+import { LIST_NETWORK } from '../../common/constant';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
-import { AccountInfoEntity, ITransaction, Rewards } from 'entities';
+import { AccountInfoEntity, Rewards } from 'entities';
 import { JsonConvert } from 'json2typescript';
 const QueueService = require('moleculer-bull');
 const knex = require('../../config/database');
-const mongo = require('mongodb');
 
 export default class IndexDelegatorsService extends Service {
-	private mongoDbMixin = mongoDBMixin;
 	private redisMixin = new RedisMixin().start();
 	private dbTransactionMixin = dbTransactionMixin;
 	public constructor(public broker: ServiceBroker) {
@@ -34,7 +28,6 @@ export default class IndexDelegatorsService extends Service {
 				// dbAccountAuthMixin,
 				this.dbTransactionMixin,
 				this.redisMixin,
-				this.mongoDbMixin,
 			],
 			queues: {
 				'index.delegators': {
