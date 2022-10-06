@@ -25,7 +25,7 @@ export default class CrawlAccountStatsService extends Service {
 			],
 			queues: {
 				'crawl.account-stats': {
-					concurrency: 1,
+					concurrency: parseInt(Config.CONCURRENCY_DAILY_TX_STATISTICS, 10),
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore

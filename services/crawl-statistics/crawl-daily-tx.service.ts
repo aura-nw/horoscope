@@ -25,7 +25,7 @@ export default class CrawlDailyTxService extends Service {
 			],
 			queues: {
 				'crawl.daily-tx': {
-					concurrency: 1,
+					concurrency: parseInt(Config.CONCURRENCY_DAILY_ACCOUNT_STATISTICS, 10),
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
