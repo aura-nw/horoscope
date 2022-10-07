@@ -150,7 +150,10 @@ export default class CrawlAccountStatsService extends Service {
 					listData
 				},
 				{
-					removeOnComplete: true
+					removeOnComplete: true,
+					removeOnFail: {
+						count: 3,
+					},
 				}
 			);
 		} else {
@@ -173,51 +176,135 @@ export default class CrawlAccountStatsService extends Service {
 						total_received_amount: item.received_amount,
 					});
 					account.one_day = {
-						total_sent_tx: item.sent_txs,
-						total_received_tx: item.received_txs,
-						total_sent_amount: item.sent_amount,
-						total_received_amount: item.received_amount,
+						total_sent_tx: {
+							amount: item.sent_txs,
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: item.received_txs,
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: item.sent_amount,
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: item.received_amount,
+							percentage: 0
+						},
 					};
 					const last_three_days = account.per_day.length > 3 ? account.per_day.slice(-3) : account.per_day;
 					account.three_days = {
-						total_sent_tx: last_three_days.reduce((a: any, b: any) => a + b.sent_txs, 0),
-						total_received_tx: last_three_days.reduce((a: any, b: any) => a + b.received_txs, 0),
-						total_sent_amount: last_three_days.reduce((a: any, b: any) => a + b.sent_amount, 0),
-						total_received_amount: last_three_days.reduce((a: any, b: any) => a + b.received_amount, 0),
+						total_sent_tx: {
+							amount: last_three_days.reduce((a: any, b: any) => a + b.sent_txs, 0),
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: last_three_days.reduce((a: any, b: any) => a + b.received_txs, 0),
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: last_three_days.reduce((a: any, b: any) => a + b.sent_amount, 0),
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: last_three_days.reduce((a: any, b: any) => a + b.received_amount, 0),
+							percentage: 0
+						},
 					};
 					account.seven_days = {
-						total_sent_tx: account.per_day.reduce((a: any, b: any) => a + b.sent_txs, 0),
-						total_received_tx: account.per_day.reduce((a: any, b: any) => a + b.received_txs, 0),
-						total_sent_amount: account.per_day.reduce((a: any, b: any) => a + b.sent_amount, 0),
-						total_received_amount: account.per_day.reduce((a: any, b: any) => a + b.received_amount, 0),
+						total_sent_tx: {
+							amount: account.per_day.reduce((a: any, b: any) => a + b.sent_txs, 0),
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: account.per_day.reduce((a: any, b: any) => a + b.received_txs, 0),
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: account.per_day.reduce((a: any, b: any) => a + b.sent_amount, 0),
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: account.per_day.reduce((a: any, b: any) => a + b.received_amount, 0),
+							percentage: 0
+						},
 					};
 				} else {
 					let accountStatistics: AccountStatistics = {} as AccountStatistics;
 					accountStatistics.address = item.address;
 					accountStatistics.per_day = [] as DailyStats[];
 					accountStatistics.per_day.push({
-						total_sent_tx: item.sent_txs,
-						total_received_tx: item.received_txs,
-						total_sent_amount: item.sent_amount,
-						total_received_amount: item.received_amount,
+						total_sent_tx: {
+							amount: item.sent_txs,
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: item.received_txs,
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: item.sent_amount,
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: item.received_amount,
+							percentage: 0
+						},
 					} as DailyStats);
 					accountStatistics.one_day = {
-						total_sent_tx: item.sent_txs,
-						total_received_tx: item.received_txs,
-						total_sent_amount: item.sent_amount,
-						total_received_amount: item.received_amount,
+						total_sent_tx: {
+							amount: item.sent_txs,
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: item.received_txs,
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: item.sent_amount,
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: item.received_amount,
+							percentage: 0
+						},
 					};
 					accountStatistics.three_days = {
-						total_sent_tx: item.sent_txs,
-						total_received_tx: item.received_txs,
-						total_sent_amount: item.sent_amount,
-						total_received_amount: item.received_amount,
+						total_sent_tx: {
+							amount: item.sent_txs,
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: item.received_txs,
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: item.sent_amount,
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: item.received_amount,
+							percentage: 0
+						},
 					};
 					accountStatistics.seven_days = {
-						total_sent_tx: item.sent_txs,
-						total_received_tx: item.received_txs,
-						total_sent_amount: item.sent_amount,
-						total_received_amount: item.received_amount,
+						total_sent_tx: {
+							amount: item.sent_txs,
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: item.received_txs,
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: item.sent_amount,
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: item.received_amount,
+							percentage: 0
+						},
 					};
 					listAccountStats.push(accountStatistics);
 				}
@@ -225,6 +312,38 @@ export default class CrawlAccountStatsService extends Service {
 
 			try {
 				listAccountStats.map((element) => {
+					// total sent tx percentage
+					element.one_day.total_sent_tx.percentage = Number(element.one_day.total_sent_tx.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.one_day.total_sent_tx.amount, 0);
+					element.three_days.total_sent_tx.percentage = Number(element.three_days.total_sent_tx.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.three_days.total_sent_tx.amount, 0);
+					element.seven_days.total_sent_tx.percentage = Number(element.seven_days.total_sent_tx.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.seven_days.total_sent_tx.amount, 0);
+
+					// total received tx percentage
+					element.one_day.total_received_tx.percentage = Number(element.one_day.total_received_tx.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.one_day.total_received_tx.amount, 0);
+					element.three_days.total_received_tx.percentage = Number(element.three_days.total_received_tx.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.three_days.total_received_tx.amount, 0);
+					element.seven_days.total_received_tx.percentage = Number(element.seven_days.total_received_tx.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.seven_days.total_received_tx.amount, 0);
+
+					// total sent amount percentage
+					element.one_day.total_sent_amount.percentage = Number(element.one_day.total_sent_amount.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.one_day.total_sent_amount.amount, 0);
+					element.three_days.total_sent_amount.percentage = Number(element.three_days.total_sent_amount.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.three_days.total_sent_amount.amount, 0);
+					element.seven_days.total_sent_amount.percentage = Number(element.seven_days.total_sent_amount.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.seven_days.total_sent_amount.amount, 0);
+
+					// total received amount percentage
+					element.one_day.total_received_amount.percentage = Number(element.one_day.total_received_amount.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.one_day.total_received_amount.amount, 0);
+					element.three_days.total_received_amount.percentage = Number(element.three_days.total_received_amount.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.three_days.total_received_amount.amount, 0);
+					element.seven_days.total_received_amount.percentage = Number(element.seven_days.total_received_amount.amount) * 100
+						/ listAccountStats.reduce((a: any, b: any) => a + b.seven_days.total_received_amount.amount, 0);
+
 					if (element._id)
 						listUpdateQueries.push(
 							this.adapter.updateById(element._id, element),

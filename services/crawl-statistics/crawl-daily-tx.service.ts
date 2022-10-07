@@ -168,7 +168,10 @@ export default class CrawlDailyTxService extends Service {
 					activeAddrs,
 				},
 				{
-					removeOnComplete: true
+					removeOnComplete: true,
+					removeOnFail: {
+						count: 3,
+					},
 				}
 			);
 		}
