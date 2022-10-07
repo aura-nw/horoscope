@@ -8,29 +8,77 @@ const definition: definitionType<IAccountStatistics> = (collection?: string) => 
     address: String,
     per_day: [
         {
-            total_sent_tx: Number,
-            total_received_tx: Number,
-            total_sent_amount: Number,
-            total_received_amount: Number,
+            total_sent_tx: {
+                amount: Number,
+                percentage: Number,
+            },
+            total_received_tx: {
+                amount: Number,
+                percentage: Number,
+            },
+            total_sent_amount: {
+                amount: Number,
+                percentage: Number,
+            },
+            total_received_amount: {
+                amount: Number,
+                percentage: Number,
+            },
         }
     ],
     one_day: {
-        total_sent_tx: Number,
-        total_received_tx: Number,
-        total_sent_amount: Number,
-        total_received_amount: Number,
+        total_sent_tx: {
+            amount: Number,
+            percentage: Number,
+        },
+        total_received_tx: {
+            amount: Number,
+            percentage: Number,
+        },
+        total_sent_amount: {
+            amount: Number,
+            percentage: Number,
+        },
+        total_received_amount: {
+            amount: Number,
+            percentage: Number,
+        },
     },
     three_days: {
-        total_sent_tx: Number,
-        total_received_tx: Number,
-        total_sent_amount: Number,
-        total_received_amount: Number,
+        total_sent_tx: {
+            amount: Number,
+            percentage: Number,
+        },
+        total_received_tx: {
+            amount: Number,
+            percentage: Number,
+        },
+        total_sent_amount: {
+            amount: Number,
+            percentage: Number,
+        },
+        total_received_amount: {
+            amount: Number,
+            percentage: Number,
+        },
     },
     seven_days: {
-        total_sent_tx: Number,
-        total_received_tx: Number,
-        total_sent_amount: Number,
-        total_received_amount: Number,
+        total_sent_tx: {
+            amount: Number,
+            percentage: Number,
+        },
+        total_received_tx: {
+            amount: Number,
+            percentage: Number,
+        },
+        total_sent_amount: {
+            amount: Number,
+            percentage: Number,
+        },
+        total_received_amount: {
+            amount: Number,
+            percentage: Number,
+        },
     },
     custom_info: customInfoModel,
 });
