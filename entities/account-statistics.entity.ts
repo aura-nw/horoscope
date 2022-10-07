@@ -2,11 +2,16 @@ import { Config } from '../common';
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
 
+export interface IStats {
+    amount: Number;
+    percentage: Number;
+}
+
 export interface IDailyStats {
-    total_sent_tx: Number;
-    total_received_tx: Number;
-    total_sent_amount: Number;
-    total_received_amount: Number;
+    total_sent_tx: IStats | Number;
+    total_received_tx: IStats | Number;
+    total_sent_amount: IStats | Number;
+    total_received_amount: IStats | Number;
 }
 
 export interface IAccountStatistics {
@@ -18,15 +23,22 @@ export interface IAccountStatistics {
     seven_days: IDailyStats;
 }
 
+export class Stats implements IStats {
+    @JsonProperty('amount', Number)
+    amount: Number = 0;
+    @JsonProperty('percentage', Number)
+    percentage: Number = 0;
+}
+
 export class DailyStats implements IDailyStats {
-    @JsonProperty('total_sent_tx', Number)
-    total_sent_tx: Number = 0;
-    @JsonProperty('total_received_tx', Number)
-    total_received_tx: Number = 0;
-    @JsonProperty('total_sent_amount', Number)
-    total_sent_amount: Number = 0;
-    @JsonProperty('total_received_amount', Number)
-    total_received_amount: Number = 0;
+    @JsonProperty('total_sent_tx', Stats || Number)
+    total_sent_tx = {} as Stats;
+    @JsonProperty('total_received_tx', Stats || Number)
+    total_received_tx = {} as Stats;
+    @JsonProperty('total_sent_amount', Stats || Number)
+    total_sent_amount = {} as Stats;
+    @JsonProperty('total_received_amount', Stats || Number)
+    total_received_amount = {} as Stats;
     
 }
 

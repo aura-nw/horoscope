@@ -18,7 +18,6 @@ import {
 } from '../../types';
 import { Utils } from '../../utils/utils';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -29,7 +28,7 @@ import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 	/**
 	 * Mixins
 	 */
-	mixins: [callApiMixin, dbAccountInfoMixin, mongoDBMixin],
+	mixins: [callApiMixin, dbAccountInfoMixin],
 	/**
 	 * Settings
 	 */

@@ -19,7 +19,6 @@ import {
 } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 const QueueService = require('moleculer-bull');
 const Bull = require('bull');
 import { QueueConfig } from '../../config/queue';
@@ -27,7 +26,6 @@ import { QueueConfig } from '../../config/queue';
 export default class CrawlAccountUnbondsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
-	private mongoDBMixin = mongoDBMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -39,7 +37,6 @@ export default class CrawlAccountUnbondsService extends Service {
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
-				this.mongoDBMixin,
 			],
 			queues: {
 				'crawl.account-unbonds': {
@@ -78,10 +75,6 @@ export default class CrawlAccountUnbondsService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
-		this.mongoDBClient = await this.connectToDB();
-		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let delayJob = await db.collection('delay_job');
-
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [],
 			listDelayJobs: DelayJobEntity[] = [];
@@ -179,8 +172,9 @@ export default class CrawlAccountUnbondsService extends Service {
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
-			if (listDelayJobs.length > 0)
-				listUpdateQueries.push(delayJob.insertMany(listDelayJobs));
+			listDelayJobs.map((element) => {
+				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', element));
+			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);

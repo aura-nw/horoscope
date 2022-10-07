@@ -53,6 +53,9 @@ export default class VoteHandlerService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 3,
+								},
 							},
 						);
 						return;

@@ -80,6 +80,9 @@ export default class WebsocketService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 3,
+								},
 							},
 						);
 						return;

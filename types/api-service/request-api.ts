@@ -151,3 +151,15 @@ export interface QueryTransactionStatsParams {
 	limit: number;
 	offset: number;
 }
+
+export interface BlockchainDataRequest {
+	chainId: string;
+	limit: number;
+}
+
+export interface TopAccountsRequest {
+	chainId: string;
+	field: string;
+	dayRange: number;
+	limit: number;
+}

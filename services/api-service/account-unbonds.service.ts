@@ -17,7 +17,6 @@ import { LIST_NETWORK } from '../../common/constant';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { IAccountInfo } from 'entities';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -27,7 +26,7 @@ import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 	/**
 	 * Mixins
 	 */
-	mixins: [callApiMixin, dbAccountInfoMixin, mongoDBMixin],
+	mixins: [callApiMixin, dbAccountInfoMixin],
 	/**
 	 * Settings
 	 */
@@ -158,19 +157,14 @@ export default class AccountUnbondsService extends MoleculerDBService<
 		},
 	})
 	async getByAddress(ctx: Context<GetAccountUnbondRequest, Record<string, unknown>>) {
-		this.mongoDBClient = await this.connectToDB();
-		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let accountInfoCollection = await db.collection('account_info');
-
-		let data = await accountInfoCollection.findOne(
-			{
+		let result = await this.adapter.lean({
+			query: {
 				address: ctx.params.address,
 				'custom_info.chain_id': ctx.params.chainid,
 			},
-			{
-				projection: { address: 1, account_unbonding: 1, custom_info: 1 },
-			},
-		);
+			projection: { address: 1, account_unbonding: 1, custom_info: 1 },
+		});
+		let data = result[0];
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
