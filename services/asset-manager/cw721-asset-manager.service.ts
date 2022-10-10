@@ -50,6 +50,8 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw721-asset-manager find ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
+				this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+				// @ts-ignore
 				return await this.adapter.find(ctx.params);
 			},
 		},
@@ -63,6 +65,8 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw721-asset-manager aggregate media ${JSON.stringify(ctx.params)}`,
 				);
 				let listAggregate: any[] = [];
+				// @ts-ignore
+				this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
 				if (ctx.params.sort) {
 					listAggregate.push({
 						$sort: ctx.params.sort,
@@ -159,6 +163,8 @@ export default class CW721AssetManagerService extends moleculer.Service {
 
 	@Action()
 	async getHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
+		// @ts-ignore
+		this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
 		let result = await this.adapter.aggregate([
 			{
 				$match: ctx.params.query,
@@ -203,6 +209,8 @@ export default class CW721AssetManagerService extends moleculer.Service {
 
 	@Action()
 	async countHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
+		// @ts-ignore
+		this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
 		let result = await this.adapter.aggregate([
 			{
 				$match: ctx.params.query,

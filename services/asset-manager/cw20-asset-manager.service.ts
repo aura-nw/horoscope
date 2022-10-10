@@ -54,7 +54,7 @@ import { LIST_NETWORK } from '../../common/constant';
 					ctx.params.query['_id'] = { $lt: new ObjectID(ctx.params.nextKey) };
 				}
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
+				this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
 				// @ts-ignore
 				return await this.adapter.find(ctx.params);
 			},
@@ -126,11 +126,15 @@ export default class CW20AssetManagerService extends moleculer.Service {
 
 	@Action()
 	async getHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
+		// @ts-ignore
+		this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
 		return await this.adapter.find(ctx.params);
 	}
 
 	@Action()
 	async countHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
+		// @ts-ignore
+		this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
 		return await this.adapter.count(ctx.params);
 	}
 }

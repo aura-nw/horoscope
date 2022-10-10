@@ -13,6 +13,9 @@ import { S3Service } from '../../utils/s3';
 import { LIST_NETWORK } from '../../common/constant';
 const { createHash } = require('crypto');
 const errors = require('request-promise/errors');
+const axios = require('axios').default;
+import * as FileType from 'file-type';
+
 
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
@@ -21,7 +24,7 @@ const FILE_TYPE_VALID = Config.FILE_TYPE_VALID;
 const REQUEST_IPFS_TIMEOUT = Config.REQUEST_IPFS_TIMEOUT;
 const callApiMixin = new CallApiMixin().start();
 const s3Client = new S3Service().connectS3();
-const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
+const IPFS_GATEWAY = 'https://cloudflare-ipfs.com/ipfs/';
 const IPFS_PREFIX = 'ipfs';
 
 type CW721AssetInfo = {
@@ -227,6 +230,39 @@ export class Common {
 					});
 			});
 			return rs;
+			// async function uploadAttachmentToS3(type: any, buffer: any) {
+			// 	var params = {
+			// 	 //file name you can get from URL or in any other way, you could then pass it as parameter to the function for example if necessary
+			// 	  Key : file_name, 
+			// 	  Body : buffer,
+			// 	  Bucket : BUCKET,
+			// 	  ContentType : type,
+			// 	//   ACL: 'public-read' //becomes a public URL
+			// 	}
+			// 	//notice use of the upload function, not the putObject function
+			// 	return s3Client.upload(params).promise().then((response) => {
+			// 	  return response.Location
+			// 	}, (err) => {
+			// 	  return {type: 'error', err: err}
+			// 	})
+			//   }
+			  
+			//   async function downloadAttachment(url: any) {
+			// 	return axios.get(url, {
+			// 	  responseType: 'arraybuffer'
+			// 	})
+			// 	.then((response: any) => {
+			// 	  const buffer = Buffer.from(response.data, 'base64');
+			// 	  return (async () => {
+			// 		let type = (await FileType.fromBuffer(buffer))?.mime
+			// 		return uploadAttachmentToS3(type, buffer)
+			// 	  })();
+			// 	})
+			// 	.catch((err: any) => {
+			// 	  return {type: 'error', err: err}
+			// 	});  
+			//   }
+			//   return await downloadAttachment(uri);
 		} else {
 			throw new Error('InvalidURI');
 		}

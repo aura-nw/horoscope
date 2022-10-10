@@ -25,7 +25,7 @@ const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
-const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
+const OPTs: CallingOptions = { timeout: 0, retries: MAX_RETRY_REQ };
 
 const VALIDATE_CODEID_PREFIX = 'validate_codeid';
 const HANDLE_CODEID_PREFIX = 'handle_codeid';
@@ -78,7 +78,7 @@ const callApiMixin = new CallApiMixin().start();
 					// @ts-ignore
 					this.logger.debug('Asset handler registered', chain_id, code_id);
 					// @ts-ignore
-					await this.handleJob(URL, chain_id, code_id);
+					this.handleJob(URL, chain_id, code_id);
 					// @ts-ignore
 					await this.broker.cacher?.del(cacheKey);
 					//TODO emit event index history of the NFT.
@@ -173,16 +173,15 @@ export default class CrawlAssetService extends moleculer.Service {
 				{ URL, code_id },
 				OPTs,
 			);
-			const insertInforPromises = await Promise.all(
-				contractList.map(async (address: String) => {
-					await this.broker.call(
-						CW721_ACTION.ENRICH_DATA,
-						[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
-						OPTs,
-					);
-				}),
-			);
-			await insertInforPromises;
+			
+			contractList.map( (address: String) => {
+				this.broker.call(
+					CW721_ACTION.ENRICH_DATA,
+					[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
+					OPTs,
+				);
+			})
+			// await insertInforPromises;
 			this.logger.debug('Asset handler DONE!', contractList.length);
 		} catch (err) {
 			this.logger.error(err);
@@ -197,11 +196,12 @@ export default class CrawlAssetService extends moleculer.Service {
 		const code_id = ctx.params[0].code_id;
 		const typeEnrich = ctx.params[1];
 		const chain_id = ctx.params[0].chain_id;
-		let listTokenIDs: any = await this.broker.call(
-			CW721_ACTION.GET_TOKEN_LIST,
-			{ URL, code_id, address },
-			OPTs,
-		);
+		// let listTokenIDs: any = await this.broker.call(
+		// 	CW721_ACTION.GET_TOKEN_LIST,
+		// 	{ URL, code_id, address },
+		// 	OPTs,
+		// );
+		let listTokenIDs = await this.actions.getTokenList({URL, code_id, address}, OPTs)
 
 		if (listTokenIDs != null) {
 			const getInforPromises = await Promise.all(
@@ -222,6 +222,7 @@ export default class CrawlAssetService extends moleculer.Service {
 									uri,
 									file_name,
 									media_link_key,
+									chain_id,
 								});
 							}
 						} catch (error) {
@@ -229,7 +230,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							this.logger.error(error);
 						}
 
-						const asset = await Common.createCW721AssetObject(
+						const asset = Common.createCW721AssetObject(
 							code_id,
 							address,
 							token_id,
@@ -237,7 +238,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							tokenInfo,
 							chain_id,
 						);
-						await this.broker.call(
+						this.broker.call(
 							`v1.CW721-asset-manager.act-${typeEnrich}`,
 							asset,
 							OPTs,
@@ -245,7 +246,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					}
 				}),
 			);
-			await getInforPromises;
+			// await getInforPromises;
 		}
 	}
 
@@ -331,15 +332,4 @@ export default class CrawlAssetService extends moleculer.Service {
 		return await this.adapter.updateById(id, update);
 	}
 
-	// async _start(): Promise<void> {
-	// 	let result = await this.adapter.aggregate([
-	// 		{
-	// 			$group: {
-	// 				_id: { contract_address: '$contract_address' },
-	// 			},
-	// 		},
-	// 	]);
-	// 	this.logger.info('_start', result);
-	// 	return super._start();
-	// }
 }

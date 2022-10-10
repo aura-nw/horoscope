@@ -91,7 +91,7 @@
     "dotenv": "^16.0.1",
     "dotenv-flow": "^3.2.0",
     "dotenv-flow-cli": "^1.0.0",
-    "file-type": "^17.1.4",
+    "file-type": "^16.5.3",
     "graphql": "^15.8.0",
     "graphql-type-json": "^0.3.2",
     "helmet": "^5.1.0",
