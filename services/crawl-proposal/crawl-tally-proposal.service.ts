@@ -69,19 +69,21 @@ export default class CrawlProposalService extends Service {
 		let result = await this.callApiFromDomain(url, path);
 		this.logger.debug(result);
 
-		let foundProposal = await this.adapter.findOne({
-			proposal_id: `${proposalId}`,
-			'custom_info.chain_id': Config.CHAIN_ID,
-		});
-		let foundStakingPool: any[] = await this.broker.call('v1.crawlPool.find', {
-			query: {
+		let [foundProposal, foundStakingPool]: [any, any] = await Promise.all([
+			this.adapter.findOne({
+				proposal_id: `${proposalId}`,
 				'custom_info.chain_id': Config.CHAIN_ID,
-			},
-		});
+			}),
+			this.broker.call('v1.crawlPool.find', {
+				query: {
+					'custom_info.chain_id': Config.CHAIN_ID,
+				},
+			}),
+		]);
 		if (foundProposal) {
 			try {
 				let adding: any = { tally: result.tally };
-				let tally = foundProposal.final_tally_result || foundProposal.tally;
+				let tally = result.tally;
 				if (foundStakingPool && foundStakingPool.length > 0) {
 					let turnout =
 						Number(

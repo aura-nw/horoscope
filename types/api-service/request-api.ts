@@ -1,3 +1,5 @@
+import { DELAY_JOB_STATUS, DELAY_JOB_TYPE } from "common/constant";
+
 export interface PageLimit {
 	pageOffset: number;
 	pageLimit: number;
@@ -130,4 +132,22 @@ export interface GetTotalRewardsByAddress extends ChainIdParams {
 export interface QueryIBCDenomParams {
 	hash: string;
 	denom: string;
+}
+
+export interface QueryDelayJobParams {
+	address: string;
+	type: DELAY_JOB_TYPE | DELAY_JOB_TYPE[];
+	chain_id: string;
+}
+
+export interface QueryPendingDelayJobParams {
+	status: DELAY_JOB_STATUS;
+	chain_id: string;
+}
+
+export interface QueryTransactionStatsParams {
+	query: Object;
+	sort: string;
+	limit: number;
+	offset: number;
 }
