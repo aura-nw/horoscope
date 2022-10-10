@@ -54,6 +54,7 @@ export interface IMintInflationResponseFromLCD {
 
 export interface IDelegationResponseFromLCD {
 	delegation_response: IDelegationResponse;
+	pagination: IPagingationResponseFromLCD;
 }
 
 export interface ResponseFromRPC {
