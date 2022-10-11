@@ -86,13 +86,7 @@ export interface IUndelegateEntry {
 export interface IUnbondingResponse {
     delegator_address: String;
     validator_address: String;
-    validator_description: IValidatorDescription;
     entries: IUndelegateEntry[];
-}
-
-export interface IValidatorDescription {
-    description: IDescription;
-    jailed: Boolean;
 }
 
 export interface IReward {
@@ -189,20 +183,11 @@ export class UndelegateEntry implements IUndelegateEntry {
     balance: String = '';
 }
 
-export class ValidatorDescription implements IValidatorDescription {
-    @JsonProperty('description', Description)
-    description = {} as Description;
-    @JsonProperty('jailed', Boolean)
-    jailed: Boolean = false;
-}
-
 export class UnbondingResponse implements IUnbondingResponse {
     @JsonProperty('delegator_address', String)
     delegator_address: String = '';
     @JsonProperty('validator_address', String)
     validator_address: String = '';
-    @JsonProperty('validator_description', ValidatorDescription)
-    validator_description = {} as ValidatorDescription;
     @JsonProperty('entries', [UndelegateEntry])
     entries: UndelegateEntry[] = [];
 }

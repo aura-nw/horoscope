@@ -71,16 +71,6 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 		{
 			delegator_address: String,
 			validator_address: String,
-			validator_description: {
-				description: {
-					moniker: String,
-					identity: String,
-					website: String,
-					details: String,
-					security_contact: String,
-				},
-				jailed: Boolean,
-			},
 			entries: [
 				{
 					creation_height: String,
@@ -113,5 +103,6 @@ export const accountInfoMongoModel = (collection: string): unknown => {
 	});
 	// @ts-ignore
 	schema.index({ 'address': 1, 'custom_info.chain_id': 1 }, { unique: true });
+	schema.index({ 'account_auth.result.type': 1 });
 	return models[collection] || model(collection, schema);
 };

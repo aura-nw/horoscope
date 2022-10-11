@@ -15,7 +15,7 @@ import {
 import { DbContextParameters } from 'moleculer-db';
 import { LIST_NETWORK } from '../../common/constant';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
-import { IAccountInfo } from 'entities';
+import { IAccountInfo, ValidatorEntity } from 'entities';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -157,14 +157,33 @@ export default class AccountUnbondsService extends MoleculerDBService<
 		},
 	})
 	async getByAddress(ctx: Context<GetAccountUnbondRequest, Record<string, unknown>>) {
-		let result = await this.adapter.lean({
-			query: {
-				address: ctx.params.address,
-				'custom_info.chain_id': ctx.params.chainid,
-			},
-			projection: { address: 1, account_unbonding: 1, custom_info: 1 },
+		let [result, validators]: [any, any] = await Promise.all([
+			this.adapter.lean({
+				query: {
+					address: ctx.params.address,
+					'custom_info.chain_id': ctx.params.chainid,
+				},
+				projection: { address: 1, account_unbonding: 1, custom_info: 1 },
+			}),
+			this.broker.call(
+				'v1.validator.find',
+				{
+					query: {
+						'custom_info.chain_id': ctx.params.chainid,
+					},
+				},
+			)
+		]);
+		let data = Object.assign({}, result[0]);
+		data.account_unbonding.map((unbond: any) => {
+			let validator = validators.find((val: ValidatorEntity) =>
+				val.operator_address === unbond.validator_address
+			);
+			unbond.validator_description = {
+				description: validator.description,
+				jailed: validator.jailed,
+			};
 		});
-		let data = result[0];
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
