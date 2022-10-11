@@ -11,7 +11,11 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from 'redis';
 import { ITransaction } from 'entities';
 import { MSG_TYPE } from 'common/constant';
+<<<<<<< Updated upstream
 import { QueueConfig } from '../../config/queue';
+=======
+const QueueService = require('moleculer-bull');
+>>>>>>> Stashed changes
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -80,9 +84,12 @@ export default class WebsocketService extends Service {
 							},
 							{
 								removeOnComplete: true,
+<<<<<<< Updated upstream
 								removeOnFail: {
 									count: 3,
 								},
+=======
+>>>>>>> Stashed changes
 							},
 						);
 						return;

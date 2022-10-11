@@ -8,7 +8,7 @@ import { Config } from '../../common';
 import { BlockchainDataRequest, getActionConfig, MoleculerDBService, RestOptions, TopAccountsRequest } from '../../types';
 import { IAccountStatistics, IDailyTxStatistics, IInflation } from '../../entities';
 import { DbContextParameters } from 'moleculer-db';
-import { LIST_NETWORK, TOP_ACCOUNT_STATS_FIELD } from 'common/constant';
+import { LIST_NETWORK, TOP_ACCOUNT_STATS_FIELD } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context

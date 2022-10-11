@@ -1,48 +1,53 @@
-import RedisMixin from '../../mixins/redis/redis.mixin';
-import { Service, ServiceBroker } from 'moleculer';
-import { Config } from '../../common';
-import { Job } from 'bull';
-import { LIST_NETWORK } from '../../common/constant';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
-import { AccountInfoEntity, Rewards } from 'entities';
-import { JsonConvert } from 'json2typescript';
+import RedisMixin from "../../mixins/redis/redis.mixin";
+import { Service, ServiceBroker } from "moleculer";
+import { Config } from "../../common";
+import { dbAccountDelegationsMixin } from "../../mixins/dbMixinMongoose/db-account-delegations.mixin";
+import { Job } from "bull";
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from "../../common/constant";
+import { ListTxCreatedParams } from "../../types";
+import { ObjectId } from "mongodb";
+import { mongoDBMixin } from "../../mixins/dbMixinMongoDB/mongodb.mixin";
+import { dbAccountInfoMixin } from "../../mixins/dbMixinMongoose";
+import { AccountInfoEntity, ITransaction, Rewards } from "../../entities";
+import { JsonConvert } from "json2typescript";
 const QueueService = require('moleculer-bull');
 const knex = require('../../config/database');
 
 export default class IndexDelegatorsService extends Service {
-	private redisMixin = new RedisMixin().start();
-	private dbTransactionMixin = dbTransactionMixin;
-	public constructor(public broker: ServiceBroker) {
-		super(broker);
-		this.parseServiceSchema({
-			name: 'indexDelegators',
-			version: 1,
-			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'index.delegators',
-					},
-				),
-				// dbAccountDelegationsMixin,
-				// dbAccountAuthMixin,
-				this.dbTransactionMixin,
-				this.redisMixin,
-			],
-			queues: {
-				'index.delegators': {
-					concurrency: 10,
-					process(job: Job) {
-						job.progress(10);
-						// @ts-ignore
-						this.handleJob(job.data.lastId, job.data.stopPoint);
-						job.progress(100);
-						return true;
-					},
-				},
-			},
-		});
-	}
+    private mongoDbMixin = mongoDBMixin;
+    private redisMixin = new RedisMixin().start();
+    private dbAccountInfoMixin = dbAccountInfoMixin;
+    public constructor(public broker: ServiceBroker) {
+        super(broker);
+        this.parseServiceSchema({
+            name: 'indexDelegators',
+            version: 1,
+            mixins: [
+                QueueService(
+                    `redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
+                    {
+                        prefix: 'index.delegators',
+                    },
+                ),
+                this.dbAccountInfoMixin,
+                this.redisMixin,
+                this.mongoDbMixin,
+            ],
+            queues: {
+                'index.delegators': {
+                    concurrency: 10,
+                    process(job: Job) {
+                        job.progress(10);
+                        // @ts-ignore
+                        this.handleJob(job.data.lastId);
+                        job.progress(100);
+                        return true;
+                    },
+                },
+            },
+        });
+    }
 
     async handleJob(lastId: number) {
         // const listAddresses = [
@@ -498,6 +503,36 @@ export default class IndexDelegatorsService extends Service {
             this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, newLastId?.toString());
             this.createJob('index.delegators', { lastId: newLastId }, { removeOnComplete: true });
         }
+
+        // let query: any = {};
+        // if (lastTxId !== '0') query = { _id: { $gt: new ObjectId(lastTxId) } }
+
+        // this.logger.info(`stopPoint: ${stopPoint}, lastTxId: ${lastTxId}`);
+        // if (stopPoint && lastTxId > stopPoint) return true;
+        // if (stopPoint) {
+        //     query =
+        //         lastTxId === '0'
+        //             ? { _id: { $lt: new ObjectId(stopPoint) } }
+        //             : { _id: { $gt: new ObjectId(lastTxId), $lt: new ObjectId(stopPoint) } };
+        // }
+        // query['indexes.message_action'] = { $in: [MSG_TYPE.MSG_DELEGATE, MSG_TYPE.MSG_REDELEGATE, MSG_TYPE.MSG_UNDELEGATE, MSG_TYPE.MSG_WITHDRAW_REWARDS] };
+
+        // const listTx: ITransaction[] = await this.adapter.find({
+        //     query,
+        //     sort: '_id',
+        //     limit: 100,
+        //     skip: 0,
+        // });
+
+        // if (listTx.length > 0) {
+        //     const lastId = listTx.at(-1)?._id;
+        //     this.logger.info(`lastId: ${lastId}`);
+        //     this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, lastId?.toString());
+        //     const stopPoint = Config.SCAN_TX_STOP_POINT;
+        //     await this.broker.call('v1.handleAddress.accountinfoupsert', { listTx, source: CONST_CHAR.CRAWL, chainId: '' });
+        //     this.createJob('index.delegators', { lastId, stopPoint }, { removeOnComplete: true });
+        // }
+        // return true;
 
         // let query: any = {};
         // if (lastTxId !== '0') query = { _id: { $gt: new ObjectId(lastTxId) } }
