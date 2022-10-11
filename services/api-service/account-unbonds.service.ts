@@ -17,7 +17,6 @@ import { LIST_NETWORK } from '../../common/constant';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { IAccountInfo, ValidatorEntity } from 'entities';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -27,7 +26,7 @@ import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 	/**
 	 * Mixins
 	 */
-	mixins: [callApiMixin, dbAccountInfoMixin, mongoDBMixin],
+	mixins: [callApiMixin, dbAccountInfoMixin],
 	/**
 	 * Settings
 	 */

@@ -28,6 +28,11 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
 		return this.createCustomCursor(filters).lean();
 	}
 
+	useDb(dbname){
+		let conn = mongoose.connection.useDb(dbname);
+		this.model = conn.model(this.model.modelName, this.model.schema);
+	}
+
     /**
 	 * Create a filtered query
 	 * Available filters in `params`:
