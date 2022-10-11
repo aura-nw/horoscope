@@ -48,6 +48,7 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 	uptime: Number,
 	account_address: String,
 	percent_voting_power: Number,
+	number_delegators: Number,
 	custom_info: customInfoModel,
 });
 
