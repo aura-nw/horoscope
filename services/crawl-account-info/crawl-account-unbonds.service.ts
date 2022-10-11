@@ -118,6 +118,7 @@ export default class CrawlAccountUnbondsService extends Service {
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.UNBOND;
 						newDelayJob.expire_time = new Date(unbond.entries[0].completion_time!);
+						newDelayJob.indexes = address + newDelayJob.type + newDelayJob.expire_time!.getTime() + chainId;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: chain ? chain.chainName : '',

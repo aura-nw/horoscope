@@ -425,7 +425,7 @@ export default class IndexDelegatorsService extends Service {
             select max(id) as last_id, delegator_address from delegator_rewards
             group by delegator_address order by last_id
         ) as dr
-        where dr.last_id > ? limit 100;
+        where dr.last_id > ? limit 50;
         `, [lastId]))[0];
         this.logger.info(`List addresses: ${JSON.stringify(listAddresses)}`);
 

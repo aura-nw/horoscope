@@ -1,4 +1,4 @@
-import { DELAY_JOB_STATUS, DELAY_JOB_TYPE } from "common/constant";
+import { DELAY_JOB_TYPE } from "common/constant";
 
 export interface PageLimit {
 	pageOffset: number;
@@ -141,7 +141,6 @@ export interface QueryDelayJobParams {
 }
 
 export interface QueryPendingDelayJobParams {
-	status: DELAY_JOB_STATUS;
 	chain_id: string;
 }
 

@@ -10,7 +10,7 @@ export interface IDelayJob {
     content: Object;
     type: String;
     expire_time: Date | null;
-    status: String;
+    indexes: String;
     custom_info: CustomInfo;
 }
 
@@ -19,13 +19,13 @@ export class DelayJobEntity implements IDelayJob {
     @JsonProperty('_id', String, true)
     _id = Config.DB_DELAY_JOB.dialect === 'local' ? Types.ObjectId() : null;
     @JsonProperty('content', Object)
-    content: Object = {};
+    content = {} as Object;
     @JsonProperty('type', String)
     type: String = '';
     @JsonProperty('expire_time', DateConverter)
     expire_time: Date | null = null;
-    @JsonProperty('status', String)
-    status: String = '';
+    @JsonProperty('indexes', String)
+    indexes: String = '';
     @JsonProperty('custom_info', CustomInfo, true)
     custom_info = {} as CustomInfo;
 }
