@@ -10,6 +10,9 @@ import {
 	Action,
 	Post,
 } from '@ourparentcenter/moleculer-decorators-extended';
+import { Types } from 'mongoose';
+import { QueryOptions } from 'moleculer-db';
+import { ObjectId } from 'mongodb';
 import {
 	ErrorCode,
 	ErrorMessage,
@@ -22,11 +25,8 @@ import {
 } from '../../types';
 import { IBlock } from '../../entities';
 import { AssetIndexParams } from '../../types/asset';
-import { Types } from 'mongoose';
-// import rateLimit from 'micro-ratelimit';
+// Import rateLimit from 'micro-ratelimit';
 import { CodeIDStatus } from '../../model/codeid.model';
-import { QueryOptions } from 'moleculer-db';
-import { ObjectId } from 'mongodb';
 import {
 	CODEID_MANAGER_ACTION,
 	CONTRACT_TYPE,
@@ -41,7 +41,7 @@ import { Utils } from '../../utils/utils';
 @Service({
 	name: 'asset',
 	version: 1,
-	// mixins: [dbCW721AssetMixin],
+	// Mixins: [dbCW721AssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
 	{
@@ -154,7 +154,7 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async index(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
-		let registed: boolean = false;
+		let registed = false;
 		const code_id = ctx.params.codeId;
 		const chain_id = ctx.params.chainId;
 		const contract_type = ctx.params.contractType;
@@ -169,7 +169,7 @@ export default class BlockService extends MoleculerDBService<
 						case CodeIDStatus.REJECTED:
 							if (res[0].contract_type !== contract_type) {
 								const condition = {
-									code_id: code_id,
+									code_id,
 									'custom_info.chain_id': chain_id,
 								};
 								this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
@@ -182,7 +182,7 @@ export default class BlockService extends MoleculerDBService<
 						case CodeIDStatus.TBD:
 							registed = true;
 							break;
-						// case Status.WAITING:
+						// Case Status.WAITING:
 						default:
 							break;
 					}
@@ -578,25 +578,25 @@ export default class BlockService extends MoleculerDBService<
 			});
 		}
 		try {
-			let query: QueryOptions = {};
-			let needNextKey = true;
+			const query: QueryOptions = {};
+			const needNextKey = true;
 			if (ctx.params.owner) {
-				query['owner'] = ctx.params.owner;
+				query.owner = ctx.params.owner;
 			}
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
 			if (ctx.params.tokenId) {
-				query['token_id'] = ctx.params.tokenId;
+				query.token_id = decodeURIComponent(ctx.params.tokenId);
 			}
 			if (ctx.params.contractAddress) {
-				query['contract_address'] = ctx.params.contractAddress;
+				query.contract_address = ctx.params.contractAddress;
 			}
 			if (ctx.params.isBurned != null) {
-				query['is_burned'] = ctx.params.isBurned;
+				query.is_burned = ctx.params.isBurned;
 			}
 			if (ctx.params.tokenName) {
-				query['$or'] = [
+				query.$or = [
 					{
 						token_id: ctx.params.tokenName,
 					},
@@ -610,7 +610,7 @@ export default class BlockService extends MoleculerDBService<
 				ctx.params.countTotal = false;
 			}
 			this.logger.debug('query', query);
-			let contract_type = ctx.params.contractType;
+			const contract_type = ctx.params.contractType;
 			let asset: any[];
 			if (contract_type == CONTRACT_TYPE.CW721) {
 				asset = await this.broker.call(
@@ -655,16 +655,16 @@ export default class BlockService extends MoleculerDBService<
 					limit: ctx.params.pageLimit * 5,
 				});
 			}
-			let assetsMap: Map<any, any> = new Map();
+			const assetsMap: Map<any, any> = new Map();
 			assetsMap.set(contract_type, { asset, count });
 
-			// const getData = Promise.all(
-			// 	contractMap.map(async (contract_type: string) => {
-			// 		let asset: any[];
+			// Const getData = Promise.all(
+			// 	ContractMap.map(async (contract_type: string) => {
+			// 		Let asset: any[];
 
 			// 	}),
 			// );
-			// await getData;
+			// Await getData;
 			const assetObj = Object.fromEntries(assetsMap);
 			this.logger.debug(`assetObj: ${JSON.stringify(assetObj)}`);
 
@@ -673,7 +673,7 @@ export default class BlockService extends MoleculerDBService<
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					assets: assetObj,
-					nextKey: nextKey,
+					nextKey,
 				},
 			};
 		} catch (error) {
@@ -701,14 +701,14 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: contractType
 	 *          required: true
-	 *          schema: 
+	 *          schema:
 	 *            type: string
 	 *            enum: ["CW721", "CW20"]
 	 *          description: "Contract type need to query"
 	 *        - in: query
 	 *          name: chainid
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            type: string
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
@@ -716,33 +716,33 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            type: number
 	 *            default: 10
 	 *          description: "number record return in a page"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            type: number
 	 *            default: 0
 	 *          description: "Page number, start at 0"
 	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            default: false
 	 *            type: boolean
 	 *          description: "count total record"
 	 *        - in: query
 	 *          name: nextKey
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            type: string
 	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
-	 *          description: Asset 
+	 *          description: Asset
 	 *          content:
 	 *            application/json:
 	 *              schema:
@@ -835,7 +835,7 @@ export default class BlockService extends MoleculerDBService<
 	 *                                  updatedAt:
 	 *                                    type: string
 	 *                                    example: "2022-08-17T06:20:19.342Z"
-	 *                            
+	 *
 	 *                      count:
 	 *                        type: number
 	 *                        example: 0
@@ -945,11 +945,11 @@ export default class BlockService extends MoleculerDBService<
 			}
 		}
 		try {
-			let query: QueryOptions = {};
+			const query: QueryOptions = {};
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
-			let needNextKey = true;
+			const needNextKey = true;
 			if (ctx.params.nextKey) {
 				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 				ctx.params.pageOffset = 0;
@@ -1234,20 +1234,20 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		try {
-			let query: QueryOptions = {};
+			const query: QueryOptions = {};
 			let sort = {};
 			switch (ctx.params.contractType) {
 				case CONTRACT_TYPE.CW721:
 					sort = ctx.params.reverse
 						? { quantity: 1, updatedAt: 1 }
 						: { quantity: -1, updatedAt: -1 };
-					query['is_burned'] = false;
+					query.is_burned = false;
 					break;
 				case CONTRACT_TYPE.CW20:
 					sort = ctx.params.reverse
 						? ['percent_hold', 'updatedAt']
 						: ['-percent_hold', '-updatedAt'];
-					query['balance'] = {
+					query.balance = {
 						$ne: '0',
 					};
 					break;
@@ -1257,29 +1257,29 @@ export default class BlockService extends MoleculerDBService<
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
-			let needNextKey = true;
+			const needNextKey = true;
 			if (ctx.params.nextKey) {
 				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
 			}
 			if (ctx.params.contractAddress) {
-				query['contract_address'] = ctx.params.contractAddress;
+				query.contract_address = ctx.params.contractAddress;
 			}
 
-			let [resultAsset, resultCount] = await Promise.all([
+			const [resultAsset, resultCount] = await Promise.all([
 				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.getHolderByAddress`, {
-					query: query,
+					query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
-					sort: sort,
+					sort,
 					nextKey: ctx.params.nextKey,
 				}),
 				ctx.params.countTotal === true
 					? this.broker.call(
 							`v1.${ctx.params.contractType}-asset-manager.countHolderByAddress`,
 							{
-								query: query,
+								query,
 							},
 					  )
 					: 0,
