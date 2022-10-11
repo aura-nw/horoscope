@@ -18,7 +18,7 @@ import {
 } from '../../types';
 import { Utils } from '../../utils/utils';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
+import { ValidatorEntity } from 'entities';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -29,7 +29,7 @@ import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 	/**
 	 * Mixins
 	 */
-	mixins: [callApiMixin, dbAccountInfoMixin, mongoDBMixin],
+	mixins: [callApiMixin, dbAccountInfoMixin],
 	/**
 	 * Settings
 	 */
@@ -742,45 +742,57 @@ export default class AccountInfoService extends MoleculerDBService<
 		];
 		switch (ctx.params.type) {
 			case 'Delegations':
-				projection.push(
-					...[
-						{ $project: { account_delegations: 1 } },
-						{ $unwind: '$account_delegations' },
-						{ $skip: ctx.params.offset },
-						{ $limit: ctx.params.limit },
-					],
-				);
+				projection.push(...[
+					{ $project: { account_delegations: 1 } },
+					{ $unwind: '$account_delegations' },
+					{ $skip: ctx.params.offset },
+					{ $limit: ctx.params.limit },
+				]);
 				break;
 			case 'Unbondings':
-				projection.push(
-					...[
-						{ $project: { account_unbonding: 1 } },
-						{ $unwind: '$account_unbonding' },
-						{ $skip: ctx.params.offset },
-						{ $limit: ctx.params.limit },
-					],
-				);
+				projection.push(...[
+					{ $project: { account_unbonding: 1 } },
+					{ $unwind: '$account_unbonding' },
+					{ $skip: ctx.params.offset },
+					{ $limit: ctx.params.limit },
+				]);
 				break;
 			case 'Redelegations':
-				projection.push(
-					...[
-						{ $project: { account_redelegations: 1 } },
-						{ $unwind: '$account_redelegations' },
-						{ $skip: ctx.params.offset },
-						{ $limit: ctx.params.limit },
-					],
-				);
+				projection.push(...[
+					{ $project: { account_redelegations: 1 } },
+					{ $unwind: '$account_redelegations' },
+					{ $skip: ctx.params.offset },
+					{ $limit: ctx.params.limit },
+				]);
 				break;
 			case 'Vestings':
-				projection.push(
-					...[{ $project: { account_auth: 1 } }, { $unwind: '$account_auth' }],
-				);
+				projection.push(...[
+					{ $project: { account_auth: 1 } }, { $unwind: '$account_auth' }
+				]);
 				projection['$project'] = { account_auth: 1 };
 				break;
 		}
 
 		let data = await this.adapter.aggregate(projection);
-		this.logger.info(data);
+		if (ctx.params.type === 'Unbondings') {
+			let validators: any = await this.broker.call(
+				'v1.validator.find',
+				{
+					query: {
+						'custom_info.chain_id': ctx.params.chainId,
+					},
+				},
+			);
+			data.map((unbond: any) => {
+				let validator = validators.find((val: ValidatorEntity) =>
+					val.operator_address === unbond.account_unbonding.validator_address
+				);
+				unbond.account_unbonding.validator_description = {
+					description: validator.description,
+					jailed: validator.jailed,
+				};
+			});
+		}
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,

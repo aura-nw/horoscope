@@ -3,7 +3,6 @@ import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
 import {
-	DELAY_JOB_STATUS,
 	DELAY_JOB_TYPE,
 	LIST_NETWORK,
 	URL_TYPE_CONSTANTS,
@@ -14,8 +13,6 @@ import {
 	UnbondingResponse,
 	DelayJobEntity,
 	AccountInfoEntity,
-	ValidatorEntity,
-	ValidatorDescription,
 } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
@@ -91,15 +88,6 @@ export default class CrawlAccountUnbondsService extends Service {
 			for (let address of listAddresses) {
 				let listUnbonds: UnbondingResponse[] = [];
 
-				const validators: ValidatorEntity[] = await this.broker.call(
-					'v1.crawlValidator.find',
-					{
-						query: {
-							'custom_info.chain_id': chainId,
-						},
-					},
-				);
-
 				const param =
 					Config.GET_PARAMS_DELEGATOR +
 					`/${address}/unbonding_delegations?pagination.limit=100`;
@@ -130,16 +118,6 @@ export default class CrawlAccountUnbondsService extends Service {
 					}
 				}
 
-				listUnbonds.map((unbond) => {
-					unbond.validator_description = {} as ValidatorDescription;
-					unbond.validator_description.description = validators.find(
-						(validator) => validator.operator_address === unbond.validator_address,
-					)?.description!;
-					unbond.validator_description.jailed = validators.find(
-						(validator) => validator.operator_address === unbond.validator_address,
-					)?.jailed!;
-				});
-
 				if (listUnbonds) {
 					accountInfo.account_unbonding = listUnbonds;
 					listUnbonds.map((unbond: UnbondingResponse) => {
@@ -147,7 +125,6 @@ export default class CrawlAccountUnbondsService extends Service {
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.UNBOND;
 						newDelayJob.expire_time = new Date(unbond.entries[0].completion_time!);
-						newDelayJob.status = DELAY_JOB_STATUS.PENDING;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: chain ? chain.chainName : '',
