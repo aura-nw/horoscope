@@ -8,10 +8,10 @@ export interface IStats {
 }
 
 export interface IDailyStats {
-    total_sent_tx: IStats | Number;
-    total_received_tx: IStats | Number;
-    total_sent_amount: IStats | Number;
-    total_received_amount: IStats | Number;
+    total_sent_tx: IStats;
+    total_received_tx: IStats;
+    total_sent_amount: IStats;
+    total_received_amount: IStats;
 }
 
 export interface IAccountStatistics {
@@ -31,13 +31,13 @@ export class Stats implements IStats {
 }
 
 export class DailyStats implements IDailyStats {
-    @JsonProperty('total_sent_tx', Stats || Number)
+    @JsonProperty('total_sent_tx', Stats)
     total_sent_tx = {} as Stats;
-    @JsonProperty('total_received_tx', Stats || Number)
+    @JsonProperty('total_received_tx', Stats)
     total_received_tx = {} as Stats;
-    @JsonProperty('total_sent_amount', Stats || Number)
+    @JsonProperty('total_sent_amount', Stats)
     total_sent_amount = {} as Stats;
-    @JsonProperty('total_received_amount', Stats || Number)
+    @JsonProperty('total_received_amount', Stats)
     total_received_amount = {} as Stats;
     
 }
