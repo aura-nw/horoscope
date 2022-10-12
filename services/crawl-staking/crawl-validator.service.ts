@@ -131,17 +131,28 @@ export default class CrawlValidatorService extends Service {
 			let pathDelegation = `${
 				Config.GET_ALL_VALIDATOR
 			}/${validator.operator_address.toString()}/delegations/${address}`;
-			let resultCallApiDelegation: IDelegationResponseFromLCD = await this.callApiFromDomain(
-				url,
-				pathDelegation,
-			);
+
+			let pathAllDelegation = `${
+				Config.GET_ALL_VALIDATOR
+			}/${validator.operator_address.toString()}/delegations?pagination.limit=1&pagination.count_total=true`;
+
+			// let resultSelfBonded: IDelegationResponseFromLCD = await this.callApiFromDomain(
+			// 	url,
+			// 	pathDelegation,
+			// );
+			let [resultSelfBonded, resultAllDelegation]: [
+				IDelegationResponseFromLCD,
+				IDelegationResponseFromLCD,
+			] = await Promise.all([
+				await this.callApiFromDomain(url, pathDelegation),
+				await this.callApiFromDomain(url, pathAllDelegation),
+			]);
 			if (
-				resultCallApiDelegation &&
-				resultCallApiDelegation.delegation_response &&
-				resultCallApiDelegation.delegation_response.balance
+				resultSelfBonded &&
+				resultSelfBonded.delegation_response &&
+				resultSelfBonded.delegation_response.balance
 			) {
-				validator.self_delegation_balance =
-					resultCallApiDelegation.delegation_response.balance;
+				validator.self_delegation_balance = resultSelfBonded.delegation_response.balance;
 			}
 
 			let poolResult: any = await this.broker.call(
@@ -161,7 +172,9 @@ export default class CrawlValidatorService extends Service {
 					) / 1000000;
 				validator.percent_voting_power = percent_voting_power;
 			}
-			this.logger.debug(`result: ${JSON.stringify(resultCallApiDelegation)}`);
+			this.logger.debug(`result: ${JSON.stringify(resultSelfBonded)}`);
+
+			validator.number_delegators = Number(resultAllDelegation.pagination.total);
 		} catch (error) {
 			this.logger.error(error);
 		}

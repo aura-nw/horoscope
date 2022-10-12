@@ -1,4 +1,4 @@
-import { DELAY_JOB_STATUS, DELAY_JOB_TYPE } from "common/constant";
+import { DELAY_JOB_TYPE } from "common/constant";
 
 export interface PageLimit {
 	pageOffset: number;
@@ -141,7 +141,6 @@ export interface QueryDelayJobParams {
 }
 
 export interface QueryPendingDelayJobParams {
-	status: DELAY_JOB_STATUS;
 	chain_id: string;
 }
 
@@ -150,4 +149,16 @@ export interface QueryTransactionStatsParams {
 	sort: string;
 	limit: number;
 	offset: number;
+}
+
+export interface BlockchainDataRequest {
+	chainId: string;
+	limit: number;
+}
+
+export interface TopAccountsRequest {
+	chainId: string;
+	field: string;
+	dayRange: number;
+	limit: number;
 }

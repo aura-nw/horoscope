@@ -241,11 +241,6 @@ export enum DELAY_JOB_TYPE {
 	DELAYED_VESTING = 'delayed_vesting',
 }
 
-export enum DELAY_JOB_STATUS {
-	PENDING = 'pending',
-	DONE = 'done',
-}
-
 export const PATH_COSMOS_SDK = {
 	GET_LATEST_BLOCK_API: '/block?latest',
 	GET_BLOCK_BY_HEIGHT_API: '/block?height=',
@@ -277,4 +272,11 @@ export const PATH_COSMOS_SDK = {
 	GET_PARAMS_SPENDABLE_BALANCE: '/cosmos/bank/v1beta1/spendable_balances',
 	GET_PARAMS_IBC_DENOM: '/ibc/apps/transfer/v1/denom_traces',
 	GET_SUPPLY: '/cosmos/bank/v1beta1/supply',
+};
+
+export const TOP_ACCOUNT_STATS_FIELD = {
+	TXS_SENT: "TXS_SENT",
+	TXS_RECEIVED: "TXS_RECEIVED",
+	AMOUNT_SENT: "AMOUNT_SENT",
+	AMOUNT_RECEIVED: "AMOUNT_RECEIVED"
 };

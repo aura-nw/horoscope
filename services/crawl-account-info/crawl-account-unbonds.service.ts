@@ -3,7 +3,6 @@ import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
 import {
-	DELAY_JOB_STATUS,
 	DELAY_JOB_TYPE,
 	LIST_NETWORK,
 	URL_TYPE_CONSTANTS,
@@ -14,12 +13,9 @@ import {
 	UnbondingResponse,
 	DelayJobEntity,
 	AccountInfoEntity,
-	ValidatorEntity,
-	ValidatorDescription,
 } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 const QueueService = require('moleculer-bull');
 const Bull = require('bull');
 import { QueueConfig } from '../../config/queue';
@@ -27,7 +23,6 @@ import { QueueConfig } from '../../config/queue';
 export default class CrawlAccountUnbondsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
-	private mongoDBMixin = mongoDBMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -39,7 +34,6 @@ export default class CrawlAccountUnbondsService extends Service {
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
-				this.mongoDBMixin,
 			],
 			queues: {
 				'crawl.account-unbonds': {
@@ -78,10 +72,6 @@ export default class CrawlAccountUnbondsService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
-		this.mongoDBClient = await this.connectToDB();
-		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let delayJob = await db.collection('delay_job');
-
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [],
 			listDelayJobs: DelayJobEntity[] = [];
@@ -90,15 +80,6 @@ export default class CrawlAccountUnbondsService extends Service {
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
 				let listUnbonds: UnbondingResponse[] = [];
-
-				const validators: ValidatorEntity[] = await this.broker.call(
-					'v1.crawlValidator.find',
-					{
-						query: {
-							'custom_info.chain_id': chainId,
-						},
-					},
-				);
 
 				const param =
 					Config.GET_PARAMS_DELEGATOR +
@@ -133,16 +114,6 @@ export default class CrawlAccountUnbondsService extends Service {
 					}
 				}
 
-				listUnbonds.map((unbond) => {
-					unbond.validator_description = {} as ValidatorDescription;
-					unbond.validator_description.description = validators.find(
-						(validator) => validator.operator_address === unbond.validator_address,
-					)?.description!;
-					unbond.validator_description.jailed = validators.find(
-						(validator) => validator.operator_address === unbond.validator_address,
-					)?.jailed!;
-				});
-
 				if (listUnbonds) {
 					accountInfo.account_unbonding = listUnbonds;
 					listUnbonds.map((unbond: UnbondingResponse) => {
@@ -150,7 +121,7 @@ export default class CrawlAccountUnbondsService extends Service {
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.UNBOND;
 						newDelayJob.expire_time = new Date(unbond.entries[0].completion_time!);
-						newDelayJob.status = DELAY_JOB_STATUS.PENDING;
+						newDelayJob.indexes = address + newDelayJob.type + newDelayJob.expire_time!.getTime() + chainId;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: chain ? chain.chainName : '',
@@ -186,8 +157,9 @@ export default class CrawlAccountUnbondsService extends Service {
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
-			if (listDelayJobs.length > 0)
-				listUpdateQueries.push(delayJob.insertMany(listDelayJobs));
+			listDelayJobs.map((element) => {
+				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', element));
+			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);

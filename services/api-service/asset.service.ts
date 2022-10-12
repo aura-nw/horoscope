@@ -10,6 +10,9 @@ import {
 	Action,
 	Post,
 } from '@ourparentcenter/moleculer-decorators-extended';
+import { Types } from 'mongoose';
+import { QueryOptions } from 'moleculer-db';
+import { ObjectId } from 'mongodb';
 import {
 	ErrorCode,
 	ErrorMessage,
@@ -22,11 +25,8 @@ import {
 } from '../../types';
 import { IBlock } from '../../entities';
 import { AssetIndexParams } from '../../types/asset';
-import { Types } from 'mongoose';
-// import rateLimit from 'micro-ratelimit';
+// Import rateLimit from 'micro-ratelimit';
 import { CodeIDStatus } from '../../model/codeid.model';
-import { QueryOptions } from 'moleculer-db';
-import { ObjectId } from 'mongodb';
 import {
 	CODEID_MANAGER_ACTION,
 	CONTRACT_TYPE,
@@ -41,7 +41,7 @@ import { Utils } from '../../utils/utils';
 @Service({
 	name: 'asset',
 	version: 1,
-	// mixins: [dbCW721AssetMixin],
+	// Mixins: [dbCW721AssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
 	{
@@ -49,7 +49,6 @@ export default class BlockService extends MoleculerDBService<
 	},
 	{}
 > {
-
 	@Post<RestOptions>('/index', {
 		name: 'index',
 		restricted: ['api'],
@@ -67,7 +66,7 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async index(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
-		let registed: boolean = false;
+		let registed = false;
 		const code_id = ctx.params.codeId;
 		const chain_id = ctx.params.chainId;
 		const contract_type = ctx.params.contractType;
@@ -82,7 +81,7 @@ export default class BlockService extends MoleculerDBService<
 						case CodeIDStatus.REJECTED:
 							if (res[0].contract_type !== contract_type) {
 								const condition = {
-									code_id: code_id,
+									code_id,
 									'custom_info.chain_id': chain_id,
 								};
 								this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
@@ -95,7 +94,7 @@ export default class BlockService extends MoleculerDBService<
 						case CodeIDStatus.TBD:
 							registed = true;
 							break;
-						// case Status.WAITING:
+						// Case Status.WAITING:
 						default:
 							break;
 					}
@@ -317,7 +316,6 @@ export default class BlockService extends MoleculerDBService<
 		return response;
 	}
 
-	
 	@Get('/getByContractType', {
 		name: 'getByContractType',
 		params: {
@@ -448,7 +446,6 @@ export default class BlockService extends MoleculerDBService<
 		return response;
 	}
 
-	
 	@Get('/holder', {
 		name: 'holder',
 		params: {
@@ -598,7 +595,7 @@ export default class BlockService extends MoleculerDBService<
 		return response;
 	}
 
-		/**
+	/**
 	 *  @swagger
 	 *
 	 *  /v1/asset/index:
@@ -686,7 +683,7 @@ export default class BlockService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1"
 	 */
-	
+
 	/**
 	 *  @swagger
 	 *  /v1/asset/getByOwner:
@@ -985,14 +982,14 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: contractType
 	 *          required: true
-	 *          schema: 
+	 *          schema:
 	 *            type: string
 	 *            enum: ["CW721", "CW20"]
 	 *          description: "Contract type need to query"
 	 *        - in: query
 	 *          name: chainid
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            type: string
 	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
@@ -1000,33 +997,33 @@ export default class BlockService extends MoleculerDBService<
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            type: number
 	 *            default: 10
 	 *          description: "number record return in a page"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            type: number
 	 *            default: 0
 	 *          description: "Page number, start at 0"
 	 *        - in: query
 	 *          name: countTotal
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            default: false
 	 *            type: boolean
 	 *          description: "count total record"
 	 *        - in: query
 	 *          name: nextKey
 	 *          required: false
-	 *          schema: 
+	 *          schema:
 	 *            type: string
 	 *          description: "key for next page"
 	 *      responses:
 	 *        '200':
-	 *          description: Asset 
+	 *          description: Asset
 	 *          content:
 	 *            application/json:
 	 *              schema:
@@ -1119,7 +1116,7 @@ export default class BlockService extends MoleculerDBService<
 	 *                                  updatedAt:
 	 *                                    type: string
 	 *                                    example: "2022-08-17T06:20:19.342Z"
-	 *                            
+	 *
 	 *                      count:
 	 *                        type: number
 	 *                        example: 0

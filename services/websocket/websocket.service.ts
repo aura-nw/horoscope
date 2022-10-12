@@ -45,15 +45,15 @@ export default class WebsocketService extends Service {
 						return true;
 					},
 				},
-				'websocket.safe-tx-handle': {
-					concurrency: parseInt(Config.CONCURRENCY_HANDLE_TX_WEBSOCKET, 10),
-					process(job: Job) {
-						// @ts-ignore
-						this.handleSafeTx(job.data.listTx);
+				// 'websocket.safe-tx-handle': {
+				// 	concurrency: parseInt(Config.CONCURRENCY_HANDLE_TX_WEBSOCKET, 10),
+				// 	process(job: Job) {
+				// 		// @ts-ignore
+				// 		this.handleSafeTx(job.data.listTx);
 
-						return true;
-					},
-				},
+				// 		return true;
+				// 	},
+				// },
 			},
 			settings: {
 				port: 3000,
@@ -70,22 +70,25 @@ export default class WebsocketService extends Service {
 					},
 				},
 			},
-			events: {
-				'list-tx.upsert': {
-					handler: (ctx: any) => {
-						this.createJob(
-							'websocket.safe-tx-handle',
-							{
-								listTx: ctx.params.listTx,
-							},
-							{
-								removeOnComplete: true,
-							},
-						);
-						return;
-					},
-				},
-			},
+			// events: {
+			// 	'list-tx.upsert': {
+			// 		handler: (ctx: any) => {
+			// 			this.createJob(
+			// 				'websocket.safe-tx-handle',
+			// 				{
+			// 					listTx: ctx.params.listTx,
+			// 				},
+			// 				{
+			// 					removeOnComplete: true,
+			// 					removeOnFail: {
+			// 						count: 3,
+			// 					},
+			// 				},
+			// 			);
+			// 			return;
+			// 		},
+			// 	},
+			// },
 			actions: {
 				'client-register': {
 					async handler(ctx: Context<TransactionArrayParam>) {
@@ -93,12 +96,12 @@ export default class WebsocketService extends Service {
 						await this.clientRegister(ctx);
 					},
 				},
-				'safe-register': {
-					async handler() {
-						// @ts-ignore
-						return true;
-					},
-				},
+				// 'safe-register': {
+				// 	async handler() {
+				// 		// @ts-ignore
+				// 		return true;
+				// 	},
+				// },
 				// 'broadcast-message': {
 				// 	async handler(ctx: Context) {
 				// 		// @ts-ignore
@@ -156,28 +159,28 @@ export default class WebsocketService extends Service {
 		return [];
 	}
 
-	async handleSafeTx(listTx: ITransaction[]): Promise<any[]> {
-		this.logger.info('Start handle safe tx');
-		try {
-			listTx = listTx.filter((txs) =>
-				txs.tx.body.messages.find(
-					(m: any) =>
-						m['@type'] === MSG_TYPE.MSG_SEND || m['@type'] === MSG_TYPE.MSG_MULTI_SEND,
-				),
-			);
-			this.logger.info('List tx need to handle ' + JSON.stringify(listTx));
-			if (listTx.length > 0) {
-				await this.broker?.call('v1.io.broadcast', {
-					namespace: '/register',
-					event: 'broadcast-safe-message',
-					args: [listTx],
-				});
-			}
-		} catch (error) {
-			this.logger.error(error);
-		}
-		return [];
-	}
+	// async handleSafeTx(listTx: ITransaction[]): Promise<any[]> {
+	// 	this.logger.info('Start handle safe tx');
+	// 	try {
+	// 		listTx = listTx.filter((txs) =>
+	// 			txs.tx.body.messages.find(
+	// 				(m: any) =>
+	// 					m['@type'] === MSG_TYPE.MSG_SEND || m['@type'] === MSG_TYPE.MSG_MULTI_SEND,
+	// 			),
+	// 		);
+	// 		this.logger.info('List tx need to handle ' + JSON.stringify(listTx));
+	// 		if (listTx.length > 0) {
+	// 			await this.broker?.call('v1.io.broadcast', {
+	// 				namespace: '/register',
+	// 				event: 'broadcast-safe-message',
+	// 				args: [listTx],
+	// 			});
+	// 		}
+	// 	} catch (error) {
+	// 		this.logger.error(error);
+	// 	}
+	// 	return [];
+	// }
 
 	async _start() {
 		this.createJob(
@@ -205,15 +208,15 @@ export default class WebsocketService extends Service {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
 		});
 
-		this.getQueue('websocket.safe-tx-handle').on('completed', (job: Job) => {
-			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
-		});
-		this.getQueue('websocket.safe-tx-handle').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
-		});
-		this.getQueue('websocket.safe-tx-handle').on('progress', (job: Job) => {
-			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
-		});
+		// this.getQueue('websocket.safe-tx-handle').on('completed', (job: Job) => {
+		// 	this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
+		// });
+		// this.getQueue('websocket.safe-tx-handle').on('failed', (job: Job) => {
+		// 	this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+		// });
+		// this.getQueue('websocket.safe-tx-handle').on('progress', (job: Job) => {
+		// 	this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
+		// });
 		return super._start();
 	}
 }
