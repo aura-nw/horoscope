@@ -185,6 +185,10 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				voter_address: { $in: validatorAccountAddress },
 			};
 			if (ctx.params.answer) query.answer = ctx.params.answer;
+			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
 			const votes: any[] = await this.adapter.find({ query });
 
 			const validatorVotes: ValidatorVoteResponse[] = [];
