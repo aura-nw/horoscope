@@ -52,7 +52,6 @@ export default class DelayJobService extends MoleculerDBService<
     async findPendingJobs(ctx: Context<QueryPendingDelayJobParams>) {
         let result = await this.adapter.find({
             query: {
-                status: ctx.params.status,
                 'custom_info.chain_id': ctx.params.chain_id,
             }
         });
@@ -67,15 +66,15 @@ export default class DelayJobService extends MoleculerDBService<
     })
     async addNewJob(ctx: Context<any>) {
         let delay_job = {} as DelayJobEntity;
+        delay_job.content = ctx.params.content;
+        delay_job.type = ctx.params.type;
+        delay_job.expire_time = ctx.params.expire_time;
+        delay_job.indexes = ctx.params.indexes;
+        delay_job.custom_info = ctx.params.custom_info;
         const item: DelayJobEntity = new JsonConvert().deserializeObject(
             delay_job,
             DelayJobEntity,
         );
-        item.content = ctx.params.content;
-        item.type = ctx.params.type;
-        item.expire_time = ctx.params.expire_time;
-        item.status = ctx.params.status;
-        item.custom_info = ctx.params.custom_info;
         let result = await this.adapter.insert(item);
         return result;
     }
@@ -90,6 +89,19 @@ export default class DelayJobService extends MoleculerDBService<
         let result = await this.adapter.updateById(
             ctx.params._id,
             ctx.params.update
+        );
+        return result;
+    }
+
+    @Action({
+        name: 'deleteFinishedJob',
+        cache: {
+            ttl: 10,
+        },
+    })
+    async deleteFinishedJob(ctx: Context<any>) {
+        let result = await this.adapter.removeById(
+            ctx.params._id
         );
         return result;
     }

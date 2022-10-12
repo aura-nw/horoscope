@@ -159,9 +159,6 @@ export default class CrawlAccountStatsService extends Service {
 		} else {
 			let listAccountStats: AccountStatistics[] = await this.adapter.find({
 				query: {
-					address: {
-						$in: listAddresses.filter(this.onlyUnique),
-					},
 					'custom_info.chain_id': Config.CHAIN_ID,
 				},
 			});
@@ -170,10 +167,22 @@ export default class CrawlAccountStatsService extends Service {
 				if (account) {
 					if (account.per_day.length === 7) account.per_day.shift();
 					account.per_day.push({
-						total_sent_tx: item.sent_txs,
-						total_received_tx: item.received_txs,
-						total_sent_amount: item.sent_amount,
-						total_received_amount: item.received_amount,
+						total_sent_tx: {
+							amount: item.sent_txs,
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: item.received_txs,
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: item.sent_amount,
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: item.received_amount,
+							percentage: 0
+						},
 					});
 					account.one_day = {
 						total_sent_tx: {
@@ -309,6 +318,83 @@ export default class CrawlAccountStatsService extends Service {
 					listAccountStats.push(accountStatistics);
 				}
 			});
+			listAccountStats.map((account: any) => {
+				if (!listData.find(item => item.address == account.address)) {
+					account.per_day.push({
+						total_sent_tx: {
+							amount: 0,
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: 0,
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: 0,
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: 0,
+							percentage: 0
+						},
+					});
+					account.one_day = {
+						total_sent_tx: {
+							amount: 0,
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: 0,
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: 0,
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: 0,
+							percentage: 0
+						},
+					};
+					const last_three_days = account.per_day.length > 3 ? account.per_day.slice(-3) : account.per_day;
+					account.three_days = {
+						total_sent_tx: {
+							amount: last_three_days.reduce((a: any, b: any) => a + b.sent_txs, 0),
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: last_three_days.reduce((a: any, b: any) => a + b.received_txs, 0),
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: last_three_days.reduce((a: any, b: any) => a + b.sent_amount, 0),
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: last_three_days.reduce((a: any, b: any) => a + b.received_amount, 0),
+							percentage: 0
+						},
+					};
+					account.seven_days = {
+						total_sent_tx: {
+							amount: account.per_day.reduce((a: any, b: any) => a + b.sent_txs, 0),
+							percentage: 0
+						},
+						total_received_tx: {
+							amount: account.per_day.reduce((a: any, b: any) => a + b.received_txs, 0),
+							percentage: 0
+						},
+						total_sent_amount: {
+							amount: account.per_day.reduce((a: any, b: any) => a + b.sent_amount, 0),
+							percentage: 0
+						},
+						total_received_amount: {
+							amount: account.per_day.reduce((a: any, b: any) => a + b.received_amount, 0),
+							percentage: 0
+						},
+					};
+				}
+			})
 
 			try {
 				listAccountStats.map((element) => {
@@ -377,6 +463,7 @@ export default class CrawlAccountStatsService extends Service {
 				listData: []
 			},
 			{
+				jobId: 'crawl.account-stats',
 				removeOnComplete: true,
 				removeOnFail: {
 					count: 3,

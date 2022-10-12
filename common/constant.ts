@@ -241,11 +241,6 @@ export enum DELAY_JOB_TYPE {
 	DELAYED_VESTING = 'delayed_vesting',
 }
 
-export enum DELAY_JOB_STATUS {
-	PENDING = 'pending',
-	DONE = 'done',
-}
-
 export const PATH_COSMOS_SDK = {
 	GET_LATEST_BLOCK_API: '/block?latest',
 	GET_BLOCK_BY_HEIGHT_API: '/block?height=',

@@ -189,6 +189,7 @@ export default class CrawlDailyTxService extends Service {
 				activeAddrs: [],
 			},
 			{
+				jobId: 'crawl.daily-tx',
 				removeOnComplete: true,
 				removeOnFail: {
 					count: 3,

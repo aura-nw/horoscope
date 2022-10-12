@@ -4,7 +4,7 @@
 
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { DELAY_JOB_STATUS, DELAY_JOB_TYPE } from '../../common/constant';
+import { DELAY_JOB_TYPE } from '../../common/constant';
 import { RedelegateEntry, DelayJobEntity, RedelegationEntry } from '../../entities';
 import { Service, ServiceBroker } from 'moleculer';
 import { Coin } from 'entities/coin.entity';
@@ -45,7 +45,6 @@ export default class HandleDelayJobService extends Service {
 		let currentJobs: DelayJobEntity[] = await this.broker.call(
 			'v1.delay-job.findPendingJobs',
 			{
-				status: DELAY_JOB_STATUS.PENDING,
 				chain_id: Config.CHAIN_ID,
 			}
 		);
@@ -59,7 +58,7 @@ export default class HandleDelayJobService extends Service {
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
 							let oldRedelegates =
-									updateRedelegates.redelegation_responses[0].entries,
+								updateRedelegates.redelegation_responses[0].entries,
 								removeRedelegate = oldRedelegates.find(
 									(x: RedelegateEntry) =>
 										new Date(
@@ -83,33 +82,15 @@ export default class HandleDelayJobService extends Service {
 										},
 									),
 									this.broker.call(
-										'v1.delay-job.updateJob',
+										'v1.delay-job.deleteFinishedJob',
 										{
-											_id: job._id,
-											update: {
-												$set: {
-													status: DELAY_JOB_STATUS.DONE
-												}
-											},
+											_id: job._id
 										}
 									),
 								],
 							);
 						} catch (error) {
 							this.logger.error(error);
-							listUpdateQueries.push(
-								this.broker.call(
-									'v1.delay-job.updateJob',
-									{
-										_id: job._id,
-										update: {
-											$set: {
-												status: DELAY_JOB_STATUS.DONE
-											}
-										},
-									}
-								),
-							);
 						}
 						break;
 					case DELAY_JOB_TYPE.UNBOND:
@@ -157,33 +138,15 @@ export default class HandleDelayJobService extends Service {
 										},
 									),
 									this.broker.call(
-										'v1.delay-job.updateJob',
+										'v1.delay-job.deleteFinishedJob',
 										{
-											_id: job._id,
-											update: {
-												$set: {
-													status: DELAY_JOB_STATUS.DONE
-												}
-											},
+											_id: job._id
 										}
 									),
 								],
 							);
 						} catch (error) {
 							this.logger.error(error);
-							listUpdateQueries.push(
-								this.broker.call(
-									'v1.delay-job.updateJob',
-									{
-										_id: job._id,
-										update: {
-											$set: {
-												status: DELAY_JOB_STATUS.DONE
-											}
-										},
-									}
-								),
-							);
 						}
 						break;
 					case DELAY_JOB_TYPE.DELAYED_VESTING:
@@ -219,32 +182,14 @@ export default class HandleDelayJobService extends Service {
 									},
 								),
 								this.broker.call(
-									'v1.delay-job.updateJob',
+									'v1.delay-job.deleteFinishedJob',
 									{
-										_id: job._id,
-										update: {
-											$set: {
-												status: DELAY_JOB_STATUS.DONE
-											}
-										},
+										_id: job._id
 									}
 								),
 							);
 						} catch (error) {
 							this.logger.error(error);
-							listUpdateQueries.push(
-								this.broker.call(
-									'v1.delay-job.updateJob',
-									{
-										_id: job._id,
-										update: {
-											$set: {
-												status: DELAY_JOB_STATUS.DONE
-											}
-										},
-									}
-								),
-							);
 						}
 						break;
 					case DELAY_JOB_TYPE.PERIODIC_VESTING:
@@ -272,34 +217,44 @@ export default class HandleDelayJobService extends Service {
 									10,
 								)
 							).toString();
-							let updateJob = {};
+							let newJobExpireTime = new Date(
+								(job.expire_time.getTime() +
+									parseInt(
+										updateInfo.account_auth.result.value.vesting_periods[0]
+											.length,
+										10,
+									)) *
+								1000,
+							);
 							if (
-								job.expire_time.getTime() >=
+								newJobExpireTime.getTime() >=
 								new Date(
 									parseInt(updateInfo.account_auth.result.value.end_time, 10) *
-										1000,
+									1000,
 								).getTime()
 							)
-								updateJob = {
-									$set: {
-										status: DELAY_JOB_STATUS.DONE,
-									},
-								};
-							else {
-								let newJobExpireTime = new Date(
-									(job.expire_time.getTime() +
-										parseInt(
-											updateInfo.account_auth.result.value.vesting_periods[0]
-												.length,
-											10,
-										)) *
-										1000,
+								listUpdateQueries.push(
+									this.broker.call(
+										'v1.delay-job.deleteFinishedJob',
+										{
+											_id: job._id
+										}
+									),
 								);
-								updateJob = {
-									$set: {
-										expire_time: newJobExpireTime,
-									},
-								};
+							else {
+								listUpdateQueries.push(
+									this.broker.call(
+										'v1.delay-job.updateJob',
+										{
+											_id: job._id,
+											update: {
+												$set: {
+													expire_time: newJobExpireTime,
+												},
+											}
+										}
+									),
+								);
 							}
 							listUpdateQueries.push(
 								this.adapter.updateById(
@@ -311,28 +266,10 @@ export default class HandleDelayJobService extends Service {
 											account_spendable_balances: newSpendableBalances,
 										},
 									},
-								),
-								this.broker.call(
-									'v1.delay-job.updateJob',
-									{
-										_id: job._id,
-										update: updateJob
-									}
-								),
+								)
 							);
 						} catch (error) {
 							this.logger.error(error);
-							listUpdateQueries.push(
-								this.broker.call(
-									'v1.delay-job.updateJob',
-									{
-										_id: job._id,
-										update: {
-											status: DELAY_JOB_STATUS.DONE,
-										},
-									}
-								),
-							);
 						}
 						break;
 				}

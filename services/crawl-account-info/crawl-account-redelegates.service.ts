@@ -3,7 +3,6 @@ import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
 import {
-	DELAY_JOB_STATUS,
 	DELAY_JOB_TYPE,
 	LIST_NETWORK,
 	URL_TYPE_CONSTANTS,
@@ -116,7 +115,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 						newDelayJob.expire_time = new Date(
 							redelegate.entries[0].redelegation_entry.completion_time!,
 						);
-						newDelayJob.status = DELAY_JOB_STATUS.PENDING;
+						newDelayJob.indexes = address + newDelayJob.type + newDelayJob.expire_time!.getTime() + chainId;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: chain ? chain.chainName : '',
