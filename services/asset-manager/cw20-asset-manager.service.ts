@@ -21,7 +21,7 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw20-asset-manager insert ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
+				this.actions.useDb({ query: { chainId: ctx.params.chain_id } });
 				// @ts-ignore
 				return await this.adapter.insert(ctx.params);
 			},
@@ -36,7 +36,10 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw20-asset-manager count ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
+				this.actions.useDb({
+					// @ts-ignore
+					query: { chainId: ctx.params.query['custom_info.chain_id'] },
+				});
 				// @ts-ignore
 				return await this.adapter.count(ctx.params);
 			},
@@ -54,7 +57,9 @@ import { LIST_NETWORK } from '../../common/constant';
 					ctx.params.query['_id'] = { $lt: new ObjectID(ctx.params.nextKey) };
 				}
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+				this.actions.useDb({
+					query: { chainId: ctx.params.query['custom_info.chain_id'] },
+				});
 				// @ts-ignore
 				return await this.adapter.find(ctx.params);
 			},
@@ -69,7 +74,7 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw20-asset-manager list ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
+				this.actions.useDb({ query: { chainId: ctx.params.chain_id } });
 				// @ts-ignore
 				return await this.adapter.list(ctx.params);
 			},
@@ -81,13 +86,13 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw20-asset-manager upsert ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.chain_id}});
+				this.actions.useDb({ query: { chainId: ctx.params.chain_id } });
 				// @ts-ignore
 				return await this.upsert_handler(ctx.params);
 			},
 		},
 		useDb: {
-			async handler(ctx: Context){
+			async handler(ctx: Context) {
 				//@ts-ignore
 				const chainId = ctx.params.query['chainId'];
 				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
@@ -95,7 +100,7 @@ import { LIST_NETWORK } from '../../common/constant';
 					// @ts-ignore
 					this.adapter.useDb(network.databaseName);
 				}
-			}
+			},
 		},
 	},
 })
@@ -127,14 +132,14 @@ export default class CW20AssetManagerService extends moleculer.Service {
 	@Action()
 	async getHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
-		this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
 		return await this.adapter.find(ctx.params);
 	}
 
 	@Action()
 	async countHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
-		this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
 		return await this.adapter.count(ctx.params);
 	}
 }

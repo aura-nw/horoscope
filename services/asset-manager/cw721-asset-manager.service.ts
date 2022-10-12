@@ -18,7 +18,7 @@ import { LIST_NETWORK } from '../../common/constant';
 		'act-insert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.custom_info.chain_id}});
+				this.actions.useDb({ query: { chainId: ctx.params.custom_info.chain_id } });
 				// @ts-ignore
 				this.logger.debug(
 					`ctx.params cw721-asset-manager insert ${JSON.stringify(ctx.params)}`,
@@ -37,6 +37,11 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw721-asset-manager count ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
+				this.actions.useDb({
+					// @ts-ignore
+					query: { chainId: ctx.params.query['custom_info.chain_id'] },
+				});
+				// @ts-ignore
 				return await this.adapter.count(ctx.params);
 			},
 		},
@@ -50,7 +55,10 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw721-asset-manager find ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+				this.actions.useDb({
+					// @ts-ignore
+					query: { chainId: ctx.params.query['custom_info.chain_id'] },
+				});
 				// @ts-ignore
 				return await this.adapter.find(ctx.params);
 			},
@@ -66,7 +74,9 @@ import { LIST_NETWORK } from '../../common/constant';
 				);
 				let listAggregate: any[] = [];
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+				this.actions.useDb({
+					query: { chainId: ctx.params.query['custom_info.chain_id'] },
+				});
 				if (ctx.params.sort) {
 					listAggregate.push({
 						$sort: ctx.params.sort,
@@ -129,7 +139,7 @@ import { LIST_NETWORK } from '../../common/constant';
 			},
 		},
 		useDb: {
-			async handler(ctx: Context){
+			async handler(ctx: Context) {
 				//@ts-ignore
 				const chainId = ctx.params.query['chainId'];
 				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
@@ -137,7 +147,7 @@ import { LIST_NETWORK } from '../../common/constant';
 					// @ts-ignore
 					this.adapter.useDb(network.databaseName);
 				}
-			}
+			},
 		},
 	},
 })
@@ -164,7 +174,7 @@ export default class CW721AssetManagerService extends moleculer.Service {
 	@Action()
 	async getHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
-		this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
 		let result = await this.adapter.aggregate([
 			{
 				$match: ctx.params.query,
@@ -210,7 +220,7 @@ export default class CW721AssetManagerService extends moleculer.Service {
 	@Action()
 	async countHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
-		this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
 		let result = await this.adapter.aggregate([
 			{
 				$match: ctx.params.query,

@@ -92,8 +92,8 @@ export default class CrawlAssetService extends moleculer.Service {
 	async checkIfContractImplementInterface(URL: string, chain_id: string, code_id: number) {
 		try {
 			let cw721flag: any = null;
-			const urlGetContractList = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
-			let path = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
+			const urlGetContractList = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&`;
+			let path = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&`;
 			this.logger.debug('Call urlGetContractList', URL, urlGetContractList);
 			let next_key = null;
 			do {
@@ -173,14 +173,14 @@ export default class CrawlAssetService extends moleculer.Service {
 				{ URL, code_id },
 				OPTs,
 			);
-			
-			contractList.map( (address: String) => {
+
+			contractList.map((address: String) => {
 				this.broker.call(
 					CW721_ACTION.ENRICH_DATA,
 					[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
 					OPTs,
 				);
-			})
+			});
 			// await insertInforPromises;
 			this.logger.debug('Asset handler DONE!', contractList.length);
 		} catch (err) {
@@ -201,7 +201,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 	{ URL, code_id, address },
 		// 	OPTs,
 		// );
-		let listTokenIDs = await this.actions.getTokenList({URL, code_id, address}, OPTs)
+		let listTokenIDs = await this.actions.getTokenList({ URL, code_id, address }, OPTs);
 
 		if (listTokenIDs != null) {
 			const getInforPromises = await Promise.all(
@@ -238,11 +238,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							tokenInfo,
 							chain_id,
 						);
-						this.broker.call(
-							`v1.CW721-asset-manager.act-${typeEnrich}`,
-							asset,
-							OPTs,
-						);
+						this.broker.call(`v1.CW721-asset-manager.act-${typeEnrich}`, asset, OPTs);
 					}
 				}),
 			);
@@ -331,5 +327,4 @@ export default class CrawlAssetService extends moleculer.Service {
 	private async updateById(id: any, update: any) {
 		return await this.adapter.updateById(id, update);
 	}
-
 }

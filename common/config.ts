@@ -150,7 +150,7 @@ export default class ConfigClass {
 		process.env.GET_PARAMS_SPENDABLE_BALANCE || PATH_COSMOS_SDK.GET_PARAMS_SPENDABLE_BALANCE;
 	public GET_PARAMS_IBC_DENOM =
 		process.env.GET_PARAMS_IBC_DENOM || PATH_COSMOS_SDK.GET_PARAMS_IBC_DENOM;
-
+	public GET_SUPPLY = process.env.GET_SUPPLY || PATH_COSMOS_SDK.GET_SUPPLY;
 	// Dynamic property key
 	[index: string]: any;
 
