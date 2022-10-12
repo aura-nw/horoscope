@@ -166,7 +166,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 		try {
 			const chainId = ctx.params.chainid;
 			const validators: any[] = await this.broker.call(
-				'v1.validator.find',
+				'v1.validator.getByCondition',
 				{
 					query: {
 						'custom_info.chain_id': chainId,
