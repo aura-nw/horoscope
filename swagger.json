@@ -4818,7 +4818,7 @@
                                 "VOTE_OPTION_ABSTAIN"
                             ]
                         },
-                        "description": "Chain Id of network need to query"
+                        "description": "Vote option want to query"
                     },
                     {
                         "in": "query",
@@ -5045,7 +5045,7 @@
                                 "DID_NOT_VOTE"
                             ]
                         },
-                        "description": "Chain Id of network need to query"
+                        "description": "Vote option want to query"
                     }
                 ],
                 "responses": {

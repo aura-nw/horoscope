@@ -301,7 +301,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *          schema:
 	 *            type: string
 	 *            enum: ['VOTE_OPTION_YES', 'VOTE_OPTION_NO', 'VOTE_OPTION_NO_WITH_VETO', 'VOTE_OPTION_ABSTAIN']
-	 *          description: "Chain Id of network need to query"
+	 *          description: "Vote option want to query"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
@@ -448,7 +448,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *          schema:
 	 *            type: string
 	 *            enum: ['VOTE_OPTION_YES', 'VOTE_OPTION_NO', 'VOTE_OPTION_NO_WITH_VETO', 'VOTE_OPTION_ABSTAIN', 'DID_NOT_VOTE']
-	 *          description: "Chain Id of network need to query"
+	 *          description: "Vote option want to query"
 	 *      responses:
 	 *        '200':
 	 *          description: Validator Vote result

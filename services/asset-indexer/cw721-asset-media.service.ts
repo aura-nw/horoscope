@@ -215,9 +215,9 @@ export default class CrawlAssetService extends moleculer.Service {
 
 	async _start(): Promise<void> {
 		// let uri =
-		// 	'https://cloudflare-ipfs.com/ipfs/bafybeid6su5bvoiah5e5nree7p53kjoti3x6hcjmoql4guhvb25njxe52i';
+		// 	'ipfs://bafybeid6su5bvoiah5e5nree7p53kjoti3x6hcjmoql4guhvb25njxe52i/mohamed-nohassi-odxB5oIG_iA-unsplash.jpg';
 		// let key = Common.getKeyFromUri(uri);
-		// let result = await Common.handleUri(uri, key[2]);
+		// let result = await Common.handleUri(key[0], key[1]);
 		// this.logger.info('result: ', result);
 		this.getQueue('get-media-link').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);

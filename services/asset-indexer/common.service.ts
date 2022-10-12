@@ -108,6 +108,9 @@ export class Common {
 			const cid = parsed.host;
 			const cidBase32 = new CID(cid).toV1().toString('base32');
 			uri_handled = `${IPFS_GATEWAY}${cidBase32}`;
+			if (parsed.path) {
+				uri_handled += `${parsed.path}`;
+			}
 			file_name = cid;
 			media_link_key = cid;
 		} else {
