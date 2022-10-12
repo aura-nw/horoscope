@@ -135,7 +135,7 @@ export default class ProposalService extends MoleculerDBService<
 					proposal_id: Number(proposalId),
 				};
 				const countVoteResponse = await this.broker.call(
-					Config.COUNT_VOTES_ACTION,
+					'v1.votes.countVotes',
 					countVoteParams,
 				);
 				const data = Object.assign({}, result[0]);
