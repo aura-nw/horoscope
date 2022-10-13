@@ -4,10 +4,12 @@
 
 import { Job } from 'bull';
 import { ITransaction } from 'entities';
+import { Coin } from 'entities/coin.entity';
 import * as _ from 'lodash';
 import { CallingOptions, Service, ServiceBroker } from 'moleculer';
+import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
-import { MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { ALLOWANCE_TYPE, FEEGRANT_ACTION, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Utils } from '../../utils/utils';
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
@@ -15,14 +17,18 @@ const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
-interface IFeegrantData {
+export interface IFeegrantData {
 	action: String,
 	payer: String,
 	grantee: String,
 	granter: String,
 	result: Boolean,
 	timestamp: Date | null,
-	amount: String
+	amount: Coin,
+	tx_hash: String,
+	expiration: String | null,
+	type: String,
+	spend_limit: Coin,
 }
 export default class CrawlAccountInfoService extends Service {
 
@@ -41,7 +47,7 @@ export default class CrawlAccountInfoService extends Service {
 			],
 			queues: {
 				'feegrant.tx-handle': {
-					concurrency: parseInt(Config.CONCURRENCY_FEEGRANT_TX_HANDLER, 10),
+					concurrency: 1,
 					process(job: Job) {
 						job.progress(10);
 						const URL = Utils.getUrlByChainIdAndType(
@@ -50,7 +56,7 @@ export default class CrawlAccountInfoService extends Service {
 						);
 
 						// @ts-ignore
-						this.handleJob(URL, job.data.listTx, job.data.chainId);
+						this.handleJob(job.data.listTx, job.data.chainId);
 
 						job.progress(100);
 						return true;
@@ -80,154 +86,199 @@ export default class CrawlAccountInfoService extends Service {
 		});
 	}
 
-	async handleJob(URL: string, listTx: ITransaction[], chainId: string): Promise<any[]> {
+	async handleJob(listTx: ITransaction[], chainId: string): Promise<any[]> {
 		let feegrantList: IFeegrantData[] = [];
+
 		try {
 			if (listTx.length > 0) {
 				for (const tx of listTx) {
-					this.logger.debug('tx', JSON.stringify(tx));
+					this.logger.debug();
 					let payer = tx.tx.auth_info.fee.granter
 					const message: any = tx.tx.body.messages[0]
 					// if tx is feegrant tx
 					if (payer) {
-						// get the owner of tx
-						let grantee = ""
-						let granter = ""
-						try {
-							switch (message['@type']) {
-								case MSG_TYPE.MSG_SEND:
-									grantee =
-										message.from_address
-									break;
-								case MSG_TYPE.MSG_DELEGATE:
-									grantee = message.delegator_address;
-									break;
-								case MSG_TYPE.MSG_REDELEGATE:
-									grantee = message.delegator_address
-									break;
-								case MSG_TYPE.MSG_UNDELEGATE:
-									grantee = message.delegator_address;
-									break;
-								case MSG_TYPE.MSG_EXECUTE_CONTRACT:
-									grantee = message.sender;
-									break;
-								case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
-									grantee = message.sender;
-									break;
-								case MSG_TYPE.MSG_STORE_CODE:
-									grantee = message.sender;
-									break;
-								case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
-									grantee = message.from_address;
-									break;
-								case MSG_TYPE.MSG_DEPOSIT:
-									grantee = message.depositor;
-									break;
-								case MSG_TYPE.MSG_WITHDRAW_REWARDS:
-									grantee = message.delegator_address;
-									break;
-								case MSG_TYPE.MSG_SUBMIT_PROPOSAL:
-									grantee = message.proposer;
-									break;
-								case MSG_TYPE.MSG_VOTE:
-									grantee = message.voter;
-									break;
-								case MSG_TYPE.MSG_IBC_TRANSFER:
-									grantee = message.sender;
-									break;
-								case MSG_TYPE.MSG_FEEGRANT_GRANT:
-									grantee = message.granter;
-									break;
-								case MSG_TYPE.MSG_FEEGRANT_REVOKE:
-									grantee = message.granter;
-									break;
-							}
-						} catch (error) {
-							this.logger.error(`Error when get message type: ${error}`);
-							continue;
-						}
-
 						let events = tx.tx_response.events
 						// check case
 						if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_GRANT) {
 							// set feegrant + use another fee grant
+							let spend_limit = {} as Coin
+							let basic_allowance = message["allowance"]
+							this.logger.info(JSON.stringify(basic_allowance))
+							while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE) {
+								basic_allowance = basic_allowance["allowance"]
+							}
+							this.logger.info(JSON.stringify(basic_allowance))
+							if (basic_allowance["spend_limit"].length > 0) {
+								spend_limit = basic_allowance["spend_limit"][0] as Coin
+							}
+							this.logger.info(JSON.stringify(spend_limit))
 							let feegrantCreate = {
-								action: "create",
+								action: FEEGRANT_ACTION.CREATE_WITH_FEEGRANT,
 								granter: message["granter"] as String,
 								grantee: message["grantee"] as String,
 								payer,
 								result: tx.tx_response.code.toString() === "0",
 								timestamp: tx.tx_response.timestamp,
-								amount: tx.tx.auth_info.fee.amount[0].amount
+								amount: tx.tx.auth_info.fee.amount[0],
+								tx_hash: tx.tx_response.txhash,
+								expiration: message["expiration"],
+								type: message["allowance"]["@type"],
+								spend_limit
 							}
 							feegrantList.push(feegrantCreate)
 						} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_REVOKE) {
 							// revoke feegrant  + use another fee grant
 							let feegrantRevoke = {
-								action: "revoke",
+								action: FEEGRANT_ACTION.REVOKE_WITH_FEEGRANT,
 								granter: message["granter"] as String,
 								grantee: message["grantee"] as String,
 								payer,
 								result: tx.tx_response.code.toString() === "0",
 								timestamp: tx.tx_response.timestamp,
-								amount: tx.tx.auth_info.fee.amount[0].amount
+								amount: tx.tx.auth_info.fee.amount[0],
+								tx_hash: tx.tx_response.txhash,
+								expiration: null,
+								type: "",
+								spend_limit: {} as Coin
 							}
 							feegrantList.push(feegrantRevoke)
-						} else if (events.find(e => e.type === "revoke_feegrant")) {
-							// use up
-							let feegrantUseup = {
-								action: "useup",
-								granter: message["granter"],
-								grantee: message["grantee"],
-								result: tx.tx_response.code.toString() === "0",
-								timestamp: tx.tx_response.timestamp,
-								amount: tx.tx.auth_info.fee.amount[0].amount,
-								payer
-							}
-							feegrantList.push(feegrantUseup)
 						} else {
-							// default: just use
-							let feegrantUpdate = {
-								action: "update",
-								payer,
-								grantee,
-								granter,
-								result: tx.tx_response.code.toString() === "0",
-								timestamp: tx.tx_response.timestamp,
-								amount: tx.tx.auth_info.fee.amount[0].amount
+							// get the owner of tx
+							let owner = ""
+							try {
+								switch (message['@type']) {
+									case MSG_TYPE.MSG_SEND:
+										owner =
+											message.from_address
+										break;
+									case MSG_TYPE.MSG_DELEGATE:
+										owner = message.delegator_address;
+										break;
+									case MSG_TYPE.MSG_REDELEGATE:
+										owner = message.delegator_address
+										break;
+									case MSG_TYPE.MSG_UNDELEGATE:
+										owner = message.delegator_address;
+										break;
+									case MSG_TYPE.MSG_EXECUTE_CONTRACT:
+										owner = message.sender;
+										break;
+									case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
+										owner = message.sender;
+										break;
+									case MSG_TYPE.MSG_STORE_CODE:
+										owner = message.sender;
+										break;
+									case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
+										owner = message.from_address;
+										break;
+									case MSG_TYPE.MSG_DEPOSIT:
+										owner = message.depositor;
+										break;
+									case MSG_TYPE.MSG_WITHDRAW_REWARDS:
+										owner = message.delegator_address;
+										break;
+									case MSG_TYPE.MSG_SUBMIT_PROPOSAL:
+										owner = message.proposer;
+										break;
+									case MSG_TYPE.MSG_VOTE:
+										owner = message.voter;
+										break;
+									case MSG_TYPE.MSG_IBC_TRANSFER:
+										owner = message.sender;
+										break;
+									case MSG_TYPE.MSG_FEEGRANT_GRANT:
+										owner = message.granter;
+										break;
+									case MSG_TYPE.MSG_FEEGRANT_REVOKE:
+										owner = message.granter;
+										break;
+								}
+							} catch (error) {
+								this.logger.error(`Error when get message type: ${error}`);
+								continue;
 							}
-							feegrantList.push(feegrantUpdate)
+							if (events.find(e => e.type === "revoke_feegrant")) {
+								// use up
+								let feegrantUseup = {
+									action: FEEGRANT_ACTION.USE_UP,
+									granter: payer,
+									grantee: owner,
+									result: tx.tx_response.code.toString() === "0",
+									timestamp: tx.tx_response.timestamp,
+									amount: tx.tx.auth_info.fee.amount[0],
+									payer,
+									tx_hash: tx.tx_response.txhash,
+									expiration: null,
+									type: "",
+									spend_limit: {} as Coin
+								}
+								feegrantList.push(feegrantUseup)
+							} else {
+								// default: just use
+								let feegrantUpdate = {
+									action: FEEGRANT_ACTION.USE,
+									payer,
+									grantee: owner,
+									granter: payer,
+									result: tx.tx_response.code.toString() === "0",
+									timestamp: tx.tx_response.timestamp,
+									amount: tx.tx.auth_info.fee.amount[0] as Coin,
+									tx_hash: tx.tx_response.txhash,
+									expiration: null,
+									type: "",
+									spend_limit: {} as Coin
+								}
+								feegrantList.push(feegrantUpdate)
+							}
 						}
 
 					} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_GRANT) {
+						// normal create grant
+						let spend_limit = {} as Coin
+						let basic_allowance = message["allowance"]
+						while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE) {
+							basic_allowance = basic_allowance["allowance"]
+						}
+						if (basic_allowance["spend_limit"].length > 0) {
+							spend_limit = basic_allowance["spend_limit"][0] as Coin
+						}
 						let feegrantCreate = {
-							action: "create",
+							action: FEEGRANT_ACTION.CREATE,
 							granter: message["granter"],
 							grantee: message["grantee"],
 							result: tx.tx_response.code.toString() === "0",
 							timestamp: tx.tx_response.timestamp,
-							amount: tx.tx.auth_info.fee.amount[0].amount,
-							payer
+							amount: tx.tx.auth_info.fee.amount[0] as Coin,
+							payer,
+							tx_hash: tx.tx_response.txhash,
+							expiration: message["expiration"],
+							type: message["allowance"]["@type"],
+							spend_limit: spend_limit
 						}
 						feegrantList.push(feegrantCreate)
 					} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_REVOKE) {
 						let feegrantRevoke = {
-							action: "revoke",
+							action: FEEGRANT_ACTION.REVOKE,
 							granter: message["granter"],
 							grantee: message["grantee"],
 							result: tx.tx_response.code.toString() === "0",
 							timestamp: tx.tx_response.timestamp,
-							amount: tx.tx.auth_info.fee.amount[0].amount,
+							amount: tx.tx.auth_info.fee.amount[0] as Coin,
 							payer,
+							tx_hash: tx.tx_response.txhash,
+							expiration: null,
+							type: "",
+							spend_limit: {} as Coin
 						}
 						feegrantList.push(feegrantRevoke)
 					}
 				}
 			}
-			_.sortBy(feegrantList, (a) => a.timestamp)
-			console.log(feegrantList);
+			feegrantList = _.sortBy(feegrantList, (a) => a.timestamp)
 			this.broker.emit('feegrant.upsert', {
-				feegrantList
+				feegrantList,
+				chainId
 			});
 
 		} catch (error) {

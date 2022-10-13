@@ -6,22 +6,24 @@ import { customInfoModel } from "./custom-info.model";
 const definition: definitionType<IFeegrant> = (collection?: string) => ({
     _id: Types.ObjectId,
     tx_hash: String,
+    origin_feegrant_txhash: String,
     granter: String,
     grantee: String,
     result: Boolean,
     type: String,
-    timestamp: String,
+    timestamp: Date,
     spend_limit: {
         amount: String,
         denom: String
     },
     expiration: String,
-    spendable: {
+    amount: {
         amount: String,
         denom: String
     },
     status: String,
     custom_info: customInfoModel,
+    action: String
 });
 
 export const feegrantMongoModel = (collection: string): unknown => {

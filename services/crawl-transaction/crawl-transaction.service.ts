@@ -56,7 +56,6 @@ export default class CrawlTransactionService extends Service {
 				'list-transaction.created': {
 					handler: async (ctx: Context<ListTxInBlockParams, Record<string, unknown>>) => {
 						const listTx = ctx.params.listTx;
-						this.logger.info(`Crawl list transaction: ${JSON.stringify(listTx)}`);
 						if (listTx && listTx.length > 0) {
 							this.createJob(
 								'crawl.transaction',

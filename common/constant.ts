@@ -238,7 +238,18 @@ export enum VESTING_ACCOUNT_TYPE {
 export enum FEEGRANT_STATUS {
 	AVAILABLE = 'Available',
 	EXPIRED = 'Expired',
-	USE_UP = 'Use up'
+	USE_UP = 'Use up',
+	REVOKED = 'Revoked',
+	FAIL = "Fail"
+}
+
+export enum FEEGRANT_ACTION {
+	CREATE = "create",
+	REVOKE = "revoke",
+	USE = "use",
+	USE_UP = "useup",
+	CREATE_WITH_FEEGRANT = "_create",
+	REVOKE_WITH_FEEGRANT = "_revoke"
 }
 
 export enum DELAY_JOB_TYPE {
@@ -284,3 +295,10 @@ export const PATH_COSMOS_SDK = {
 	GET_PARAMS_SPENDABLE_BALANCE: '/cosmos/bank/v1beta1/spendable_balances',
 	GET_PARAMS_IBC_DENOM: '/ibc/apps/transfer/v1/denom_traces',
 };
+
+export const ALLOWANCE_TYPE = {
+	BASIC_ALLOWANCE: "/cosmos.feegrant.v1beta1.BasicAllowance",
+	PERIODIC_ALLOWANCE: "/cosmos.feegrant.v1beta1.PeriodicAllowance",
+	ALLOWED_MSGS_ALLOWANCE: "/cosmos.feegrant.v1beta1.AllowedMsgAllowance",
+	ALLOWED_CONTRACT_ALLOWANCE: "/cosmos.feegrant.v1beta1.AllowedContractAllowance",
+}

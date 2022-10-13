@@ -99,6 +99,7 @@ export default class ConfigClass {
 	public static DB_ACCOUNT_REWARDS: any;
 	public static DB_DELAY_JOB: any;
 	public static DB_IBC_DENOM: any;
+	public static DB_FEEGRANT_HISTORY: any;
 
 	public ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
 
@@ -163,7 +164,7 @@ export default class ConfigClass {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			this.NODE_ENV
-		}`;
+			}`;
 		this.DB_USER = genericDbInfo('USER');
 		this.DB_PRODUCT = genericDbInfo('PRODUCT');
 		this.DB_PROPOSAL = genericDbInfo('PROPOSAL');
@@ -192,5 +193,6 @@ export default class ConfigClass {
 		this.DB_DELAY_JOB = genericDbInfo('DELAY_JOB');
 		this.DB_IBC_DENOM = genericDbInfo('IBC_DENOM');
 		this.DB_VOTE = genericDbInfo('VOTE');
+		this.DB_FEEGRANT_HISTORY = genericDbInfo('feegrant-history')
 	}
 }
