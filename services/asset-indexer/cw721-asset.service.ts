@@ -26,7 +26,7 @@ const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
 const OPTs: CallingOptions = { timeout: 0, retries: MAX_RETRY_REQ };
-
+const ASSET_INDEXER_TOKEN_ID_LIMIT = Config.ASSET_INDEXER_TOKEN_ID_LIMIT;
 const VALIDATE_CODEID_PREFIX = 'validate_codeid';
 const HANDLE_CODEID_PREFIX = 'handle_codeid';
 
@@ -250,19 +250,11 @@ export default class CrawlAssetService extends moleculer.Service {
 	private async getTokenList(ctx: Context<TokenInfo>) {
 		const URL = ctx.params.URL;
 		const address = ctx.params.address;
-		// const URL = ['https://lcd.dev.aura.network'];
-		// const address = 'aura1dgevllptugd0gt64nc6nmmat23zwrks4txzl0mxqlfhkhjauguusl8trdp';
 		try {
-			// let urlGetListToken = `${CONTRACT_URI}${address}/smart/${CW721_ACTION.URL_GET_TOKEN_LIST}`;
-			// let listTokenIDs = await this.callApiFromDomain(URL, urlGetListToken);
-			// if (listTokenIDs?.data?.tokens !== undefined && listTokenIDs.data.tokens.length > 0) {
-			// 	return listTokenIDs;
-			// } else return null;
-
 			let doneLoop = false;
 			let listTokenId = [];
 			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
-				toUtf8(`{"all_tokens":{"limit":100}}`),
+				toUtf8(`{"all_tokens":{"limit":${ASSET_INDEXER_TOKEN_ID_LIMIT}}}`),
 			)}`;
 			while (!doneLoop) {
 				let resultCallApi = await this.callApiFromDomain(URL, urlGetListToken);
@@ -273,7 +265,9 @@ export default class CrawlAssetService extends moleculer.Service {
 					const lastTokenId =
 						resultCallApi.data.tokens[resultCallApi.data.tokens.length - 1];
 					urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
-						toUtf8(`{"all_tokens":{"limit":100, "start_after":"${lastTokenId}"}}`),
+						toUtf8(
+							`{"all_tokens":{"limit":${ASSET_INDEXER_TOKEN_ID_LIMIT}, "start_after":"${lastTokenId}"}}`,
+						),
 					)}`;
 				} else {
 					doneLoop = true;
