@@ -739,6 +739,10 @@ export default class AccountInfoService extends MoleculerDBService<
 		},
 	})
 	async getAccountStake(ctx: Context<GetAccountStakeParams, Record<string, unknown>>) {
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		let projection: any = [
 			{
 				$match: {
@@ -783,7 +787,7 @@ export default class AccountInfoService extends MoleculerDBService<
 		let data = await this.adapter.aggregate(projection);
 		if (ctx.params.type === 'Unbondings') {
 			let validators: any = await this.broker.call(
-				'v1.validator.find',
+				'v1.validator.getByCondition',
 				{
 					query: {
 						'custom_info.chain_id': ctx.params.chainId,

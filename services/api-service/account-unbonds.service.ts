@@ -157,6 +157,10 @@ export default class AccountUnbondsService extends MoleculerDBService<
 		},
 	})
 	async getByAddress(ctx: Context<GetAccountUnbondRequest, Record<string, unknown>>) {
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		let [result, validators]: [any, any] = await Promise.all([
 			this.adapter.lean({
 				query: {
@@ -166,7 +170,7 @@ export default class AccountUnbondsService extends MoleculerDBService<
 				projection: { address: 1, account_unbonding: 1, custom_info: 1 },
 			}),
 			this.broker.call(
-				'v1.validator.find',
+				'v1.validator.getByCondition',
 				{
 					query: {
 						'custom_info.chain_id': ctx.params.chainid,
