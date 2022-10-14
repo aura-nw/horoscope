@@ -52,7 +52,7 @@ export default class CrawlAccountInfoService extends Service {
                 },
             },
             events: {
-                'feegrant.upsert': {
+                'feegrant.history.upsert': {
                     handler: (ctx: any) => {
                         this.createJob(
                             'feegrant.history-db',
@@ -124,18 +124,32 @@ export default class CrawlAccountInfoService extends Service {
                 case FEEGRANT_ACTION.USE_UP:
                     // useup feegrant
                     {
-                        const record = {
+                        // record use
+                        const record_use = {
                             ...element,
                             status: FEEGRANT_STATUS.USE_UP,
                             _id: null,
-                            action: FEEGRANT_ACTION.USE_UP,
+                            action: FEEGRANT_ACTION.USE,
                             origin_feegrant_txhash: null,
                             custom_info
                         } as FeegrantEntity
-                        record.granter = element.payer
-                        record.type = ""
-                        this.logger.info(`Feegrant-history-useup: ${JSON.stringify(record)}`)
-                        await this.adapter.insert(record)
+                        record_use.granter = element.payer
+                        record_use.type = ""
+                        this.logger.info(`Feegrant-history-useup_use: ${JSON.stringify(record_use)}`)
+                        await this.adapter.insert(record_use)
+                        // record revoke
+                        const record_revoke = {
+                            ...element,
+                            status: FEEGRANT_STATUS.USE_UP,
+                            _id: null,
+                            action: FEEGRANT_ACTION.REVOKE,
+                            origin_feegrant_txhash: null,
+                            custom_info
+                        } as FeegrantEntity
+                        record_revoke.granter = element.payer
+                        record_revoke.type = ""
+                        this.logger.info(`Feegrant-history-useup_revoke: ${JSON.stringify(record_revoke)}`)
+                        await this.adapter.insert(record_revoke)
                         break
                     }
                 case FEEGRANT_ACTION.REVOKE:

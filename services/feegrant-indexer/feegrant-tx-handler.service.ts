@@ -276,7 +276,7 @@ export default class CrawlAccountInfoService extends Service {
 				}
 			}
 			feegrantList = _.sortBy(feegrantList, (a) => a.timestamp)
-			this.broker.emit('feegrant.upsert', {
+			this.broker.emit('feegrant.history.upsert', {
 				feegrantList,
 				chainId
 			});

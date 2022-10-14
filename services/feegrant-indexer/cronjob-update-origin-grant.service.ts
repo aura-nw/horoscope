@@ -1,4 +1,5 @@
 import { dbFeegrantHistoryMixin } from '@Mixins/dbMixinMongoose';
+import { ObjectID } from 'bson';
 import { Job } from 'bull';
 import { FEEGRANT_ACTION } from 'common/constant';
 import { FeegrantEntity } from 'entities';
@@ -43,8 +44,11 @@ export default class HandleAccountVestingService extends Service {
                 "origin_feegrant_txhash": null
             }
         }) as FeegrantEntity[]
+        // list bulk action to update feegrant history db
         const bulkUpdate: any[] = []
-        listUpdate.forEach(async e => {
+        // list to update feegrant DB
+        const listUpdateFeegrantDb: FeegrantEntity[] = []
+        await Promise.all(listUpdate.map(async e => {
             const originalCreate = await this.adapter.find({
                 query: {
                     "granter": e.granter,
@@ -57,21 +61,28 @@ export default class HandleAccountVestingService extends Service {
                 sort: "-timestamp",
                 limit: 1
             }) as FeegrantEntity[]
-            this.logger.info(JSON.stringify(originalCreate[0]))
-            // bulkUpdate.push({
-            //     updateOne: {
-            //         filter: { _id: e._id },
-            //         update: {
-            //             $set: {
-            //                 'type': originalCreate[0].type,
-            //                 'origin_feegrant_txhash': originalCreate[0].origin_feegrant_txhash,
-            //             },
-            //         },
-            //     },
-            // })
-
+            if (originalCreate.length > 0) {
+                this.logger.info(`${e._id}  ${originalCreate[0].type}   ${originalCreate[0].origin_feegrant_txhash}`)
+                e.origin_feegrant_txhash = originalCreate[0].origin_feegrant_txhash
+                listUpdateFeegrantDb.push(e)
+                bulkUpdate.push({
+                    updateOne: {
+                        filter: { _id: e._id },
+                        update: {
+                            $set: {
+                                'type': originalCreate[0].type,
+                                'origin_feegrant_txhash': originalCreate[0].origin_feegrant_txhash,
+                            },
+                        },
+                    },
+                })
+            }
+        }))
+        this.broker.emit("feegrant.upsert", {
+            listUpdateFeegrantDb
         })
-        // this.adapter.bulkWrite(bulkUpdate)
+        this.logger.info(`${JSON.stringify(bulkUpdate)}`)
+        await this.adapter.bulkWrite(bulkUpdate)
     }
 
     async _start() {

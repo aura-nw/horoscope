@@ -100,6 +100,7 @@ export default class ConfigClass {
 	public static DB_DELAY_JOB: any;
 	public static DB_IBC_DENOM: any;
 	public static DB_FEEGRANT_HISTORY: any;
+	public static DB_FEEGRANT: any;
 
 	public ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
 
@@ -194,5 +195,6 @@ export default class ConfigClass {
 		this.DB_IBC_DENOM = genericDbInfo('IBC_DENOM');
 		this.DB_VOTE = genericDbInfo('VOTE');
 		this.DB_FEEGRANT_HISTORY = genericDbInfo('feegrant-history')
+		this.DB_FEEGRANT_HISTORY = genericDbInfo('feegrant')
 	}
 }

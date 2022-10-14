@@ -3,11 +3,12 @@
 'use strict';
 
 import { Job } from 'bull';
+import { FeegrantEntity } from 'entities/feegrant.entity';
 import { CallingOptions, Service, ServiceBroker } from 'moleculer';
 import { Config } from '../../common';
-import { LIST_NETWORK } from '../../common/constant';
+import { FEEGRANT_ACTION, FEEGRANT_STATUS, LIST_NETWORK } from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import { dbFeegrantHistoryMixin } from '../../mixins/dbMixinMongoose';
+import { dbFeegrantMixin } from '../../mixins/dbMixinMongoose';
 import { IFeegrantData } from './feegrant-tx-handler.service';
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
@@ -17,7 +18,7 @@ const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ }
 
 export default class CrawlAccountInfoService extends Service {
     private callApiMixin = new CallApiMixin().start();
-    private dbFeegrantHistoryMixin = dbFeegrantHistoryMixin;
+    private dbFeegrantMixin = dbFeegrantMixin;
 
     public constructor(public broker: ServiceBroker) {
         super(broker);
@@ -31,7 +32,7 @@ export default class CrawlAccountInfoService extends Service {
                         prefix: 'feegrant.db',
                     },
                 ),
-                this.dbFeegrantHistoryMixin,
+                this.dbFeegrantMixin,
                 this.callApiMixin,
             ],
             queues: {
@@ -41,7 +42,7 @@ export default class CrawlAccountInfoService extends Service {
                         job.progress(10);
 
                         // @ts-ignore
-                        this.handleJob(job.data.listTx, job.data.chainId);
+                        this.handleJob(job.data.listUpdateFeegrantDb);
 
                         job.progress(100);
                         return true;
@@ -54,8 +55,7 @@ export default class CrawlAccountInfoService extends Service {
                         this.createJob(
                             'feegrant.db',
                             {
-                                feegrantList: ctx.params.feegrantList,
-                                chainId: ctx.params.chainId,
+                                listUpdateFeegrantDb: ctx.params.listUpdateFeegrantDb,
                             },
                             {
                                 removeOnComplete: true,
@@ -71,14 +71,64 @@ export default class CrawlAccountInfoService extends Service {
         });
     }
 
-    async handleJob(feegrantList: IFeegrantData[], chainId: string): Promise<any[]> {
-        chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-        const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-        const custom_info = {
-            chain_id: chainId,
-            chain_name: chain ? chain.chainName : '',
+    async handleJob(listUpdateFeegrantDb: FeegrantEntity[]): Promise<any[]> {
+        await Promise.all(listUpdateFeegrantDb.map(async e => {
+            if (e.action == FEEGRANT_ACTION.CREATE) {
+                let record = {
+                    ...e,
+                } as FeegrantEntity
+                this.logger.info(`Feegrant-create: ${record}`)
+                await this.adapter.insert(record)
+            }
+        }))
+        for (const e of listUpdateFeegrantDb) {
+            if (e.action == FEEGRANT_ACTION.USE) {
+                if (e.status == FEEGRANT_STATUS.USE_UP) {
+                    const record = await this.adapter.find({
+                        query: {
+                            "tx_hash": e.origin_feegrant_txhash
+                        },
+                        limit: 1
+                    }) as FeegrantEntity[]
+                    if (record[0].spend_limit) {
+                        this.adapter.updateById(record[0]._id, {
+                            $set: {
+                                "status": FEEGRANT_STATUS.USE_UP
+                            },
+                        });
+                    }
+                } else {
+                    const record = await this.adapter.find({
+                        query: {
+                            "tx_hash": e.origin_feegrant_txhash
+                        },
+                        limit: 1
+                    }) as FeegrantEntity[]
+                    if (record[0].spend_limit) {
+                        this.adapter.updateById(record[0]._id, {
+                            $set: {
+                                "amount.amount": (parseInt(record[0].amount.amount.toString()) - parseInt(e.amount.amount.toString())).toString(),
+                                "timestamp": e.timestamp
+                            },
+                        });
+                    }
+                }
+            } else if (e.action == FEEGRANT_ACTION.REVOKE) {
+                const record = await this.adapter.find({
+                    query: {
+                        "tx_hash": e.origin_feegrant_txhash
+                    },
+                    limit: 1
+                }) as FeegrantEntity[]
+                if (record[0].spend_limit) {
+                    this.adapter.updateById(record[0]._id, {
+                        $set: {
+                            "status": FEEGRANT_STATUS.REVOKED
+                        },
+                    });
+                }
+            }
         }
-
         return []
     }
 
