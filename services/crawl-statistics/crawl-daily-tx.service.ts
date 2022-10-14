@@ -29,7 +29,7 @@ export default class CrawlDailyTxService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.offset, job.data.activeAddrs);
+						await this.handleJob(job.data.offset, job.data.time, job.data.txCount, job.data.activeAddrs);
 						job.progress(100);
 						return true;
 					},
@@ -38,13 +38,17 @@ export default class CrawlDailyTxService extends Service {
 		});
 	}
 
-	async handleJob(offset: number, activeAddrs: string[]) {
+	async handleJob(offset: number, time: number, txCount: number, activeAddrs: string[]) {
+		// Check if time value exceeds 24 hours
+		this.logger.info(`Get txs at time zone ${time} at paging ${offset + 1}`);
+		if (time === 24) return;
+
 		let listAddresses: string[] = [];
 
 		const syncDate = new Date();
 		syncDate.setDate(syncDate.getDate() - 1);
-		const startTime = syncDate.setUTCHours(0, 0, 0, 0);
-		const endTime = syncDate.setUTCHours(23, 59, 59, 999);
+		const startTime = syncDate.setUTCHours(time, 0, 0, 0);
+		const endTime = syncDate.setUTCHours(time + 1, 59, 59, 999);
 
 		let query: any = {
 			'custom_info.chain_id': Config.CHAIN_ID,
@@ -54,21 +58,12 @@ export default class CrawlDailyTxService extends Service {
 			}
 		};
 
-		const [dailyTxs, resultTotalAccs, currentStats]: [any, any, any] = await Promise.all([
-			this.broker.call('v1.transaction-stats.find', {
-				query,
-				sort: '_id',
-				limit: 100,
-				offset: offset * 100
-			}),
-			this.broker.call('v1.account-stats.countTotal', {
-				chain_id: Config.CHAIN_ID,
-			}),
-			this.adapter.findOne({
-				'custom_info.chain_id': Config.CHAIN_ID,
-				date: new Date(startTime),
-			})
-		]);
+		const dailyTxs: any = await this.broker.call('v1.transaction-stats.find', {
+			query,
+			sort: '_id',
+			limit: 100,
+			offset: offset * 100
+		});
 		this.logger.info(`Number of Txs retrieved at page ${offset + 1}: ${dailyTxs.length}`);
 
 		if (dailyTxs.length > 0) {
@@ -141,14 +136,34 @@ export default class CrawlDailyTxService extends Service {
 				this.logger.error(error);
 			}
 
-			activeAddrs = activeAddrs.concat(listAddresses);
-			if (currentStats) {
-				currentStats.daily_txs += dailyTxs.length;
-				currentStats.daily_active_addresses = activeAddrs.filter(this.onlyUnique).length;
-				await this.adapter.updateById(currentStats._id, currentStats);
-			} else {
+			activeAddrs = activeAddrs.concat(listAddresses).filter(this.onlyUnique);
+
+			const newOffset = offset + 1;
+			this.logger.info(`Next paging: ${newOffset + 1}`);
+			txCount += dailyTxs.length;
+			this.createJob(
+				'crawl.daily-tx',
+				{
+					offset: newOffset,
+					time,
+					txCount,
+					activeAddrs,
+				},
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: 3,
+					},
+				}
+			);
+		} else {
+			try {
+				const resultTotalAccs: any = await this.broker.call('v1.account-stats.countTotal', {
+					chain_id: Config.CHAIN_ID,
+				});
+	
 				let dailyTxStatistics: DailyTxStatistics = {} as DailyTxStatistics;
-				dailyTxStatistics.daily_txs = dailyTxs.length;
+				dailyTxStatistics.daily_txs = txCount;
 				dailyTxStatistics.daily_active_addresses = activeAddrs.filter(this.onlyUnique).length;
 				dailyTxStatistics.unique_addresses = resultTotalAccs;
 				dailyTxStatistics.date = new Date(startTime);
@@ -157,15 +172,17 @@ export default class CrawlDailyTxService extends Service {
 					DailyTxStatistics,
 				);
 				await this.adapter.insert(item);
+			} catch (error) {
+				this.logger.error(`Error insert duplicate record of daily txs for time zone ${time}`);
 			}
 
-			const newOffset = offset + 1;
-			this.logger.info(`Next paging: ${newOffset + 1}`);
 			this.createJob(
 				'crawl.daily-tx',
 				{
-					offset: newOffset,
-					activeAddrs,
+					offset: 0,
+					time: time + 1,
+					txCount: 0,
+					activeAddrs: [],
 				},
 				{
 					removeOnComplete: true,
@@ -182,23 +199,24 @@ export default class CrawlDailyTxService extends Service {
 	}
 
 	async _start() {
-		this.createJob(
-			'crawl.daily-tx',
-			{
-				offset: 0,
-				activeAddrs: [],
-			},
-			{
-				jobId: 'crawl.daily-tx',
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 3,
-				},
-				repeat: {
-					cron: '0 0 0 * * ?'
-				},
-			},
-		);
+		// this.createJob(
+		// 	'crawl.daily-tx',
+		// 	{
+		// 		offset: 0,
+		// 		time: 0,
+		// 		txCount: 0,
+		// 		activeAddrs: [],
+		// 	},
+		// 	{
+		// 		removeOnComplete: true,
+		// 		removeOnFail: {
+		// 			count: 3,
+		// 		},
+		// 		repeat: {
+		// 			cron: '0 0 0 * * ?'
+		// 		},
+		// 	},
+		// );
 
 		this.getQueue('crawl.daily-tx').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);

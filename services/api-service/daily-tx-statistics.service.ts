@@ -48,6 +48,14 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
      *          description: "Chain Id of network need to query"
      *          example: "aura-testnet"
      *        - in: query
+     *          name: timezone
+     *          required: true
+     *          schema:
+     *            type: string
+     *            enum: [-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12]
+     *          description: "Chain Id of network need to query"
+     *          example: "aura-testnet"
+     *        - in: query
      *          name: limit
      *          required: true
      *          schema:
@@ -130,6 +138,7 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
         restricted: ['api'],
         params: {
             chainId: 'string',
+            timezone: 'number',
             limit: 'number',
         },
     })
@@ -139,10 +148,39 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
         if (network && network.databaseName) {
             this.adapter.useDb(network.databaseName);
         }
+        let skip = 0, limit = params.limit * 24;
+        if (params.timezone < 0) {
+            skip = params.timezone;
+        } else if (params.timezone > 0) {
+            limit -= params.timezone;
+        }
         let result = await this.adapter.lean({
             sort: '-date',
-            limit: params.limit,
+            limit,
+            skip,
         });
-        return result;
+        let data: any[] = [], firstDay = true;
+        while (result.length > 0) {
+            let lastDay = result.length > 24 ? 24: result.length;
+            let eachDay = {
+                daily_txs: 0,
+                total_active_addresses: 0,
+                unique_addresses: 0,
+                date: null
+            };
+            if (params.timezone > 0 && firstDay){
+                lastDay = 24 - params.timezone;
+                firstDay = false;
+            }
+            for (let i = 0; i < lastDay; i++) {
+                eachDay.daily_txs += result[i].daily_txs;
+                eachDay.total_active_addresses += result[i].daily_active_addresses;
+            }
+            eachDay.unique_addresses = result[0].unique_addresses;
+            eachDay.date = result[0].date;
+            data.push(eachDay);
+            result = result.splice(0, lastDay);
+        }
+        return data;
     }
 }
