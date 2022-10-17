@@ -154,6 +154,8 @@ import { LIST_NETWORK } from '../../common/constant';
 export default class CW721AssetManagerService extends moleculer.Service {
 	async upsert_handler(asset: any) {
 		this.logger.debug(`upsert_handler asset `, asset);
+		// @ts-ignore
+		this.actions.useDb({ query: { chainId: asset.custom_info.chain_id } });
 		let item = await this.adapter.findOne({ asset_id: asset.asset_id });
 		if (item) {
 			asset._id = item._id;

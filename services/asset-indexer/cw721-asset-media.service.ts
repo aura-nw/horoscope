@@ -15,7 +15,7 @@ import { QueryOptions } from 'moleculer-db';
 import { Common } from './common.service';
 // import { RedisClientType, commandOptions } from '@redis/client';
 var util = require('util');
-
+import { toBase64, toUtf8 } from '@cosmjs/encoding';
 const callApiMixin = new CallApiMixin().start();
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
@@ -40,7 +40,7 @@ const QueueService = require('moleculer-bull');
 	],
 	queues: {
 		'get-media-link': {
-			concurrency: 100,
+			concurrency: parseInt(Config.CONCURRENCY_GET_MEDIA_LINK, 10),
 			async process(job: Job) {
 				const uri = job.data.uri;
 				const file_name = job.data.file_name;
@@ -107,6 +107,33 @@ const QueueService = require('moleculer-bull');
 					media_link_key,
 					CONTRACT_TYPE.CW721,
 				);
+				// test create job without redlock
+				// try {
+				// 	// @ts-ignore
+				// 	// await this.getMediaLink(uri, file_name, media_link_key);
+
+				// 	//@ts-ignore
+				// 	this.createJob(
+				// 		'get-media-link',
+				// 		{
+				// 			uri,
+				// 			file_name,
+				// 			media_link_key,
+				// 			chain_id,
+				// 			cacheKey,
+				// 		},
+				// 		{
+				// 			removeOnComplete: true,
+				// 			removeOnFail: {
+				// 				count: 3,
+				// 			},
+				// 		},
+				// 	);
+				// } catch (error) {
+				// 	// @ts-ignore
+				// 	this.logger.error('create job getMediaLink error', media_link_key, error);
+				// }
+
 
 				// // @ts-ignore
 				// await this.getMediaLink(uri, file_name, media_link_key, chain_id);
@@ -219,6 +246,10 @@ export default class CrawlAssetService extends moleculer.Service {
 		// let key = Common.getKeyFromUri(uri);
 		// let result = await Common.handleUri(key[0], key[1]);
 		// this.logger.info('result: ', result);
+
+		// let urlGetListToken = `contract/address/smart/${toBase64(
+		// 	toUtf8(`{"all_tokens":{"limit":100}}`),
+		// )}`;
 		this.getQueue('get-media-link').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

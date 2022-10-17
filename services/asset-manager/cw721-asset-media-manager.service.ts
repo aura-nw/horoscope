@@ -27,7 +27,7 @@ const QueueService = require('moleculer-bull');
 	broker: {},
 	queues: {
 		'update-media-link': {
-			concurrency: 100,
+			concurrency: parseInt(Config.CONCURRENCY_UPDATE_MEDIA_LINK, 10),
 			async process(job: Job) {
 				job.progress(10);
 				// @ts-ignore
