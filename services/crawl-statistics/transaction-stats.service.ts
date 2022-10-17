@@ -29,7 +29,7 @@ export default class TransactionStatsService extends MoleculerDBService<
     ITransaction
 > {
     @Action({
-        name: 'find',
+        name: 'act-find',
         cache: {
             ttl: 10,
         },

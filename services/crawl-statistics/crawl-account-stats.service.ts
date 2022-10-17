@@ -57,7 +57,7 @@ export default class CrawlAccountStatsService extends Service {
 			}
 		};
 
-		const dailyTxs: any = await this.broker.call('v1.transaction-stats.find', {
+		const dailyTxs: any = await this.broker.call('v1.transaction-stats.act-find', {
 			query,
 			sort: '_id',
 			limit: 100,
