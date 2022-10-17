@@ -154,6 +154,7 @@ export interface QueryTransactionStatsParams {
 export interface BlockchainDataRequest {
 	chainId: string;
 	limit: number;
+	timezone: number;
 }
 
 export interface TopAccountsRequest {
