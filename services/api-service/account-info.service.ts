@@ -323,11 +323,15 @@ export default class AccountInfoService extends MoleculerDBService<
 		]);
 
 		if (accountInfo) {
-			this.broker.call('v1.handleAddress.accountinfoupsert', {
-				listTx: [{ address: ctx.params.address, message: '' }],
-				source: CONST_CHAR.API,
-				chainId: ctx.params.chainId,
-			});
+			try {
+				this.broker.call('v1.handleAddress.accountinfoupsert', {
+					listTx: [{ address: ctx.params.address, message: '' }],
+					source: CONST_CHAR.API,
+					chainId: ctx.params.chainId,
+				});
+			} catch (error) {
+				this.logger.error(error);
+			}
 			accountInfo = accountInfo.toObject();
 			accountInfo.account_delegate_rewards = accountRewards;
 			const data = accountInfo;
@@ -339,11 +343,15 @@ export default class AccountInfoService extends MoleculerDBService<
 			this.logger.info(JSON.stringify(result));
 			return result;
 		} else {
-			this.broker.call('v1.handleAddress.accountinfoupsert', {
-				listTx: [{ address: ctx.params.address, message: '' }],
-				source: CONST_CHAR.API,
-				chainId: ctx.params.chainId,
-			});
+			try {
+				this.broker.call('v1.handleAddress.accountinfoupsert', {
+					listTx: [{ address: ctx.params.address, message: '' }],
+					source: CONST_CHAR.API,
+					chainId: ctx.params.chainId,
+				});
+			} catch (error) {
+				this.logger.error(error);
+			}
 			if (!accountRewards.code) {
 				const result: ResponseDto = {
 					code: ErrorCode.SUCCESSFUL,
@@ -543,11 +551,15 @@ export default class AccountInfoService extends MoleculerDBService<
 		]);
 		let result: ResponseDto;
 		if (accountInfo.length > 0) {
-			this.broker.call('v1.handleAddress.accountinfoupsert', {
-				listTx: [{ address: ctx.params.address, message: '' }],
-				source: CONST_CHAR.API,
-				chainId: ctx.params.chainId,
-			});
+			try {
+				this.broker.call('v1.handleAddress.accountinfoupsert', {
+					listTx: [{ address: ctx.params.address, message: '' }],
+					source: CONST_CHAR.API,
+					chainId: ctx.params.chainId,
+				});
+			} catch (error) {
+				this.logger.error(error);
+			}
 			let data = Object.assign({}, accountInfo[0]);
 			data.account_delegate_rewards = accountRewards;
 			result = {
@@ -556,11 +568,15 @@ export default class AccountInfoService extends MoleculerDBService<
 				data,
 			};
 		} else {
-			this.broker.call('v1.handleAddress.accountinfoupsert', {
-				listTx: [{ address: ctx.params.address, message: '' }],
-				source: CONST_CHAR.API,
-				chainId: ctx.params.chainId,
-			});
+			try {
+				this.broker.call('v1.handleAddress.accountinfoupsert', {
+					listTx: [{ address: ctx.params.address, message: '' }],
+					source: CONST_CHAR.API,
+					chainId: ctx.params.chainId,
+				});
+			} catch (error) {
+				this.logger.error(error);
+			}
 			if (!accountRewards.code) {
 				const result: ResponseDto = {
 					code: ErrorCode.SUCCESSFUL,
