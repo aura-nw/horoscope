@@ -5,7 +5,7 @@ import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbDailyTxStatisticsMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { BlockchainDataRequest, getActionConfig, MoleculerDBService, RestOptions, TopAccountsRequest } from '../../types';
+import { BlockchainDataRequest, ErrorCode, ErrorMessage, getActionConfig, MoleculerDBService, RestOptions, TopAccountsRequest } from '../../types';
 import { IDailyTxStatistics, IInflation } from '../../entities';
 import { DbContextParameters } from 'moleculer-db';
 import { LIST_NETWORK } from '../../common/constant';
@@ -32,7 +32,7 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 > {
     /**
      *  @swagger
-     *  /v1/statistics/blockchain-data:
+     *  /v1/daily-tx-statistics:
      *    get:
      *      tags:
      *        - AuraScan Statistics
@@ -138,16 +138,16 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
         restricted: ['api'],
         params: {
             chainId: 'string',
-            timezone: 'number',
-            limit: 'number',
+            timezone: { type: 'number', convert: true },
+            limit: { type: 'number', convert: true },
         },
     })
     async getDailyData(ctx: Context<BlockchainDataRequest>) {
         const params = await this.sanitizeParams(ctx, ctx.params);
-        const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
-        if (network && network.databaseName) {
-            this.adapter.useDb(network.databaseName);
-        }
+        // const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
+        // if (network && network.databaseName) {
+        //     this.adapter.useDb(network.databaseName);
+        // }
         let skip = 0, limit = params.limit * 24;
         if (params.timezone < 0) {
             skip = params.timezone;
@@ -161,7 +161,7 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
         });
         let data: any[] = [], firstDay = true;
         while (result.length > 0) {
-            let lastDay = result.length > 24 ? 24: result.length;
+            let lastDayRange = result.length > 24 ? 24 : result.length;
             let eachDay = {
                 daily_txs: 0,
                 total_active_addresses: 0,
@@ -169,18 +169,23 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
                 date: null
             };
             if (params.timezone > 0 && firstDay){
-                lastDay = 24 - params.timezone;
+                lastDayRange = 24 - params.timezone;
                 firstDay = false;
-            }
-            for (let i = 0; i < lastDay; i++) {
-                eachDay.daily_txs += result[i].daily_txs;
-                eachDay.total_active_addresses += result[i].daily_active_addresses;
-            }
+            } else if (firstDay) firstDay = false;
+            let lastDay = result.slice(0, lastDayRange);
+            lastDay.map((x: any) => {
+                eachDay.daily_txs += x.daily_txs;
+                eachDay.total_active_addresses += x.daily_active_addresses;
+            });
             eachDay.unique_addresses = result[0].unique_addresses;
             eachDay.date = result[0].date;
             data.push(eachDay);
-            result = result.splice(0, lastDay);
+            result.splice(0, lastDayRange);
         }
-        return data;
+        return {
+            code: ErrorCode.SUCCESSFUL,
+            message: ErrorMessage.SUCCESSFUL,
+            data,
+        };
     }
 }
