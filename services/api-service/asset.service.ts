@@ -56,8 +56,8 @@ export default class BlockService extends MoleculerDBService<
 	 *    post:
 	 *      tags:
 	 *      - "Asset"
-	 *      summary:  Register asset CW20, CW721 with the code id and contract type
-	 *      description: Register asset CW20, CW721 with the code id and contract type
+	 *      summary:  Register asset CW20, CW721, CW4973 with the code id and contract type
+	 *      description: Register asset CW20, CW721, CW4973 with the code id and contract type
 	 *      requestBody:
 	 *        content:
 	 *          application/json:
@@ -72,6 +72,7 @@ export default class BlockService extends MoleculerDBService<
 	 *                  enum:
 	 *                  - "CW721"
 	 *                  - "CW20"
+	 *                  - "CW4973"
 	 *                  description: "Type of contract want to register"
 	 *                chainId:
 	 *                  type: string
@@ -229,8 +230,8 @@ export default class BlockService extends MoleculerDBService<
 	 *    get:
 	 *      tags:
 	 *        - Asset
-	 *      summary: Get asset CW20, CW721 by owner
-	 *      description: Get asset CW20, CW721 by owner
+	 *      summary: Get asset CW20, CW721, CW4973 by owner
+	 *      description: Get asset CW20, CW721, CW4973 by owner
 	 *      parameters:
 	 *        - in: query
 	 *          name: owner
@@ -249,7 +250,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: contractType
 	 *          required: true
 	 *          schema:
-	 *            enum: ["CW20","CW721"]
+	 *            enum: ["CW20","CW721","CW4973"]
 	 *            type: string
 	 *            default: "CW20"
 	 *          description: "Type asset need to query"
@@ -325,6 +326,90 @@ export default class BlockService extends MoleculerDBService<
 	 *                        type: object
 	 *                        properties:
 	 *                          CW721:
+	 *                            type: object
+	 *                            properties:
+	 *                              asset:
+	 *                                type: array
+	 *                                items:
+	 *                                  type: object
+	 *                                  properties:
+	 *                                    asset_info:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        data:
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            access:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                approvals:
+	 *                                                  type: array
+	 *                                                  items:
+	 *                                                    type: object
+	 *                                                owner:
+	 *                                                  type: string
+	 *                                                  example: 'aura123'
+	 *                                            info:
+	 *                                              type: object
+	 *                                              properties:
+	 *                                                token_uri:
+	 *                                                  type: string
+	 *                                                extension:
+	 *                                                  type: string
+	 *                                    custom_info:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        chain_id:
+	 *                                          type: string
+	 *                                          example: 'aura'
+	 *                                        chain_name:
+	 *                                          type: string
+	 *                                          example: 'Aura network'
+	 *                                    history:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        type: object
+	 *                                    asset_id:
+	 *                                      type: string
+	 *                                    code_id:
+	 *                                      type: string
+	 *                                    contract_address:
+	 *                                      type: string
+	 *                                    token_id:
+	 *                                      type: string
+	 *                                    owner:
+	 *                                      type: string
+	 *                                    is_burned:
+	 *                                      type: boolean
+	 *                                    createdAt:
+	 *                                      type: string
+	 *                                      example: "2022-08-17T06:20:19.342Z"
+	 *                                    updatedAt:
+	 *                                      type: string
+	 *                                      example: "2022-08-17T06:20:19.342Z"
+	 *                                    media_info:
+	 *                                      type: array
+	 *                                      items:
+	 *                                        type: object
+	 *                                        properties:
+	 *                                          key:
+	 *                                            type: string
+	 *                                          media_link:
+	 *                                            type: string
+	 *                                            example: "s3://aws.aura.network"
+	 *                                          status:
+	 *                                            type: string
+	 *                                            example: "COMPLETED"
+	 *                                          createdAt:
+	 *                                            type: string
+	 *                                            example: "2022-08-17T06:20:19.342Z"
+	 *                                          updatedAt:
+	 *                                            type: string
+	 *                                            example: "2022-08-17T06:20:19.342Z"
+	 *                              count:
+	 *                                type: number
+	 *                                example: 0
+	 *                          CW4973:
 	 *                            type: object
 	 *                            properties:
 	 *                              asset:
@@ -612,7 +697,7 @@ export default class BlockService extends MoleculerDBService<
 			this.logger.debug('query', query);
 			const contract_type = ctx.params.contractType;
 			let asset: any[];
-			if (contract_type == CONTRACT_TYPE.CW721) {
+			if (contract_type == CONTRACT_TYPE.CW721 || CONTRACT_TYPE.CW4973) {
 				asset = await this.broker.call(
 					`v1.${contract_type}-asset-manager.act-join-media-link`,
 					{
@@ -694,8 +779,8 @@ export default class BlockService extends MoleculerDBService<
 	 *    get:
 	 *      tags:
 	 *        - Asset
-	 *      summary: Get asset CW20, CW721 by contract type
-	 *      description: Get asset CW20, CW721 by contract type
+	 *      summary: Get asset CW20, CW721, CW4973 by contract type
+	 *      description: Get asset CW20, CW721, CW4973 by contract type
 
 	 *      parameters:
 	 *        - in: query
@@ -703,7 +788,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["CW721", "CW20"]
+	 *            enum: ["CW721", "CW20", "CW4973"]
 	 *          description: "Contract type need to query"
 	 *        - in: query
 	 *          name: chainid
@@ -1018,8 +1103,8 @@ export default class BlockService extends MoleculerDBService<
 	 *    get:
 	 *      tags:
 	 *        - Asset
-	 *      summary: Get holder by asset CW20, CW721 (contractType and contractAddress)
-	 *      description: Get holder by asset CW20, CW721 (contractType and contractAddress)
+	 *      summary: Get holder by asset CW20, CW721, CW4973 (contractType and contractAddress)
+	 *      description: Get holder by asset CW20, CW721, CW4973 (contractType and contractAddress)
 	 *      parameters:
 	 *        - in: query
 	 *          name: chainid
@@ -1034,7 +1119,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["CW721", "CW20"]
+	 *            enum: ["CW721", "CW20", "CW4973"]
 	 *          description: "Contract type need to query"
 	 *        - in: query
 	 *          name: contractAddress
@@ -1237,7 +1322,7 @@ export default class BlockService extends MoleculerDBService<
 			const query: QueryOptions = {};
 			let sort = {};
 			switch (ctx.params.contractType) {
-				case CONTRACT_TYPE.CW721:
+				case CONTRACT_TYPE.CW721, CONTRACT_TYPE.CW4973:
 					sort = ctx.params.reverse
 						? { quantity: 1, updatedAt: 1 }
 						: { quantity: -1, updatedAt: -1 };

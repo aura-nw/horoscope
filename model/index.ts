@@ -16,3 +16,5 @@ export * from './account-info.model';
 export * from './ibc-denom.model';
 export * from './daily-tx-statistics.model';
 export * from './account-statistics.model';
+export * from './cw4973-asset.model';
+export * from './cw4973-asset-media.model';

@@ -58,6 +58,7 @@ export default class CrawlAccountInfoService extends Service {
 						this.handleJob(URL, job.data.listTx, job.data.chainId);
 						// @ts-ignore
 						this.handleTxBurnCw721(job.data.listTx, job.data.chainId);
+						// TODO: handleTxBurnCw4973 ???
 						job.progress(100);
 						return true;
 					},
@@ -190,6 +191,8 @@ export default class CrawlAccountInfoService extends Service {
 			}
 		});
 	}
+	
+	// TODO: handleTxBurnCw4973 ???
 
 	async verifyAddressByCodeID(URL: string, address: string, chain_id: string) {
 		let urlGetContractInfo = `${CONTRACT_URI}${address}`;

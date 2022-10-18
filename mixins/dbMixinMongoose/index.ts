@@ -8,6 +8,8 @@ export * from './db-community-pool.mixin';
 export * from './db-cw721-asset.mixin';
 export * from './db-cw721-asset-media.mixin';
 export * from './db-cw20-asset.mixin';
+export * from './db-cw4973-asset.mixin';
+export * from './db-cw4973-asset-media.mixin';
 export * from './db-code-id.mixin';
 export * from './db-inflation.mixin';
 export * from './db-supply.mixin';

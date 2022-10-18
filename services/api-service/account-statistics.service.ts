@@ -5,7 +5,7 @@ import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbAccountStatisticsMixin, dbDailyTxStatisticsMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { BlockchainDataRequest, getActionConfig, MoleculerDBService, RestOptions, TopAccountsRequest } from '../../types';
+import { BlockchainDataRequest, ErrorCode, ErrorMessage, getActionConfig, MoleculerDBService, RestOptions, TopAccountsRequest } from '../../types';
 import { IAccountStatistics, IDailyTxStatistics, IInflation } from '../../entities';
 import { DbContextParameters } from 'moleculer-db';
 import { LIST_NETWORK, TOP_ACCOUNT_STATS_FIELD } from '../../common/constant';
@@ -32,7 +32,7 @@ export default class AccountStatisticsService extends MoleculerDBService<
 > {
     /**
      *  @swagger
-     *  /v1/statistics/top-accounts:
+     *  /v1/account-statistics:
      *    get:
      *      tags:
      *        - AuraScan Statistics
@@ -297,15 +297,15 @@ export default class AccountStatisticsService extends MoleculerDBService<
             chainId: 'string',
             field: 'string',
             dayRange: 'string',
-            limit: 'number',
+            limit: { type: 'number', convert: true },
         },
     })
     async getTopAccounts(ctx: Context<TopAccountsRequest>) {
         const params = await this.sanitizeParams(ctx, ctx.params);
-        const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
-        if (network && network.databaseName) {
-            this.adapter.useDb(network.databaseName);
-        }
+        // const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
+        // if (network && network.databaseName) {
+        //     this.adapter.useDb(network.databaseName);
+        // }
         
         let sort, day_range;
         switch (params.dayRange) {
@@ -334,10 +334,14 @@ export default class AccountStatisticsService extends MoleculerDBService<
                 break;
         }
 
-        let result = await this.adapter.lean({
+        let data = await this.adapter.lean({
             sort,
             limit: params.limit,
         });
-        return result;
+        return {
+            code: ErrorCode.SUCCESSFUL,
+            message: ErrorMessage.SUCCESSFUL,
+            data,
+        };
     }
 }

@@ -24,6 +24,19 @@ const s3Client = new S3Service().connectS3();
 const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
 const IPFS_PREFIX = 'ipfs';
 
+type CW4973AssetInfo = {
+	data: {
+		access: {
+			approvals: [];
+			owner: string;
+		};
+		info: {
+			token_uri: string;
+			extension: string;
+		};
+	};
+};
+
 type CW721AssetInfo = {
 	data: {
 		access: {
@@ -116,6 +129,32 @@ export class Common {
 		return [uri_handled, file_name, media_link_key];
 	}
 
+	public static createCW4973AssetObject = function (
+		code_id: Number,
+		address: String,
+		id: String,
+		media_link_key: String,
+		tokenInfo: CW721AssetInfo,
+		chainId: String,
+	) {
+		let network = LIST_NETWORK.find((item) => item.chainId === chainId);
+		return {
+			_id: new Types.ObjectId(),
+			asset_id: `${address}_${id}`,
+			code_id: code_id,
+			asset_info: tokenInfo,
+			contract_address: address,
+			token_id: id,
+			owner: tokenInfo.data.access.owner,
+			media_link: media_link_key,
+			history: [],
+			custom_info: {
+				chain_id: network?.chainId,
+				chain_name: network?.chainName,
+			},
+			is_burned: false,
+		};
+	};
 	public static createCW721AssetObject = function (
 		code_id: Number,
 		address: String,
