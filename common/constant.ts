@@ -35,6 +35,10 @@ export const CONST_CHAR = {
 	VALIDATOR: 'validator',
 	RECV_PACKET: 'recv_packet',
 	PACKET_DATA: 'packet_data',
+	INSTANTIATE: 'instantiate',
+	_CONTRACT_ADDRESS: '_contract_address',
+	CODE_ID: 'code_id',
+	EXECUTE: 'execute',
 };
 
 export const MSG_TYPE = {

@@ -20,3 +20,4 @@ export * from './db-ibc-denom.mixin';
 export * from './db-daily-tx-statistics.mixin';
 export * from './db-account-statistics.mixin';
 export * from './db-delay-job.mixin';
+export * from './db-smart-contracts.mixin';
