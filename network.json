@@ -38,10 +38,10 @@
 		"chainName":"Theta Testnet",
 		"chainId":"theta-testnet-001",
 		"RPC":[
-			"https://rpc.sentry-01.theta-testnet.polypore.xyz"
+			"https://rpc.theta.aura.network"
 		],
 		"LCD":[
-			"https://rest.sentry-01.theta-testnet.polypore.xyz"
+			"https://lcd.theta.aura.network"
 		],
 		"prefixAddress":"cosmos",
 		"databaseName":"horoscope_dev_thetatestnet001"
@@ -72,10 +72,10 @@
 		"chainName":"Evmos Testnet",
 		"chainId":"evmos_9000-4",
 		"RPC":[
-			"https://evmos-testnet-rpc.polkachu.com:443"
+			"https://rpc.evmos.aura.network"
 		],
 		"LCD":[
-			"https://evmos-testnet-api.polkachu.com"
+			"https://lcd.evmos.aura.network"
 		],
 		"prefixAddress":"evmos",
 		"databaseName":"horoscope_dev_evmos90004"
