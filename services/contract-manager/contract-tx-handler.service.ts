@@ -4,7 +4,7 @@ import { dbSmartContractsMixin } from "../../mixins/dbMixinMongoose";
 import { QueueConfig } from '../../config/queue';
 import { Config } from "../../common";
 import { Job } from "bull";
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from "../../common/constant";
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, PATH_COSMOS_SDK, URL_TYPE_CONSTANTS } from "../../common/constant";
 import { ISmartContracts } from "../../model";
 import { Types } from 'mongoose';
 import { Utils } from "../../utils/utils";
@@ -26,7 +26,7 @@ export default class CrawlSmartContractsService extends Service {
             ],
             queues: {
                 'contract.tx-handle': {
-                    concurrency: parseInt(Config.CONCURRENCTY_HANDLE_CONTRACT_TX, 10),
+                    concurrency: parseInt(Config.CONCURRENCY_HANDLE_CONTRACT_TX, 10),
                     async process(job: Job) {
                         job.progress(10);
                         // @ts-ignore
@@ -85,7 +85,7 @@ export default class CrawlSmartContractsService extends Service {
                             try {
                                 contract_hash = await this.callApiWithAxios(
                                     Config.VERIFY_CONTRACT_API,
-                                    Config.VERIFY_API_GET_HASH + code_id
+                                    PATH_COSMOS_SDK.VERIFY_API_GET_HASH + code_id
                                 );
                             } catch (error) {
                                 this.logger.error(
@@ -133,11 +133,11 @@ export default class CrawlSmartContractsService extends Service {
                                 [contract_hash, cosmwasm_contract] = await Promise.all([
                                     this.callApiWithAxios(
                                         Config.VERIFY_CONTRACT_API,
-                                        Config.VERIFY_API_GET_HASH + code_id
+                                        PATH_COSMOS_SDK.VERIFY_API_GET_HASH + code_id
                                     ),
                                     this.callApiFromDomain(
                                         URL,
-                                        Config.COSMWASM_CONTRACT_PARAM + contract_address
+                                        PATH_COSMOS_SDK.COSMWASM_CONTRACT_PARAM + contract_address
                                     ),
                                 ]);
                             } catch (error) {
