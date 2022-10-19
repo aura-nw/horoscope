@@ -81,6 +81,8 @@ export default class ConfigClass {
 	public static DB_CW721_ASSET: any;
 	public static DB_CW721_MEDIA_LINK: any;
 	public static DB_CW20_ASSET: any;
+	public static DB_CW4973_ASSET: any;
+	public static DB_CW4973_MEDIA_LINK: any;
 	public static DB_CODE_ID: any;
 	public static DB_BLOCK: any;
 	public static DB_PARAM: any;
@@ -180,6 +182,8 @@ export default class ConfigClass {
 		this.DB_CW721_ASSET = genericDbInfo('CW721_ASSET');
 		this.DB_CW721_MEDIA_LINK = genericDbInfo('CW721_MEDIA_LINK');
 		this.DB_CW20_ASSET = genericDbInfo('CW20_ASSET');
+		this.DB_CW4973_ASSET = genericDbInfo('CW4973_ASSET');
+		this.DB_CW4973_MEDIA_LINK = genericDbInfo('CW4973_MEDIA_LINK');
 		this.DB_CODE_ID = genericDbInfo('CODE_ID');
 		this.DB_INFLATION = genericDbInfo('INFLATION');
 		this.DB_ACCOUNT_BALANCES = genericDbInfo('ACCOUNT_BALANCES');

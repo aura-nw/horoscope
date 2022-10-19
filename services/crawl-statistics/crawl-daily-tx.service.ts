@@ -58,7 +58,7 @@ export default class CrawlDailyTxService extends Service {
 			}
 		};
 
-		const dailyTxs: any = await this.broker.call('v1.transaction-stats.find', {
+		const dailyTxs: any = await this.broker.call('v1.transaction-stats.act-find', {
 			query,
 			sort: '_id',
 			limit: 100,
@@ -199,24 +199,24 @@ export default class CrawlDailyTxService extends Service {
 	}
 
 	async _start() {
-		// this.createJob(
-		// 	'crawl.daily-tx',
-		// 	{
-		// 		offset: 0,
-		// 		time: 0,
-		// 		txCount: 0,
-		// 		activeAddrs: [],
-		// 	},
-		// 	{
-		// 		removeOnComplete: true,
-		// 		removeOnFail: {
-		// 			count: 3,
-		// 		},
-		// 		repeat: {
-		// 			cron: '0 0 0 * * ?'
-		// 		},
-		// 	},
-		// );
+		this.createJob(
+			'crawl.daily-tx',
+			{
+				offset: 0,
+				time: 0,
+				txCount: 0,
+				activeAddrs: [],
+			},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: 3,
+				},
+				repeat: {
+					cron: '0 0 0 * * ?'
+				},
+			},
+		);
 
 		this.getQueue('crawl.daily-tx').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);

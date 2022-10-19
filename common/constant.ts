@@ -145,9 +145,37 @@ export const CW721_ACTION = {
 	ENRICH_DATA: 'v1.CW721.enrichData',
 };
 
+export const CW4973_MANAGER_ACTION = {
+	FIND: 'v1.cw4973-asset-manager.act-find',
+	COUNT: 'v1.cw4973-asset-manager.act-count',
+	INSERT: 'v1.cw4973-asset-manager.act-insert',
+	LIST: 'v1.cw4973-asset-manager.act-list',
+	UPSERT: 'v1.cw4973-asset-manager.act-upsert',
+};
+
+export const CW4973_MEDIA_MANAGER_ACTION = {
+	FIND: 'v1.CW4973-asset-media-manager.act-find',
+	INSERT: 'v1.CW4973-asset-media-manager.act-insert',
+	UPSERT: 'v1.CW4973-asset-media-manager.act-upsert',
+	UPDATE_MANY: 'v1.CW4973-asset-media-manager.act-updateMany',
+	UPDATE_MEDIA_LINK: 'v1.CW4973-asset-media-manager.update-media-link',
+};
+
+export const CW4973_MEDIA = {
+	FIND: 'v1.CW4973-media.act-find',
+};
+
+export const CW4973_ACTION = {
+	URL_GET_TOKEN_LIST: 'eyJhbGxfdG9rZW5zIjp7fX0=',
+	GET_TOKEN_INFOR: 'v1.CW4973.getTokenInfor',
+	GET_TOKEN_LIST: 'v1.CW4973.getTokenList',
+	ENRICH_DATA: 'v1.CW4973.enrichData',
+};
+
 export const CONTRACT_TYPE = {
 	CW721: 'CW721',
 	CW20: 'CW20',
+	CW4973: 'CW4973',
 };
 
 export const ENRICH_TYPE = {
