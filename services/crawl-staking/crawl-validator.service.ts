@@ -140,14 +140,14 @@ export default class CrawlValidatorService extends Service {
 			// 	url,
 			// 	pathDelegation,
 			// );
-			let [resultSelfBonded, resultAllDelegation]: [
-				IDelegationResponseFromLCD,
-				any,
-			] = await Promise.all([
-				this.callApiFromDomain(url, pathDelegation),
-				null,
-				// this.callApiFromDomain(url, pathAllDelegation),
-			]);
+			let resultAllDelegation: any = null;
+			let resultSelfBonded: any = null; 
+			// let [resultSelfBonded]: [
+			// 	IDelegationResponseFromLCD,
+			// ] = await Promise.all([
+			// 	this.callApiFromDomain(url, pathDelegation),
+			// 	// this.callApiFromDomain(url, pathAllDelegation),
+			// ]);
 			if (
 				resultSelfBonded &&
 				resultSelfBonded.delegation_response &&
