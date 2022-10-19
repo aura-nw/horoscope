@@ -259,7 +259,7 @@ export class Common {
 										reject(error);
 									} else {
 										const linkS3 = `https://${BUCKET}.s3.amazonaws.com/${file_name}`;
-										resolve(linkS3);
+										resolve({linkS3, contentType});
 									}
 								},
 							);

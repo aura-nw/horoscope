@@ -3,10 +3,11 @@ import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
 export interface ICW721Media {
-	_id: ObjectIdNull;
-	key: String;
+	_id: ObjectIdNull,
+	key: String,
 	media_link: String,
 	status: String,
+	content_type: String,
 }
 
 export enum MediaStatus {
@@ -26,6 +27,7 @@ const definition: definitionType<ICW721Media> = (collection?: string) => ({
 		type: String,
 		enum: MediaStatus
 	},
+	content_type: String,
 	custom_info: customInfoModel,
 })
 

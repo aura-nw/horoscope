@@ -145,11 +145,13 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 	async updateMediaLink(uri: string, file_name: string, key: string, chainId: string) {
 		try {
 			// this.logger.info("updateMediaLink", uri, key);
-			const linkS3 = await Common.handleUri(uri, file_name);
+			const result: any = await Common.handleUri(uri, file_name);
 			// this.logger.info("linkS3", linkS3);
+			
 			await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
 				key,
-				media_link: linkS3,
+				media_link: result.linkS3,
+				content_type: result.contentType,
 				status: MediaStatus.COMPLETED,
 				custom_info: {
 					chain_id: chainId
