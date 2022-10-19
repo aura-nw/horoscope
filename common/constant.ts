@@ -303,6 +303,7 @@ export const PATH_COSMOS_SDK = {
 	GET_PARAMS_AUTH_INFO: '/auth/accounts',
 	GET_PARAMS_SPENDABLE_BALANCE: '/cosmos/bank/v1beta1/spendable_balances',
 	GET_PARAMS_IBC_DENOM: '/ibc/apps/transfer/v1/denom_traces',
+	GET_SUPPLY: '/cosmos/bank/v1beta1/supply',
 };
 
 export const TOP_ACCOUNT_STATS_FIELD = {

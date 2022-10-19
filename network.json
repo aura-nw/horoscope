@@ -24,17 +24,6 @@
 		"databaseName":"horoscope_dev_serenitytestnet001"
 	},
 	{
-		"chainName":"Aura Halo",
-		"chainId":"halo-testnet-001",
-		"RPC":[
-			"https://rpc.halo.aura.network"
-		],
-		"LCD":[
-			"https://lcd.halo.aura.network"
-		],
-		"prefixAddress":"aura"
-	},
-	{
 		"chainName":"Theta Testnet",
 		"chainId":"theta-testnet-001",
 		"RPC":[
@@ -55,7 +44,9 @@
 		"LCD":[
 			"https://osmosistest-lcd.quickapi.com"
 		],
-		"prefixAddress":"osmo"
+		"prefixAddress":"osmo",
+		"databaseName":"horoscope_dev_osmotest4"
+
 	},
 	{
 		"chainName":"Osmosis Mainnet",
@@ -66,7 +57,8 @@
 		"LCD":[
 			"https://lcd.osmosis.zone"
 		],
-		"prefixAddress":"osmo"
+		"prefixAddress":"osmo",
+		"databaseName":"horoscope_dev_osmosis1"
 	},
 	{
 		"chainName":"Evmos Testnet",
@@ -96,11 +88,12 @@
 		"chainName":"Cosmos Mainnet",
 		"chainId":"cosmoshub-4",
 		"RPC":[
-		   "https://rpc-cosmoshub.whispernode.com"
+		   "https://cosmos-lcd.quickapi.com"
 		],
 		"LCD":[
-		   "https://lcd-cosmoshub.whispernode.com"
+		   "https://cosmos-lcd.quickapi.com"
 		],
-		"prefixAddress":"cosmos"
+		"prefixAddress":"cosmos",
+		"databaseName":"horoscope_dev_cosmoshub4"
 	}
 ]

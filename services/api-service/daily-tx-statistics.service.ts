@@ -144,10 +144,10 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
     })
     async getDailyData(ctx: Context<BlockchainDataRequest>) {
         const params = await this.sanitizeParams(ctx, ctx.params);
-        // const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
-        // if (network && network.databaseName) {
-        //     this.adapter.useDb(network.databaseName);
-        // }
+        const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
+        if (network && network.databaseName) {
+            this.adapter.useDb(network.databaseName);
+        }
         let skip = 0, limit = params.limit * 24;
         if (params.timezone < 0) {
             skip = params.timezone;

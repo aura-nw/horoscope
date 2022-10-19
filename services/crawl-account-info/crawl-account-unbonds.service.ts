@@ -85,7 +85,10 @@ export default class CrawlAccountUnbondsService extends Service {
 					Config.GET_PARAMS_DELEGATOR +
 					`/${address}/unbonding_delegations?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-
+				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				if (network && network.databaseName) {
+					this.adapter.useDb(network.databaseName);
+				}
 				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
 					address,
 					'custom_info.chain_id': chainId,
@@ -131,6 +134,10 @@ export default class CrawlAccountUnbondsService extends Service {
 			}
 		}
 		try {
+			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
 			listAccounts.forEach((element) => {
 				if (element._id)
 					listUpdateQueries.push(

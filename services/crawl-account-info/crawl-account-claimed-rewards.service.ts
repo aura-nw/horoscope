@@ -157,7 +157,9 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						const redelegateClaimedReward = coinReceived.find(
 							(x: any) => x.key === CONST_CHAR.AMOUNT,
 						).value;
-						if (Number(resultCallApi.validator.commission.commission_rates.rate) !== 1) {
+						if (
+							Number(resultCallApi.validator.commission.commission_rates.rate) !== 1
+						) {
 							let srcAmount = '0';
 							try {
 								srcAmount = redelegateClaimedReward.match(/\d+/g)[0];
@@ -172,7 +174,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								account.account_claimed_rewards.find(
 									(x: any) => x.validator_address === valSrcAddress,
 								)!.amount = (
-									parseInt(srcReward.amount.toString(), 10) + parseInt(srcAmount, 10)
+									parseInt(srcReward.amount.toString(), 10) +
+									parseInt(srcAmount, 10)
 								).toString();
 							} else {
 								account.account_claimed_rewards.push({
@@ -196,7 +199,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								account.account_claimed_rewards.find(
 									(x: any) => x.validator_address === valDstAddress,
 								)!.amount = (
-									parseInt(dstReward.amount.toString(), 10) + parseInt(dstAmount, 10)
+									parseInt(dstReward.amount.toString(), 10) +
+									parseInt(dstAmount, 10)
 								).toString();
 							} else {
 								account.account_claimed_rewards.push({
@@ -222,7 +226,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								account.account_claimed_rewards.find(
 									(x: any) => x.validator_address === valDstAddress,
 								)!.amount = (
-									parseInt(dstReward.amount.toString(), 10) + parseInt(dstAmount, 10)
+									parseInt(dstReward.amount.toString(), 10) +
+									parseInt(dstAmount, 10)
 								).toString();
 							} else {
 								account.account_claimed_rewards.push({
@@ -244,7 +249,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						let undelegateAmount = '0';
 						try {
 							undelegateAmount = undelegateClaimedReward.match(/\d+/g)[0];
-							if (undelegateAmount === '' || undelegateIndexReward < 0) undelegateAmount = '0';
+							if (undelegateAmount === '' || undelegateIndexReward < 0)
+								undelegateAmount = '0';
 						} catch (error) {
 							undelegateAmount = '0';
 						}
@@ -255,7 +261,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 							account.account_claimed_rewards.find(
 								(x: any) => x.validator_address === undelegateValAddress,
 							)!.amount = (
-								parseInt(undelegateReward.amount.toString(), 10) + parseInt(undelegateAmount, 10)
+								parseInt(undelegateReward.amount.toString(), 10) +
+								parseInt(undelegateAmount, 10)
 							).toString();
 						} else {
 							account.account_claimed_rewards.push({

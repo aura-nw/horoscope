@@ -310,6 +310,10 @@ export default class AccountInfoService extends MoleculerDBService<
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
 			this.adapter.findOne({
 				address: ctx.params.address,
@@ -526,7 +530,10 @@ export default class AccountInfoService extends MoleculerDBService<
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
-
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
 			this.adapter.lean({
 				query: {
@@ -748,6 +755,10 @@ export default class AccountInfoService extends MoleculerDBService<
 		},
 	})
 	async getAccountStake(ctx: Context<GetAccountStakeParams, Record<string, unknown>>) {
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		let projection: any = [
 			{
 				$match: {
@@ -792,7 +803,7 @@ export default class AccountInfoService extends MoleculerDBService<
 		let data = await this.adapter.aggregate(projection);
 		if (ctx.params.type === 'Unbondings') {
 			let validators: any = await this.broker.call(
-				'v1.validator.find',
+				'v1.validator.getByCondition',
 				{
 					query: {
 						'custom_info.chain_id': ctx.params.chainId,

@@ -27,6 +27,41 @@ export default class NetworkService extends MoleculerDBService<
 	},
 	{}
 > {
+	@Get('/', {
+		name: 'status',
+		params: {
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+		},
+		cache: {
+			ttl: 5,
+		},
+	})
+	async getStatus(ctx: Context<ChainIdParams, Record<string, unknown>>) {
+		let [inflation, pool, communityPool, supply] = await Promise.all([
+			this.broker.call('v1.inflation.getByChain', { chainid: ctx.params.chainid }),
+			this.broker.call('v1.pool.getByChain', { chainid: ctx.params.chainid }),
+			this.broker.call('v1.communitypool.getByChain', { chainid: ctx.params.chainid }),
+			this.broker.call('v1.supply.getByChain', { chainid: ctx.params.chainid }),
+		]);
+		let result: ResponseDto = {
+			code: ErrorCode.SUCCESSFUL,
+			message: ErrorMessage.SUCCESSFUL,
+			data: {
+				inflation,
+				pool,
+				communityPool,
+				supply,
+			},
+		};
+		return result;
+	}
+
 	/**
 	 *  @swagger
 	 *  /v1/network/status:
@@ -144,38 +179,4 @@ export default class NetworkService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1.network.chain"
 	 */
-	@Get('/', {
-		name: 'status',
-		params: {
-			chainid: {
-				type: 'string',
-				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
-			},
-		},
-		cache: {
-			ttl: 5,
-		},
-	})
-	async getStatus(ctx: Context<ChainIdParams, Record<string, unknown>>) {
-		let [inflation, pool, communityPool, supply] = await Promise.all([
-			this.broker.call('v1.inflation.getByChain', { chainid: ctx.params.chainid }),
-			this.broker.call('v1.pool.getByChain', { chainid: ctx.params.chainid }),
-			this.broker.call('v1.communitypool.getByChain', { chainid: ctx.params.chainid }),
-			this.broker.call('v1.supply.getByChain', { chainid: ctx.params.chainid }),
-		]);
-		let result: ResponseDto = {
-			code: ErrorCode.SUCCESSFUL,
-			message: ErrorMessage.SUCCESSFUL,
-			data: {
-				inflation,
-				pool,
-				communityPool,
-				supply,
-			},
-		};
-		return result;
-	}
 }

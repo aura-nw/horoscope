@@ -467,9 +467,9 @@ export default class CrawlAccountStatsService extends Service {
 				removeOnFail: {
 					count: 3,
 				},
-				repeat: {
-					cron: '0 0 0 * * ?'
-				},
+				// repeat: {
+				// 	cron: '0 0 0 * * ?'
+				// },
 			},
 		);
 

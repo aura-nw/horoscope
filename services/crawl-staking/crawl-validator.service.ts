@@ -140,13 +140,14 @@ export default class CrawlValidatorService extends Service {
 			// 	url,
 			// 	pathDelegation,
 			// );
-			let [resultSelfBonded, resultAllDelegation]: [
-				IDelegationResponseFromLCD,
-				IDelegationResponseFromLCD,
-			] = await Promise.all([
-				await this.callApiFromDomain(url, pathDelegation),
-				await this.callApiFromDomain(url, pathAllDelegation),
-			]);
+			let resultAllDelegation: any = null;
+			let resultSelfBonded: any = null; 
+			// let [resultSelfBonded]: [
+			// 	IDelegationResponseFromLCD,
+			// ] = await Promise.all([
+			// 	this.callApiFromDomain(url, pathDelegation),
+			// 	// this.callApiFromDomain(url, pathAllDelegation),
+			// ]);
 			if (
 				resultSelfBonded &&
 				resultSelfBonded.delegation_response &&
@@ -174,7 +175,9 @@ export default class CrawlValidatorService extends Service {
 			}
 			this.logger.debug(`result: ${JSON.stringify(resultSelfBonded)}`);
 
-			validator.number_delegators = Number(resultAllDelegation.pagination.total);
+			if (resultAllDelegation && resultAllDelegation.pagination && resultAllDelegation.pagination.total){
+				validator.number_delegators = Number(resultAllDelegation.pagination.total);
+			}
 		} catch (error) {
 			this.logger.error(error);
 		}

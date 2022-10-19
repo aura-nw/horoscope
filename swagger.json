@@ -35,7 +35,7 @@
             "description": "Osmosis Mainnet LCD"
         },
         {
-            "url": "https://lcd.evmos.aura.network",
+            "url": "https://evmos-testnet-api.polkachu.com",
             "description": "Evmos Testnet LCD"
         },
         {
@@ -825,6 +825,396 @@
                                                     "action": {
                                                         "type": "string",
                                                         "example": "v1.account-info"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/statistics/top-accounts": {
+            "get": {
+                "tags": [
+                    "AuraScan Statistics"
+                ],
+                "summary": "Get top accounts data",
+                "description": "Get top accounts data",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainId",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
+                                "euphoria-1",
+                                "cosmoshub-4"
+                            ]
+                        },
+                        "description": "Chain Id of network need to query",
+                        "example": "aura-testnet"
+                    },
+                    {
+                        "in": "query",
+                        "name": "field",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "TXS_SENT",
+                                "TXS_RECEIVED",
+                                "AMOUNT_SENT",
+                                "AMOUNT_RECEIVED"
+                            ]
+                        },
+                        "description": "Account's field to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dayRange",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "enum": [
+                                "1",
+                                "3",
+                                "7"
+                            ]
+                        },
+                        "description": "Day limit to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        },
+                        "description": "Number of records returned"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Top Statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "address": {
+                                                        "type": "string",
+                                                        "example": "aura1s9z065kv897was45gel6wxjcddu73fmh4qwmcu"
+                                                    },
+                                                    "per_day": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "total_sent_tx": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 100
+                                                                        },
+                                                                        "percentage": {
+                                                                            "type": "number",
+                                                                            "example": 30.45
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "total_received_tx": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 100
+                                                                        },
+                                                                        "percentage": {
+                                                                            "type": "number",
+                                                                            "example": 30.45
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "total_sent_amount": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 100
+                                                                        },
+                                                                        "percentage": {
+                                                                            "type": "number",
+                                                                            "example": 30.45
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "total_received_amount": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 100
+                                                                        },
+                                                                        "percentage": {
+                                                                            "type": "number",
+                                                                            "example": 30.45
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "one_day": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "total_sent_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_sent_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "three_days": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "total_sent_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_sent_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "seven_days": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "total_sent_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_sent_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.block.chain"
                                                     }
                                                 }
                                             }
@@ -2483,6 +2873,145 @@
                                                 "status": {
                                                     "type": "string",
                                                     "example": "REJECTED"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.block.chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/statistics/blockchain-data": {
+            "get": {
+                "tags": [
+                    "AuraScan Statistics"
+                ],
+                "summary": "Get daily blockchain data",
+                "description": "Get daily blockchain data",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainId",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
+                                "euphoria-1",
+                                "cosmoshub-4"
+                            ]
+                        },
+                        "description": "Chain Id of network need to query",
+                        "example": "aura-testnet"
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        },
+                        "description": "Number of records returned"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daily Blockchain Data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "daily_txs": {
+                                                    "type": "number",
+                                                    "example": 100
+                                                },
+                                                "daily_active_addresses": {
+                                                    "type": "number",
+                                                    "example": 100
+                                                },
+                                                "unique_addresses": {
+                                                    "type": "number",
+                                                    "example": 100
+                                                },
+                                                "date": {
+                                                    "type": "string",
+                                                    "example": "2022-10-05T00:00:00.000+00:00"
                                                 }
                                             }
                                         }
@@ -4818,7 +5347,7 @@
                                 "VOTE_OPTION_ABSTAIN"
                             ]
                         },
-                        "description": "Chain Id of network need to query"
+                        "description": "Vote option want to query"
                     },
                     {
                         "in": "query",
@@ -5045,7 +5574,7 @@
                                 "DID_NOT_VOTE"
                             ]
                         },
-                        "description": "Chain Id of network need to query"
+                        "description": "Vote option want to query"
                     }
                 ],
                 "responses": {

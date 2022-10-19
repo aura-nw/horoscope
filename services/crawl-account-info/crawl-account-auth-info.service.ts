@@ -165,6 +165,10 @@ export default class CrawlAccountAuthInfoService extends Service {
 			}
 		}
 		try {
+			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
 			listAccounts.map((element) => {
 				if (element._id)
 					listUpdateQueries.push(

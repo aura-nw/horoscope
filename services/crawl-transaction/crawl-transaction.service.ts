@@ -124,7 +124,6 @@ export default class CrawlTransactionService extends Service {
 	}
 	async _start() {
 		this.redisClient = await this.getRedisClient();
-
 		this.getQueue('crawl.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

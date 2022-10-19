@@ -1,5 +1,6 @@
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
+import { customInfoModel } from './custom-info.model';
 
 export interface ICW721Media {
 	_id: ObjectIdNull;
@@ -25,6 +26,7 @@ const definition: definitionType<ICW721Media> = (collection?: string) => ({
 		type: String,
 		enum: MediaStatus
 	},
+	custom_info: customInfoModel,
 })
 
 

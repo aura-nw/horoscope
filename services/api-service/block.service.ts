@@ -402,7 +402,10 @@ export default class BlockService extends MoleculerDBService<
 			if (ctx.params.nextKey) {
 				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 			}
-
+			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
 			let [resultBlock, resultCount]: [any[], any] = await Promise.all([
 				this.adapter.find({
 					query: query,

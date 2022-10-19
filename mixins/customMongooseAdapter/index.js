@@ -1,6 +1,7 @@
 'use strict';
 const _ 		= require("lodash");
 const MongooseDbAdapter = require("moleculer-db-adapter-mongoose");
+const mongoose  = require("mongoose");
 
 class CustomMongooseDbAdapter extends MongooseDbAdapter {
     aggregate(param){

@@ -48,7 +48,7 @@ export default class CrawlSupplyService extends Service {
 	async handleJob(path: String) {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let urlToCall = path;
+		let urlToCall = `${path}`;
 		let done = false;
 		let resultCallApi: ISupplyResponseFromLCD;
 		let listSupplies: Coin[] = [];
@@ -59,7 +59,7 @@ export default class CrawlSupplyService extends Service {
 			if (resultCallApi.pagination.next_key === null) {
 				done = true;
 			} else {
-				urlToCall = `${path}&pagination.key=${encodeURIComponent(
+				urlToCall = `${path}?pagination.key=${encodeURIComponent(
 					resultCallApi.pagination.next_key.toString(),
 				)}`;
 			}
