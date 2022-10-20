@@ -65,6 +65,7 @@ export default class CrawlSmartContractsService extends Service {
         chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
         const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
         for (let txs of listTx) {
+            this.logger.info(`Get smart contract from TxHash: ${txs.tx_response.txhash}`);
             for (let msg of txs.tx.body.messages) {
                 switch (msg['@type']) {
                     case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
