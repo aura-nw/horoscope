@@ -527,7 +527,8 @@ export default class BlockService extends MoleculerDBService<
 			let query: QueryOptions = {};
 			let sort = {};
 			switch (ctx.params.contractType) {
-				case CONTRACT_TYPE.CW721, CONTRACT_TYPE.CW4973:
+				case CONTRACT_TYPE.CW4973:
+				case CONTRACT_TYPE.CW721:
 					sort = ctx.params.reverse
 						? { quantity: 1, updatedAt: 1 }
 						: { quantity: -1, updatedAt: -1 };
