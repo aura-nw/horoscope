@@ -132,7 +132,8 @@ const listLCD = LIST_NETWORK.map((e) => {
 					'v1.votes.getValidatorVote',
 					'v1.ibc-denom.getByHash',
 					'v1.ibc-denom.addNewDenom',
-					'v1.validator.getAllByChain'
+					'v1.validator.getAllByChain',
+					'v1.feegrant.getGrants'
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 				use: [swMiddleware],

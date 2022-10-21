@@ -13,6 +13,10 @@ import { ALLOWANCE_TYPE, FEEGRANT_ACTION, MSG_TYPE, URL_TYPE_CONSTANTS } from '.
 import { Utils } from '../../utils/utils';
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
+import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
+import RedisMixin from '../../mixins/redis/redis.mixin';
+import { RedisClientType } from '@redis/client';
+import { CustomInfo } from 'entities/custom-info.entity';
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
@@ -29,9 +33,12 @@ export interface IFeegrantData {
 	expiration: String | null,
 	type: String,
 	spend_limit: Coin,
+	custom_info: CustomInfo
 }
 export default class CrawlAccountInfoService extends Service {
-
+	private redisMixin = new RedisMixin().start();
+	private dbTransactionMixin = dbTransactionMixin;
+	private currentBlock = 0
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -44,6 +51,8 @@ export default class CrawlAccountInfoService extends Service {
 						prefix: 'feegrant.tx-handle',
 					},
 				),
+				this.dbTransactionMixin,
+				this.redisMixin
 			],
 			queues: {
 				'feegrant.tx-handle': {
@@ -54,41 +63,35 @@ export default class CrawlAccountInfoService extends Service {
 							job.data.chainId,
 							URL_TYPE_CONSTANTS.LCD,
 						);
-
 						// @ts-ignore
-						this.handleJob(job.data.listTx, job.data.chainId);
+						this.handleJob(job.data.chainId);
 
 						job.progress(100);
 						return true;
 					},
 				},
-			},
-			events: {
-				'list-tx.upsert': {
-					handler: (ctx: any) => {
-						this.createJob(
-							'feegrant.tx-handle',
-							{
-								listTx: ctx.params.listTx,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 10,
-								},
-							},
-						);
-						return;
-					},
-				},
-			},
+			}
 		});
 	}
 
-	async handleJob(listTx: ITransaction[], chainId: string): Promise<any[]> {
-		let feegrantList: IFeegrantData[] = [];
+	async initEnv() {
+		//get handled feegrant block
+		let handledBlockRedis = await this.redisClient.get(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK);
+		this.currentBlock = 0;
+		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : this.currentBlock;
+		this.logger.info(`currentFeegrantBlock: ${this.currentBlock}`);
+	}
 
+	async handleJob(chainId: string): Promise<any[]> {
+		let feegrantList: IFeegrantData[] = [];
+		const listTx = await this.adapter.find({
+			query: {
+				"tx_response.height": {
+					$gte: this.currentBlock,
+					$lt: this.currentBlock + 100
+				}
+			}
+		}) as ITransaction[]
 		try {
 			if (listTx.length > 0) {
 				for (const tx of listTx) {
@@ -123,7 +126,8 @@ export default class CrawlAccountInfoService extends Service {
 								tx_hash: tx.tx_response.txhash,
 								expiration: message["expiration"],
 								type: message["allowance"]["@type"],
-								spend_limit
+								spend_limit,
+								custom_info: tx.custom_info
 							}
 							feegrantList.push(feegrantCreate)
 						} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_REVOKE) {
@@ -139,7 +143,8 @@ export default class CrawlAccountInfoService extends Service {
 								tx_hash: tx.tx_response.txhash,
 								expiration: null,
 								type: "",
-								spend_limit: {} as Coin
+								spend_limit: {} as Coin,
+								custom_info: tx.custom_info
 							}
 							feegrantList.push(feegrantRevoke)
 						} else {
@@ -211,7 +216,8 @@ export default class CrawlAccountInfoService extends Service {
 									tx_hash: tx.tx_response.txhash,
 									expiration: null,
 									type: "",
-									spend_limit: {} as Coin
+									spend_limit: {} as Coin,
+									custom_info: tx.custom_info
 								}
 								feegrantList.push(feegrantUseup)
 							} else {
@@ -227,7 +233,8 @@ export default class CrawlAccountInfoService extends Service {
 									tx_hash: tx.tx_response.txhash,
 									expiration: null,
 									type: "",
-									spend_limit: {} as Coin
+									spend_limit: {} as Coin,
+									custom_info: tx.custom_info
 								}
 								feegrantList.push(feegrantUpdate)
 							}
@@ -254,7 +261,8 @@ export default class CrawlAccountInfoService extends Service {
 							tx_hash: tx.tx_response.txhash,
 							expiration: message["expiration"],
 							type: message["allowance"]["@type"],
-							spend_limit: spend_limit
+							spend_limit: spend_limit,
+							custom_info: tx.custom_info
 						}
 						feegrantList.push(feegrantCreate)
 					} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_REVOKE) {
@@ -269,13 +277,13 @@ export default class CrawlAccountInfoService extends Service {
 							tx_hash: tx.tx_response.txhash,
 							expiration: null,
 							type: "",
-							spend_limit: {} as Coin
+							spend_limit: {} as Coin,
+							custom_info: tx.custom_info
 						}
 						feegrantList.push(feegrantRevoke)
 					}
 				}
 			}
-			feegrantList = _.sortBy(feegrantList, (a) => a.timestamp)
 			this.broker.emit('feegrant.history.upsert', {
 				feegrantList,
 				chainId
@@ -284,12 +292,28 @@ export default class CrawlAccountInfoService extends Service {
 		} catch (error) {
 			this.logger.error(error);
 		}
-
+		this.currentBlock += 100
+		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
 		return [];
 	}
 
 
 	async _start() {
+		this.redisClient = await this.getRedisClient();
+		this.createJob(
+			'feegrant.tx-handle',
+			{},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
+				repeat: {
+					every: parseInt(Config.MILISECOND_CRAWL_BLOCK, 10),
+				},
+			},
+		);
+		await this.initEnv()
 		this.getQueue('feegrant.tx-handle').on('completed', (job: Job) => {
 			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});

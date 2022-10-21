@@ -194,7 +194,7 @@ export default class ConfigClass {
 		this.DB_DELAY_JOB = genericDbInfo('DELAY_JOB');
 		this.DB_IBC_DENOM = genericDbInfo('IBC_DENOM');
 		this.DB_VOTE = genericDbInfo('VOTE');
-		this.DB_FEEGRANT_HISTORY = genericDbInfo('feegrant-history')
-		this.DB_FEEGRANT_HISTORY = genericDbInfo('feegrant')
+		this.DB_FEEGRANT_HISTORY = genericDbInfo('feegrant_history')
+		this.DB_FEEGRANT = genericDbInfo('feegrant')
 	}
 }

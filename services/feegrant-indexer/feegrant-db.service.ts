@@ -4,6 +4,7 @@
 
 import { Job } from 'bull';
 import { FeegrantEntity } from 'entities/feegrant.entity';
+import _ from 'lodash';
 import { CallingOptions, Service, ServiceBroker } from 'moleculer';
 import { Config } from '../../common';
 import { FEEGRANT_ACTION, FEEGRANT_STATUS, LIST_NETWORK } from '../../common/constant';
@@ -16,7 +17,7 @@ const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
-export default class CrawlAccountInfoService extends Service {
+export default class FeegrantDB extends Service {
     private callApiMixin = new CallApiMixin().start();
     private dbFeegrantMixin = dbFeegrantMixin;
 
@@ -48,6 +49,18 @@ export default class CrawlAccountInfoService extends Service {
                         return true;
                     },
                 },
+                'feegrant-check-expire.db': {
+                    concurrency: 1,
+                    process(job: Job) {
+                        job.progress(10);
+
+                        // @ts-ignore
+                        this.handleJobCheckExpire();
+
+                        job.progress(100);
+                        return true;
+                    },
+                },
             },
             events: {
                 'feegrant.upsert': {
@@ -71,6 +84,31 @@ export default class CrawlAccountInfoService extends Service {
         });
     }
 
+    async handleJobCheckExpire() {
+        await this.adapter.updateMany({
+            'timestamp': {
+                $lte: new Date()
+            },
+            'status': FEEGRANT_STATUS.AVAILABLE
+        },
+            {
+                $set: {
+                    'status': FEEGRANT_STATUS.EXPIRED
+                }
+            }
+        )
+        this.logger.info("gjhkgjhkgjkhgjg: " + new Date())
+        // const list = await this.adapter.find({
+        //     query: {
+        //         'timestamp': {
+        //             $lte: new Date()
+        //         },
+        //         'status': FEEGRANT_STATUS.AVAILABLE
+        //     },
+        // })
+        // this.logger.info("gjhkgjhkgjkhgjg: " + JSON.stringify(list))
+    }
+
     async handleJob(listUpdateFeegrantDb: FeegrantEntity[]): Promise<any[]> {
         await Promise.all(listUpdateFeegrantDb.map(async e => {
             if (e.action == FEEGRANT_ACTION.CREATE) {
@@ -83,6 +121,22 @@ export default class CrawlAccountInfoService extends Service {
         }))
         for (const e of listUpdateFeegrantDb) {
             if (e.action == FEEGRANT_ACTION.USE) {
+                const record = await this.adapter.find({
+                    query: {
+                        "tx_hash": e.origin_feegrant_txhash
+                    },
+                    limit: 1
+                }) as FeegrantEntity[]
+                this.logger.info(`Feegrant-use: ${record[0]}`)
+                if (record[0].spend_limit.amount) {
+                    await this.adapter.updateById(record[0]._id, {
+                        $set: {
+                            "amount.amount": (parseInt(record[0].amount.amount.toString()) - parseInt(e.amount.amount.toString())).toString(),
+                        },
+                    });
+                }
+            } else if (e.action == FEEGRANT_ACTION.REVOKE) {
+                this.logger.info(`e.action: ${e.status}`)
                 if (e.status == FEEGRANT_STATUS.USE_UP) {
                     const record = await this.adapter.find({
                         query: {
@@ -90,13 +144,11 @@ export default class CrawlAccountInfoService extends Service {
                         },
                         limit: 1
                     }) as FeegrantEntity[]
-                    if (record[0].spend_limit) {
-                        this.adapter.updateById(record[0]._id, {
-                            $set: {
-                                "status": FEEGRANT_STATUS.USE_UP
-                            },
-                        });
-                    }
+                    await this.adapter.updateById(record[0]._id, {
+                        $set: {
+                            "status": FEEGRANT_STATUS.USE_UP
+                        },
+                    });
                 } else {
                     const record = await this.adapter.find({
                         query: {
@@ -104,28 +156,13 @@ export default class CrawlAccountInfoService extends Service {
                         },
                         limit: 1
                     }) as FeegrantEntity[]
-                    if (record[0].spend_limit) {
-                        this.adapter.updateById(record[0]._id, {
-                            $set: {
-                                "amount.amount": (parseInt(record[0].amount.amount.toString()) - parseInt(e.amount.amount.toString())).toString(),
-                                "timestamp": e.timestamp
-                            },
-                        });
-                    }
-                }
-            } else if (e.action == FEEGRANT_ACTION.REVOKE) {
-                const record = await this.adapter.find({
-                    query: {
-                        "tx_hash": e.origin_feegrant_txhash
-                    },
-                    limit: 1
-                }) as FeegrantEntity[]
-                if (record[0].spend_limit) {
-                    this.adapter.updateById(record[0]._id, {
+                    this.logger.info(`record: ${JSON.stringify(e.origin_feegrant_txhash)}`)
+                    this.logger.info(`record: ${JSON.stringify(record)}`)
+                    await this.adapter.updateById(record[0]._id, {
                         $set: {
                             "status": FEEGRANT_STATUS.REVOKED
                         },
-                    });
+                    })
                 }
             }
         }
@@ -134,6 +171,19 @@ export default class CrawlAccountInfoService extends Service {
 
 
     async _start() {
+        this.createJob(
+            'feegrant-check-expire.db',
+            {},
+            {
+                removeOnComplete: true,
+                removeOnFail: {
+                    count: 10,
+                },
+                repeat: {
+                    every: parseInt(Config.MILISECOND_CHECK_EXPIRE, 10),
+                },
+            },
+        );
         this.getQueue('feegrant.db').on('completed', (job: Job) => {
             this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
         });

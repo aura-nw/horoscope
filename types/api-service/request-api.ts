@@ -24,9 +24,9 @@ export interface BlockHashParams {
 
 export interface GetBlockRequest
 	extends ChainIdParams,
-		PageLimit,
-		BlockHashParams,
-		BlockHeightParams {
+	PageLimit,
+	BlockHashParams,
+	BlockHeightParams {
 	operatorAddress: string;
 	consensusHexAddress: string;
 }
@@ -38,7 +38,7 @@ export interface GetVoteRequest extends ChainIdParams, PageLimit {
 export interface GetAssetByAddressRequest extends ChainIdParams, PageLimit {
 	address: string;
 }
-export interface GetAllAsset extends ChainIdParams, PageLimit {}
+export interface GetAllAsset extends ChainIdParams, PageLimit { }
 
 export interface GetAssetByOwnerAddressRequest extends ChainIdParams, PageLimit {
 	owner: string;
@@ -60,10 +60,10 @@ export interface AddressParams {
 
 export interface GetTxRequest
 	extends ChainIdParams,
-		PageLimit,
-		BlockHeightParams,
-		TxHashParams,
-		AddressParams {
+	PageLimit,
+	BlockHeightParams,
+	TxHashParams,
+	AddressParams {
 	searchType: string;
 	searchKey: string;
 	searchValue: string;
@@ -71,7 +71,7 @@ export interface GetTxRequest
 	addressInContract: string;
 	sequenceIBC: string;
 }
-export interface GetPowerEventTxRequest extends ChainIdParams, PageLimit, AddressParams {}
+export interface GetPowerEventTxRequest extends ChainIdParams, PageLimit, AddressParams { }
 
 export interface GetIBCTxRequest extends PageLimit {
 	sequenceIBC: string;
@@ -130,4 +130,9 @@ export interface GetTotalRewardsByAddress extends ChainIdParams {
 export interface QueryIBCDenomParams {
 	hash: string;
 	denom: string;
+}
+export interface GetFeegrantRequest extends ChainIdParams, PageLimit {
+	granter: string;
+	grantee: string;
+	status: string
 }

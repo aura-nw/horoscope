@@ -55,15 +55,15 @@ export default class HandleAccountVestingService extends Service {
                     "grantee": e.grantee,
                     "action": FEEGRANT_ACTION.CREATE,
                     "timestamp": {
-                        $lt: e.timestamp
+                        $lte: e.timestamp
                     }
                 },
                 sort: "-timestamp",
                 limit: 1
             }) as FeegrantEntity[]
             if (originalCreate.length > 0) {
-                this.logger.info(`${e._id}  ${originalCreate[0].type}   ${originalCreate[0].origin_feegrant_txhash}`)
-                e.origin_feegrant_txhash = originalCreate[0].origin_feegrant_txhash
+                this.logger.info(`${e._id}  ${originalCreate[0].type}   ${originalCreate[0].tx_hash}`)
+                e.origin_feegrant_txhash = originalCreate[0].tx_hash
                 listUpdateFeegrantDb.push(e)
                 bulkUpdate.push({
                     updateOne: {
@@ -71,7 +71,7 @@ export default class HandleAccountVestingService extends Service {
                         update: {
                             $set: {
                                 'type': originalCreate[0].type,
-                                'origin_feegrant_txhash': originalCreate[0].origin_feegrant_txhash,
+                                'origin_feegrant_txhash': originalCreate[0].tx_hash,
                             },
                         },
                     },
@@ -82,6 +82,7 @@ export default class HandleAccountVestingService extends Service {
             listUpdateFeegrantDb
         })
         this.logger.info(`${JSON.stringify(bulkUpdate)}`)
+        this.logger.info(`listUpdateFeegrantDb: ${JSON.stringify(listUpdateFeegrantDb)}`)
         await this.adapter.bulkWrite(bulkUpdate)
     }
 
