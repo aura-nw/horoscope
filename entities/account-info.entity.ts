@@ -38,7 +38,7 @@ export interface IAccountResult {
 
 export interface IAccount {
     height: String;
-    result: IAccountResult;
+    result: Object;
 }
 
 export interface IDelegation {
@@ -86,7 +86,6 @@ export interface IUndelegateEntry {
 export interface IUnbondingResponse {
     delegator_address: String;
     validator_address: String;
-    validator_description: IDescription;
     entries: IUndelegateEntry[];
 }
 
@@ -124,8 +123,8 @@ export class AccountResult implements IAccountResult {
 export class Account implements IAccount {
     @JsonProperty('height', String)
     height: String = '';
-    @JsonProperty('result', AccountResult)
-    result = {} as AccountResult;
+    @JsonProperty('result', Object, true)
+    result = {} as Object;
 }
 
 export class Delegation implements IDelegation {
@@ -189,8 +188,6 @@ export class UnbondingResponse implements IUnbondingResponse {
     delegator_address: String = '';
     @JsonProperty('validator_address', String)
     validator_address: String = '';
-    @JsonProperty('validator_description', Description)
-    validator_description = {} as Description;
     @JsonProperty('entries', [UndelegateEntry])
     entries: UndelegateEntry[] = [];
 }

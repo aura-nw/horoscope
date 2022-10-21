@@ -17,6 +17,8 @@ import {
 	TransactionHashParam,
 } from '../../types';
 import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
+import { QueueConfig } from '../../config/queue';
+
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbTransactionMixin = dbTransactionMixin;
@@ -28,12 +30,7 @@ export default class HandleTransactionService extends Service {
 			name: 'handletransaction',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.transaction',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.dbTransactionMixin,
 			],
@@ -246,7 +243,7 @@ export default class HandleTransactionService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_TRANSACTION, 10),

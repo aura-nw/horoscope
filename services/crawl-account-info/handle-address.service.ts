@@ -6,6 +6,7 @@ import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
 import { AccountInfoEntity, ITransaction } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
 export default class HandleAddressService extends Service {
@@ -16,15 +17,7 @@ export default class HandleAddressService extends Service {
 		this.parseServiceSchema({
 			name: 'handleAddress',
 			version: 1,
-			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.address',
-					},
-				),
-				this.dbAccountInfoMixin,
-			],
+			mixins: [QueueService(QueueConfig.redis, QueueConfig.opts), this.dbAccountInfoMixin],
 			queues: {
 				'handle.address': {
 					concurrency: parseInt(Config.CONCURRENCY_HANDLE_ADDRESS, 10),
@@ -73,9 +66,9 @@ export default class HandleAddressService extends Service {
 	}
 
 	async handleJob(listTx: any[], source: string, chainId: string) {
-		let listAddresses: any[] = [];
-		let listUpdateInfo: string[] = [];
-		let listInsert: any[] = [];
+		let listAddresses: any[] = [],
+			listUpdateInfo: string[] = [],
+			listInsert: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		listUpdateInfo.push(
@@ -99,10 +92,7 @@ export default class HandleAddressService extends Service {
 						element.tx.body.messages.map((message: any) => {
 							switch (message['@type']) {
 								case MSG_TYPE.MSG_SEND:
-									listAddresses.push(
-										message.from_address,
-										message.to_address,
-									);
+									listAddresses.push(message.from_address, message.to_address);
 									break;
 								case MSG_TYPE.MSG_DELEGATE:
 									listAddresses.push(message.delegator_address);
@@ -132,10 +122,7 @@ export default class HandleAddressService extends Service {
 									listAddresses.push(message.sender);
 									break;
 								case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
-									listAddresses.push(
-										message.from_address,
-										message.to_address,
-									);
+									listAddresses.push(message.from_address, message.to_address);
 									break;
 								case MSG_TYPE.MSG_DEPOSIT:
 									listAddresses.push(message.depositor);
@@ -153,11 +140,30 @@ export default class HandleAddressService extends Service {
 									listAddresses.push(message.sender);
 									break;
 								case MSG_TYPE.MSG_IBC_RECEIVE:
-									let data = JSON.parse(element.tx_response.logs.find((log: any) =>
-										log.events.find((event: any) => event.type === CONST_CHAR.RECV_PACKET)).events
-										.find((event: any) => event.type === CONST_CHAR.RECV_PACKET).attributes
-										.find((attribute: any) => attribute.key === CONST_CHAR.PACKET_DATA).value);
+									let data = JSON.parse(
+										element.tx_response.logs
+											.find((log: any) =>
+												log.events.find(
+													(event: any) =>
+														event.type === CONST_CHAR.RECV_PACKET,
+												),
+											)
+											.events.find(
+												(event: any) =>
+													event.type === CONST_CHAR.RECV_PACKET,
+											)
+											.attributes.find(
+												(attribute: any) =>
+													attribute.key === CONST_CHAR.PACKET_DATA,
+											).value,
+									);
 									listAddresses.push(data.receiver);
+									break;
+								case MSG_TYPE.MSG_MULTI_SEND:
+									listAddresses.push(message.inputs[0].address);
+									message.outputs.map((output: any) => {
+										listAddresses.push(output.address);
+									});
 									break;
 							}
 						});
@@ -195,7 +201,7 @@ export default class HandleAddressService extends Service {
 				const result = await this.adapter.bulkWrite(listInsert);
 				this.logger.info(`${JSON.stringify(result)}`);
 			} catch (error) {
-				this.logger.error(error);
+				this.logger.error(`Account(s) already exists`);
 			}
 			listUpdateInfo.map((item) => {
 				this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });

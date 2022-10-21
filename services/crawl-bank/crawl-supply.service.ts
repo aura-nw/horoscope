@@ -13,6 +13,7 @@ import { ISupplyResponseFromLCD } from '../../types';
 import { JsonConvert } from 'json2typescript';
 import { SupplyEntity } from '../../entities';
 import { Coin } from '../../entities/coin.entity';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlSupplyService extends Service {
@@ -25,12 +26,7 @@ export default class CrawlSupplyService extends Service {
 			name: 'crawlSupply',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.supply',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbSupplyMixin,
 			],
@@ -52,7 +48,7 @@ export default class CrawlSupplyService extends Service {
 	async handleJob(path: String) {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let urlToCall = path;
+		let urlToCall = `${path}`;
 		let done = false;
 		let resultCallApi: ISupplyResponseFromLCD;
 		let listSupplies: Coin[] = [];
@@ -63,7 +59,7 @@ export default class CrawlSupplyService extends Service {
 			if (resultCallApi.pagination.next_key === null) {
 				done = true;
 			} else {
-				urlToCall = `${path}&pagination.key=${encodeURIComponent(
+				urlToCall = `${path}?pagination.key=${encodeURIComponent(
 					resultCallApi.pagination.next_key.toString(),
 				)}`;
 			}
@@ -98,7 +94,7 @@ export default class CrawlSupplyService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_SUPPLY, 10),
@@ -115,7 +111,6 @@ export default class CrawlSupplyService extends Service {
 		this.getQueue('crawl.supply').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-
 		return super._start();
 	}
 }

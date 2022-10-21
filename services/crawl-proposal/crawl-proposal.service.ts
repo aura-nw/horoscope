@@ -12,6 +12,7 @@ import { PROPOSAL_STATUS, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { IProposalResponseFromLCD } from '../../types';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -23,12 +24,7 @@ export default class CrawlProposalService extends Service {
 			name: 'crawlProposal',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.proposal',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbProposalMixin,
 			],
@@ -193,7 +189,7 @@ export default class CrawlProposalService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_PROPOSAL, 10),

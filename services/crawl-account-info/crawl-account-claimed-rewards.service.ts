@@ -2,13 +2,13 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
 import RedisMixin from '../../mixins/redis/redis.mixin';
-import * as mongoose from 'mongoose';
-import * as mongodb from 'mongodb';
+import { QueueConfig } from '../../config/queue';
+import { Utils } from '../../utils/utils';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
@@ -22,12 +22,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			name: 'crawlAccountClaimedRewards',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-claimed-rewards',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
 				this.redisMixin,
@@ -100,177 +95,253 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-		let handledRewardRedis = await this.redisClient.get(Config.REDIS_KEY_START_TX_REWARDS);
-		try {
-			for (let tx of listTx) {
-				if (tx.custom_info.chain_id) chainId = tx.custom_info.chain_id;
-				let startTimeStamp = Math.floor(new Date(tx.tx_response.timestamp).getTime() / 1000);
-				let id = mongodb.ObjectId.createFromTime(startTimeStamp).toString();
-				if (!handledRewardRedis ||
-					new mongodb.ObjectId(handledRewardRedis).getTimestamp() > new Date(tx.tx_response.timestamp)) {
-					await this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, id);
-				}
-				const userAddress = tx.tx.body.messages[0].delegator_address;
-				let account: AccountInfoEntity = await this.adapter.findOne({
-					address: userAddress,
-					'custom_info.chain_id': chainId,
-				});
-				if (!account) {
-					account = {} as AccountInfoEntity;
-					account.address = userAddress;
-					account.custom_info = {
-						chain_id: chainId,
-						chain_name: ''
-					};
-				}
+		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
+		for (let tx of listTx) {
+			if (tx.tx_response.code !== 0) continue;
+
+			const userAddress = tx.tx.body.messages[0].delegator_address;
+			let account: AccountInfoEntity = await this.adapter.findOne({
+				address: userAddress,
+				'custom_info.chain_id': chainId,
+			});
+			if (!account) {
+				account = {} as AccountInfoEntity;
+				account.address = userAddress;
+				account.account_claimed_rewards = [] as Rewards[];
+			}
+
+			try {
 				switch (tx.tx.body.messages[0]['@type']) {
 					case MSG_TYPE.MSG_DELEGATE:
 						const validatorAddress = tx.tx.body.messages[0].validator_address;
 						const indexReward = tx.tx_response.logs[0].events
-							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes
-							.findIndex((x: any) => x.value === userAddress);
-						const claimedReward = tx.tx_response.logs[0].events
-							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes[indexReward + 1].value;
-						let amount = '';
-						if (claimedReward !== '') amount = claimedReward.match(/\d+/g)[0];
-						if (account.account_claimed_rewards && amount !== ''
-							&& account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)) {
-							account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)!.amount
-								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === validatorAddress)!.amount.toString(), 10)
-									+ parseInt(amount, 10)).toString();
+							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED)
+							.attributes.findIndex((x: any) => x.value === userAddress);
+						const claimedReward = tx.tx_response.logs[0].events.find(
+							(x: any) => x.type === CONST_CHAR.COIN_RECEIVED,
+						).attributes[indexReward + 1].value;
+						let amount = '0';
+						try {
+							let amount = claimedReward.match(/\d+/g)[0];
+							if (amount === '' || indexReward < 0) amount = '0';
+						} catch (error) {
+							amount = '0';
+						}
+						let reward = account.account_claimed_rewards.find(
+							(x: any) => x.validator_address === validatorAddress,
+						);
+						if (reward) {
+							account.account_claimed_rewards.find(
+								(x: any) => x.validator_address === validatorAddress,
+							)!.amount = (
+								parseInt(reward.amount.toString(), 10) + parseInt(amount, 10)
+							).toString();
 						} else {
 							account.account_claimed_rewards.push({
 								validator_address: validatorAddress,
-								denom: claimedReward !== '' ? claimedReward.match(/[a-zA-Z]+/g)[0] : '',
+								denom: Config.NETWORK_DENOM,
 								amount,
 							} as Rewards);
 						}
-						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_REDELEGATE:
 						const valSrcAddress = tx.tx.body.messages[0].validator_src_address;
 						const valDstAddress = tx.tx.body.messages[0].validator_dst_address;
-						const coinReceived = tx.tx_response.logs[0].events.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes;
-						if (coinReceived.length === 2) {
-							const srcClaimedReward = coinReceived.find((x: any) => x.key === CONST_CHAR.AMOUNT).value;
-							let srcAmount = '';
-							if (srcClaimedReward !== '') srcAmount = srcClaimedReward.match(/\d+/g)[0];
-							if (account.account_claimed_rewards && srcAmount !== ''
-								&& account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
-								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount
-									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount.toString(), 10)
-										+ parseInt(srcAmount, 10)).toString();
+						const coinReceived = tx.tx_response.logs[0].events.find(
+							(x: any) => x.type === CONST_CHAR.COIN_RECEIVED,
+						).attributes;
+
+						const paramValidator = Config.GET_VALIDATOR + valSrcAddress;
+						const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
+						let resultCallApi = await this.callApiFromDomain(url, paramValidator);
+						const redelegateClaimedReward = coinReceived.find(
+							(x: any) => x.key === CONST_CHAR.AMOUNT,
+						).value;
+						if (
+							Number(resultCallApi.validator.commission.commission_rates.rate) !== 1
+						) {
+							let srcAmount = '0';
+							try {
+								srcAmount = redelegateClaimedReward.match(/\d+/g)[0];
+								if (srcAmount === '') srcAmount = '0';
+							} catch (error) {
+								srcAmount = '0';
+							}
+							let srcReward = account.account_claimed_rewards.find(
+								(x: any) => x.validator_address === valSrcAddress,
+							);
+							if (srcReward) {
+								account.account_claimed_rewards.find(
+									(x: any) => x.validator_address === valSrcAddress,
+								)!.amount = (
+									parseInt(srcReward.amount.toString(), 10) +
+									parseInt(srcAmount, 10)
+								).toString();
 							} else {
 								account.account_claimed_rewards.push({
 									validator_address: valSrcAddress,
-									denom: srcClaimedReward !== '' ? srcClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
+									denom: Config.NETWORK_DENOM,
 									amount: srcAmount,
 								} as Rewards);
 							}
-						} else if (coinReceived.length > 2) {
-							const srcClaimedReward = coinReceived[1].value;
-							const dstClaimedReward = coinReceived[3].value;
-							let srcAmount = '';
-							if (srcClaimedReward !== '') srcAmount = srcClaimedReward.match(/\d+/g)[0];
-							let dstAmount = '';
-							if (dstClaimedReward !== '') dstAmount = dstClaimedReward.match(/\d+/g)[0];
-							if (account.account_claimed_rewards && srcAmount !== ''
-								&& account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)) {
-								account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount
-									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valSrcAddress)!.amount.toString(), 10)
-										+ parseInt(srcAmount, 10)).toString();
-							} else {
-								account.account_claimed_rewards.push({
-									validator_address: valSrcAddress,
-									denom: srcClaimedReward !== '' ? srcClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
-									amount: srcAmount,
-								} as Rewards);
+						} else {
+							let dstAmount = '0';
+							try {
+								dstAmount = redelegateClaimedReward.match(/\d+/g)[0];
+								if (dstAmount === '') dstAmount = '0';
+							} catch (error) {
+								dstAmount = '0';
 							}
-							if (account.account_claimed_rewards && dstAmount !== ''
-								&& account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)) {
-								account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)!.amount
-									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === valDstAddress)!.amount.toString(), 10)
-										+ parseInt(dstAmount, 10)).toString();
+							let dstReward = account.account_claimed_rewards.find(
+								(x: any) => x.validator_address === valDstAddress,
+							);
+							if (dstReward) {
+								account.account_claimed_rewards.find(
+									(x: any) => x.validator_address === valDstAddress,
+								)!.amount = (
+									parseInt(dstReward.amount.toString(), 10) +
+									parseInt(dstAmount, 10)
+								).toString();
 							} else {
 								account.account_claimed_rewards.push({
 									validator_address: valDstAddress,
-									denom: dstClaimedReward !== '' ? dstClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
+									denom: Config.NETWORK_DENOM,
 									amount: dstAmount,
 								} as Rewards);
 							}
 						}
-						listAccounts.push(account);
+						if (coinReceived.length > 2) {
+							const dstClaimedReward = coinReceived[3].value;
+							let dstAmount = '0';
+							try {
+								dstAmount = dstClaimedReward.match(/\d+/g)[0];
+								if (dstAmount === '') dstAmount = '0';
+							} catch (error) {
+								dstAmount = '0';
+							}
+							let dstReward = account.account_claimed_rewards.find(
+								(x: any) => x.validator_address === valDstAddress,
+							);
+							if (dstReward) {
+								account.account_claimed_rewards.find(
+									(x: any) => x.validator_address === valDstAddress,
+								)!.amount = (
+									parseInt(dstReward.amount.toString(), 10) +
+									parseInt(dstAmount, 10)
+								).toString();
+							} else {
+								account.account_claimed_rewards.push({
+									validator_address: valDstAddress,
+									denom: Config.NETWORK_DENOM,
+									amount: dstAmount,
+								} as Rewards);
+							}
+						}
 						break;
 					case MSG_TYPE.MSG_UNDELEGATE:
 						const undelegateValAddress = tx.tx.body.messages[0].validator_address;
 						const undelegateIndexReward = tx.tx_response.logs[0].events
-							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes
-							.findIndex((x: any) => x.value === userAddress);
-						const undelegateClaimedReward = tx.tx_response.logs[0].events
-							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED).attributes[undelegateIndexReward + 1].value;
-						let undelegateAmount = '';
-						if (undelegateClaimedReward !== '') undelegateAmount = undelegateClaimedReward.match(/\d+/g)[0];
-						if (account.account_claimed_rewards && undelegateAmount !== ''
-							&& account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)) {
-							account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)!.amount
-								= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === undelegateValAddress)!.amount.toString(), 10)
-									+ parseInt(undelegateAmount, 10)).toString();
+							.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED)
+							.attributes.findIndex((x: any) => x.value === userAddress);
+						const undelegateClaimedReward = tx.tx_response.logs[0].events.find(
+							(x: any) => x.type === CONST_CHAR.COIN_RECEIVED,
+						).attributes[undelegateIndexReward + 1].value;
+						let undelegateAmount = '0';
+						try {
+							undelegateAmount = undelegateClaimedReward.match(/\d+/g)[0];
+							if (undelegateAmount === '' || undelegateIndexReward < 0)
+								undelegateAmount = '0';
+						} catch (error) {
+							undelegateAmount = '0';
+						}
+						let undelegateReward = account.account_claimed_rewards.find(
+							(x: any) => x.validator_address === undelegateValAddress,
+						);
+						if (undelegateReward) {
+							account.account_claimed_rewards.find(
+								(x: any) => x.validator_address === undelegateValAddress,
+							)!.amount = (
+								parseInt(undelegateReward.amount.toString(), 10) +
+								parseInt(undelegateAmount, 10)
+							).toString();
 						} else {
 							account.account_claimed_rewards.push({
 								validator_address: undelegateValAddress,
-								denom: undelegateClaimedReward !== '' ? undelegateClaimedReward.match(/[a-zA-Z]+/g)[0] : '',
+								denom: Config.NETWORK_DENOM,
 								amount: undelegateAmount,
 							} as Rewards);
 						}
-						listAccounts.push(account);
 						break;
 					case MSG_TYPE.MSG_WITHDRAW_REWARDS:
 						tx.tx.body.messages.map((msg: any) => {
-							const log = tx.tx_response.logs.find((log: any) =>
-								log.events.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS).attributes
-									.find((attr: any) => attr.key === CONST_CHAR.VALIDATOR).value === msg.validator_address);
-							const claimedReward = log.events.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS)
-								.attributes.find((attr: any) => attr.key === CONST_CHAR.AMOUNT).value;
-							let amount = '';
-							if (claimedReward !== '') amount = claimedReward.match(/\d+/g)[0];
-							if (account.account_claimed_rewards && amount !== ''
-								&& account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)) {
-								account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)!.amount
-									= (parseInt(account.account_claimed_rewards.find((x: any) => x.validator_address === msg.validator_address)!.amount.toString(), 10)
-										+ parseInt(amount, 10)).toString();
+							const log = tx.tx_response.logs.find(
+								(log: any) =>
+									log.events
+										.find(
+											(event: any) =>
+												event.type === CONST_CHAR.WITHDRAW_REWARDS,
+										)
+										.attributes.find(
+											(attr: any) => attr.key === CONST_CHAR.VALIDATOR,
+										).value === msg.validator_address,
+							);
+							const claimedReward = log.events
+								.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS)
+								.attributes.find(
+									(attr: any) => attr.key === CONST_CHAR.AMOUNT,
+								).value;
+							let amount = '0';
+							try {
+								amount = claimedReward.match(/\d+/g)[0];
+								if (amount === '') amount = '0';
+							} catch (error) {
+								amount = '0';
+							}
+							let reward = account.account_claimed_rewards.find(
+								(x: any) => x.validator_address === msg.validator_address,
+							);
+							if (reward) {
+								account.account_claimed_rewards.find(
+									(x: any) => x.validator_address === msg.validator_address,
+								)!.amount = (
+									parseInt(reward.amount.toString(), 10) + parseInt(amount, 10)
+								).toString();
 							} else {
 								account.account_claimed_rewards.push({
 									validator_address: msg.validator_address,
-									denom: claimedReward !== '' ? claimedReward.match(/[a-zA-Z]+/g)[0] : '',
+									denom: Config.NETWORK_DENOM,
 									amount,
 								} as Rewards);
 							}
 						});
-						listAccounts.push(account);
 						break;
 				}
-			};
-			listAccounts.map((element) => {
-				if (element._id)
-					listUpdateQueries.push(
-						this.adapter.updateById(element._id, {
-							$set: { account_claimed_rewards: element.account_claimed_rewards }
-						})
-					);
-				else {
-					const chain = LIST_NETWORK.find((x) => x.chainId === element.custom_info.chain_id);
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(element, AccountInfoEntity);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: chain ? chain.chainName : '',
-					};
-					listUpdateQueries.push(this.adapter.insert(item));
-				}
-			});
-			await Promise.all(listUpdateQueries);
-		} catch (error) {
-			this.logger.error(error);
+				listAccounts.push(account);
+			} catch (error) {
+				this.logger.error(error);
+			}
 		}
+
+		listAccounts.map((element) => {
+			if (element._id)
+				listUpdateQueries.push(
+					this.adapter.updateById(element._id, {
+						$set: { account_claimed_rewards: element.account_claimed_rewards },
+					}),
+				);
+			else {
+				const item: AccountInfoEntity = new JsonConvert().deserializeObject(
+					element,
+					AccountInfoEntity,
+				);
+				item.custom_info = {
+					chain_id: chainId,
+					chain_name: chain ? chain.chainName : '',
+				};
+				listUpdateQueries.push(this.adapter.insert(item));
+			}
+		});
+		await Promise.all(listUpdateQueries);
 	}
 
 	async _start() {

@@ -81,6 +81,8 @@ export default class ConfigClass {
 	public static DB_CW721_ASSET: any;
 	public static DB_CW721_MEDIA_LINK: any;
 	public static DB_CW20_ASSET: any;
+	public static DB_CW4973_ASSET: any;
+	public static DB_CW4973_MEDIA_LINK: any;
 	public static DB_CODE_ID: any;
 	public static DB_BLOCK: any;
 	public static DB_PARAM: any;
@@ -101,6 +103,9 @@ export default class ConfigClass {
 	public static DB_IBC_DENOM: any;
 	public static DB_FEEGRANT_HISTORY: any;
 	public static DB_FEEGRANT: any;
+	public static DB_DAILY_TX_STATISTICS: any;
+	public static DB_ACCOUNT_STATISTICS: any;
+	public static DB_SMART_CONTRACTS: any;
 
 	public ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
 
@@ -150,7 +155,7 @@ export default class ConfigClass {
 		process.env.GET_PARAMS_SPENDABLE_BALANCE || PATH_COSMOS_SDK.GET_PARAMS_SPENDABLE_BALANCE;
 	public GET_PARAMS_IBC_DENOM =
 		process.env.GET_PARAMS_IBC_DENOM || PATH_COSMOS_SDK.GET_PARAMS_IBC_DENOM;
-
+	public GET_SUPPLY = process.env.GET_SUPPLY || PATH_COSMOS_SDK.GET_SUPPLY;
 	// Dynamic property key
 	[index: string]: any;
 
@@ -180,6 +185,8 @@ export default class ConfigClass {
 		this.DB_CW721_ASSET = genericDbInfo('CW721_ASSET');
 		this.DB_CW721_MEDIA_LINK = genericDbInfo('CW721_MEDIA_LINK');
 		this.DB_CW20_ASSET = genericDbInfo('CW20_ASSET');
+		this.DB_CW4973_ASSET = genericDbInfo('CW4973_ASSET');
+		this.DB_CW4973_MEDIA_LINK = genericDbInfo('CW4973_MEDIA_LINK');
 		this.DB_CODE_ID = genericDbInfo('CODE_ID');
 		this.DB_INFLATION = genericDbInfo('INFLATION');
 		this.DB_ACCOUNT_BALANCES = genericDbInfo('ACCOUNT_BALANCES');
@@ -194,7 +201,10 @@ export default class ConfigClass {
 		this.DB_DELAY_JOB = genericDbInfo('DELAY_JOB');
 		this.DB_IBC_DENOM = genericDbInfo('IBC_DENOM');
 		this.DB_VOTE = genericDbInfo('VOTE');
-		this.DB_FEEGRANT_HISTORY = genericDbInfo('feegrant_history')
-		this.DB_FEEGRANT = genericDbInfo('feegrant')
+		this.DB_FEEGRANT_HISTORY = genericDbInfo('feegrant_history');
+		this.DB_FEEGRANT = genericDbInfo('feegrant');
+		this.DB_DAILY_TX_STATISTICS = genericDbInfo('DAILY_TX_STATISTICS');
+		this.DB_ACCOUNT_STATISTICS = genericDbInfo('ACCOUNT_STATISTICS');
+		this.DB_SMART_CONTRACTS = genericDbInfo('SMART_CONTRACTS');
 	}
 }

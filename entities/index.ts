@@ -22,4 +22,6 @@ export * from './aurascan/validators.entity';
 export * from './delay-job.entity';
 export * from './account-info.entity';
 export * from './ibc-denom.entity';
-export * from './feegrant.entity'
+export * from './feegrant.entity';
+export * from './daily-tx-statistics.entity';
+export * from './account-statistics.entity';

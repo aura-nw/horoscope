@@ -23,6 +23,7 @@ import {
 import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
 import { LIST_NETWORK } from '../../common/constant';
+const BullBoard = require('../../mixins/bullBoard/bull-board');
 
 const tlBucket = 60000;
 const swMiddleware = swStats.getMiddleware({
@@ -43,7 +44,7 @@ const listLCD = LIST_NETWORK.map((e) => {
  */
 @Service({
 	name: 'api',
-	mixins: [ApiGateway, openAPIMixin()],
+	mixins: [ApiGateway, openAPIMixin(), BullBoard],
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	settings: {
 		port: Config.PORT || 3000,
@@ -133,7 +134,9 @@ const listLCD = LIST_NETWORK.map((e) => {
 					'v1.ibc-denom.getByHash',
 					'v1.ibc-denom.addNewDenom',
 					'v1.validator.getAllByChain',
-					'v1.feegrant.getGrants'
+					'v1.feegrant.getGrants',
+					'v1.account-statistics.getTopAccounts',
+					'v1.daily-tx-statistics.getDailyData',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 				use: [swMiddleware],

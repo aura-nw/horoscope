@@ -7,6 +7,7 @@ import { AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { Coin } from 'entities/coin.entity';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
 export default class HandleAccountVestingService extends Service {
@@ -19,12 +20,7 @@ export default class HandleAccountVestingService extends Service {
 			name: 'handleAccountVesting',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.account-vesting',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
 				this.callApiMixin,
@@ -94,7 +90,7 @@ export default class HandleAccountVestingService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_CONTINUOUS_VESTING, 10),
@@ -111,7 +107,6 @@ export default class HandleAccountVestingService extends Service {
 		this.getQueue('handle.account-continuous-vesting').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-
 		return super._start();
 	}
 }

@@ -12,6 +12,7 @@ import { IDelegationResponseFromLCD, IValidatorResponseFromLCD } from '../../typ
 import { Job } from 'bull';
 import { IParam, ISlashingParam, IValidator, SlashingParam, ValidatorEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlValidatorService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -23,12 +24,7 @@ export default class CrawlValidatorService extends Service {
 			name: 'crawlValidator',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.staking.validator',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbValidatorMixin,
 			],
@@ -135,17 +131,29 @@ export default class CrawlValidatorService extends Service {
 			let pathDelegation = `${
 				Config.GET_ALL_VALIDATOR
 			}/${validator.operator_address.toString()}/delegations/${address}`;
-			let resultCallApiDelegation: IDelegationResponseFromLCD = await this.callApiFromDomain(
-				url,
-				pathDelegation,
-			);
+
+			let pathAllDelegation = `${
+				Config.GET_ALL_VALIDATOR
+			}/${validator.operator_address.toString()}/delegations?pagination.limit=1&pagination.count_total=true`;
+
+			// let resultSelfBonded: IDelegationResponseFromLCD = await this.callApiFromDomain(
+			// 	url,
+			// 	pathDelegation,
+			// );
+			let resultAllDelegation: any = null;
+			let resultSelfBonded: any = null; 
+			// let [resultSelfBonded]: [
+			// 	IDelegationResponseFromLCD,
+			// ] = await Promise.all([
+			// 	this.callApiFromDomain(url, pathDelegation),
+			// 	// this.callApiFromDomain(url, pathAllDelegation),
+			// ]);
 			if (
-				resultCallApiDelegation &&
-				resultCallApiDelegation.delegation_response &&
-				resultCallApiDelegation.delegation_response.balance
+				resultSelfBonded &&
+				resultSelfBonded.delegation_response &&
+				resultSelfBonded.delegation_response.balance
 			) {
-				validator.self_delegation_balance =
-					resultCallApiDelegation.delegation_response.balance;
+				validator.self_delegation_balance = resultSelfBonded.delegation_response.balance;
 			}
 
 			let poolResult: any = await this.broker.call(
@@ -165,7 +173,11 @@ export default class CrawlValidatorService extends Service {
 					) / 1000000;
 				validator.percent_voting_power = percent_voting_power;
 			}
-			this.logger.debug(`result: ${JSON.stringify(resultCallApiDelegation)}`);
+			this.logger.debug(`result: ${JSON.stringify(resultSelfBonded)}`);
+
+			if (resultAllDelegation && resultAllDelegation.pagination && resultAllDelegation.pagination.total){
+				validator.number_delegators = Number(resultAllDelegation.pagination.total);
+			}
 		} catch (error) {
 			this.logger.error(error);
 		}
@@ -182,7 +194,7 @@ export default class CrawlValidatorService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_VALIDATOR, 10),
@@ -199,7 +211,6 @@ export default class CrawlValidatorService extends Service {
 		this.getQueue('crawl.staking.validator').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-
 		return super._start();
 	}
 }

@@ -32,6 +32,145 @@ export default class ValidatorService extends MoleculerDBService<
 	},
 	IValidator
 > {
+	@Get('/', {
+		name: 'getByChain',
+		params: {
+			chainid: {
+				type: 'string',
+				optional: false,
+				enum: LIST_NETWORK.map((e) => {
+					return e.chainId;
+				}),
+			},
+			operatorAddress: { type: 'string', optional: true, default: null },
+			status: {
+				type: 'string',
+				optional: true,
+				enum: Object.keys(BOND_STATUS).map((e) => {
+					return e;
+				}),
+			},
+			pageLimit: {
+				type: 'number',
+				optional: true,
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			pageOffset: {
+				type: 'number',
+				optional: true,
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+				default: null,
+			},
+		},
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getByChain(ctx: Context<GetValidatorRequest, Record<string, unknown>>) {
+		let response: ResponseDto = {} as ResponseDto;
+		if (ctx.params.nextKey) {
+			try {
+				new ObjectId(ctx.params.nextKey);
+			} catch (error) {
+				return (response = {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid ObjectId',
+					},
+				});
+			}
+		}
+		try {
+			const operatorAddress = ctx.params.operatorAddress;
+			const status = ctx.params.status;
+			let needNextKey = true;
+			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			if (operatorAddress) {
+				query['operator_address'] = operatorAddress;
+			}
+			if (status) {
+				query['status'] = status;
+			}
+			if (ctx.params.nextKey) {
+				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
+				ctx.params.pageOffset = 0;
+				ctx.params.countTotal = false;
+			}
+			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
+			let [result, count]: [any[], number] = await Promise.all([
+				this.adapter.find({
+					query: query,
+					limit: ctx.params.pageLimit,
+					offset: ctx.params.pageOffset,
+					// @ts-ignore
+					sort: '_id',
+				}),
+				this.adapter.count({
+					query: query,
+				}),
+			]);
+			response = {
+				code: ErrorCode.SUCCESSFUL,
+				message: ErrorMessage.SUCCESSFUL,
+				data: {
+					validators: result,
+					count: count,
+					nextKey: needNextKey && result.length ? result[result.length - 1]._id : null,
+				},
+			};
+		} catch (error) {
+			response = {
+				code: ErrorCode.WRONG,
+				message: ErrorMessage.WRONG,
+				data: {
+					error,
+				},
+			};
+		}
+
+		return response;
+	}
+
+	@Action({
+		name: 'getAllByChain',
+		cache: {
+			ttl: 10,
+		},
+	})
+	async getAllByChain(ctx: Context<DbContextParameters>) {
+		const params = await this.sanitizeParams(ctx, ctx.params);
+		let result = await this.adapter.find({ query: { 'custom_info.chain_id': params.chainId } });
+		return result;
+	}
+
+	@Action()
+	async getByCondition(ctx: Context<DbContextParameters>) {
+		const params = await this.sanitizeParams(ctx, ctx.params);
+		const network = LIST_NETWORK.find((x) => x.chainId == params.query['custom_info.chain_id']);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+		// @ts-ignore
+		let result = await this.adapter.find({ query: params.query, sort: params.sort });
+		return result;
+	}
+
 	/**
 	 *  @swagger
 	 *  /v1/validator:
@@ -259,126 +398,4 @@ export default class ValidatorService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1.validator"
 	 */
-	@Get('/', {
-		name: 'getByChain',
-		params: {
-			chainid: {
-				type: 'string',
-				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
-			},
-			operatorAddress: { type: 'string', optional: true, default: null },
-			status: {
-				type: 'string',
-				optional: true,
-				enum: Object.keys(BOND_STATUS).map((e) => {
-					return e;
-				}),
-			},
-			pageLimit: {
-				type: 'number',
-				optional: true,
-				default: 10,
-				integer: true,
-				convert: true,
-				min: 1,
-				max: 100,
-			},
-			pageOffset: {
-				type: 'number',
-				optional: true,
-				default: 0,
-				integer: true,
-				convert: true,
-				min: 0,
-				max: 100,
-			},
-			nextKey: {
-				type: 'string',
-				optional: true,
-				default: null,
-			},
-		},
-		cache: {
-			ttl: 10,
-		},
-	})
-	async getByChain(ctx: Context<GetValidatorRequest, Record<string, unknown>>) {
-		let response: ResponseDto = {} as ResponseDto;
-		if (ctx.params.nextKey) {
-			try {
-				new ObjectId(ctx.params.nextKey);
-			} catch (error) {
-				return (response = {
-					code: ErrorCode.WRONG,
-					message: ErrorMessage.VALIDATION_ERROR,
-					data: {
-						message: 'The nextKey is not a valid ObjectId',
-					},
-				});
-			}
-		}
-		try {
-			const operatorAddress = ctx.params.operatorAddress;
-			const status = ctx.params.status;
-			let needNextKey = true;
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
-			if (operatorAddress) {
-				query['operator_address'] = operatorAddress;
-			}
-			if (status) {
-				query['status'] = status;
-			}
-			if (ctx.params.nextKey) {
-				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
-				ctx.params.pageOffset = 0;
-				ctx.params.countTotal = false;
-			}
-			let [result, count]: [any[], number] = await Promise.all([
-				this.adapter.find({
-					query: query,
-					limit: ctx.params.pageLimit,
-					offset: ctx.params.pageOffset,
-					// @ts-ignore
-					sort: '_id',
-				}),
-				this.adapter.count({
-					query: query,
-				}),
-			]);
-			response = {
-				code: ErrorCode.SUCCESSFUL,
-				message: ErrorMessage.SUCCESSFUL,
-				data: {
-					validators: result,
-					count: count,
-					nextKey: needNextKey && result.length ? result[result.length - 1]._id : null,
-				},
-			};
-		} catch (error) {
-			response = {
-				code: ErrorCode.WRONG,
-				message: ErrorMessage.WRONG,
-				data: {
-					error,
-				},
-			};
-		}
-
-		return response;
-	}
-
-	@Action({
-		name: 'getAllByChain',
-		cache: {
-			ttl: 10,
-		},
-	})
-	async getAllByChain(ctx: Context<DbContextParameters>) {
-		const params = await this.sanitizeParams(ctx, ctx.params);
-		let result = await this.adapter.find({ query: { 'custom_info.chain_id': params.chainId } });
-		return result;
-	}
 }

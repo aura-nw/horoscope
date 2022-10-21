@@ -18,7 +18,7 @@ import {
 } from '../../types';
 import { Utils } from '../../utils/utils';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
+import { ValidatorEntity } from 'entities';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -29,7 +29,7 @@ import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 	/**
 	 * Mixins
 	 */
-	mixins: [callApiMixin, dbAccountInfoMixin, mongoDBMixin],
+	mixins: [callApiMixin, dbAccountInfoMixin],
 	/**
 	 * Settings
 	 */
@@ -310,6 +310,10 @@ export default class AccountInfoService extends MoleculerDBService<
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
 			this.adapter.findOne({
 				address: ctx.params.address,
@@ -323,6 +327,8 @@ export default class AccountInfoService extends MoleculerDBService<
 				listTx: [{ address: ctx.params.address, message: '' }],
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
+			}).catch((error) => {
+				this.logger.error(error);
 			});
 			accountInfo = accountInfo.toObject();
 			accountInfo.account_delegate_rewards = accountRewards;
@@ -339,6 +345,8 @@ export default class AccountInfoService extends MoleculerDBService<
 				listTx: [{ address: ctx.params.address, message: '' }],
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
+			}).catch((error) => {
+				this.logger.error(error);
 			});
 			if (!accountRewards.code) {
 				const result: ResponseDto = {
@@ -518,7 +526,10 @@ export default class AccountInfoService extends MoleculerDBService<
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
-
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
 			this.adapter.lean({
 				query: {
@@ -540,6 +551,8 @@ export default class AccountInfoService extends MoleculerDBService<
 				listTx: [{ address: ctx.params.address, message: '' }],
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
+			}).catch((error) => {
+				this.logger.error(error);
 			});
 			let data = Object.assign({}, accountInfo[0]);
 			data.account_delegate_rewards = accountRewards;
@@ -553,6 +566,8 @@ export default class AccountInfoService extends MoleculerDBService<
 				listTx: [{ address: ctx.params.address, message: '' }],
 				source: CONST_CHAR.API,
 				chainId: ctx.params.chainId,
+			}).catch((error) => {
+				this.logger.error(error);
 			});
 			if (!accountRewards.code) {
 				const result: ResponseDto = {
@@ -732,6 +747,10 @@ export default class AccountInfoService extends MoleculerDBService<
 		},
 	})
 	async getAccountStake(ctx: Context<GetAccountStakeParams, Record<string, unknown>>) {
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		let projection: any = [
 			{
 				$match: {
@@ -742,45 +761,57 @@ export default class AccountInfoService extends MoleculerDBService<
 		];
 		switch (ctx.params.type) {
 			case 'Delegations':
-				projection.push(
-					...[
-						{ $project: { account_delegations: 1 } },
-						{ $unwind: '$account_delegations' },
-						{ $skip: ctx.params.offset },
-						{ $limit: ctx.params.limit },
-					],
-				);
+				projection.push(...[
+					{ $project: { account_delegations: 1 } },
+					{ $unwind: '$account_delegations' },
+					{ $skip: ctx.params.offset },
+					{ $limit: ctx.params.limit },
+				]);
 				break;
 			case 'Unbondings':
-				projection.push(
-					...[
-						{ $project: { account_unbonding: 1 } },
-						{ $unwind: '$account_unbonding' },
-						{ $skip: ctx.params.offset },
-						{ $limit: ctx.params.limit },
-					],
-				);
+				projection.push(...[
+					{ $project: { account_unbonding: 1 } },
+					{ $unwind: '$account_unbonding' },
+					{ $skip: ctx.params.offset },
+					{ $limit: ctx.params.limit },
+				]);
 				break;
 			case 'Redelegations':
-				projection.push(
-					...[
-						{ $project: { account_redelegations: 1 } },
-						{ $unwind: '$account_redelegations' },
-						{ $skip: ctx.params.offset },
-						{ $limit: ctx.params.limit },
-					],
-				);
+				projection.push(...[
+					{ $project: { account_redelegations: 1 } },
+					{ $unwind: '$account_redelegations' },
+					{ $skip: ctx.params.offset },
+					{ $limit: ctx.params.limit },
+				]);
 				break;
 			case 'Vestings':
-				projection.push(
-					...[{ $project: { account_auth: 1 } }, { $unwind: '$account_auth' }],
-				);
+				projection.push(...[
+					{ $project: { account_auth: 1 } }, { $unwind: '$account_auth' }
+				]);
 				projection['$project'] = { account_auth: 1 };
 				break;
 		}
 
 		let data = await this.adapter.aggregate(projection);
-		this.logger.info(data);
+		if (ctx.params.type === 'Unbondings') {
+			let validators: any = await this.broker.call(
+				'v1.validator.getByCondition',
+				{
+					query: {
+						'custom_info.chain_id': ctx.params.chainId,
+					},
+				},
+			);
+			data.map((unbond: any) => {
+				let validator = validators.find((val: ValidatorEntity) =>
+					val.operator_address === unbond.account_unbonding.validator_address
+				);
+				unbond.account_unbonding.validator_description = {
+					description: validator.description,
+					jailed: validator.jailed,
+				};
+			});
+		}
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,

@@ -9,6 +9,8 @@ import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { dbParamMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
+import { QueueConfig } from '../../config/queue';
+
 export default class CrawlParamService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbParamMixin = dbParamMixin;
@@ -19,12 +21,7 @@ export default class CrawlParamService extends Service {
 			name: 'crawlparam',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.param',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbParamMixin,
 			],
@@ -152,7 +149,7 @@ export default class CrawlParamService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_PARAM, 10),

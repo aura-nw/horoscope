@@ -4,15 +4,16 @@
 
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { DELAY_JOB_STATUS, DELAY_JOB_TYPE } from '../../common/constant';
+import { DELAY_JOB_TYPE } from '../../common/constant';
 import { RedelegateEntry, DelayJobEntity, RedelegationEntry } from '../../entities';
 import { Service, ServiceBroker } from 'moleculer';
 import { Coin } from 'entities/coin.entity';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
+import { QueueConfig } from '../../config/queue';
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 const QueueService = require('moleculer-bull');
 
 export default class HandleDelayJobService extends Service {
-	private mongoDBMixin = mongoDBMixin;
+	private dbAccountInfoMixin = dbAccountInfoMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -20,13 +21,8 @@ export default class HandleDelayJobService extends Service {
 			name: 'handleDelayJob',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.delay-job',
-					},
-				),
-				this.mongoDBMixin,
+				QueueService(QueueConfig.redis, QueueConfig.opts),
+				this.dbAccountInfoMixin,
 			],
 			queues: {
 				'handle.delay-job': {
@@ -46,25 +42,18 @@ export default class HandleDelayJobService extends Service {
 	async handleJob() {
 		let listUpdateQueries: any[] = [];
 
-		this.mongoDBClient = await this.connectToDB();
-		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let [accountInfo, delayJob] = await Promise.all([
-			db.collection('account_info'),
-			db.collection('delay_job'),
-		]);
-
-		let currentJobs: DelayJobEntity[] = await delayJob
-			.find({
-				status: DELAY_JOB_STATUS.PENDING,
-				'custom_info.chain_id': Config.CHAIN_ID,
-			})
-			.toArray();
+		let currentJobs: DelayJobEntity[] = await this.broker.call(
+			'v1.delay-job.findPendingJobs',
+			{
+				chain_id: Config.CHAIN_ID,
+			}
+		);
 		currentJobs.map(async (job: any) => {
 			if (job.expire_time <= new Date().getTime()) {
 				switch (job.type) {
 					case DELAY_JOB_TYPE.REDELEGATE:
 						try {
-							let updateRedelegates = await accountInfo.findOne({
+							let updateRedelegates = await this.adapter.findOne({
 								address: job.content.address,
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
@@ -82,7 +71,7 @@ export default class HandleDelayJobService extends Service {
 							else newRedelegates[0].entries = oldRedelegates;
 							listUpdateQueries.push(
 								...[
-									accountInfo.updateOne(
+									this.adapter.updateById(
 										{
 											_id: updateRedelegates._id,
 										},
@@ -92,37 +81,21 @@ export default class HandleDelayJobService extends Service {
 											},
 										},
 									),
-									delayJob.updateOne(
+									this.broker.call(
+										'v1.delay-job.deleteFinishedJob',
 										{
-											_id: job._id,
-										},
-										{
-											$set: {
-												status: DELAY_JOB_STATUS.DONE,
-											},
-										},
+											_id: job._id
+										}
 									),
 								],
 							);
 						} catch (error) {
 							this.logger.error(error);
-							listUpdateQueries.push(
-								delayJob.updateOne(
-									{
-										_id: job._id,
-									},
-									{
-										$set: {
-											status: DELAY_JOB_STATUS.DONE,
-										},
-									},
-								),
-							);
 						}
 						break;
 					case DELAY_JOB_TYPE.UNBOND:
 						try {
-							let updateInfo = await accountInfo.findOne({
+							let updateInfo = await this.adapter.findOne({
 								address: job.content.address,
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
@@ -134,11 +107,15 @@ export default class HandleDelayJobService extends Service {
 										new Date(x.completion_time!).getTime() ===
 										new Date(job.expire_time).getTime(),
 								);
-							newBalances.find((balance: any) => balance.denom === Config.NETWORK_DENOM).amount = (
+							newBalances.find(
+								(balance: any) => balance.denom === Config.NETWORK_DENOM,
+							).amount = (
 								parseInt(newBalances[0].amount, 10) +
 								parseInt(removeUnbond.balance, 10)
 							).toString();
-							newSpendableBalances.find((balance: any) => balance.denom === Config.NETWORK_DENOM).amount = (
+							newSpendableBalances.find(
+								(balance: any) => balance.denom === Config.NETWORK_DENOM,
+							).amount = (
 								parseInt(newSpendableBalances[0].amount, 10) +
 								parseInt(removeUnbond.balance, 10)
 							).toString();
@@ -148,7 +125,7 @@ export default class HandleDelayJobService extends Service {
 							else newUnbonds[0].entries = oldUnbonds;
 							listUpdateQueries.push(
 								...[
-									accountInfo.updateOne(
+									this.adapter.updateById(
 										{
 											_id: updateInfo._id,
 										},
@@ -160,37 +137,21 @@ export default class HandleDelayJobService extends Service {
 											},
 										},
 									),
-									delayJob.updateOne(
+									this.broker.call(
+										'v1.delay-job.deleteFinishedJob',
 										{
-											_id: job._id,
-										},
-										{
-											$set: {
-												status: DELAY_JOB_STATUS.DONE,
-											},
-										},
+											_id: job._id
+										}
 									),
 								],
 							);
 						} catch (error) {
 							this.logger.error(error);
-							listUpdateQueries.push(
-								delayJob.updateOne(
-									{
-										_id: job._id,
-									},
-									{
-										$set: {
-											status: DELAY_JOB_STATUS.DONE,
-										},
-									},
-								),
-							);
 						}
 						break;
 					case DELAY_JOB_TYPE.DELAYED_VESTING:
 						try {
-							let updateInfo = await accountInfo.findOne({
+							let updateInfo = await this.adapter.findOne({
 								address: job.content.address,
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
@@ -210,7 +171,7 @@ export default class HandleDelayJobService extends Service {
 								parseInt(oldAmount, 10) + parseInt(vestingInfo[0].amount, 10)
 							).toString();
 							listUpdateQueries.push(
-								accountInfo.updateOne(
+								this.adapter.updateById(
 									{
 										_id: updateInfo._id,
 									},
@@ -220,36 +181,20 @@ export default class HandleDelayJobService extends Service {
 										},
 									},
 								),
-								delayJob.updateOne(
+								this.broker.call(
+									'v1.delay-job.deleteFinishedJob',
 									{
-										_id: job._id,
-									},
-									{
-										$set: {
-											status: DELAY_JOB_STATUS.DONE,
-										},
-									},
+										_id: job._id
+									}
 								),
 							);
 						} catch (error) {
 							this.logger.error(error);
-							listUpdateQueries.push(
-								delayJob.updateOne(
-									{
-										_id: job._id,
-									},
-									{
-										$set: {
-											status: DELAY_JOB_STATUS.DONE,
-										},
-									},
-								),
-							);
 						}
 						break;
 					case DELAY_JOB_TYPE.PERIODIC_VESTING:
 						try {
-							let updateInfo = await accountInfo.findOne({
+							let updateInfo = await this.adapter.findOne({
 								address: job.content.address,
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
@@ -272,37 +217,47 @@ export default class HandleDelayJobService extends Service {
 									10,
 								)
 							).toString();
-							let updateJob = {};
+							let newJobExpireTime = new Date(
+								(job.expire_time.getTime() +
+									parseInt(
+										updateInfo.account_auth.result.value.vesting_periods[0]
+											.length,
+										10,
+									)) *
+								1000,
+							);
 							if (
-								job.expire_time.getTime() >=
+								newJobExpireTime.getTime() >=
 								new Date(
 									parseInt(updateInfo.account_auth.result.value.end_time, 10) *
 									1000,
 								).getTime()
 							)
-								updateJob = {
-									$set: {
-										status: DELAY_JOB_STATUS.DONE,
-									},
-								};
-							else {
-								let newJobExpireTime = new Date(
-									(job.expire_time.getTime() +
-										parseInt(
-											updateInfo.account_auth.result.value.vesting_periods[0]
-												.length,
-											10,
-										)) *
-									1000,
+								listUpdateQueries.push(
+									this.broker.call(
+										'v1.delay-job.deleteFinishedJob',
+										{
+											_id: job._id
+										}
+									),
 								);
-								updateJob = {
-									$set: {
-										expire_time: newJobExpireTime,
-									},
-								};
+							else {
+								listUpdateQueries.push(
+									this.broker.call(
+										'v1.delay-job.updateJob',
+										{
+											_id: job._id,
+											update: {
+												$set: {
+													expire_time: newJobExpireTime,
+												},
+											}
+										}
+									),
+								);
 							}
 							listUpdateQueries.push(
-								accountInfo.updateOne(
+								this.adapter.updateById(
 									{
 										_id: updateInfo._id,
 									},
@@ -311,28 +266,10 @@ export default class HandleDelayJobService extends Service {
 											account_spendable_balances: newSpendableBalances,
 										},
 									},
-								),
-								delayJob.updateOne(
-									{
-										_id: job._id,
-									},
-									updateJob,
-								),
+								)
 							);
 						} catch (error) {
 							this.logger.error(error);
-							listUpdateQueries.push(
-								delayJob.updateOne(
-									{
-										_id: job._id,
-									},
-									{
-										$set: {
-											status: DELAY_JOB_STATUS.DONE,
-										},
-									},
-								),
-							);
 						}
 						break;
 				}
@@ -349,7 +286,7 @@ export default class HandleDelayJobService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_DELAY_JOB, 10),
@@ -366,7 +303,6 @@ export default class HandleDelayJobService extends Service {
 		this.getQueue('handle.delay-job').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-
 		return super._start();
 	}
 }

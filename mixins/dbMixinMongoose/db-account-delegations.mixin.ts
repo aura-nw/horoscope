@@ -1,8 +1,8 @@
 'use strict';
 
-import { Config } from "../../common";
-import { accountDelegationsMongoModel } from "../../model/account-delegations.model";
-import { DbBaseMixin } from "./db-base.mixin";
+import { Config } from '../../common';
+import { accountDelegationsMongoModel } from '../../model/account-delegations.model';
+import { DbBaseMixin } from './db-base.mixin';
 
 const dbInfo = Config.DB_ACCOUNT_DELEGATIONS;
 
@@ -13,6 +13,7 @@ const dbBaseMixin = new DbBaseMixin({
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	model: accountDelegationsMongoModel(dbInfo.collection),
+	idField: '_id',
 });
 
 export const dbAccountDelegationsMixin = dbBaseMixin.getMixin();

@@ -12,6 +12,8 @@ import { JsonConvert, OperationMode } from 'json2typescript';
 import { InflationEntity, ParamEntity } from '../../entities';
 import { IMintInflationResponseFromLCD } from 'types';
 import { Utils } from '../../utils/utils';
+import { QueueConfig } from '../../config/queue';
+
 export default class CrawlInflationService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbInflationMixin = dbInflationMixin;
@@ -22,12 +24,7 @@ export default class CrawlInflationService extends Service {
 			name: 'crawlinflation',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.inflation',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbInflationMixin,
 			],
@@ -81,7 +78,7 @@ export default class CrawlInflationService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_INFLATION, 10),

@@ -39,7 +39,9 @@ export default class RemoveDuplicateVotingData extends Service {
 		for (let i = 0; ; i++) {
 			this.logger.info(`Start job ${i}`);
 			const vote = await this.adapter.find({
-				query: {},
+				query: {
+					'custom_info.chain_id': 'serenity-testnet-001',
+				},
 				sort: '_id',
 				limit: 1,
 				offset: i,

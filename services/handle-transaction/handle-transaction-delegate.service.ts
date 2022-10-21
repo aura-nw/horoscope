@@ -14,6 +14,8 @@ import { ListTxCreatedParams, ListTxInBlockParams, TransactionHashParam } from '
 import { ITransaction } from 'entities';
 import { parseCoins } from '@cosmjs/amino';
 import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
+import { QueueConfig } from '../../config/queue';
+
 export default class HandleTransactionDelegateService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private callApiMixin = new CallApiMixin().start();
@@ -24,12 +26,7 @@ export default class HandleTransactionDelegateService extends Service {
 			name: 'handle-transaction-delegate',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.transaction.delegate',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.callApiMixin,
 			],

@@ -43,6 +43,7 @@ export default class VoteHandlerService extends Service {
 						if (existVote.length > 0) {
 							existVote[0].answer = newVote.answer;
 							existVote[0].txhash = newVote.txhash;
+							existVote[0].timestamp = newVote.timestamp;
 							result = await this.adapter.updateById(existVote[0]._id, existVote[0]);
 							this.logger.debug(`updatedVote ${JSON.stringify(result)}`);
 						} else {

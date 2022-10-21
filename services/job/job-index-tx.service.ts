@@ -175,7 +175,7 @@ export default class IndexTxService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 			},
 		);

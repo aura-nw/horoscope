@@ -35,10 +35,15 @@ export const CONST_CHAR = {
 	VALIDATOR: 'validator',
 	RECV_PACKET: 'recv_packet',
 	PACKET_DATA: 'packet_data',
+	INSTANTIATE: 'instantiate',
+	_CONTRACT_ADDRESS: '_contract_address',
+	CODE_ID: 'code_id',
+	EXECUTE: 'execute',
 };
 
 export const MSG_TYPE = {
 	MSG_SEND: '/cosmos.bank.v1beta1.MsgSend',
+	MSG_MULTI_SEND: '/cosmos.bank.v1beta1.MsgMultiSend',
 	MSG_VOTE: '/cosmos.gov.v1beta1.MsgVote',
 	MSG_DEPOSIT: '/cosmos.gov.v1beta1.MsgDeposit',
 	MSG_SUBMIT_PROPOSAL: '/cosmos.gov.v1beta1.MsgSubmitProposal',
@@ -146,9 +151,37 @@ export const CW721_ACTION = {
 	ENRICH_DATA: 'v1.CW721.enrichData',
 };
 
+export const CW4973_MANAGER_ACTION = {
+	FIND: 'v1.cw4973-asset-manager.act-find',
+	COUNT: 'v1.cw4973-asset-manager.act-count',
+	INSERT: 'v1.cw4973-asset-manager.act-insert',
+	LIST: 'v1.cw4973-asset-manager.act-list',
+	UPSERT: 'v1.cw4973-asset-manager.act-upsert',
+};
+
+export const CW4973_MEDIA_MANAGER_ACTION = {
+	FIND: 'v1.CW4973-asset-media-manager.act-find',
+	INSERT: 'v1.CW4973-asset-media-manager.act-insert',
+	UPSERT: 'v1.CW4973-asset-media-manager.act-upsert',
+	UPDATE_MANY: 'v1.CW4973-asset-media-manager.act-updateMany',
+	UPDATE_MEDIA_LINK: 'v1.CW4973-asset-media-manager.update-media-link',
+};
+
+export const CW4973_MEDIA = {
+	FIND: 'v1.CW4973-media.act-find',
+};
+
+export const CW4973_ACTION = {
+	URL_GET_TOKEN_LIST: 'eyJhbGxfdG9rZW5zIjp7fX0=',
+	GET_TOKEN_INFOR: 'v1.CW4973.getTokenInfor',
+	GET_TOKEN_LIST: 'v1.CW4973.getTokenList',
+	ENRICH_DATA: 'v1.CW4973.enrichData',
+};
+
 export const CONTRACT_TYPE = {
 	CW721: 'CW721',
 	CW20: 'CW20',
+	CW4973: 'CW4973',
 };
 
 export const ENRICH_TYPE = {
@@ -259,11 +292,6 @@ export enum DELAY_JOB_TYPE {
 	DELAYED_VESTING = 'delayed_vesting',
 }
 
-export enum DELAY_JOB_STATUS {
-	PENDING = 'pending',
-	DONE = 'done',
-}
-
 export const PATH_COSMOS_SDK = {
 	GET_LATEST_BLOCK_API: '/block?latest',
 	GET_BLOCK_BY_HEIGHT_API: '/block?height=',
@@ -294,6 +322,16 @@ export const PATH_COSMOS_SDK = {
 	GET_PARAMS_AUTH_INFO: '/auth/accounts',
 	GET_PARAMS_SPENDABLE_BALANCE: '/cosmos/bank/v1beta1/spendable_balances',
 	GET_PARAMS_IBC_DENOM: '/ibc/apps/transfer/v1/denom_traces',
+	GET_SUPPLY: '/cosmos/bank/v1beta1/supply',
+	VERIFY_API_GET_HASH: '/api/v1/smart-contract/get-hash/',
+	COSMWASM_CONTRACT_PARAM: '/cosmwasm/wasm/v1/contract/'
+};
+
+export const TOP_ACCOUNT_STATS_FIELD = {
+	TXS_SENT: "TXS_SENT",
+	TXS_RECEIVED: "TXS_RECEIVED",
+	AMOUNT_SENT: "AMOUNT_SENT",
+	AMOUNT_RECEIVED: "AMOUNT_RECEIVED"
 };
 
 export const ALLOWANCE_TYPE = {

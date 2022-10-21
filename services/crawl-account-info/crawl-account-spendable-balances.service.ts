@@ -9,6 +9,7 @@ import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { Coin } from '../../entities/coin.entity';
 import { AccountInfoEntity, IBCDenomEntity } from '../../entities';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountSpendableBalancesService extends Service {
@@ -21,12 +22,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 			name: 'crawlAccountSpendableBalances',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-spendable-balances',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
@@ -80,6 +76,10 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 					Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
+				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				if (network && network.databaseName) {
+					this.adapter.useDb(network.databaseName);
+				}
 				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
 					address,
 					'custom_info.chain_id': chainId,
@@ -107,24 +107,35 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 
 				if (listSpendableBalances) {
 					if (listSpendableBalances.length > 1) {
-						await Promise.all(listSpendableBalances.map(async (balance) => {
-							if (balance.denom.startsWith('ibc/')) {
-								let hash = balance.denom.split('/')[1];
-								let ibcDenom: IBCDenomEntity = await this.broker.call('v1.ibc-denom.getByHash', { hash: balance.denom, denom: '' });
-								if (ibcDenom) {
-									balance.denom = ibcDenom.denom;
-									balance.minimal_denom = ibcDenom.hash;
-								} else {
-									const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
-									let denomResult = await this.callApiFromDomain(url, hashParam);
-									balance.minimal_denom = balance.denom;
-									balance.denom = denomResult.denom_trace.base_denom;
-									this.broker.call('v1.ibc-denom.addNewDenom', { hash: `ibc/${hash}`, denom: balance.denom });
+						await Promise.all(
+							listSpendableBalances.map(async (balance) => {
+								if (balance.denom.startsWith('ibc/')) {
+									let hash = balance.denom.split('/')[1];
+									let ibcDenom: IBCDenomEntity = await this.broker.call(
+										'v1.ibc-denom.getByHash',
+										{ hash: balance.denom, denom: '' },
+									);
+									if (ibcDenom) {
+										balance.denom = ibcDenom.denom;
+										balance.minimal_denom = ibcDenom.hash;
+									} else {
+										const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
+										let denomResult = await this.callApiFromDomain(
+											url,
+											hashParam,
+										);
+										balance.minimal_denom = balance.denom;
+										balance.denom = denomResult.denom_trace.base_denom;
+										this.broker.call('v1.ibc-denom.addNewDenom', {
+											hash: `ibc/${hash}`,
+											denom: balance.denom,
+										});
+									}
 								}
-							}
-						}));
-						accountInfo.account_spendable_balances = listSpendableBalances;
+							}),
+						);
 					}
+					accountInfo.account_spendable_balances = listSpendableBalances;
 				}
 
 				listAccounts.push(accountInfo);

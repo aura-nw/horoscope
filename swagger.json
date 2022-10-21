@@ -19,11 +19,7 @@
             "description": "Aura Serenity LCD"
         },
         {
-            "url": "https://lcd.halo.aura.network",
-            "description": "Aura Halo LCD"
-        },
-        {
-            "url": "https://rest.sentry-01.theta-testnet.polypore.xyz",
+            "url": "https://lcd.theta.aura.network",
             "description": "Theta Testnet LCD"
         },
         {
@@ -35,7 +31,7 @@
             "description": "Osmosis Mainnet LCD"
         },
         {
-            "url": "https://rest.bd.evmos.dev:1317",
+            "url": "https://lcd.evmos.aura.network",
             "description": "Evmos Testnet LCD"
         },
         {
@@ -43,7 +39,7 @@
             "description": "Aura Euphoria LCD"
         },
         {
-            "url": "https://lcd-cosmoshub.whispernode.com",
+            "url": "https://cosmos-lcd.quickapi.com",
             "description": "Cosmos Mainnet LCD"
         }
     ],
@@ -837,6 +833,396 @@
                 }
             }
         },
+        "/v1/account-statistics": {
+            "get": {
+                "tags": [
+                    "AuraScan Statistics"
+                ],
+                "summary": "Get top accounts data",
+                "description": "Get top accounts data",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainId",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
+                                "euphoria-1",
+                                "cosmoshub-4"
+                            ]
+                        },
+                        "description": "Chain Id of network need to query",
+                        "example": "aura-testnet"
+                    },
+                    {
+                        "in": "query",
+                        "name": "field",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "TXS_SENT",
+                                "TXS_RECEIVED",
+                                "AMOUNT_SENT",
+                                "AMOUNT_RECEIVED"
+                            ]
+                        },
+                        "description": "Account's field to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dayRange",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "enum": [
+                                "1",
+                                "3",
+                                "7"
+                            ]
+                        },
+                        "description": "Day limit to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        },
+                        "description": "Number of records returned"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Top Statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "address": {
+                                                        "type": "string",
+                                                        "example": "aura1s9z065kv897was45gel6wxjcddu73fmh4qwmcu"
+                                                    },
+                                                    "per_day": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "total_sent_tx": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 100
+                                                                        },
+                                                                        "percentage": {
+                                                                            "type": "number",
+                                                                            "example": 30.45
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "total_received_tx": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 100
+                                                                        },
+                                                                        "percentage": {
+                                                                            "type": "number",
+                                                                            "example": 30.45
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "total_sent_amount": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 100
+                                                                        },
+                                                                        "percentage": {
+                                                                            "type": "number",
+                                                                            "example": 30.45
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "total_received_amount": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 100
+                                                                        },
+                                                                        "percentage": {
+                                                                            "type": "number",
+                                                                            "example": 30.45
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "one_day": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "total_sent_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_sent_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "three_days": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "total_sent_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_sent_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "seven_days": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "total_sent_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_tx": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_sent_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            },
+                                                            "total_received_amount": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 100
+                                                                    },
+                                                                    "percentage": {
+                                                                        "type": "number",
+                                                                        "example": 30.45
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.block.chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/account-unbonds": {
             "get": {
                 "tags": [
@@ -1002,8 +1388,8 @@
                 "tags": [
                     "Asset"
                 ],
-                "summary": "Register asset CW20, CW721 with the code id and contract type",
-                "description": "Register asset CW20, CW721 with the code id and contract type",
+                "summary": "Register asset CW20, CW721, CW4973 with the code id and contract type",
+                "description": "Register asset CW20, CW721, CW4973 with the code id and contract type",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1018,7 +1404,8 @@
                                         "type": "string",
                                         "enum": [
                                             "CW721",
-                                            "CW20"
+                                            "CW20",
+                                            "CW4973"
                                         ],
                                         "description": "Type of contract want to register"
                                     },
@@ -1126,8 +1513,8 @@
                 "tags": [
                     "Asset"
                 ],
-                "summary": "Get asset CW20, CW721 by owner",
-                "description": "Get asset CW20, CW721 by owner",
+                "summary": "Get asset CW20, CW721, CW4973 by owner",
+                "description": "Get asset CW20, CW721, CW4973 by owner",
                 "parameters": [
                     {
                         "in": "query",
@@ -1164,7 +1551,8 @@
                         "schema": {
                             "enum": [
                                 "CW20",
-                                "CW721"
+                                "CW721",
+                                "CW4973"
                             ],
                             "type": "string",
                             "default": "CW20"
@@ -1480,6 +1868,131 @@
                                                                     "example": 0
                                                                 }
                                                             }
+                                                        },
+                                                        "CW4973": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "asset": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "asset_info": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "data": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "access": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "approvals": {
+                                                                                                        "type": "array",
+                                                                                                        "items": {
+                                                                                                            "type": "object"
+                                                                                                        }
+                                                                                                    },
+                                                                                                    "owner": {
+                                                                                                        "type": "string",
+                                                                                                        "example": "aura123"
+                                                                                                    }
+                                                                                                }
+                                                                                            },
+                                                                                            "info": {
+                                                                                                "type": "object",
+                                                                                                "properties": {
+                                                                                                    "token_uri": {
+                                                                                                        "type": "string"
+                                                                                                    },
+                                                                                                    "extension": {
+                                                                                                        "type": "string"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "custom_info": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "chain_id": {
+                                                                                        "type": "string",
+                                                                                        "example": "aura"
+                                                                                    },
+                                                                                    "chain_name": {
+                                                                                        "type": "string",
+                                                                                        "example": "Aura network"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "history": {
+                                                                                "type": "array",
+                                                                                "items": {
+                                                                                    "type": "object"
+                                                                                }
+                                                                            },
+                                                                            "asset_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "code_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "contract_address": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "token_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "owner": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "is_burned": {
+                                                                                "type": "boolean"
+                                                                            },
+                                                                            "createdAt": {
+                                                                                "type": "string",
+                                                                                "example": "2022-08-17T06:20:19.342Z"
+                                                                            },
+                                                                            "updatedAt": {
+                                                                                "type": "string",
+                                                                                "example": "2022-08-17T06:20:19.342Z"
+                                                                            },
+                                                                            "media_info": {
+                                                                                "type": "array",
+                                                                                "items": {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "key": {
+                                                                                            "type": "string"
+                                                                                        },
+                                                                                        "media_link": {
+                                                                                            "type": "string",
+                                                                                            "example": "s3://aws.aura.network"
+                                                                                        },
+                                                                                        "status": {
+                                                                                            "type": "string",
+                                                                                            "example": "COMPLETED"
+                                                                                        },
+                                                                                        "createdAt": {
+                                                                                            "type": "string",
+                                                                                            "example": "2022-08-17T06:20:19.342Z"
+                                                                                        },
+                                                                                        "updatedAt": {
+                                                                                            "type": "string",
+                                                                                            "example": "2022-08-17T06:20:19.342Z"
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "count": {
+                                                                    "type": "number",
+                                                                    "example": 0
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1554,8 +2067,8 @@
                 "tags": [
                     "Asset"
                 ],
-                "summary": "Get asset CW20, CW721 by contract type",
-                "description": "Get asset CW20, CW721 by contract type",
+                "summary": "Get asset CW20, CW721, CW4973 by contract type",
+                "description": "Get asset CW20, CW721, CW4973 by contract type",
                 "parameters": [
                     {
                         "in": "query",
@@ -1565,7 +2078,8 @@
                             "type": "string",
                             "enum": [
                                 "CW721",
-                                "CW20"
+                                "CW20",
+                                "CW4973"
                             ]
                         },
                         "description": "Contract type need to query"
@@ -1844,8 +2358,8 @@
                 "tags": [
                     "Asset"
                 ],
-                "summary": "Get holder by asset CW20, CW721 (contractType and contractAddress)",
-                "description": "Get holder by asset CW20, CW721 (contractType and contractAddress)",
+                "summary": "Get holder by asset CW20, CW721, CW4973 (contractType and contractAddress)",
+                "description": "Get holder by asset CW20, CW721, CW4973 (contractType and contractAddress)",
                 "parameters": [
                     {
                         "in": "query",
@@ -1875,7 +2389,8 @@
                             "type": "string",
                             "enum": [
                                 "CW721",
-                                "CW20"
+                                "CW20",
+                                "CW4973"
                             ]
                         },
                         "description": "Contract type need to query"
@@ -2550,6 +3065,181 @@
                 }
             }
         },
+        "/v1/daily-tx-statistics": {
+            "get": {
+                "tags": [
+                    "AuraScan Statistics"
+                ],
+                "summary": "Get daily blockchain data",
+                "description": "Get daily blockchain data",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainId",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
+                                "euphoria-1",
+                                "cosmoshub-4"
+                            ]
+                        },
+                        "description": "Chain Id of network need to query",
+                        "example": "aura-testnet"
+                    },
+                    {
+                        "in": "query",
+                        "name": "timezone",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                -11,
+                                -10,
+                                -9,
+                                -8,
+                                -7,
+                                -6,
+                                -5,
+                                -4,
+                                -3,
+                                -2,
+                                -1,
+                                0,
+                                1,
+                                2,
+                                3,
+                                4,
+                                5,
+                                6,
+                                7,
+                                8,
+                                9,
+                                10,
+                                11,
+                                12
+                            ]
+                        },
+                        "description": "Chain Id of network need to query",
+                        "example": "aura-testnet"
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        },
+                        "description": "Number of records returned"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daily Blockchain Data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "daily_txs": {
+                                                    "type": "number",
+                                                    "example": 100
+                                                },
+                                                "daily_active_addresses": {
+                                                    "type": "number",
+                                                    "example": 100
+                                                },
+                                                "unique_addresses": {
+                                                    "type": "number",
+                                                    "example": 100
+                                                },
+                                                "date": {
+                                                    "type": "string",
+                                                    "example": "2022-10-05T00:00:00.000+00:00"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.block.chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/network/status": {
             "get": {
                 "tags": [
@@ -2975,7 +3665,7 @@
                         "name": "nextKey",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "number"
                         },
                         "description": "key for next page"
                     },
@@ -4818,7 +5508,7 @@
                                 "VOTE_OPTION_ABSTAIN"
                             ]
                         },
-                        "description": "Chain Id of network need to query"
+                        "description": "Vote option want to query"
                     },
                     {
                         "in": "query",
@@ -5045,7 +5735,7 @@
                                 "DID_NOT_VOTE"
                             ]
                         },
-                        "description": "Chain Id of network need to query"
+                        "description": "Vote option want to query"
                     }
                 ],
                 "responses": {

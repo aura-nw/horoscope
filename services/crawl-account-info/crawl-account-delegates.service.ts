@@ -8,6 +8,7 @@ import { Context, Service, ServiceBroker } from 'moleculer';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, DelegationResponse, ValidatorEntity } from '../../entities';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountDelegatesService extends Service {
@@ -20,12 +21,7 @@ export default class CrawlAccountDelegatesService extends Service {
 			name: 'crawlAccountDelegates',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-delegates',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
@@ -77,7 +73,10 @@ export default class CrawlAccountDelegatesService extends Service {
 
 				const param = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-
+				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				if (network && network.databaseName) {
+					this.adapter.useDb(network.databaseName);
+				}
 				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
 					address,
 					'custom_info.chain_id': chainId,
@@ -109,6 +108,10 @@ export default class CrawlAccountDelegatesService extends Service {
 
 				listAccounts.push(accountInfo);
 			}
+		}
+		const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
 		}
 		try {
 			listAccounts.map((element) => {

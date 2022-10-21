@@ -1,3 +1,5 @@
+import { DELAY_JOB_TYPE } from "common/constant";
+
 export interface PageLimit {
 	pageOffset: number;
 	pageLimit: number;
@@ -134,5 +136,34 @@ export interface QueryIBCDenomParams {
 export interface GetFeegrantRequest extends ChainIdParams, PageLimit {
 	granter: string;
 	grantee: string;
-	status: string
+	status: string;
+}
+export interface QueryDelayJobParams {
+	address: string;
+	type: DELAY_JOB_TYPE | DELAY_JOB_TYPE[];
+	chain_id: string;
+}
+
+export interface QueryPendingDelayJobParams {
+	chain_id: string;
+}
+
+export interface QueryTransactionStatsParams {
+	query: Object;
+	sort: string;
+	limit: number;
+	offset: number;
+}
+
+export interface BlockchainDataRequest {
+	chainId: string;
+	limit: number;
+	timezone: number;
+}
+
+export interface TopAccountsRequest {
+	chainId: string;
+	field: string;
+	dayRange: number;
+	limit: number;
 }

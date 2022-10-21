@@ -11,6 +11,8 @@ import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { ListTxInBlockParams, TransactionHashParam } from 'types';
+import { QueueConfig } from '../../config/queue';
+
 export default class CrawlTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private callApiMixin = new CallApiMixin().start();
@@ -21,12 +23,7 @@ export default class CrawlTransactionService extends Service {
 			name: 'crawltransaction',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.transaction',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.callApiMixin,
 			],
@@ -126,7 +123,6 @@ export default class CrawlTransactionService extends Service {
 	}
 	async _start() {
 		this.redisClient = await this.getRedisClient();
-
 		this.getQueue('crawl.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

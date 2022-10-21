@@ -12,6 +12,8 @@ import { Job } from 'bull';
 import { IRedisStreamData, IRedisStreamResponse, ListBlockCreatedParams } from '../../types';
 import { ListTxInBlockParams } from '../../types';
 import { CONST_CHAR } from 'common/constant';
+import { QueueConfig } from '../../config/queue';
+
 export default class HandleBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbBlockMixin = dbBlockMixin;
@@ -23,12 +25,7 @@ export default class HandleBlockService extends Service {
 			name: 'handleblock',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.block',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.dbBlockMixin,
 			],
@@ -200,7 +197,7 @@ export default class HandleBlockService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_BLOCK, 10),

@@ -1,3 +1,4 @@
+import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import RedisMixin from "../../mixins/redis/redis.mixin";
 import { Service, ServiceBroker } from "moleculer";
 import { Config } from "../../common";
@@ -7,15 +8,16 @@ import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from "../../common/constant";
 import { ListTxCreatedParams } from "../../types";
 import { ObjectId } from "mongodb";
 import { mongoDBMixin } from "../../mixins/dbMixinMongoDB/mongodb.mixin";
-import { dbTransactionMixin } from "../../mixins/dbMixinMongoose";
+import { dbAccountInfoMixin } from "../../mixins/dbMixinMongoose";
+import { AccountInfoEntity, ITransaction, Rewards } from "../../entities";
+import { JsonConvert } from "json2typescript";
 const QueueService = require('moleculer-bull');
 const knex = require('../../config/database');
-const mongo = require('mongodb');
 
 export default class IndexDelegatorsService extends Service {
     private mongoDbMixin = mongoDBMixin;
     private redisMixin = new RedisMixin().start();
-    private dbTransactionMixin = dbTransactionMixin;
+    private dbAccountInfoMixin = dbAccountInfoMixin;
     public constructor(public broker: ServiceBroker) {
         super(broker);
         this.parseServiceSchema({
@@ -28,9 +30,7 @@ export default class IndexDelegatorsService extends Service {
                         prefix: 'index.delegators',
                     },
                 ),
-                // dbAccountDelegationsMixin,
-                // dbAccountAuthMixin,
-                this.dbTransactionMixin,
+                this.dbAccountInfoMixin,
                 this.redisMixin,
                 this.mongoDbMixin,
             ],
@@ -49,7 +49,7 @@ export default class IndexDelegatorsService extends Service {
         });
     }
 
-    async handleJob(lastId: string) {
+    async handleJob(lastId: number) {
         // const listAddresses = [
         //     "aura1zcsmykewyuwr25d4egmjmvuc3xpf38fupunthq",
         //     "aura1letj04jee803tddhcllj8lp6y6fzcctw2aex0y",
@@ -411,73 +411,186 @@ export default class IndexDelegatorsService extends Service {
         //     console.log(`${validator.title},${validator.address},${addresses},${vote_count}/${total_votes}`);
         // };
 
-        let query: any = {
-            'custom_info.chain_id': 'serenity-testnet-001', // , 'euphoria-1', 'aura-testnet'
-            'tx.body.messages.@type': {
-                $in: [MSG_TYPE.MSG_DELEGATE, MSG_TYPE.MSG_REDELEGATE, MSG_TYPE.MSG_UNDELEGATE, MSG_TYPE.MSG_WITHDRAW_REWARDS]
-            }
+        let network = {
+            chain_id: 'serenity-testnet-001',
+            denom: 'uaura',
         };
-        query['indexes'] = { $eq: null };
-        if (lastId == '0') {
-        } else {
-            query['_id'] = { $gt: new ObjectId(lastId) };
-        }
-        const listTx = await this.adapter.find({
-            query,
-            sort: '_id',
-            limit: 100,
-            offset: 0,
-        });
-        if (listTx.length > 0) {
-            this.logger.info(`Last tx id: ${listTx[listTx.length - 1]._id.toString()}`);
-            this.createJob(
-                'index.delegators',
-                {
-                    //@ts-ignore
-                    lastId: listTx[listTx.length - 1]._id.toString(),
-                },
-                {
-                    removeOnComplete: true,
-                },
-            );
-        }
-        this.broker.emit('account-info.upsert-claimed-rewards', {
-            listTx,
-            chainId: 'serenity-testnet-001',
-        });
+        let newLastId = 0;
+        let queryMySQL: any[] = [], listAccounts: any[] = [], listUpdateQueries: any[] = [], listDelegators: any[] = [];
+        // let listAddresses = await knex('delegator_rewards')
+        //     .select('max(id) as last_id', 'delegator_address').groupBy('delegator_address')
+        //     .orderBy('last_id').limit(100);
+        let listAddresses = (await knex.raw(`
+        select * from (
+            select max(id) as last_id, delegator_address from delegator_rewards
+            group by delegator_address order by last_id
+        ) as dr
+        where dr.last_id > ? limit 50;
+        `, [lastId]))[0];
+        this.logger.info(`List addresses: ${JSON.stringify(listAddresses)}`);
 
-        // const listVestingAccounts = await this.adapter.find({
-        //     query: {
-        //         'account.result.type': {
-        //             $in: [
-        //                 'cosmos-sdk/ContinuousVestingAccount',
-        //                 'cosmos-sdk/PeriodicVestingAccount',
-        //                 'cosmos-sdk/DelayedVestingAccount'
-        //             ]
-        //         }
-        //     },
-        // });
-        // LIST_NETWORK.map((network) => {
-        //     this.broker.emit('list-tx.upsert', {
-        //         listTx: listVestingAccounts.filter((v: any) => v.custom_info.chain_id === network.chainId),
-        //         source: CONST_CHAR.API,
-        //         chainId: network.chainId,
-        //     } as ListTxCreatedParams);
-        // });
-    }
+        for (let addr of listAddresses) {
+            queryMySQL.push(knex('delegator_rewards').select(knex.raw(`*, max(id) as last_id, sum(amount) as total_rewards`))
+                .where({ delegator_address: addr.delegator_address }).groupBy('validator_address').orderBy('last_id'));
+            listDelegators.push(addr.delegator_address);
+        }
+        let [resultMySQL, resultMongo] = await Promise.all([
+            Promise.all(queryMySQL),
+            this.adapter.find({
+                query: {
+                    address: { $in: listDelegators },
+                    'custom_info.chain_id': network.chain_id
+                }
+            })
+        ]);
 
-    sleep(ms: number) {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms);
-        });
-    }
+        if (resultMySQL.length > 0) {
+            resultMySQL.map((res: any) => {
+                let account = resultMongo.find((a: any) => a.address === res[0].delegator_address
+                    && a.custom_info.chain_id === network.chain_id);
+                if (account) {
+                    account.account_claimed_rewards = [] as Rewards[];
+                    res.map((r: any) =>
+                        account.account_claimed_rewards.push({
+                            validator_address: r.validator_address,
+                            amount: r.total_rewards,
+                            denom: network.denom
+                        })
+                    );
+                    listAccounts.push(account);
+                } else {
+                    const chain = LIST_NETWORK.find((x) => x.chainId === network.chain_id);
+                    const newAcc: AccountInfoEntity = {} as AccountInfoEntity;
+                    newAcc.address = res[0].delegator_address;
+                    newAcc.account_claimed_rewards = [] as Rewards[];
+                    res.map((r: any) =>
+                        newAcc.account_claimed_rewards.push({
+                            validator_address: r.validator_address,
+                            amount: r.total_rewards,
+                            denom: network.denom
+                        })
+                    );
+                    const item: AccountInfoEntity = new JsonConvert().deserializeObject(
+                        newAcc,
+                        AccountInfoEntity,
+                    );
+                    item.custom_info = {
+                        chain_id: network.chain_id,
+                        chain_name: chain ? chain.chainName : '',
+                    };
+                    listAccounts.push(item);
+                }
+            });
+
+            try {
+                listAccounts.map((element) => {
+                    if (element._id)
+                        listUpdateQueries.push(
+                            this.adapter.updateById(element._id, {
+                                $set: { account_claimed_rewards: element.account_claimed_rewards }
+                            }),
+                        );
+                    else {
+                        listUpdateQueries.push(this.adapter.insert(element));
+                    }
+                });
+                await Promise.all(listUpdateQueries);
+            } catch (error) {
+                this.logger.error(error);
+            }
+            newLastId = resultMySQL.at(-1)?.at(-1)?.last_id;
+            this.logger.info(`lastId: ${newLastId}`);
+            this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, newLastId?.toString());
+            this.createJob('index.delegators', { lastId: newLastId }, { removeOnComplete: true });
+        }
+
+        // let query: any = {};
+        // if (lastTxId !== '0') query = { _id: { $gt: new ObjectId(lastTxId) } }
+
+        // this.logger.info(`stopPoint: ${stopPoint}, lastTxId: ${lastTxId}`);
+        // if (stopPoint && lastTxId > stopPoint) return true;
+        // if (stopPoint) {
+        //     query =
+        //         lastTxId === '0'
+        //             ? { _id: { $lt: new ObjectId(stopPoint) } }
+        //             : { _id: { $gt: new ObjectId(lastTxId), $lt: new ObjectId(stopPoint) } };
+        // }
+        // query['indexes.message_action'] = { $in: [MSG_TYPE.MSG_DELEGATE, MSG_TYPE.MSG_REDELEGATE, MSG_TYPE.MSG_UNDELEGATE, MSG_TYPE.MSG_WITHDRAW_REWARDS] };
+
+        // const listTx: ITransaction[] = await this.adapter.find({
+        //     query,
+        //     sort: '_id',
+        //     limit: 100,
+        //     skip: 0,
+        // });
+
+        // if (listTx.length > 0) {
+        //     const lastId = listTx.at(-1)?._id;
+        //     this.logger.info(`lastId: ${lastId}`);
+        //     this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, lastId?.toString());
+        //     const stopPoint = Config.SCAN_TX_STOP_POINT;
+        //     await this.broker.call('v1.handleAddress.accountinfoupsert', { listTx, source: CONST_CHAR.CRAWL, chainId: '' });
+        //     this.createJob('index.delegators', { lastId, stopPoint }, { removeOnComplete: true });
+        // }
+        // return true;
+
+        // let query: any = {};
+        // if (lastTxId !== '0') query = { _id: { $gt: new ObjectId(lastTxId) } }
+
+        // this.logger.info(`stopPoint: ${stopPoint}, lastTxId: ${lastTxId}`);
+        // if (stopPoint && lastTxId > stopPoint) return true;
+        // if (stopPoint) {
+        //     query =
+        //         lastTxId === '0'
+        //             ? { _id: { $lt: new ObjectId(stopPoint) } }
+        //             : { _id: { $gt: new ObjectId(lastTxId), $lt: new ObjectId(stopPoint) } };
+        // }
+        // query['indexes.message_action'] = { $in: [MSG_TYPE.MSG_DELEGATE, MSG_TYPE.MSG_REDELEGATE, MSG_TYPE.MSG_UNDELEGATE, MSG_TYPE.MSG_WITHDRAW_REWARDS] };
+
+        // const listTx: ITransaction[] = await this.adapter.find({
+        //     query,
+        //     sort: '_id',
+        //     limit: 100,
+        //     skip: 0,
+        // });
+
+        // if (listTx.length > 0) {
+        //     const lastId = listTx.at(-1)?._id;
+        //     this.logger.info(`lastId: ${lastId}`);
+        //     this.redisClient.set(Config.REDIS_KEY_START_TX_REWARDS, lastId?.toString());
+        //     const stopPoint = Config.SCAN_TX_STOP_POINT;
+        //     await this.broker.call('v1.handleAddress.accountinfoupsert', { listTx, source: CONST_CHAR.CRAWL, chainId: '' });
+        //     this.createJob('index.delegators', { lastId, stopPoint }, { removeOnComplete: true });
+        // }
+        // return true;
+
+		// const listVestingAccounts = await this.adapter.find({
+		//     query: {
+		//         'account.result.type': {
+		//             $in: [
+		//                 'cosmos-sdk/ContinuousVestingAccount',
+		//                 'cosmos-sdk/PeriodicVestingAccount',
+		//                 'cosmos-sdk/DelayedVestingAccount'
+		//             ]
+		//         }
+		//     },
+		// });
+		// LIST_NETWORK.map((network) => {
+		//     this.broker.emit('list-tx.upsert', {
+		//         listTx: listVestingAccounts.filter((v: any) => v.custom_info.chain_id === network.chainId),
+		//         source: CONST_CHAR.API,
+		//         chainId: network.chainId,
+		//     } as ListTxCreatedParams);
+		// });
+	}
 
     async _start() {
         this.redisClient = await this.getRedisClient();
+        let lastId = parseInt((await this.redisClient.get(Config.REDIS_KEY_START_TX_REWARDS))) || 0;
         this.createJob(
             'index.delegators',
             {
-                lastId: '0',
+                lastId,
             },
             {
                 removeOnComplete: true,

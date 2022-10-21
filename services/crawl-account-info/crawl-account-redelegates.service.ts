@@ -3,7 +3,6 @@ import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
 import {
-	DELAY_JOB_STATUS,
 	DELAY_JOB_TYPE,
 	LIST_NETWORK,
 	URL_TYPE_CONSTANTS,
@@ -13,14 +12,13 @@ import { Context, Service, ServiceBroker } from 'moleculer';
 import { RedelegationResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
 const QueueService = require('moleculer-bull');
 const Bull = require('bull');
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlAccountRedelegatesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
-	private mongoDBMixin = mongoDBMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -28,16 +26,10 @@ export default class CrawlAccountRedelegatesService extends Service {
 			name: 'crawlAccountRedelegates',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-redelegates',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
-				this.mongoDBMixin,
 			],
 			queues: {
 				'crawl.account-redelegates': {
@@ -76,10 +68,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
-		this.mongoDBClient = await this.connectToDB();
-		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let delayJob = await db.collection('delay_job');
-
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [],
 			listDelayJobs: DelayJobEntity[] = [];
@@ -93,6 +81,10 @@ export default class CrawlAccountRedelegatesService extends Service {
 					Config.GET_PARAMS_DELEGATOR + `/${address}/redelegations?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
+				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				if (network && network.databaseName) {
+					this.adapter.useDb(network.databaseName);
+				}
 				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
 					address,
 					'custom_info.chain_id': chainId,
@@ -127,7 +119,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 						newDelayJob.expire_time = new Date(
 							redelegate.entries[0].redelegation_entry.completion_time!,
 						);
-						newDelayJob.status = DELAY_JOB_STATUS.PENDING;
+						newDelayJob.indexes = address + newDelayJob.type + newDelayJob.expire_time!.getTime() + chainId;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: chain ? chain.chainName : '',
@@ -140,6 +132,10 @@ export default class CrawlAccountRedelegatesService extends Service {
 			}
 		}
 		try {
+			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
 			listAccounts.map((element) => {
 				if (element._id)
 					listUpdateQueries.push(
@@ -160,7 +156,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 				}
 			});
 			listDelayJobs.map((element) => {
-				listUpdateQueries.push(delayJob.insertMany([element]));
+				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', element));
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {

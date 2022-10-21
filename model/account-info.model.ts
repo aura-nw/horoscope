@@ -7,10 +7,7 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 	address: String,
 	account_auth: {
 		height: String,
-		result: {
-			type: { type: String },
-			value: Object,
-		}
+		result: Object
 	},
 	account_balances: [
 		{
@@ -74,13 +71,6 @@ const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 		{
 			delegator_address: String,
 			validator_address: String,
-			validator_description: {
-				moniker: String,
-				identity: String,
-				website: String,
-				details: String,
-				security_contact: String,
-			},
 			entries: [
 				{
 					creation_height: String,
@@ -113,5 +103,6 @@ export const accountInfoMongoModel = (collection: string): unknown => {
 	});
 	// @ts-ignore
 	schema.index({ 'address': 1, 'custom_info.chain_id': 1 }, { unique: true });
+	schema.index({ 'account_auth.result.type': 1 });
 	return models[collection] || model(collection, schema);
 };

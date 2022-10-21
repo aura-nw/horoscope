@@ -3,7 +3,6 @@ import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
 import {
-	DELAY_JOB_STATUS,
 	DELAY_JOB_TYPE,
 	LIST_NETWORK,
 	URL_TYPE_CONSTANTS,
@@ -12,15 +11,14 @@ import {
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { Utils } from '../../utils/utils';
-import { CrawlAccountInfoParams } from '../../types';
+import { CrawlAccountInfoParams, QueryDelayJobParams } from '../../types';
 import { AccountInfoEntity, DelayJobEntity } from '../../entities';
-import { mongoDBMixin } from '../../mixins/dbMixinMongoDB/mongodb.mixin';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountAuthInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
-	private mongoDBMixin = mongoDBMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -28,16 +26,10 @@ export default class CrawlAccountAuthInfoService extends Service {
 			name: 'crawlAccountAuthInfo',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-auth-info',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
-				this.mongoDBMixin,
 			],
 			queues: {
 				'crawl.account-auth-info': {
@@ -76,10 +68,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
-		this.mongoDBClient = await this.connectToDB();
-		const db = this.mongoDBClient.db(Config.DB_GENERIC_DBNAME);
-		let delayJob = await db.collection('delay_job');
-
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [],
 			listDelayJobs: DelayJobEntity[] = [];
@@ -105,39 +93,16 @@ export default class CrawlAccountAuthInfoService extends Service {
 						resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC ||
 						resultCallApi.result.type === VESTING_ACCOUNT_TYPE.DELAYED
 					) {
-						// let delay = resultCallApi.result.value.base_vesting_account.end_time - new Date().getTime();
-						// const apiKeyQueue = new Bull(
-						//     'handle.address',
-						//     {
-						//         redis: {
-						//             host: Config.REDIS_HOST,
-						//             port: Config.REDIS_PORT,
-						//             username: Config.REDIS_USERNAME,
-						//             password: Config.REDIS_PASSWORD,
-						//             db: Config.REDIS_DB_NUMBER,
-						//         },
-						//         prefix: 'handle.address',
-						//         defaultJobOptions: {
-						//             jobId: `${address}_${chainId}_${resultCallApi.result.value.base_vesting_account.end_time}`,
-						//             removeOnComplete: true,
-						//             delay,
-						//         }
-						//     }
-						// );
-						// apiKeyQueue.add({
-						//     listTx: [
-						//         {
-						//             address,
-						//         }
-						//     ],
-						//     source: CONST_CHAR.API,
-						//     chainId,
-						// });
-						const existsJob = await delayJob.findOne({
-							'content.address': address,
-							type: DELAY_JOB_TYPE.PERIODIC_VESTING,
-							'custom_info.chain_id': chainId,
-						});
+						const existsJob = await this.broker.call(
+							'v1.delay-job.findOne',
+							{
+								address,
+								type: resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC
+									? DELAY_JOB_TYPE.PERIODIC_VESTING
+									: DELAY_JOB_TYPE.DELAYED_VESTING,
+								chain_id: chainId,
+							} as QueryDelayJobParams
+						);
 						if (!existsJob) {
 							let newDelayJob = {} as DelayJobEntity;
 							newDelayJob.content = { address };
@@ -146,7 +111,8 @@ export default class CrawlAccountAuthInfoService extends Service {
 									newDelayJob.type = DELAY_JOB_TYPE.DELAYED_VESTING;
 									newDelayJob.expire_time = new Date(
 										parseInt(
-											resultCallApi.result.value.base_vesting_account.end_time,
+											resultCallApi.result.value.base_vesting_account
+												.end_time,
 											10,
 										) * 1000,
 									);
@@ -166,20 +132,22 @@ export default class CrawlAccountAuthInfoService extends Service {
 										start_time +
 										number_of_periods *
 										parseInt(
-											resultCallApi.result.value.vesting_periods[0].length,
+											resultCallApi.result.value.vesting_periods[0]
+												.length,
 											10,
 										) *
 										1000;
 									if (expire_time < new Date().getTime())
 										expire_time +=
 											parseInt(
-												resultCallApi.result.value.vesting_periods[0].length,
+												resultCallApi.result.value.vesting_periods[0]
+													.length,
 												10,
 											) * 1000;
 									newDelayJob.expire_time = new Date(expire_time);
 									break;
 							}
-							newDelayJob.status = DELAY_JOB_STATUS.PENDING;
+							newDelayJob.indexes = address + newDelayJob.type + newDelayJob.expire_time!.getTime() + chainId;
 							newDelayJob.custom_info = {
 								chain_id: chainId,
 								chain_name: chain ? chain.chainName : '',
@@ -197,6 +165,10 @@ export default class CrawlAccountAuthInfoService extends Service {
 			}
 		}
 		try {
+			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
 			listAccounts.map((element) => {
 				if (element._id)
 					listUpdateQueries.push(
@@ -217,7 +189,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 				}
 			});
 			listDelayJobs.map((element) => {
-				listUpdateQueries.push(delayJob.insertMany([element]));
+				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', element));
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {

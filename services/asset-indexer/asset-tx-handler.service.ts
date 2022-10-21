@@ -23,6 +23,7 @@ import { info } from 'console';
 import { IAttribute, IEvent, ITransaction } from 'entities';
 import { toBase64, toUtf8, fromBase64, fromUtf8 } from '@cosmjs/encoding';
 import { Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
@@ -39,12 +40,7 @@ export default class CrawlAccountInfoService extends Service {
 			name: 'handle-asset-tx',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'asset.tx-handle',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAssetMixin,
 				this.callApiMixin,
 			],
@@ -62,6 +58,7 @@ export default class CrawlAccountInfoService extends Service {
 						this.handleJob(URL, job.data.listTx, job.data.chainId);
 						// @ts-ignore
 						this.handleTxBurnCw721(job.data.listTx, job.data.chainId);
+						// TODO: handleTxBurnCw4973 ???
 						job.progress(100);
 						return true;
 					},
@@ -194,6 +191,8 @@ export default class CrawlAccountInfoService extends Service {
 			}
 		});
 	}
+	
+	// TODO: handleTxBurnCw4973 ???
 
 	async verifyAddressByCodeID(URL: string, address: string, chain_id: string) {
 		let urlGetContractInfo = `${CONTRACT_URI}${address}`;

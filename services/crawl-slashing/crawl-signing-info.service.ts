@@ -14,6 +14,7 @@ const tmhash = require('tendermint/lib/hash');
 import { bech32 } from 'bech32';
 import { Utils } from '../../utils/utils';
 import { JsonConvert } from 'json2typescript';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlSigningInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -25,12 +26,7 @@ export default class CrawlSigningInfoService extends Service {
 			name: 'crawlSigningInfo',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.signinginfo',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbValidatorMixin,
 			],

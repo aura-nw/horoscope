@@ -36,6 +36,23 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 						return null;
 					}
 				},
+
+				async callApiWithAxios(domain: string, path: string) {
+					let callApiClient = axios.create({
+						baseURL: domain,
+					});
+					try {
+						let result = await callApiClient.get(path);
+						if (result.data) {
+							return result.data;
+						} else {
+							return null;
+						}
+					} catch (error) {
+						this.logger.error(error);
+						return null;
+					}
+				},
 			},
 		};
 	}

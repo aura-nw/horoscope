@@ -10,7 +10,7 @@ export enum ErrorMessage {
 	DUPLICATED_EMAIL = 'user.duplicated.email',
 	DELETE_ITSELF = 'user.delete.itself',
 	ADDRESS_NOT_FOUND = 'Address not found',
-	CRAWL_SUCCESSFUL = 'Data crawl successful! Please call API again to get data',
+	CRAWL_SUCCESSFUL = 'Data is preparing! Please call API again in a few minutes',
 	VALIDATION_ERROR = 'Validation error',
 }
 

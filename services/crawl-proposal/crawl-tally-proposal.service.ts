@@ -11,6 +11,7 @@ import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { ListTxCreatedParams } from 'types';
 import { IProposal, ITransaction, IVoteTx } from 'entities';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -22,12 +23,7 @@ export default class CrawlProposalService extends Service {
 			name: 'crawlTallyProposal',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.tally.proposal',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbProposalMixin,
 			],
@@ -73,14 +69,36 @@ export default class CrawlProposalService extends Service {
 		let result = await this.callApiFromDomain(url, path);
 		this.logger.debug(result);
 
-		let foundProposal = await this.adapter.findOne({
-			proposal_id: `${proposalId}`,
-			'custom_info.chain_id': Config.CHAIN_ID,
-		});
+		let [foundProposal, foundStakingPool]: [any, any] = await Promise.all([
+			this.adapter.findOne({
+				proposal_id: `${proposalId}`,
+				'custom_info.chain_id': Config.CHAIN_ID,
+			}),
+			this.broker.call('v1.crawlPool.find', {
+				query: {
+					'custom_info.chain_id': Config.CHAIN_ID,
+				},
+			}),
+		]);
 		if (foundProposal) {
 			try {
+				let adding: any = { tally: result.tally };
+				let tally = result.tally;
+				if (foundStakingPool && foundStakingPool.length > 0) {
+					let turnout =
+						Number(
+							((BigInt(tally.yes) +
+								BigInt(tally.no) +
+								BigInt(tally.abstain) +
+								BigInt(tally.no_with_veto)) *
+								BigInt(100000000)) /
+								BigInt(foundStakingPool[0].bonded_tokens),
+						) / 1000000;
+					adding['turnout'] = turnout;
+				}
+
 				let res = await this.adapter.updateById(foundProposal._id, {
-					$set: { tally: result.tally },
+					$set: adding,
 				});
 				this.logger.debug(res);
 			} catch (error) {

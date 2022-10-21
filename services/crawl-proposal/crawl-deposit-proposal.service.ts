@@ -11,6 +11,7 @@ import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { IDepositProposalResponseFromLCD, ListTxCreatedParams } from 'types';
 import { IDeposit, IProposal, ITransaction } from 'entities';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -22,18 +23,7 @@ export default class CrawlProposalService extends Service {
 			name: 'crawlDepositProposal',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.deposit.proposal',
-					},
-				),
-				// QueueService(
-				// 	`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-				// 	{
-				// 		prefix: 'crawl.deposit.tx',
-				// 	},
-				// ),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbProposalMixin,
 			],

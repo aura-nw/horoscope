@@ -8,7 +8,8 @@
 		"LCD":[
 		   "https://lcd.dev.aura.network"
 		],
-		"prefixAddress":"aura"
+		"prefixAddress":"aura",
+		"databaseName":"horoscope_dev_auratestnet"
 	},
 	{
 		"chainName":"Aura Serenity",
@@ -19,29 +20,20 @@
 		"LCD":[
 		   "https://lcd.serenity.aura.network"
 		],
-		"prefixAddress":"aura"
-	},
-	{
-		"chainName":"Aura Halo",
-		"chainId":"halo-testnet-001",
-		"RPC":[
-			"https://rpc.halo.aura.network"
-		],
-		"LCD":[
-			"https://lcd.halo.aura.network"
-		],
-		"prefixAddress":"aura"
+		"prefixAddress":"aura",
+		"databaseName":"horoscope_dev_serenitytestnet001"
 	},
 	{
 		"chainName":"Theta Testnet",
 		"chainId":"theta-testnet-001",
 		"RPC":[
-			"https://rpc.sentry-01.theta-testnet.polypore.xyz"
+			"https://rpc.theta.aura.network"
 		],
 		"LCD":[
-			"https://rest.sentry-01.theta-testnet.polypore.xyz"
+			"https://lcd.theta.aura.network"
 		],
-		"prefixAddress":"cosmos"
+		"prefixAddress":"cosmos",
+		"databaseName":"horoscope_dev_thetatestnet001"
 	},
 	{
 		"chainName":"Osmosis Testnet",
@@ -52,7 +44,9 @@
 		"LCD":[
 			"https://osmosistest-lcd.quickapi.com"
 		],
-		"prefixAddress":"osmo"
+		"prefixAddress":"osmo",
+		"databaseName":"horoscope_dev_osmotest4"
+
 	},
 	{
 		"chainName":"Osmosis Mainnet",
@@ -63,19 +57,20 @@
 		"LCD":[
 			"https://lcd.osmosis.zone"
 		],
-		"prefixAddress":"osmo"
+		"prefixAddress":"osmo",
+		"databaseName":"horoscope_dev_osmosis1"
 	},
 	{
 		"chainName":"Evmos Testnet",
 		"chainId":"evmos_9000-4",
 		"RPC":[
-			"https://tendermint.bd.evmos.dev:26657"
-			
+			"https://rpc.evmos.aura.network"
 		],
 		"LCD":[
-			"https://rest.bd.evmos.dev:1317"
+			"https://lcd.evmos.aura.network"
 		],
-		"prefixAddress":"evmos"
+		"prefixAddress":"evmos",
+		"databaseName":"horoscope_dev_evmos90004"
 	},
 	{
 		"chainName":"Aura Euphoria",
@@ -86,17 +81,19 @@
 		"LCD":[
 		   "https://lcd.euphoria.aura.network"
 		],
-		"prefixAddress":"aura"
+		"prefixAddress":"aura",
+		"databaseName":"horoscope_dev_euphoria1"
 	},
 	{
 		"chainName":"Cosmos Mainnet",
 		"chainId":"cosmoshub-4",
 		"RPC":[
-		   "https://rpc-cosmoshub.whispernode.com"
+		   "https://cosmos-lcd.quickapi.com"
 		],
 		"LCD":[
-		   "https://lcd-cosmoshub.whispernode.com"
+		   "https://cosmos-lcd.quickapi.com"
 		],
-		"prefixAddress":"cosmos"
+		"prefixAddress":"cosmos",
+		"databaseName":"horoscope_dev_cosmoshub4"
 	}
 ]

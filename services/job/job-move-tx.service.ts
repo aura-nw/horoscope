@@ -162,7 +162,7 @@ export default class MoveTxService extends Service {
 			{
 				removeOnComplete: true,
 				removeOnFail: {
-					count: 10,
+					count: 3,
 				},
 			},
 		);
