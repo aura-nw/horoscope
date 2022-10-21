@@ -220,271 +220,50 @@ export default class FeegrantService extends MoleculerDBService<
      *                  data:
      *                    type: object
      *                    properties:
-     *                      transaction:
-     *                        type: object
-     *                        properties:
-     *                          tx:
-     *                            type: object
-     *                            properties:
-     *                              body:
-     *                                type: object
-     *                                properties:
-     *                                  messages:
-     *                                    type: array
-     *                                    items:
-     *                                      type: object
-     *                                      properties:
-     *                                        '@type':
-     *                                          type: string
-     *                                          example: '/cosmos.staking.v1beta1.MsgDelegate'
-     *                                        delegator_address:
-     *                                          type: string
-     *                                          example: 'aura123123123123'
-     *                                        validator_address:
-     *                                          type: string
-     *                                          example: 'aura123123123123'
-     *                                  extension_options:
-     *                                    type: array
-     *                                    items:
-     *                                      type: object
-     *                                  non_critical_extension_options:
-     *                                    type: array
-     *                                    items:
-     *                                      type: object
-     *                                  memo:
-     *                                    type: string
-     *                                    example: "This is Aura Tx"
-     *                                  timeout_height:
-     *                                    type: string
-     *                                    example: "0"
-     *                              auth_info:
-     *                                type: object
-     *                                properties:
-     *                                  fee:
-     *                                    type: object
-     *                                    properties:
-     *                                      amount:
-     *                                        type: array
-     *                                        items:
-     *                                          properties:
-     *                                            denom:
-     *                                              type: string
-     *                                              example: 'uaura'
-     *                                            amount:
-     *                                              type: string
-     *                                              example: '1000000'
-     *                                      gas_limit:
-     *                                        type: string
-     *                                        example: '100000'
-     *                                      payer:
-     *                                        type: string
-     *                                        example: ''
-     *                                      granter:
-     *                                        type: string
-     *                                        example: ''
-     *                                  signer_infos:
-     *                                    type: array
-     *                                    items:
-     *                                      type: object
-     *                                      properties:
-     *                                        mode_info:
-     *                                          type: object
-     *                                          properties:
-     *                                            single:
-     *                                              type: object
-     *                                              properties:
-     *                                                mode:
-     *                                                  type: string
-     *                                                  example: "SIGN_MODE_DIRECT"
-     *                                        public_key:
-     *                                          type: object
-     *                                          properties:
-     *                                            '@type':
-     *                                              type: string
-     *                                              example: '/cosmos.crypto.secp256k1.PubKey'
-     *                                            key:
-     *                                              type: string
-     *                                              example: 'xxxxxxxxxxxxxxxxxxxx'
-     *                                        sequence:
-     *                                          type: string
-     *                                          example: '1000000'
-     *                              signatures:
-     *                                type: array
-     *                                items:
-     *                                  type: string
-     *                                  example: 'xxxxxxxxxxxxxxx'
-     *                          tx_response:
-     *                            type: object
-     *                            properties:
-     *                              height:
-     *                                type: number
-     *                                example: 10000
-     *                              txhash:
-     *                                type: string
-     *                                example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-     *                              codespace:
-     *                                type: string
-     *                                example: ''
-     *                              code:
-     *                                type: string
-     *                                example: '0'
-     *                              data:
-     *                                type: string
-     *                                example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-     *                              raw_log:
-     *                                type: string
-     *                                example: '[{\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"xxxxx\"}]'
-     *                              logs:
-     *                                type: array
-     *                                items:
-     *                                  type: object
-     *                                  properties:
-     *                                    msg_index:
-     *                                      type: number
-     *                                      example: 0
-     *                                    log:
+     *                      grants:
+     *                        type: array
+     *                        items:
+     *                          type: object
+     *                          properties:
+     *                            _id:
+     *                              type: string
+     *                              example: '6350f029e5f359bddeadcb08'
+     *                            custom_info:
+     *                              type: object
+     *                              properties:
+     *                                  chain_id:
      *                                      type: string
-     *                                      example: ''
-     *                                    events:
-     *                                      type: array
-     *                                      items:
-     *                                        type: object
-     *                                        properties:
-     *                                          'type':
-     *                                            type: string
-     *                                            example: 'coin_received'
-     *                                          attributes:
-     *                                            type: array
-     *                                            items:
-     *                                              type: object
-     *                                              properties:
-     *                                                key:
-     *                                                  type: string
-     *                                                  example: receiver
-     *                                                value:
-     *                                                  type: string
-     *                                                  example: 'aura123123123123123'
-     *                              info:
-     *                                type: string
-     *                              gas_wanted:
-     *                                type: string
-     *                                example: "200000"
-     *                              gas_used:
-     *                                type: string
-     *                                example: "150000"
-     *                              tx:
-     *                                type: object
-     *                                properties:
-     *                                  '@type':
-     *                                    type: string
-     *                                    example: '/cosmos.tx.v1beta1.Tx'
-     *                                  body:
-     *                                    type: object
-     *                                    properties:
-     *                                      messages:
-     *                                        type: array
-     *                                        items:
-     *                                          type: object
-     *                                          properties:
-     *                                            '@type':
-     *                                              type: string
-     *                                              example: '/cosmos.staking.v1beta1.MsgDelegate'
-     *                                            delegator_address:
-     *                                              type: string
-     *                                              example: 'aura123123123123123'
-     *                                            validator_address:
-     *                                              type: string
-     *                                              example: 'aura123123123123123123'
-     *                                      memo:
-     *                                        type: string
-     *                                      timeout_height:
-     *                                        type: string
-     *                                        example: '0'
-     *                                      extension_options:
-     *                                        type: array
-     *                                        items:
-     *                                          type: object
-     *                                      non_critical_extension_options:
-     *                                        type: array
-     *                                        items:
-     *                                          type: object
-     *                                  auth_info:
-     *                                    type: object
-     *                                    properties:
-     *                                      fee:
-     *                                        type: object
-     *                                        properties:
-     *                                          amount:
-     *                                            type: array
-     *                                            items:
-     *                                              properties:
-     *                                                denom:
-     *                                                  type: string
-     *                                                  example: 'uaura'
-     *                                                amount:
-     *                                                  type: string
-     *                                                  example: '1000000'
-     *                                          gas_limit:
-     *                                            type: string
-     *                                            example: '100000'
-     *                                          payer:
-     *                                            type: string
-     *                                            example: ''
-     *                                          granter:
-     *                                            type: string
-     *                                            example: ''
-     *                                      signer_infos:
-     *                                        type: array
-     *                                        items:
-     *                                          type: object
-     *                                          properties:
-     *                                            mode_info:
-     *                                              type: object
-     *                                              properties:
-     *                                                single:
-     *                                                  type: object
-     *                                                  properties:
-     *                                                    mode:
-     *                                                      type: string
-     *                                                      example: "SIGN_MODE_DIRECT"
-     *                                            public_key:
-     *                                              type: object
-     *                                              properties:
-     *                                                '@type':
-     *                                                  type: string
-     *                                                  example: '/cosmos.crypto.secp256k1.PubKey'
-     *                                                key:
-     *                                                  type: string
-     *                                                  example: 'xxxxxxxxxxxxxxxxxxxx'
-     *                                            sequence:
-     *                                              type: string
-     *                                              example: '1000000'
-     *                                  signatures:
-     *                                    type: array
-     *                                    items:
+     *                                      example: 'euphoria-1'
+     *                                  chain_name:
      *                                      type: string
-     *                                      example: 'xxxxxxxxxxxxxxx'
-     *                              timestamp:
-     *                                type: string
-     *                                example: '2022-09-13T03:17:45.000Z'
-     *                              events:
-     *                                type: array
-     *                                items:
-     *                                  type: object
-     *                                  properties:
-     *                                    'type':
-     *                                      type: string
-     *                                      example: 'coin_received'
-     *                                    attributes:
-     *                                      type: array
-     *                                      items:
-     *                                        properties:
-     *                                          key:
-     *                                            type: string
-     *                                            example: 'c3BlbmRlcg=='
-     *                                          value:
-     *                                            type: string
-     *                                            example: 'xxxxxxxxxxxxxxxxxxxxxx'
+     *                                      example: 'Aura Euphoria'
+     *                            action:
+     *                              type: string
+     *                              example: 'create'
+     *                            granter:
+     *                              type: string
+     *                              example: '*************'
+     *                            grantee:
+     *                              type: string
+     *                              example: '*************'
+     *                            result:
+     *                              type: boolean
+     *                              example: true
+     *                            timestamp:
+     *                              type: string
+     *                              example: '2022-10-20T14:18:41.000Z'
+     *                            tx_hash:
+     *                              type: string
+     *                              example: '*************'
+     *                            type:
+     *                              type: string
+     *                              example: '/cosmos.feegrant.v1beta1.BasicAllowance'
+     *                            status:
+     *                              type: string
+     *                              example: 'Expired'
+     *                            origin_feegrant_txhash:
+     *                              type: string
+     *                              example: '2E5E6067AECE06B6AAA9969BBF5EE7277C12E05B1317176hgfjfghjhfgjhjkhjkjh'
      *                      count:
      *                        type: number
      *                        example: 10

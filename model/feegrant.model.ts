@@ -34,5 +34,7 @@ export const feegrantMongoModel = (collection: string): unknown => {
         autoIndex: true,
         collection: collection,
     });
+    // @ts-ignore
+    schema.index({ 'tx_hash': 1, 'action': 1 }, { unique: true });
     return models[collection] || model(collection, schema);
 };

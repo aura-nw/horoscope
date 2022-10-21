@@ -3,6 +3,7 @@
 'use strict';
 
 import { Job } from 'bull';
+import { QueueConfig } from '../../config/queue';
 import { FeegrantEntity } from 'entities/feegrant.entity';
 import _ from 'lodash';
 import { CallingOptions, Service, ServiceBroker } from 'moleculer';
@@ -27,12 +28,7 @@ export default class FeegrantDB extends Service {
             name: 'db-feegrant',
             version: 1,
             mixins: [
-                QueueService(
-                    `redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-                    {
-                        prefix: 'feegrant.db',
-                    },
-                ),
+                QueueService(QueueConfig.redis, QueueConfig.opts),
                 this.dbFeegrantMixin,
                 this.callApiMixin,
             ],
@@ -97,16 +93,6 @@ export default class FeegrantDB extends Service {
                 }
             }
         )
-        this.logger.info("gjhkgjhkgjkhgjg: " + new Date())
-        // const list = await this.adapter.find({
-        //     query: {
-        //         'timestamp': {
-        //             $lte: new Date()
-        //         },
-        //         'status': FEEGRANT_STATUS.AVAILABLE
-        //     },
-        // })
-        // this.logger.info("gjhkgjhkgjkhgjg: " + JSON.stringify(list))
     }
 
     async handleJob(listUpdateFeegrantDb: FeegrantEntity[]): Promise<any[]> {

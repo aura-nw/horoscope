@@ -75,8 +75,8 @@ export default class CrawlAccountInfoService extends Service {
     }
 
     async handleJob(feegrantList: IFeegrantData[], chainId: string): Promise<any[]> {
+        const records: any[] = []
         feegrantList.forEach(async (element) => {
-
             switch (element.action) {
                 case FEEGRANT_ACTION.CREATE:
                     // normal create
@@ -90,7 +90,7 @@ export default class CrawlAccountInfoService extends Service {
                         } as FeegrantEntity
                         record.amount = element.spend_limit
                         this.logger.info(`Feegrant-history-create: ${record}`)
-                        await this.adapter.insert(record)
+                        records.push(record)
                         break;
                     }
                 case FEEGRANT_ACTION.USE:
@@ -106,7 +106,7 @@ export default class CrawlAccountInfoService extends Service {
                             } as FeegrantEntity
                             record.granter = element.payer
                             this.logger.info(`Feegrant-history-use: ${JSON.stringify(record)}`)
-                            await this.adapter.insert(record)
+                            records.push(record)
                         }
                         break
                     }
@@ -124,7 +124,7 @@ export default class CrawlAccountInfoService extends Service {
                         record_use.granter = element.payer
                         record_use.type = ""
                         this.logger.info(`Feegrant-history-useup_use: ${JSON.stringify(record_use)}`)
-                        await this.adapter.insert(record_use)
+                        records.push(record_use)
                         // record revoke
                         const record_revoke = {
                             ...element,
@@ -136,7 +136,7 @@ export default class CrawlAccountInfoService extends Service {
                         record_revoke.granter = element.payer
                         record_revoke.type = ""
                         this.logger.info(`Feegrant-history-useup_revoke: ${JSON.stringify(record_revoke)}`)
-                        await this.adapter.insert(record_revoke)
+                        records.push(record_revoke)
                         break
                     }
                 case FEEGRANT_ACTION.REVOKE:
@@ -151,7 +151,7 @@ export default class CrawlAccountInfoService extends Service {
                             origin_feegrant_txhash: null
                         } as FeegrantEntity
                         this.logger.info(`Feegrant-history-revoke: ${JSON.stringify(record)}`)
-                        await this.adapter.insert(record)
+                        records.push(record)
                         break
                     }
                 case FEEGRANT_ACTION.REVOKE_WITH_FEEGRANT:
@@ -166,7 +166,7 @@ export default class CrawlAccountInfoService extends Service {
                             origin_feegrant_txhash: null
                         } as FeegrantEntity
                         this.logger.info(`Feegrant-history-_revoke: ${JSON.stringify(record_revoke)}`)
-                        await this.adapter.insert(record_revoke)
+                        records.push(record_revoke)
                         // record payfee
                         const record_payfee = {
                             ...element,
@@ -178,7 +178,7 @@ export default class CrawlAccountInfoService extends Service {
                         record_payfee.type = ""
                         record_payfee.grantee = element.granter
                         record_payfee.granter = element.payer
-                        await this.adapter.insert(record_payfee)
+                        records.push(record_payfee)
                         break;
                     }
                 case FEEGRANT_ACTION.CREATE_WITH_FEEGRANT:
@@ -193,7 +193,7 @@ export default class CrawlAccountInfoService extends Service {
                             origin_feegrant_txhash: null
                         } as FeegrantEntity
                         record_create.amount = element.spend_limit
-                        await this.adapter.insert(record_create)
+                        records.push(record_create)
 
                         // record pay fee
                         const record_payfee = {
@@ -206,11 +206,12 @@ export default class CrawlAccountInfoService extends Service {
                         record_payfee.type = ""
                         record_payfee.grantee = element.granter
                         record_payfee.granter = element.payer
-                        await this.adapter.insert(record_payfee)
+                        records.push(record_payfee)
                         break;
                     }
             }
         });
+        await this.adapter.insertMany(records)
         return []
     }
 

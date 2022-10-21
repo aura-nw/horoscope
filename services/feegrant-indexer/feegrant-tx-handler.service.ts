@@ -84,11 +84,17 @@ export default class CrawlAccountInfoService extends Service {
 
 	async handleJob(chainId: string): Promise<any[]> {
 		let feegrantList: IFeegrantData[] = [];
+		const latestBlockTx = await this.adapter.find({
+			sort: "-tx_response.height",
+			limit: 1
+		}) as ITransaction[]
+		const latestBlock = latestBlockTx[0].tx_response.height.valueOf()
+		this.logger.info("Feegrant latest block: " + latestBlock)
 		const listTx = await this.adapter.find({
 			query: {
 				"tx_response.height": {
 					$gte: this.currentBlock,
-					$lt: this.currentBlock + 100
+					$lt: this.currentBlock + 100 < latestBlock ? this.currentBlock + 100 : latestBlock
 				}
 			}
 		}) as ITransaction[]
@@ -292,7 +298,7 @@ export default class CrawlAccountInfoService extends Service {
 		} catch (error) {
 			this.logger.error(error);
 		}
-		this.currentBlock += 100
+		this.currentBlock = this.currentBlock + 100 < latestBlock ? this.currentBlock + 100 : latestBlock
 		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
 		return [];
 	}

@@ -1,10 +1,11 @@
-import { dbFeegrantHistoryMixin } from '@Mixins/dbMixinMongoose';
+import { dbFeegrantHistoryMixin } from '../../mixins/dbMixinMongoose';
 import { ObjectID } from 'bson';
 import { Job } from 'bull';
-import { FEEGRANT_ACTION } from 'common/constant';
+import { FEEGRANT_ACTION } from '../../common/constant';
 import { FeegrantEntity } from 'entities';
 import { Service, ServiceBroker } from 'moleculer';
 import { Config } from '../../common';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
 export default class HandleAccountVestingService extends Service {
@@ -16,12 +17,7 @@ export default class HandleAccountVestingService extends Service {
             name: 'cronjob-update-original-grant',
             version: 1,
             mixins: [
-                QueueService(
-                    `redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-                    {
-                        prefix: 'cronjob.update-origin-grant',
-                    },
-                ),
+                QueueService(QueueConfig.redis, QueueConfig.opts),
                 this.dbFeegrantHistoryMixin,
             ],
             queues: {
@@ -78,9 +74,21 @@ export default class HandleAccountVestingService extends Service {
                 })
             }
         }))
-        this.broker.emit("feegrant.upsert", {
-            listUpdateFeegrantDb
-        })
+        // this.broker.emit("feegrant.upsert", {
+        //     listUpdateFeegrantDb
+        // })
+        this.createJob(
+            'feegrant.db',
+            {
+                listUpdateFeegrantDb
+            },
+            {
+                removeOnComplete: true,
+                removeOnFail: {
+                    count: 10,
+                },
+            },
+        );
         this.logger.info(`${JSON.stringify(bulkUpdate)}`)
         this.logger.info(`listUpdateFeegrantDb: ${JSON.stringify(listUpdateFeegrantDb)}`)
         await this.adapter.bulkWrite(bulkUpdate)
