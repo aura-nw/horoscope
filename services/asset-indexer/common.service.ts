@@ -302,26 +302,42 @@ export class Common {
 					);
 			}
 
-			async function downloadAttachment(url: any) {
-				const a = axios.create({
-					responseType: 'arraybuffer',
-					timeout: REQUEST_IPFS_TIMEOUT,
-					maxContentLength: MAX_CONTENT_LENGTH_BYTE,
-					maxBodyLength: MAX_BODY_LENGTH_BYTE,
-				});
-				return a.get(url).then((response: any) => {
-					const buffer = Buffer.from(response.data, 'base64');
-					return (async () => {
-						let type = (await FileType.fromBuffer(buffer))?.mime;
-						return uploadAttachmentToS3(type, buffer);
-					})();
-				});
-			}
-			return downloadAttachment(uri);
+			// async function downloadAttachment(url: any) {
+			// 	const axiosClient = axios.create({
+			// 		responseType: 'arraybuffer',
+			// 		timeout: REQUEST_IPFS_TIMEOUT,
+			// 		maxContentLength: MAX_CONTENT_LENGTH_BYTE,
+			// 		maxBodyLength: MAX_BODY_LENGTH_BYTE,
+			// 	});
+			// 	return axiosClient.get(url).then((response: any) => {
+			// 		const buffer = Buffer.from(response.data, 'base64');
+			// 		return (async () => {
+			// 			let type = (await FileType.fromBuffer(buffer))?.mime;
+			// 			return uploadAttachmentToS3(type, buffer);
+			// 		})();
+			// 	});
+			// }
+			return this.downloadAttachment(uri).then(async (buffer) => {
+				let type = (await FileType.fromBuffer(buffer))?.mime;
+				return uploadAttachmentToS3(type, buffer);
+			});
 		} else {
 			return null;
 		}
 	};
+	public static async downloadAttachment(url: any) {
+		const axiosClient = axios.create({
+			responseType: 'arraybuffer',
+			timeout: REQUEST_IPFS_TIMEOUT,
+			maxContentLength: MAX_CONTENT_LENGTH_BYTE,
+			maxBodyLength: MAX_BODY_LENGTH_BYTE,
+		});
+
+		return axiosClient.get(url).then((response: any) => {
+			const buffer = Buffer.from(response.data, 'base64');
+			return buffer;
+		});
+	}
 
 	public static validURI(str: string) {
 		try {

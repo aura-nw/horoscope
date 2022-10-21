@@ -47,6 +47,7 @@ const QueueService = require('moleculer-bull');
 				const media_link_key = job.data.media_link_key;
 				const chain_id = job.data.chain_id;
 				const type = job.data.type;
+				const metadata = job.data.metadata;
 				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${media_link_key}`;
 
 				job.progress(10);
@@ -58,24 +59,31 @@ const QueueService = require('moleculer-bull');
 				if (!processingFlag) {
 					try {
 						// @ts-ignore
-						// await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
+						await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
 						// @ts-ignore
-						let locked = await this.broker.cacher?.tryLock(
-							cacheKey,
-							CACHER_INDEXER_TTL,
-						);
+						// let locked = await this.broker.cacher?.tryLock(
+						// 	cacheKey,
+						// 	CACHER_INDEXER_TTL,
+						// );
 						// @ts-ignore
 						try {
 							// @ts-ignore
-							await this.getMediaLink(uri, type, file_name, media_link_key, chain_id);
+							await this.getMediaLink(
+								uri,
+								type,
+								file_name,
+								media_link_key,
+								chain_id,
+								metadata,
+							);
 						} catch (error) {
 							// @ts-ignore
 							this.logger.error('getMediaLink error', media_link_key, error);
 						}
 						// @ts-ignore
-						// await this.broker.cacher?.del(cacheKey);
+						await this.broker.cacher?.del(cacheKey);
 						// @ts-ignore
-						await locked();
+						// await locked();
 						// @ts-ignore
 						this.logger.info('getMediaLink locked', media_link_key);
 						// await this.unlock(cacheKey);
@@ -99,7 +107,7 @@ const QueueService = require('moleculer-bull');
 				const chain_id = ctx.params.chain_id;
 				const type = ctx.params.type;
 				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${media_link_key}`;
-
+				const metadata = ctx.params.metadata;
 				// @ts-ignore
 				// this.logger.info("this.broker.cacher",util.inspect(this.broker.cacher));
 				// @ts-ignore
@@ -144,9 +152,9 @@ const QueueService = require('moleculer-bull');
 				if (!processingFlag) {
 					try {
 						// @ts-ignore
-						// await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
+						await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
 						// @ts-ignore
-						let locked = await this.broker.cacher?.tryLock(cacheKey);
+						// let locked = await this.broker.cacher?.tryLock(cacheKey);
 						// @ts-ignore
 						try {
 							// @ts-ignore
@@ -162,6 +170,7 @@ const QueueService = require('moleculer-bull');
 									media_link_key,
 									chain_id,
 									cacheKey,
+									metadata,
 								},
 								{
 									removeOnComplete: true,
@@ -177,11 +186,11 @@ const QueueService = require('moleculer-bull');
 							this.logger.error('getMediaLink error', media_link_key, error);
 						}
 						// @ts-ignore
-						// await this.broker.cacher?.del(cacheKey);
+						await this.broker.cacher?.del(cacheKey);
 						// @ts-ignore
 						await locked();
 						// @ts-ignore
-						this.logger.info('getMediaLink locked', media_link_key);
+						// this.logger.info('getMediaLink locked', media_link_key);
 						// await this.unlock(cacheKey);
 						// }
 					} catch (e) {
@@ -200,6 +209,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		file_name: string,
 		key: string,
 		chain_id: string,
+		metadata: string,
 	) {
 		this.logger.info('getMediaLink', uri, file_name, key);
 		let query: QueryOptions = { key, 'custom_info.chain_id': chain_id };
@@ -219,6 +229,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					media_link: '',
 					status: MediaStatus.HANDLING,
 					chainId: chain_id,
+					metadata,
 				},
 				OPTs,
 			);

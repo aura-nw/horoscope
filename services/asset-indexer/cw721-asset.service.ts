@@ -215,14 +215,25 @@ export default class CrawlAssetService extends moleculer.Service {
 						let [uri, type, file_name, media_link_key] = ['', '', '', ''];
 						try {
 							let imageLink = null;
+							let metadata = null;
 							if (
 								tokenInfo.data.info.extension &&
 								tokenInfo.data.info.extension.image
 							) {
+								metadata = tokenInfo.data.info.extension;
 								imageLink = tokenInfo.data.info.extension.image;
 							} else if (tokenInfo.data.info.token_uri) {
 								imageLink = tokenInfo.data.info.token_uri;
 							}
+
+							// if (tokenInfo.data.info.token_uri) {
+							// 	[uri, type, file_name, media_link_key] =
+							// 		Common.getKeyFromUri(tokenInfo.data.info.token_uri);
+							// 	let schemaIPFS: Buffer = await Common.downloadAttachment(
+							// 		tokenInfo.data.info.token_uri,
+							// 	);
+							// 	this.logger.info(schemaIPFS.toJSON());
+							// }
 
 							if (imageLink) {
 								[uri, type, file_name, media_link_key] =
@@ -233,6 +244,7 @@ export default class CrawlAssetService extends moleculer.Service {
 									file_name,
 									media_link_key,
 									chain_id,
+									metadata,
 								});
 							}
 						} catch (error) {
