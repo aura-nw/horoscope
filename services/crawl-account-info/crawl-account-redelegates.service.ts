@@ -2,11 +2,7 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import {
-	DELAY_JOB_TYPE,
-	LIST_NETWORK,
-	URL_TYPE_CONSTANTS,
-} from '../../common/constant';
+import { DELAY_JOB_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { RedelegationResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
@@ -119,7 +115,11 @@ export default class CrawlAccountRedelegatesService extends Service {
 						newDelayJob.expire_time = new Date(
 							redelegate.entries[0].redelegation_entry.completion_time!,
 						);
-						newDelayJob.indexes = address + newDelayJob.type + newDelayJob.expire_time!.getTime() + chainId;
+						newDelayJob.indexes =
+							address +
+							newDelayJob.type +
+							newDelayJob.expire_time!.getTime() +
+							chainId;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: chain ? chain.chainName : '',
@@ -169,7 +169,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('crawl.account-redelegates').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('crawl.account-redelegates').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);

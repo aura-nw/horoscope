@@ -144,7 +144,7 @@ export default class CrawlAccountDelegatesService extends Service {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('crawl.account-delegates').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('crawl.account-delegates').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);

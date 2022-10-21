@@ -212,27 +212,24 @@ export default class CrawlAssetService extends moleculer.Service {
 						OPTs,
 					);
 					if (tokenInfo != null) {
-						let [uri, file_name, media_link_key] = ['', '', ''];
+						let [uri, type, file_name, media_link_key] = ['', '', '', ''];
 						try {
+							let imageLink = null;
 							if (
 								tokenInfo.data.info.extension &&
 								tokenInfo.data.info.extension.image
 							) {
-								[uri, file_name, media_link_key] = Common.getKeyFromUri(
-									tokenInfo.data.info.extension.image,
-								);
-								this.broker.emit('CW721-media.get-media-link', {
-									uri,
-									file_name,
-									media_link_key,
-									chain_id,
-								});
+								imageLink = tokenInfo.data.info.extension.image;
 							} else if (tokenInfo.data.info.token_uri) {
-								[uri, file_name, media_link_key] = Common.getKeyFromUri(
-									tokenInfo.data.info.token_uri,
-								);
+								imageLink = tokenInfo.data.info.token_uri;
+							}
+
+							if (imageLink) {
+								[uri, type, file_name, media_link_key] =
+									Common.getKeyFromUri(imageLink);
 								this.broker.emit('CW721-media.get-media-link', {
 									uri,
+									type,
 									file_name,
 									media_link_key,
 									chain_id,

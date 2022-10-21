@@ -20,10 +20,7 @@ export default class HandleDelayJobService extends Service {
 		this.parseServiceSchema({
 			name: 'handleDelayJob',
 			version: 1,
-			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.dbAccountInfoMixin,
-			],
+			mixins: [QueueService(QueueConfig.redis, QueueConfig.opts), this.dbAccountInfoMixin],
 			queues: {
 				'handle.delay-job': {
 					concurrency: parseInt(Config.CONCURRENCY_HANDLE_DELAY_JOB, 10),
@@ -42,12 +39,9 @@ export default class HandleDelayJobService extends Service {
 	async handleJob() {
 		let listUpdateQueries: any[] = [];
 
-		let currentJobs: DelayJobEntity[] = await this.broker.call(
-			'v1.delay-job.findPendingJobs',
-			{
-				chain_id: Config.CHAIN_ID,
-			}
-		);
+		let currentJobs: DelayJobEntity[] = await this.broker.call('v1.delay-job.findPendingJobs', {
+			chain_id: Config.CHAIN_ID,
+		});
 		currentJobs.map(async (job: any) => {
 			if (job.expire_time <= new Date().getTime()) {
 				switch (job.type) {
@@ -58,7 +52,7 @@ export default class HandleDelayJobService extends Service {
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
 							let oldRedelegates =
-								updateRedelegates.redelegation_responses[0].entries,
+									updateRedelegates.redelegation_responses[0].entries,
 								removeRedelegate = oldRedelegates.find(
 									(x: RedelegateEntry) =>
 										new Date(
@@ -81,12 +75,9 @@ export default class HandleDelayJobService extends Service {
 											},
 										},
 									),
-									this.broker.call(
-										'v1.delay-job.deleteFinishedJob',
-										{
-											_id: job._id
-										}
-									),
+									this.broker.call('v1.delay-job.deleteFinishedJob', {
+										_id: job._id,
+									}),
 								],
 							);
 						} catch (error) {
@@ -137,12 +128,9 @@ export default class HandleDelayJobService extends Service {
 											},
 										},
 									),
-									this.broker.call(
-										'v1.delay-job.deleteFinishedJob',
-										{
-											_id: job._id
-										}
-									),
+									this.broker.call('v1.delay-job.deleteFinishedJob', {
+										_id: job._id,
+									}),
 								],
 							);
 						} catch (error) {
@@ -181,12 +169,9 @@ export default class HandleDelayJobService extends Service {
 										},
 									},
 								),
-								this.broker.call(
-									'v1.delay-job.deleteFinishedJob',
-									{
-										_id: job._id
-									}
-								),
+								this.broker.call('v1.delay-job.deleteFinishedJob', {
+									_id: job._id,
+								}),
 							);
 						} catch (error) {
 							this.logger.error(error);
@@ -224,36 +209,30 @@ export default class HandleDelayJobService extends Service {
 											.length,
 										10,
 									)) *
-								1000,
+									1000,
 							);
 							if (
 								newJobExpireTime.getTime() >=
 								new Date(
 									parseInt(updateInfo.account_auth.result.value.end_time, 10) *
-									1000,
+										1000,
 								).getTime()
 							)
 								listUpdateQueries.push(
-									this.broker.call(
-										'v1.delay-job.deleteFinishedJob',
-										{
-											_id: job._id
-										}
-									),
+									this.broker.call('v1.delay-job.deleteFinishedJob', {
+										_id: job._id,
+									}),
 								);
 							else {
 								listUpdateQueries.push(
-									this.broker.call(
-										'v1.delay-job.updateJob',
-										{
-											_id: job._id,
-											update: {
-												$set: {
-													expire_time: newJobExpireTime,
-												},
-											}
-										}
-									),
+									this.broker.call('v1.delay-job.updateJob', {
+										_id: job._id,
+										update: {
+											$set: {
+												expire_time: newJobExpireTime,
+											},
+										},
+									}),
 								);
 							}
 							listUpdateQueries.push(
@@ -266,7 +245,7 @@ export default class HandleDelayJobService extends Service {
 											account_spendable_balances: newSpendableBalances,
 										},
 									},
-								)
+								),
 							);
 						} catch (error) {
 							this.logger.error(error);
@@ -298,7 +277,7 @@ export default class HandleDelayJobService extends Service {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('handle.delay-job').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('handle.delay-job').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

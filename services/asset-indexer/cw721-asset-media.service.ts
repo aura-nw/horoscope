@@ -46,11 +46,12 @@ const QueueService = require('moleculer-bull');
 				const file_name = job.data.file_name;
 				const media_link_key = job.data.media_link_key;
 				const chain_id = job.data.chain_id;
+				const type = job.data.type;
 				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${media_link_key}`;
 
 				job.progress(10);
 				// @ts-ignore
-				// await this.getMediaLink(uri, file_name, media_link_key, chain_id);
+				// await this.getMediaLink(uri, type, file_name, media_link_key, chain_id);
 				// @ts-ignore
 				const processingFlag = (await this.broker.cacher?.get(cacheKey)) ? true : false;
 
@@ -66,7 +67,7 @@ const QueueService = require('moleculer-bull');
 						// @ts-ignore
 						try {
 							// @ts-ignore
-							await this.getMediaLink(uri, file_name, media_link_key);
+							await this.getMediaLink(uri, type, file_name, media_link_key, chain_id);
 						} catch (error) {
 							// @ts-ignore
 							this.logger.error('getMediaLink error', media_link_key, error);
@@ -96,6 +97,7 @@ const QueueService = require('moleculer-bull');
 				const file_name = ctx.params.file_name;
 				const media_link_key = ctx.params.media_link_key;
 				const chain_id = ctx.params.chain_id;
+				const type = ctx.params.type;
 				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${media_link_key}`;
 
 				// @ts-ignore
@@ -134,7 +136,6 @@ const QueueService = require('moleculer-bull');
 				// 	this.logger.error('create job getMediaLink error', media_link_key, error);
 				// }
 
-
 				// // @ts-ignore
 				// await this.getMediaLink(uri, file_name, media_link_key, chain_id);
 				// @ts-ignore
@@ -157,6 +158,7 @@ const QueueService = require('moleculer-bull');
 								{
 									uri,
 									file_name,
+									type,
 									media_link_key,
 									chain_id,
 									cacheKey,
@@ -166,6 +168,8 @@ const QueueService = require('moleculer-bull');
 									removeOnFail: {
 										count: 3,
 									},
+									attempts: 5,
+									backoff: 5000,
 								},
 							);
 						} catch (error) {
@@ -190,7 +194,13 @@ const QueueService = require('moleculer-bull');
 	},
 })
 export default class CrawlAssetService extends moleculer.Service {
-	async getMediaLink(uri: string, file_name: string, key: string, chain_id: string) {
+	async getMediaLink(
+		uri: string,
+		type: string,
+		file_name: string,
+		key: string,
+		chain_id: string,
+	) {
 		this.logger.info('getMediaLink', uri, file_name, key);
 		let query: QueryOptions = { key, 'custom_info.chain_id': chain_id };
 		const media: any[] = await this.broker.call(
@@ -214,7 +224,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			);
 			await this.broker.call(
 				CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK,
-				{ uri, file_name, key, chainId: chain_id },
+				{ uri, file_name, type, key, chainId: chain_id },
 				OPTs,
 			);
 		} else {
@@ -254,7 +264,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('get-media-link').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('get-media-link').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

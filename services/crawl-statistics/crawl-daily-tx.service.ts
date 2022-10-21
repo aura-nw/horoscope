@@ -29,7 +29,12 @@ export default class CrawlDailyTxService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.offset, job.data.time, job.data.txCount, job.data.activeAddrs);
+						await this.handleJob(
+							job.data.offset,
+							job.data.time,
+							job.data.txCount,
+							job.data.activeAddrs,
+						);
 						job.progress(100);
 						return true;
 					},
@@ -55,14 +60,14 @@ export default class CrawlDailyTxService extends Service {
 			'indexes.timestamp': {
 				$gte: new Date(startTime),
 				$lte: new Date(endTime),
-			}
+			},
 		};
 
 		const dailyTxs: any = await this.broker.call('v1.transaction-stats.act-find', {
 			query,
 			sort: '_id',
 			limit: 100,
-			offset: offset * 100
+			offset: offset * 100,
 		});
 		this.logger.info(`Number of Txs retrieved at page ${offset + 1}: ${dailyTxs.length}`);
 
@@ -72,10 +77,7 @@ export default class CrawlDailyTxService extends Service {
 					txs.tx.body.messages.map((message: any) => {
 						switch (message['@type']) {
 							case MSG_TYPE.MSG_SEND:
-								listAddresses.push(
-									message.from_address,
-									message.to_address,
-								);
+								listAddresses.push(message.from_address, message.to_address);
 								break;
 							case MSG_TYPE.MSG_DELEGATE:
 								listAddresses.push(message.delegator_address);
@@ -96,10 +98,7 @@ export default class CrawlDailyTxService extends Service {
 								listAddresses.push(message.sender);
 								break;
 							case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
-								listAddresses.push(
-									message.from_address,
-									message.to_address,
-								);
+								listAddresses.push(message.from_address, message.to_address);
 								break;
 							case MSG_TYPE.MSG_DEPOSIT:
 								listAddresses.push(message.depositor);
@@ -117,10 +116,22 @@ export default class CrawlDailyTxService extends Service {
 								listAddresses.push(message.sender);
 								break;
 							case MSG_TYPE.MSG_IBC_RECEIVE:
-								let data = JSON.parse(txs.tx_response.logs.find((log: any) =>
-									log.events.find((event: any) => event.type === CONST_CHAR.RECV_PACKET)).events
-									.find((event: any) => event.type === CONST_CHAR.RECV_PACKET).attributes
-									.find((attribute: any) => attribute.key === CONST_CHAR.PACKET_DATA).value);
+								let data = JSON.parse(
+									txs.tx_response.logs
+										.find((log: any) =>
+											log.events.find(
+												(event: any) =>
+													event.type === CONST_CHAR.RECV_PACKET,
+											),
+										)
+										.events.find(
+											(event: any) => event.type === CONST_CHAR.RECV_PACKET,
+										)
+										.attributes.find(
+											(attribute: any) =>
+												attribute.key === CONST_CHAR.PACKET_DATA,
+										).value,
+								);
 								listAddresses.push(data.receiver);
 								break;
 							case MSG_TYPE.MSG_MULTI_SEND:
@@ -130,7 +141,7 @@ export default class CrawlDailyTxService extends Service {
 								});
 								break;
 						}
-					})
+					});
 				});
 			} catch (error) {
 				this.logger.error(error);
@@ -154,17 +165,19 @@ export default class CrawlDailyTxService extends Service {
 					removeOnFail: {
 						count: 3,
 					},
-				}
+				},
 			);
 		} else {
 			try {
 				const resultTotalAccs: any = await this.broker.call('v1.account-stats.countTotal', {
 					chain_id: Config.CHAIN_ID,
 				});
-	
+
 				let dailyTxStatistics: DailyTxStatistics = {} as DailyTxStatistics;
 				dailyTxStatistics.daily_txs = txCount;
-				dailyTxStatistics.daily_active_addresses = activeAddrs.filter(this.onlyUnique).length;
+				dailyTxStatistics.daily_active_addresses = activeAddrs.filter(
+					this.onlyUnique,
+				).length;
 				dailyTxStatistics.unique_addresses = resultTotalAccs;
 				dailyTxStatistics.date = new Date(startTime);
 				const item: DailyTxStatistics = new JsonConvert().deserializeObject(
@@ -173,7 +186,9 @@ export default class CrawlDailyTxService extends Service {
 				);
 				await this.adapter.insert(item);
 			} catch (error) {
-				this.logger.error(`Error insert duplicate record of daily txs for time zone ${time}`);
+				this.logger.error(
+					`Error insert duplicate record of daily txs for time zone ${time}`,
+				);
 			}
 
 			this.createJob(
@@ -189,7 +204,7 @@ export default class CrawlDailyTxService extends Service {
 					removeOnFail: {
 						count: 3,
 					},
-				}
+				},
 			);
 		}
 	}
@@ -213,7 +228,7 @@ export default class CrawlDailyTxService extends Service {
 					count: 3,
 				},
 				repeat: {
-					cron: '0 0 0 * * ?'
+					cron: '0 0 0 * * ?',
 				},
 			},
 		);
@@ -222,7 +237,7 @@ export default class CrawlDailyTxService extends Service {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('crawl.daily-tx').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('crawl.daily-tx').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

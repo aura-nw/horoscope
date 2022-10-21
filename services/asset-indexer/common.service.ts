@@ -13,7 +13,9 @@ import { S3Service } from '../../utils/s3';
 import { LIST_NETWORK } from '../../common/constant';
 const { createHash } = require('crypto');
 const errors = require('request-promise/errors');
-const axios = require('axios').default;
+import { AxiosDefaults } from 'axios';
+import axios from 'axios';
+
 import * as FileType from 'file-type';
 
 const CODE_ID_URI = Config.CODE_ID_URI;
@@ -21,10 +23,13 @@ const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
 const BUCKET = Config.BUCKET;
 const FILE_TYPE_VALID = Config.FILE_TYPE_VALID;
 const REQUEST_IPFS_TIMEOUT = Config.REQUEST_IPFS_TIMEOUT;
+const MAX_CONTENT_LENGTH_BYTE = parseInt(Config.MAX_CONTENT_LENGTH_BYTE, 10);
+const MAX_BODY_LENGTH_BYTE = parseInt(Config.MAX_BODY_LENGTH_BYTE, 10);
 const callApiMixin = new CallApiMixin().start();
 const s3Client = new S3Service().connectS3();
 const IPFS_GATEWAY = Config.IPFS_GATEWAY;
 const IPFS_PREFIX = 'ipfs';
+import { create } from 'ipfs-http-client';
 
 type CW4973AssetInfo = {
 	data: {
@@ -117,7 +122,9 @@ export class Common {
 		let uri_handled = '';
 		let file_name = '';
 		let media_link_key = '';
+		let type = '';
 		if (parsed.protocol === IPFS_PREFIX) {
+			type = 'IPFS';
 			const cid = parsed.host;
 			const cidBase32 = new CID(cid).toV1().toString('base32');
 			uri_handled = `${IPFS_GATEWAY}${cidBase32}`;
@@ -127,11 +134,12 @@ export class Common {
 			file_name = cid;
 			media_link_key = cid;
 		} else {
+			type = 'HTTP';
 			uri_handled = uri;
 			file_name = uri.replace(/^.*[\\\/]/, '');
 			media_link_key = Common.hash(uri);
 		}
-		return [uri_handled, file_name, media_link_key];
+		return [uri_handled, type, file_name, media_link_key];
 	}
 
 	public static createCW4973AssetObject = function (
@@ -224,109 +232,104 @@ export class Common {
 		return createHash('sha256').update(str).digest('hex');
 	}
 
-	public static handleUri = async (uri: string, file_name: string) => {
+	public static handleUri = async (uri: string, type: string, file_name: string) => {
 		let errcode = 0;
 		if (Common.validURI(uri)) {
-			var _include_headers = function (
-				body: any,
-				response: { headers: any },
-				resolveWithFullResponse: any,
-			) {
-				return { headers: response.headers, data: body };
-			};
-			var options = {
-				uri,
-				encoding: null,
-				json: true,
-				transform: _include_headers,
-				resolveWithFullResponse: true,
-				timeout: REQUEST_IPFS_TIMEOUT,
-			};
-			const rs = new Promise(async (resolve, reject) => {
-				request(options)
-					.then(function (response: any) {
-						const contentType = response.headers['content-type'];
-						if (Common.checkFileTypeInvalid(contentType)) {
-							s3Client.putObject(
-								{
-									Body: response.data,
-									Key: file_name,
-									Bucket: BUCKET,
-									ContentType: contentType,
-								},
-								function (error: any) {
-									if (error) {
-										reject(error);
-									} else {
-										const linkS3 = `https://${BUCKET}.s3.amazonaws.com/${file_name}`;
-										resolve({linkS3, contentType});
-									}
-								},
-							);
-						}
-					})
-					.catch(function (err: any) {
-						errcode = err.error.code;
-						reject(err);
-					});
-			});
-			return rs;
-			// async function uploadAttachmentToS3(type: any, buffer: any) {
-			// 	var params = {
-			// 		//file name you can get from URL or in any other way, you could then pass it as parameter to the function for example if necessary
-			// 		Key: file_name,
-			// 		Body: buffer,
-			// 		Bucket: BUCKET,
-			// 		ContentType: type,
-			// 		//   ACL: 'public-read' //becomes a public URL
-			// 	};
-			// 	//notice use of the upload function, not the putObject function
-			// 	return s3Client
-			// 		.upload(params)
-			// 		.promise()
-			// 		.then(
-			// 			(response) => {
-			// 				return response.Location;
-			// 			},
-			// 			(err) => {
-			// 				return { type: 'error', err: err };
-			// 			},
-			// 		);
-			// }
-
-			// async function downloadAttachment(url: any) {
-			// 	return axios
-			// 		.get(url, {
-			// 			responseType: 'arraybuffer',
+			// var _include_headers = function (
+			// 	body: any,
+			// 	response: { headers: any },
+			// 	resolveWithFullResponse: any,
+			// ) {
+			// 	return { headers: response.headers, data: body };
+			// };
+			// var options = {
+			// 	uri,
+			// 	encoding: null,
+			// 	json: true,
+			// 	transform: _include_headers,
+			// 	resolveWithFullResponse: true,
+			// 	// timeout: REQUEST_IPFS_TIMEOUT,
+			// };
+			// const rs = new Promise(async (resolve, reject) => {
+			// 	request(options)
+			// 		.then(function (response: any) {
+			// 			const contentType = response.headers['content-type'];
+			// 			if (Common.checkFileTypeInvalid(contentType)) {
+			// 				s3Client.putObject(
+			// 					{
+			// 						Body: response.data,
+			// 						Key: file_name,
+			// 						Bucket: BUCKET,
+			// 						ContentType: contentType,
+			// 					},
+			// 					function (error: any) {
+			// 						if (error) {
+			// 							reject(error);
+			// 						} else {
+			// 							const linkS3 = `https://${BUCKET}.s3.amazonaws.com/${file_name}`;
+			// 							resolve({linkS3, contentType});
+			// 						}
+			// 					},
+			// 				);
+			// 			}
 			// 		})
-			// 		.then((response: any) => {
-			// 			const buffer = Buffer.from(response.data, 'base64');
-			// 			return (async () => {
-			// 				let type = (await FileType.fromBuffer(buffer))?.mime;
-			// 				return uploadAttachmentToS3(type, buffer);
-			// 			})();
-			// 		})
-			// 		.catch((err: any) => {
-			// 			return { type: 'error', err: err };
+			// 		.catch(function (err: any) {
+			// 			errcode = err.error.code;
+			// 			reject(err);
 			// 		});
-			// }
-			// return await downloadAttachment(uri);
+			// });
+			// return rs;
+			async function uploadAttachmentToS3(type: any, buffer: any) {
+				var params = {
+					//file name you can get from URL or in any other way, you could then pass it as parameter to the function for example if necessary
+					Key: file_name,
+					Body: buffer,
+					Bucket: BUCKET,
+					ContentType: type,
+					//   ACL: 'public-read' //becomes a public URL
+				};
+				//notice use of the upload function, not the putObject function
+				return s3Client
+					.upload(params)
+					.promise()
+					.then(
+						(response) => {
+							return { linkS3: response.Location, contentType: type };
+						},
+						(err) => {
+							throw new Error(err);
+						},
+					);
+			}
+
+			async function downloadAttachment(url: any) {
+				const a = axios.create({
+					responseType: 'arraybuffer',
+					timeout: REQUEST_IPFS_TIMEOUT,
+					maxContentLength: MAX_CONTENT_LENGTH_BYTE,
+					maxBodyLength: MAX_BODY_LENGTH_BYTE,
+				});
+				return a.get(url).then((response: any) => {
+					const buffer = Buffer.from(response.data, 'base64');
+					return (async () => {
+						let type = (await FileType.fromBuffer(buffer))?.mime;
+						return uploadAttachmentToS3(type, buffer);
+					})();
+				});
+			}
+			return downloadAttachment(uri);
 		} else {
-			throw new Error('InvalidURI');
+			return null;
 		}
 	};
 
 	public static validURI(str: string) {
-		var pattern = new RegExp(
-			'^(https?:\\/\\/)?' + // protocol
-				'((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-				'((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-				'(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-				'(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-				'(\\#[-a-z\\d_]*)?$',
-			'i',
-		); // fragment locator
-		return !!pattern.test(str);
+		try {
+			let url = new URL(str);
+		} catch (error) {
+			return false;
+		}
+		return true;
 	}
 	public static makeid() {
 		var text = '';
