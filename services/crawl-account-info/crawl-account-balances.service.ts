@@ -1,19 +1,20 @@
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import { dbAccountBalancesMixin } from '../../mixins/dbMixinMongoose';
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { AccountBalancesEntity } from '../../entities/account-balances.entity';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { Coin } from '../../entities/coin.entity';
+import { AccountInfoEntity, IBCDenomEntity } from '../../entities';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountBalancesService extends Service {
 	private callApiMixin = new CallApiMixin().start();
-	private dbAccountBalancesMixin = dbAccountBalancesMixin;
+	private dbAccountInfoMixin = dbAccountInfoMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -21,30 +22,25 @@ export default class CrawlAccountBalancesService extends Service {
 			name: 'crawlAccountBalances',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.account-balances',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				// this.redisMixin,
-				this.dbAccountBalancesMixin,
+				this.dbAccountInfoMixin,
 				this.callApiMixin,
 			],
 			queues: {
 				'crawl.account-balances': {
 					concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_BALANCES, 10),
-					async process(job: Job) {
+					process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.listAddresses, job.data.chainId);
+						this.handleJob(job.data.listAddresses, job.data.chainId);
 						job.progress(100);
 						return true;
 					},
 				},
 			},
 			events: {
-				'account-info.upsert-each': {
+				'account-info.upsert-balances': {
 					handler: (ctx: Context<CrawlAccountInfoParams>) => {
 						this.logger.debug(`Crawl account balances`);
 						this.createJob(
@@ -55,6 +51,9 @@ export default class CrawlAccountBalancesService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -65,21 +64,26 @@ export default class CrawlAccountBalancesService extends Service {
 	}
 
 	async handleJob(listAddresses: string[], chainId: string) {
-		let listAccounts: AccountBalancesEntity[] = [],
+		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
+		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
+		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
-			for (const address of listAddresses) {
-				let listBalances: Coin[] = [];
+			for (let address of listAddresses) {
+				let listBalances: any[] = [];
 
 				const param = Config.GET_PARAMS_BALANCE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-
-				let accountInfo: AccountBalancesEntity = await this.adapter.findOne({
+				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				if (network && network.databaseName) {
+					this.adapter.useDb(network.databaseName);
+				}
+				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
 					address,
 					'custom_info.chain_id': chainId,
 				});
 				if (!accountInfo) {
-					accountInfo = {} as AccountBalancesEntity;
+					accountInfo = {} as AccountInfoEntity;
 					accountInfo.address = address;
 				}
 
@@ -100,21 +104,57 @@ export default class CrawlAccountBalancesService extends Service {
 				}
 
 				if (listBalances) {
-					accountInfo.balances = listBalances;
+					if (listBalances.length > 1) {
+						await Promise.all(
+							listBalances.map(async (balance) => {
+								if (balance.denom.startsWith('ibc/')) {
+									let hash = balance.denom.split('/')[1];
+									let ibcDenom: IBCDenomEntity = await this.broker.call(
+										'v1.ibc-denom.getByHash',
+										{ hash: balance.denom, denom: '' },
+									);
+									if (ibcDenom) {
+										balance.denom = ibcDenom.denom;
+										balance.minimal_denom = ibcDenom.hash;
+									} else {
+										const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
+										let denomResult = await this.callApiFromDomain(
+											url,
+											hashParam,
+										);
+										balance.minimal_denom = balance.denom;
+										balance.denom = denomResult.denom_trace.base_denom;
+										this.broker.call('v1.ibc-denom.addNewDenom', {
+											hash: `ibc/${hash}`,
+											denom: balance.denom,
+										});
+									}
+								}
+							}),
+						);
+					}
+					accountInfo.account_balances = listBalances;
 				}
 
 				listAccounts.push(accountInfo);
 			}
 		}
 		try {
-			listAccounts.forEach((element) => {
+			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+			if (network && network.databaseName) {
+				this.adapter.useDb(network.databaseName);
+			}
+			listAccounts.map((element) => {
 				if (element._id)
-					listUpdateQueries.push(this.adapter.updateById(element._id, element));
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_balances: element.account_balances },
+						}),
+					);
 				else {
-					const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-					const item: AccountBalancesEntity = new JsonConvert().deserializeObject(
+					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 						element,
-						AccountBalancesEntity,
+						AccountInfoEntity,
 					);
 					item.custom_info = {
 						chain_id: chainId,
@@ -134,7 +174,7 @@ export default class CrawlAccountBalancesService extends Service {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('crawl.account-balances').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('crawl.account-balances').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);

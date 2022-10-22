@@ -14,6 +14,7 @@ import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { BlockResponseFromLCD, ResponseFromRPC } from '../../types';
 import { IBlock } from 'entities';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlBlockService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -27,12 +28,7 @@ export default class CrawlBlockService extends Service {
 			name: 'crawlblock',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.block',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.redisMixin,
 			],
@@ -90,22 +86,22 @@ export default class CrawlBlockService extends Service {
 		try {
 			let listPromise = [];
 			for (let i = startBlock; i <= endBlock; i++) {
-				listPromise.push(this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`));
+				listPromise.push(
+					this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`),
+				);
 			}
-			let resultListPromise : ResponseFromRPC[] = await Promise.all(listPromise);
-			
-			let data : ResponseFromRPC = {
+			let resultListPromise: ResponseFromRPC[] = await Promise.all(listPromise);
+
+			let data: ResponseFromRPC = {
 				id: '',
 				jsonrpc: '',
 				result: {
-					blocks: resultListPromise.map( item => {return item.result}),
-				}
-			}
-			// this.logger.info(data);
-			// let data: ResponseFromRPC = await this.callApiFromDomain(
-			// 	url,
-			// 	`${Config.GET_BLOCK_API}\"block.height >= ${startBlock} AND block.height <= ${endBlock}\"&order_by="asc"&per_page=${Config.NUMBER_OF_BLOCK_PER_CALL}`,
-			// );
+					blocks: resultListPromise.map((item) => {
+						return item.result;
+					}),
+				},
+			};
+
 			if (data == null) {
 				throw new Error('cannot crawl block');
 			}
@@ -128,6 +124,8 @@ export default class CrawlBlockService extends Service {
 				'XADD',
 				Config.REDIS_STREAM_BLOCK_NAME,
 				'*',
+				'source',
+				block.block?.header?.height,
 				'element',
 				JSON.stringify(block),
 			]);
@@ -164,6 +162,9 @@ export default class CrawlBlockService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 3,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_BLOCK, 10),
 				},
@@ -173,7 +174,7 @@ export default class CrawlBlockService extends Service {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('crawl.block').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('crawl.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

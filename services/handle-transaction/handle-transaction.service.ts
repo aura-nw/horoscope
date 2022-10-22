@@ -8,9 +8,16 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
-import { ITransaction, TransactionEntity } from '../../entities';
+import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../entities';
 import { CONST_CHAR } from '../../common/constant';
-import { IRedisStreamData, IRedisStreamResponse, ListTxCreatedParams } from '../../types';
+import {
+	IRedisStreamData,
+	IRedisStreamResponse,
+	ListTxCreatedParams,
+	TransactionHashParam,
+} from '../../types';
+import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
+import { QueueConfig } from '../../config/queue';
 
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -23,12 +30,7 @@ export default class HandleTransactionService extends Service {
 			name: 'handletransaction',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.transaction',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.dbTransactionMixin,
 			],
@@ -99,20 +101,29 @@ export default class HandleTransactionService extends Service {
 				let listMessageNeedAck: String[] = [];
 				try {
 					element.messages.forEach(async (item: IRedisStreamData) => {
-						this.logger.info(`Handling message ${item.id}`);
+						this.logger.info(
+							`Handling message ID: ${item.id}, txhash: ${item.message.source}`,
+						);
 						try {
-							const transaction: TransactionEntity = new JsonConvert().deserializeObject(
-								JSON.parse(item.message.element.toString()),
-								TransactionEntity,
-							);
+							const transaction: TransactionEntity =
+								new JsonConvert().deserializeObject(
+									JSON.parse(item.message.element.toString()),
+									TransactionEntity,
+								);
 							listTransactionNeedSaveToDb.push(transaction);
 							listMessageNeedAck.push(item.id);
 							this.lastId = item.id.toString();
 						} catch (error) {
-							this.logger.error("Error when handling message id: " + item.id);
+							this.logger.error('Error when handling message id: ' + item.id);
+							this.logger.error(JSON.stringify(item));
+							if (item.message.source) {
+								this.broker.emit('crawl-transaction-hash.retry', {
+									txHash: item.message.source,
+								} as TransactionHashParam);
+								listMessageNeedAck.push(item.id);
+							}
 							this.logger.error(error);
 						}
-						
 					});
 
 					this.broker.emit('list-tx.upsert', {
@@ -159,10 +170,58 @@ export default class HandleTransactionService extends Service {
 			});
 			let listTransactionNeedSaveToDb: ITransaction[] = [];
 			listTransactionEntity.forEach((tx: ITransaction) => {
+				let indexes: any = {};
+				//@ts-ignore
+				indexes['timestamp'] = new Date(tx.tx_response.timestamp);
+				indexes['height'] = Number(tx.tx_response.height);
+				tx.tx_response.events.map((event: IEvent) => {
+					let type = event.type.toString();
+					type = type.replace(/\./g, '_');
+					let attributes = event.attributes;
+					attributes.map((attribute: IAttribute) => {
+						try {
+							let key = fromUtf8(fromBase64(attribute.key.toString()));
+							let value = attribute.value
+								? fromUtf8(fromBase64(attribute.value.toString()))
+								: '';
+							key = key.replace(/\./g, '_');
+							let array = indexes[`${type}_${key}`];
+							if (array && array.length > 0) {
+								let position = indexes[`${type}_${key}`].indexOf(value);
+								if (position == -1) {
+									indexes[`${type}_${key}`].push(value);
+								}
+							} else {
+								indexes[`${type}_${key}`] = [value];
+							}
+
+							let hashValue = this.redisClient
+								.hGet(`att-${type}`, key)
+								.then((value: any) => {
+									if (value) {
+										this.redisClient.hSet(
+											`att-${type}`,
+											key,
+											Number(value) + 1,
+										);
+									} else {
+										this.redisClient.hSet(`att-${type}`, key, 1);
+									}
+								});
+						} catch (error) {
+							this.logger.info(tx._id);
+							this.logger.error(error);
+						}
+					});
+				});
+
+				tx.indexes = indexes;
+
 				let hash = tx.tx_response.txhash;
 				let foundItem = listFoundTransaction.find((itemFound: ITransaction) => {
 					return itemFound.tx_response.txhash == hash;
 				});
+
 				if (!foundItem) {
 					listTransactionNeedSaveToDb.push(tx);
 				}
@@ -183,6 +242,9 @@ export default class HandleTransactionService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 3,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_TRANSACTION, 10),
 				},
@@ -195,7 +257,7 @@ export default class HandleTransactionService extends Service {
 			// this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('handle.transaction').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('handle.transaction').on('progress', (job: Job) => {
 			// this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

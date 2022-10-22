@@ -16,9 +16,9 @@ import { IBlock } from '../../entities';
 import { AssetIndexParams } from 'types/asset';
 import { Types } from 'mongoose';
 // import rateLimit from 'micro-ratelimit';
-import { Status } from '../../model/codeid.model';
+import { CodeIDStatus } from '../../model/codeid.model';
 import { Ok } from 'ts-results';
-import { CODEID_MANAGER_ACTION, LIST_NETWORK } from 'common/constant';
+import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -29,10 +29,10 @@ import { CODEID_MANAGER_ACTION, LIST_NETWORK } from 'common/constant';
 	mixins: [dbBlockMixin],
 })
 export default class BlockService extends MoleculerDBService<
-{
-	rest: 'v1/codeid';
-},
-IBlock
+	{
+		rest: 'v1/codeid';
+	},
+	{}
 > {
 	/**
 	 *  @swagger
@@ -40,37 +40,93 @@ IBlock
 	 *    get:
 	 *      tags:
 	 *        - CodeId
-	 *      summary: Check status of code_id
-	 *      description: Check status of code_id
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
-	 *      parameters:	 
+	 *      summary: Check status asset by code_id after register
+	 *      description: Check status asset by code_id after register
+	 *      parameters:
 	 *        - in: path
 	 *          name: chainId
 	 *          required: true
-	 *          type: string
-	 *          example: aura-devnet
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network"
 	 *        - in: path
 	 *          name: codeId
 	 *          required: true
-	 *          type: number
+	 *          schema:
+	 *            type: number
 	 *          description: "Code Id of stored contract need to query"
 	 *      responses:
 	 *        '200':
-	 *          description: Register result
+	 *          description: CodeId information
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      status:
+	 *                        type: string
+	 *                        example: "REJECTED"
 	 *        '422':
-	 *          description: Missing parameters
-	 *
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.block.chain"
 	 */
 	@Get('/:chainId/:codeId/checkStatus', {
 		name: 'checkStatus',
 		restricted: ['api'],
 		params: {
 			codeId: { type: 'number', convert: true },
-			chainId: { type: 'string', enum: LIST_NETWORK.map(function (e) { return e.chainId }) },
+			chainId: {
+				type: 'string',
+				enum: LIST_NETWORK.map(function (e) {
+					return e.chainId;
+				}),
+			},
 		},
 	})
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {

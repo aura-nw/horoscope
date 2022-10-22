@@ -1,5 +1,15 @@
 ## CHANGE LOG
 
+## v0.2
+
+### Features
+
+-   Add proposer name who propose block
+-   Add address who create proposal
+-   Add IBC when crawl account info
+-   Add GraphQL for query
+-   Add Websocket
+
 ## v0.1
 
 ### Features

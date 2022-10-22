@@ -11,7 +11,7 @@ export type definitionType<T> = (
 export type ObjectId = Types.ObjectId | string;
 export type ObjectIdNull = ObjectId | null;
 
-export type DBDialog = 'local' | 'file' | 'mongodb';
+export type DBDialog = 'local' | 'file' | 'mongodb' | 'mysql';
 
 export interface DBInfo {
 	dialect: DBDialog;
@@ -24,6 +24,7 @@ export interface DBInfo {
 	retryWrites: string;
 	replicaSet: string;
 	readPreference: string;
+	maxPoolSize: number;
 }
 
 export interface RouteSchemaOpts {
@@ -70,10 +71,21 @@ export interface ApiGatewayMeta {
 	$location?: string;
 }
 
-export interface NetworkInfo {
+export interface INetworkInfo {
 	chainName: string;
 	chainId: string;
 	RPC: string[];
 	LCD: string[];
 	prefixAddress: string;
+	databaseName: string;
+}
+
+export interface IVoteAnswer {
+	label: string;
+	value: string;
+}
+
+export interface ISearchTxQuery {
+	type: string;
+	key: string;
 }

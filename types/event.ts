@@ -1,4 +1,4 @@
-import { ITransaction } from '../entities';
+import { IBlock, ITransaction } from '../entities';
 
 export interface ListTxInBlockParams {
 	listTx: string[];
@@ -9,6 +9,22 @@ export interface ListTxCreatedParams {
 	chainId: string;
 }
 
+export interface CrawlAccountClaimedRewardsParams {
+	listTx: ITransaction[];
+	chainId: string;
+}
+
+export interface ListBlockCreatedParams {
+	listBlock: IBlock[];
+	chainId: string;
+}
+
 export interface ListValidatorAddress {
 	listAddress: string[];
+}
+export interface TransactionHashParam {
+	txHash: string;
+}
+export interface TransactionArrayParam {
+	txHashArr: string[];
 }

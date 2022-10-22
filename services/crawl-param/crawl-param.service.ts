@@ -8,9 +8,9 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { dbParamMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
-import { JsonConvert, OperationMode } from 'json2typescript';
-import { ParamEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
+import { QueueConfig } from '../../config/queue';
+
 export default class CrawlParamService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbParamMixin = dbParamMixin;
@@ -21,12 +21,7 @@ export default class CrawlParamService extends Service {
 			name: 'crawlparam',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.param',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbParamMixin,
 			],
@@ -70,12 +65,12 @@ export default class CrawlParamService extends Service {
 			this.callApiFromDomain(url, Config.GET_PARAMS_MINT),
 		]);
 
-		this.logger.info(`paramBank: ${JSON.stringify(paramBank)}`);
-		this.logger.info(`paramDistribution: ${JSON.stringify(paramDistribution)}`);
-		this.logger.info(`paramSlashing: ${JSON.stringify(paramSlashing)}`);
-		this.logger.info(`paramStaking: ${JSON.stringify(paramStaking)}`);
-		this.logger.info(`paramApiTransfer: ${JSON.stringify(paramIBCTransfer)}`);
-		this.logger.info(`paramMint: ${JSON.stringify(paramMint)}`);
+		this.logger.debug(`paramBank: ${JSON.stringify(paramBank)}`);
+		this.logger.debug(`paramDistribution: ${JSON.stringify(paramDistribution)}`);
+		this.logger.debug(`paramSlashing: ${JSON.stringify(paramSlashing)}`);
+		this.logger.debug(`paramStaking: ${JSON.stringify(paramStaking)}`);
+		this.logger.debug(`paramApiTransfer: ${JSON.stringify(paramIBCTransfer)}`);
+		this.logger.debug(`paramMint: ${JSON.stringify(paramMint)}`);
 
 		let paramGov = {
 			type: 'gov',
@@ -85,7 +80,7 @@ export default class CrawlParamService extends Service {
 				deposit_param: paramGovDeposit.deposit_params,
 			},
 		};
-		this.logger.info(`paramGov: ${JSON.stringify(paramGov)}`);
+		this.logger.debug(`paramGov: ${JSON.stringify(paramGov)}`);
 
 		let listParamInDb = await this.adapter.find({
 			query: {
@@ -104,7 +99,7 @@ export default class CrawlParamService extends Service {
 			},
 		});
 
-		this.logger.info(`listParamInDb: ${listParamInDb}`);
+		this.logger.debug(`listParamInDb: ${listParamInDb}`);
 		let id = await Promise.all([
 			this.findAndUpdate(listParamInDb, 'bank', paramBank.params),
 			this.findAndUpdate(listParamInDb, 'distribution', paramDistribution.params),
@@ -114,13 +109,13 @@ export default class CrawlParamService extends Service {
 			this.findAndUpdate(listParamInDb, 'ibc-transfer', paramIBCTransfer.params),
 			this.findAndUpdate(listParamInDb, 'mint', paramMint.params),
 		]);
-		this.logger.info(`id: ${JSON.stringify(id)}`);
+		this.logger.debug(`id: ${JSON.stringify(id)}`);
 	}
 
 	async findAndUpdate(listParamInDb: any, module: String, params: any) {
 		if (listParamInDb.length > 0) {
 			let item = listParamInDb.find((item: any) => item._doc.module == module);
-			this.logger.info(`item: ${item}`);
+			this.logger.debug(`item: ${item}`);
 			if (item) {
 				await this.adapter.updateById(item._id, { params: params });
 			}
@@ -153,6 +148,9 @@ export default class CrawlParamService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 3,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_PARAM, 10),
 				},
@@ -162,7 +160,7 @@ export default class CrawlParamService extends Service {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('crawl.param').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('crawl.param').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

@@ -20,7 +20,7 @@ export class Utils {
 		return null;
 	}
 
-	public static getHexAddressFromPubkey(pubkey: string): string {
+	public static pubkeyBase64ToHexAddress(pubkey: string): string {
 		var bytes = Buffer.from(pubkey, 'base64');
 		return tmhash(bytes).slice(0, 20).toString('hex').toUpperCase();
 	}
@@ -32,8 +32,42 @@ export class Utils {
 
 	public static bech32ToHex(address: string) {
 		let decodedAddress = bech32.decode(address);
-		return Buffer.from(new Uint8Array(bech32.fromWords(decodedAddress.words)))
-			.toString('hex')
-			.toUpperCase();
+		return Buffer.from(new Uint8Array(decodedAddress.words)).toString('hex').toUpperCase();
+	}
+
+	public static operatorAddressToAddress(operatorAddress: string, prefix: string) {
+		const operator_address = operatorAddress;
+		const decodeAcc = bech32.decode(operator_address.toString());
+		const wordsByte = bech32.fromWords(decodeAcc.words);
+		return bech32.encode(prefix, bech32.toWords(wordsByte));
+	}
+
+	public static formatSearchQueryInTxSearch(query: string) {
+		let queryArray: string[] = [];
+		if (query.includes(';')) {
+			queryArray = query.split(';');
+		} else if (query.includes(',')) {
+			queryArray = query.split(',');
+		} else {
+			queryArray = [query];
+		}
+		let queryObject: any[] = [];
+		queryArray.forEach((element) => {
+			let keyValueList = element.split('=');
+			if (keyValueList.length === 2) {
+				let value = keyValueList[1];
+				let typeKeyList = keyValueList[0].split('.');
+				if (typeKeyList.length === 2) {
+					let type = typeKeyList[0];
+					let key = typeKeyList[1];
+					queryObject.push({
+						type: type,
+						key: key,
+						value: value.replace(/(^'|'$)/g, ''),
+					});
+				}
+			}
+		});
+		return queryObject;
 	}
 }

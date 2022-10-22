@@ -5,6 +5,7 @@ import {
 	CommunityPoolEntity,
 	IBlock,
 	ICommunityPool,
+	IDelegationResponse,
 	IDeposit,
 	IPool,
 	IProposal,
@@ -45,10 +46,15 @@ export interface ISigningInfoResponseFromLCD {
 	info: ISigningInfo[];
 }
 export interface ISigningInfoEntityResponseFromLCD {
-	val_signing_info: ISigningInfo[];
+	val_signing_info: ISigningInfo;
 }
-export interface MintInflationResponseFromLCD {
+export interface IMintInflationResponseFromLCD {
 	inflation: String;
+}
+
+export interface IDelegationResponseFromLCD {
+	delegation_response: IDelegationResponse;
+	pagination: IPagingationResponseFromLCD;
 }
 
 export interface ResponseFromRPC {

@@ -12,12 +12,21 @@ import _ from 'lodash';
 import swaggerJSDoc from 'swagger-jsdoc';
 import * as pkg from '../../package.json';
 import { Config } from '../../common';
+import { LIST_NETWORK } from '../../common/constant';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const MoleculerServerError = Errors.MoleculerServerError;
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
+
+let listLCD: any[] = [];
+LIST_NETWORK.map((e) => {
+	let listlcd = e.LCD;
+	listlcd.map((lcd) => {
+		listLCD.push({ url: lcd, description: `${e.chainName} LCD` });
+	});
+});
 
 export const openAPIMixin = (mixinOptions?: any) => {
 	mixinOptions = _.defaultsDeep(mixinOptions, {
@@ -52,16 +61,38 @@ export const openAPIMixin = (mixinOptions?: any) => {
 			 */
 			generateOpenAPISchema(): any {
 				try {
+					let url = Config.SWAGGER_HOST;
+					if (Config.SWAGGER_PORT) {
+						url += `:${Config.BASE_PORT}`;
+					}
+					url += `${Config.SWAGGER_BASEPATH}`;
+
 					const swaggerDefinition = {
+						openapi: '3.0.0',
 						info: {
 							title: `Horoscope API Documentation`, // Title of the documentation
 							version: pkg.version, // Version of the app
-							description:
-								// eslint-disable-next-line max-len
-								'Indexer for multiple Cosmos Network', // Short description of the app
+							description: `## Indexer for multiple Cosmos Network \n
+### How to use\n
+Select server Horoscope if use Horoscope API\n
+Select server LCD if use Legacy API`,
+							// eslint-disable-next-line max-len
+							// 'Indexer for multiple Cosmos Network',
 						},
-						host: `${Config.SWAGGER_HOST}:${Config.SWAGGER_PORT}`, // The host or url of the app
-						basePath: `${Config.SWAGGER_BASEPATH}`, // The basepath of your endpoint
+						// host: `${Config.SWAGGER_HOST}:${Config.SWAGGER_PORT}`, // The host or url of the app
+						// basePath: `${Config.SWAGGER_BASEPATH}`, // The basepath of your endpoint
+						servers: [
+							{
+								url: url,
+								description: 'Horoscope ',
+							},
+							...listLCD.map((e) => {
+								return {
+									url: e.url,
+									description: e.description,
+								};
+							}),
+						],
 					};
 					// Options for the swagger docs
 					const options = {

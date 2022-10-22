@@ -27,32 +27,6 @@ export default class NetworkService extends MoleculerDBService<
 	},
 	{}
 > {
-	/**
-	 *  @swagger
-	 *  /v1/network/status:
-	 *    get:
-	 *      tags:
-	 *        - Network
-	 *      summary: Get status network
-	 *      description: Get status network
-	 *      produces:
-	 *        - application/json
-	 *      consumes:
-	 *        - application/json
-	 *      parameters:
-	 *        - in: query
-	 *          name: chainid
-	 *          required: true
-	 *          type: string
-	 *          enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1"]
-	 *          description: "Chain Id of network need to query"
-	 *      responses:
-	 *        '200':
-	 *          description: Register result
-	 *        '422':
-	 *          description: Missing parameters
-	 *
-	 */
 	@Get('/', {
 		name: 'status',
 		params: {
@@ -82,9 +56,127 @@ export default class NetworkService extends MoleculerDBService<
 				inflation,
 				pool,
 				communityPool,
-				supply
+				supply,
 			},
 		};
 		return result;
 	}
+
+	/**
+	 *  @swagger
+	 *  /v1/network/status:
+	 *    get:
+	 *      tags:
+	 *        - Network
+	 *      summary: Get status network (inflation, pool, community pool, supply)
+	 *      description: Get status network (inflation, pool, community pool, supply)
+	 *      parameters:
+	 *        - in: query
+	 *          name: chainid
+	 *          required: true
+	 *          schema:
+	 *            type: string
+	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *          description: "Chain Id of network need to query"
+	 *          example: "aura-testnet"
+	 *      responses:
+	 *        '200':
+	 *          description: Network information
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  code:
+	 *                    type: number
+	 *                    example: 200
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Successful"
+	 *                  data:
+	 *                    type: object
+	 *                    properties:
+	 *                      inflation:
+	 *                        type: object
+	 *                        properties:
+	 *                          inflation:
+	 *                            type: string
+	 *                            example: '0.255222222222522525'
+	 *                      pool:
+	 *                        type: object
+	 *                        properties:
+	 *                          bonded_tokens:
+	 *                            type: string
+	 *                            example: "1000000000"
+	 *                          not_bonded_tokens:
+	 *                            type: string
+	 *                            example: "1000000000"
+	 *                      communityPool:
+	 *                        type: object
+	 *                        properties:
+	 *                          pool:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                amount:
+	 *                                  type: string
+	 *                                  example: "100000"
+	 *                                denom:
+	 *                                  type: string
+	 *                                  example: "uaura"
+	 *                      supply:
+	 *                        type: object
+	 *                        properties:
+	 *                          supply:
+	 *                            type: array
+	 *                            items:
+	 *                              type: object
+	 *                              properties:
+	 *                                denom:
+	 *                                  type: string
+	 *                                  example: "uaura"
+	 *                                amount:
+	 *                                  type: string
+	 *                                  example: "1000000"
+	 *        '422':
+	 *          description: Bad request
+	 *          content:
+	 *            application/json:
+	 *              schema:
+	 *                type: object
+	 *                properties:
+	 *                  name:
+	 *                    type: string
+	 *                    example: "ValidationError"
+	 *                  message:
+	 *                    type: string
+	 *                    example: "Parameters validation error!"
+	 *                  code:
+	 *                    type: number
+	 *                    example: 422
+	 *                  type:
+	 *                    type: string
+	 *                    example: "VALIDATION_ERROR"
+	 *                  data:
+	 *                    type: array
+	 *                    items:
+	 *                       type: object
+	 *                       properties:
+	 *                         type:
+	 *                           type: string
+	 *                           example: "required"
+	 *                         message:
+	 *                           type: string
+	 *                           example: "The 'chainid' field is required."
+	 *                         field:
+	 *                           type: string
+	 *                           example: chainid
+	 *                         nodeID:
+	 *                           type: string
+	 *                           example: "node1"
+	 *                         action:
+	 *                           type: string
+	 *                           example: "v1.network.chain"
+	 */
 }

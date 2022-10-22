@@ -6,11 +6,12 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
-import { IDepositProposalResponseFromLCD } from 'types';
-import { IDeposit } from 'entities';
+import { IDepositProposalResponseFromLCD, ListTxCreatedParams } from 'types';
+import { IDeposit, IProposal, ITransaction } from 'entities';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlProposalService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -22,12 +23,7 @@ export default class CrawlProposalService extends Service {
 			name: 'crawlDepositProposal',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.deposit.proposal',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbProposalMixin,
 			],
@@ -37,11 +33,21 @@ export default class CrawlProposalService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.id);
+						await this.handleJobDeposit(job.data.id);
 						job.progress(100);
 						return true;
 					},
 				},
+				// 'crawl.deposit.tx': {
+				// 	concurrency: 1,
+				// 	async process(job: Job) {
+				// 		job.progress(10);
+				// 		// @ts-ignore
+				// 		await this.handleJobDepositTx(job.data.listTx);
+				// 		job.progress(100);
+				// 		return true;
+				// 	},
+				// },
 			},
 			events: {
 				'proposal.depositing': {
@@ -55,6 +61,9 @@ export default class CrawlProposalService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -64,7 +73,7 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async handleJob(proposalId: String) {
+	async handleJobDeposit(proposalId: String) {
 		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/deposits`;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
@@ -112,7 +121,7 @@ export default class CrawlProposalService extends Service {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('crawl.deposit.proposal').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('crawl.deposit.proposal').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);

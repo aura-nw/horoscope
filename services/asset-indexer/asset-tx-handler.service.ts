@@ -7,12 +7,23 @@ import { Config } from '../../common';
 import { CallingOptions, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
 import * as _ from 'lodash';
-import { URL_TYPE_CONSTANTS, EVENT_TYPE, COMMON_ACTION, ENRICH_TYPE, CODEID_MANAGER_ACTION } from '../../common/constant';
+import {
+	URL_TYPE_CONSTANTS,
+	EVENT_TYPE,
+	COMMON_ACTION,
+	ENRICH_TYPE,
+	CODEID_MANAGER_ACTION,
+	BASE_64_ENCODE,
+} from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
-import { Status } from '@Model';
+import { CodeIDStatus } from '../../model/codeid.model';
+import { ICW721Asset } from '../../model';
 import { info } from 'console';
-
+import { IAttribute, IEvent, ITransaction } from 'entities';
+import { toBase64, toUtf8, fromBase64, fromUtf8 } from '@cosmjs/encoding';
+import { Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
@@ -29,24 +40,25 @@ export default class CrawlAccountInfoService extends Service {
 			name: 'handle-asset-tx',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'asset.tx-handle',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAssetMixin,
 				this.callApiMixin,
 			],
 			queues: {
 				'asset.tx-handle': {
-					concurrency: 1,
-					async process(job: Job) {
+					concurrency: parseInt(Config.CONCURRENCY_ASSET_TX_HANDLER, 10),
+					process(job: Job) {
 						job.progress(10);
-						const URL = Utils.getUrlByChainIdAndType(job.data.chainId, URL_TYPE_CONSTANTS.LCD);
+						const URL = Utils.getUrlByChainIdAndType(
+							job.data.chainId,
+							URL_TYPE_CONSTANTS.LCD,
+						);
 
 						// @ts-ignore
-						await this.handleJob(URL, job.data.listTx, job.data.chainId);
+						this.handleJob(URL, job.data.listTx, job.data.chainId);
+						// @ts-ignore
+						this.handleTxBurnCw721(job.data.listTx, job.data.chainId);
+						// TODO: handleTxBurnCw4973 ???
 						job.progress(100);
 						return true;
 					},
@@ -63,6 +75,9 @@ export default class CrawlAccountInfoService extends Service {
 							},
 							{
 								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
 							},
 						);
 						return;
@@ -72,15 +87,21 @@ export default class CrawlAccountInfoService extends Service {
 		});
 	}
 
-	async handleJob(URL: string, listTx: any[], chainId: string): Promise<any[]> {
+	async handleJob(URL: string, listTx: ITransaction[], chainId: string): Promise<any[]> {
 		let contractListFromEvent: any[] = [];
 		try {
 			if (listTx.length > 0) {
 				for (const tx of listTx) {
-					let log = tx.tx_response.logs[0].events;
-					let attributes = log.find((x: any) => x.type == EVENT_TYPE.EXECUTE)?.attributes;
-					if (attributes) {
-						contractListFromEvent.push(...attributes);
+					this.logger.debug('tx', JSON.stringify(tx));
+					let log = tx.tx_response.logs[0];
+					if (log && log.events) {
+						let events = log.events;
+						let attributes = events.find(
+							(x: any) => x.type == EVENT_TYPE.EXECUTE,
+						)?.attributes;
+						if (attributes) {
+							contractListFromEvent.push(...attributes);
+						}
 					}
 				}
 			}
@@ -92,23 +113,40 @@ export default class CrawlAccountInfoService extends Service {
 						const processingFlag = await this.broker.cacher?.get(`contract_${address}`);
 						if (!processingFlag) {
 							await this.broker.cacher?.set(`contract_${chainId}_${address}`, true);
-							let contractInfo = await this.verifyAddressByCodeID(URL, address, chainId);
+							let contractInfo = await this.verifyAddressByCodeID(
+								URL,
+								address,
+								chainId,
+							);
 							if (contractInfo != null) {
-								this.logger.info('contractInfo', contractInfo);
 								switch (contractInfo.status) {
-									case Status.COMPLETED:
+									case CodeIDStatus.COMPLETED:
 										await this.broker.call(
 											`v1.${contractInfo.contract_type}.enrichData`,
-											[{ URL, chain_id: chainId, code_id: contractInfo.code_id, address }, ENRICH_TYPE.UPSERT],
+											[
+												{
+													URL,
+													chain_id: chainId,
+													code_id: contractInfo.code_id,
+													address,
+												},
+												ENRICH_TYPE.UPSERT,
+											],
 											OPTs,
 										);
 										break;
-									case Status.TBD:
-										this.logger.info('contractInfo TBD', contractInfo.status);
-										this.broker.emit(`${contractInfo.contract_type}.validate`, { URL, chain_id: chainId, code_id: contractInfo.code_id });
+									case CodeIDStatus.TBD:
+										this.broker.emit(`${contractInfo.contract_type}.validate`, {
+											URL,
+											chain_id: chainId,
+											code_id: contractInfo.code_id,
+										});
 										break;
 									default:
-										this.logger.error('handleJob tx fail, status does not match', contractInfo.status);
+										this.logger.error(
+											'handleJob tx fail, status does not match',
+											contractInfo.status,
+										);
 										break;
 								}
 							}
@@ -125,15 +163,58 @@ export default class CrawlAccountInfoService extends Service {
 		return [];
 	}
 
+	handleTxBurnCw721(listTx: any[], chainId: string) {
+		listTx.map((tx) => {
+			const events = tx.tx_response.events;
+			const attributes = events.find((x: IEvent) => x.type == EVENT_TYPE.WASM)?.attributes;
+			if (attributes) {
+				const key_value = attributes.find(
+					(x: IAttribute) =>
+						x.key == BASE_64_ENCODE.ACTION && x.value == BASE_64_ENCODE.BURN,
+				);
+				if (key_value) {
+					const contract_address = attributes.find(
+						(x: IAttribute) => x.key == BASE_64_ENCODE._CONTRACT_ADDRESS,
+					)?.value;
+					const tokenId = attributes.find(
+						(x: IAttribute) => x.key == BASE_64_ENCODE.TOKEN_ID,
+					)?.value;
+
+					this.logger.info(`${fromUtf8(fromBase64(contract_address))}`);
+					this.logger.info(`${fromUtf8(fromBase64(tokenId))}`);
+					this.broker.call('v1.CW721.addBurnedToAsset', {
+						chainid: chainId,
+						contractAddress: `${fromUtf8(fromBase64(contract_address))}`,
+						tokenId: `${fromUtf8(fromBase64(tokenId))}`,
+					});
+				}
+			}
+		});
+	}
+
+	// TODO: handleTxBurnCw4973 ???
+
 	async verifyAddressByCodeID(URL: string, address: string, chain_id: string) {
 		let urlGetContractInfo = `${CONTRACT_URI}${address}`;
 		let contractInfo = await this.callApiFromDomain(URL, urlGetContractInfo);
 		if (contractInfo?.contract_info?.code_id != undefined) {
-			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, { query: { code_id: contractInfo.contract_info.code_id, 'custom_info.chain_id': chain_id } });
+			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, {
+				query: {
+					code_id: contractInfo.contract_info.code_id,
+					'custom_info.chain_id': chain_id,
+				},
+			});
 			this.logger.debug('codeid-manager.find res', res);
 			if (res.length > 0) {
-				if (res[0].status === Status.COMPLETED || res[0].status === Status.TBD) {
-					return { code_id: contractInfo.contract_info.code_id, contract_type: res[0].contract_type, status: res[0].status };
+				if (
+					res[0].status === CodeIDStatus.COMPLETED ||
+					res[0].status === CodeIDStatus.TBD
+				) {
+					return {
+						code_id: contractInfo.contract_info.code_id,
+						contract_type: res[0].contract_type,
+						status: res[0].status,
+					};
 				} else return null;
 			} else {
 				return null;
@@ -149,7 +230,7 @@ export default class CrawlAccountInfoService extends Service {
 			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('asset.tx-handle').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('asset.tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);

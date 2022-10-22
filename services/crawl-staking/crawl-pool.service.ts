@@ -9,9 +9,10 @@ import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { IPoolResponseFromLCD } from '../../types';
-import { Job } from 'bull';
+import { Job, KeepJobsOptions } from 'bull';
 import { PoolEntity, ValidatorEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlPoolService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -23,12 +24,7 @@ export default class CrawlPoolService extends Service {
 			name: 'crawlPool',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.pool',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbPoolMixin,
 			],
@@ -62,7 +58,9 @@ export default class CrawlPoolService extends Service {
 			try {
 				if (foundPool) {
 					item._id = foundPool._id;
-					await this.adapter.updateById(foundPool._id, item);
+					// await this.adapter.clearCache();
+					// await this.adapter.updateById(foundPool._id, item);
+					await this.actions.update(item);
 				} else {
 					await this.adapter.insert(item);
 				}
@@ -73,7 +71,6 @@ export default class CrawlPoolService extends Service {
 			this.logger.error(error);
 		}
 	}
-
 	async _start() {
 		this.createJob(
 			'crawl.pool',
@@ -82,6 +79,9 @@ export default class CrawlPoolService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 5,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_CRAWL_POOL, 10),
 				},
@@ -92,12 +92,11 @@ export default class CrawlPoolService extends Service {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('crawl.pool').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('crawl.pool').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-
 		return super._start();
 	}
 }

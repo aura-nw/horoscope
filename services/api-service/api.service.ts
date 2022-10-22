@@ -22,7 +22,8 @@ import {
 } from '../../types';
 import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
-
+import { LIST_NETWORK } from '../../common/constant';
+const BullBoard = require('../../mixins/bullBoard/bull-board');
 
 const tlBucket = 60000;
 const swMiddleware = swStats.getMiddleware({
@@ -32,6 +33,10 @@ const swMiddleware = swStats.getMiddleware({
 	swaggerSpec: swaggerSpec,
 });
 
+const listLCD = LIST_NETWORK.map((e) => {
+	return e.LCD;
+}).flat();
+
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  * @typedef {import('http').IncomingMessage} IncomingRequest Incoming HTTP Request
@@ -39,22 +44,22 @@ const swMiddleware = swStats.getMiddleware({
  */
 @Service({
 	name: 'api',
-	mixins: [ApiGateway, openAPIMixin()],
+	mixins: [ApiGateway, openAPIMixin(), BullBoard],
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	settings: {
 		port: Config.PORT || 3000,
-
 		use: [
 			cookieParser(),
 			helmet({
 				contentSecurityPolicy: {
 					directives: {
-						'default-src': ["'self'"],
+						'default-src': ["'self'", ...listLCD],
+						'connect-src': ["'self'", ...listLCD],
 						'base-uri': ["'self'"],
 						// 'block-all-mixed-content',
 						'font-src': ["'self'"],
 						'frame-ancestors': ["'self'"],
-						'img-src': ["'self'"],
+						'img-src': ["'self'", 'data:'],
 						'object-src': ["'none'"],
 						'script-src': ["'self'", "'unsafe-inline'"],
 						'script-src-attr': ["'none'"],
@@ -103,7 +108,17 @@ const swMiddleware = swStats.getMiddleware({
 					// Access to any actions in all services under "/api" URL
 					// '**',
 					'v1.network.*',
-					'v1.account-info.*',
+					// 'v1.account-info.*',
+					// 'v1.proposal.getByChain',
+					// 'v1.validator.getByChain',
+					// 'v1.block.getByChain',
+					// 'v1.codeid.*',
+					// 'v1.transaction.getByChain',
+					// 'v1.test.*',
+					'v1.account-info.getAccountInfo',
+					'v1.account-info.getAccountDelegationInfo',
+					'v1.account-info.getAccountStake',
+					'v1.account-unbonds.getByAddress',
 					'v1.proposal.getByChain',
 					'v1.validator.getByChain',
 					'v1.block.getByChain',
@@ -111,6 +126,16 @@ const swMiddleware = swStats.getMiddleware({
 					'v1.asset.*',
 					'v1.codeid.*',
 					'v1.transaction.getByChain',
+					'v1.transaction.getPowerEvent',
+					'v1.transaction.getIBCTx',
+					'v1.param.getByChain',
+					'v1.votes.getVotes',
+					'v1.votes.getValidatorVote',
+					'v1.ibc-denom.getByHash',
+					'v1.ibc-denom.addNewDenom',
+					'v1.validator.getAllByChain',
+					'v1.account-statistics.getTopAccounts',
+					'v1.daily-tx-statistics.getDailyData'
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 				use: [swMiddleware],

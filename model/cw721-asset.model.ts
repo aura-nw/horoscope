@@ -7,41 +7,47 @@ export interface ICW721Asset {
 	asset_id: String;
 	code_id: String;
 	asset_info: Object;
-	constract_address: String;
+	contract_address: String;
 	token_id: String;
 	owner: String;
+	media_link: String,
 	history: String[];
+	is_burned: Boolean;
 }
 
 const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 	_id: Types.ObjectId,
 	asset_id: {
-		type: String, unique : true, index: true
+		type: String,
+		unique: true,
+		index: true,
 	},
 	code_id: String,
 	asset_info: {
 		data: {
 			access: {
 				owner: String,
-				approvals: []
+				approvals: [],
 			},
 			info: {
 				token_uri: String,
-				extension: {}
-			}
-		}
+				extension: {},
+			},
+		},
 	},
-	constract_address: String,
+	contract_address: String,
 	token_id: String,
 	owner: {
-		type: String, index: true
+		type: String,
+		index: true,
 	},
 	history: {
-		type: [String]
+		type: [String],
 	},
+	media_link: String,
 	custom_info: customInfoModel,
-})
-
+	is_burned: Boolean,
+});
 
 export const cw721AssetMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -49,12 +55,12 @@ export const cw721AssetMongoModel = (collection: string): unknown => {
 	const schema = new Schema<ICW721Asset>(definition(collection), {
 		autoIndex: true,
 		collection: collection,
-		timestamps:{
+		timestamps: {
 			createdAt: true,
-			updatedAt: true
-		}
+			updatedAt: true,
+		},
 		// strict: true
 	});
-	schema.index({ 'custom_info.chain_id': 1, 'asset_id': 1 });
+	schema.index({ 'custom_info.chain_id': 1, asset_id: 1 });
 	return models[collection] || model(collection, schema);
 };

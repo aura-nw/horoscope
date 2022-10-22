@@ -10,6 +10,7 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 		'@type': String,
 		key: String,
 	},
+	consensus_hex_address: String,
 	jailed: Boolean,
 	status: String,
 	tokens: String,
@@ -24,7 +25,7 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 	unbonding_height: String,
 	unbonding_time: String,
 	commission: {
-		commision_rates: {
+		commission_rates: {
 			rate: String,
 			max_rate: String,
 			max_change_rate: String,
@@ -40,6 +41,14 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 		tombstoned: Boolean,
 		missed_blocks_counter: String,
 	},
+	self_delegation_balance: {
+		denom: String,
+		amount: String,
+	},
+	uptime: Number,
+	account_address: String,
+	percent_voting_power: Number,
+	number_delegators: Number,
 	custom_info: customInfoModel,
 });
 
@@ -52,5 +61,7 @@ export const validatorMongoModel = (collection: string): unknown => {
 		collection: collection,
 	});
 	schema.index({ operator_address: 1, 'custom_info.chain_id': 1 });
+	schema.index({ account_address: 1, 'custom_info.chain_id': 1 });
+	schema.index({ consensus_hex_address: 1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

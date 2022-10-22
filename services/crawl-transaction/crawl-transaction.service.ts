@@ -10,7 +10,9 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
-import { ListTxInBlockParams } from 'types';
+import { ListTxInBlockParams, TransactionHashParam } from 'types';
+import { QueueConfig } from '../../config/queue';
+
 export default class CrawlTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private callApiMixin = new CallApiMixin().start();
@@ -21,12 +23,7 @@ export default class CrawlTransactionService extends Service {
 			name: 'crawltransaction',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.transaction',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.callApiMixin,
 			],
@@ -37,6 +34,16 @@ export default class CrawlTransactionService extends Service {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(job.data.listTx);
+						job.progress(100);
+						return true;
+					},
+				},
+				'crawl.transaction-hash': {
+					concurrency: 1,
+					async process(job: Job) {
+						job.progress(10);
+						// @ts-ignore
+						await this.crawlTransaction(job.data.txhash);
 						job.progress(100);
 						return true;
 					},
@@ -55,6 +62,33 @@ export default class CrawlTransactionService extends Service {
 								},
 								{
 									removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
+								},
+							);
+						}
+					},
+				},
+				'crawl-transaction-hash.retry': {
+					handler: async (
+						ctx: Context<TransactionHashParam, Record<string, unknown>>,
+					) => {
+						const txHash = ctx.params.txHash;
+						this.logger.info(
+							`Crawl transaction by hash retry: ${JSON.stringify(txHash)}`,
+						);
+						if (txHash) {
+							this.createJob(
+								'crawl.transaction-hash',
+								{
+									txhash: txHash,
+								},
+								{
+									removeOnComplete: true,
+									removeOnFail: {
+										count: 10,
+									},
 								},
 							);
 						}
@@ -65,34 +99,36 @@ export default class CrawlTransactionService extends Service {
 	}
 
 	async handleJob(listTx: string[]) {
-		// this.logger.info(`Handle job: ${JSON.stringify(listTx)}`);
-		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
-
-		listTx.map(async (tx: string) => {
+		listTx.map((tx: string) => {
 			const txHash = sha256(Buffer.from(tx, 'base64')).toUpperCase();
-			this.logger.info(`txhash: ${txHash}`);
-			let result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
-			if (result) {
-				this.redisClient.sendCommand([
-					'XADD',
-					Config.REDIS_STREAM_TRANSACTION_NAME,
-					'*',
-					'element',
-					JSON.stringify(result),
-				]);
-				this.logger.debug(`result: ${JSON.stringify(result)}`);
-			}
+			this.crawlTransaction(txHash);
 		});
 	}
 
+	async crawlTransaction(txHash: string) {
+		this.logger.info(`txhash: ${txHash}`);
+		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+		let result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
+		if (result) {
+			this.redisClient.sendCommand([
+				'XADD',
+				Config.REDIS_STREAM_TRANSACTION_NAME,
+				'*',
+				'source',
+				txHash,
+				'element',
+				JSON.stringify(result),
+			]);
+			this.logger.debug(`result: ${JSON.stringify(result)}`);
+		}
+	}
 	async _start() {
 		this.redisClient = await this.getRedisClient();
-
 		this.getQueue('crawl.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('crawl.transaction').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('crawl.transaction').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

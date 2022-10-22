@@ -9,8 +9,11 @@ import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { BlockEntity, IBlock } from '../../entities';
 import { Job } from 'bull';
-import { IRedisStreamData, IRedisStreamResponse } from '../../types';
+import { IRedisStreamData, IRedisStreamResponse, ListBlockCreatedParams } from '../../types';
 import { ListTxInBlockParams } from '../../types';
+import { CONST_CHAR } from 'common/constant';
+import { QueueConfig } from '../../config/queue';
+
 export default class HandleBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbBlockMixin = dbBlockMixin;
@@ -22,12 +25,7 @@ export default class HandleBlockService extends Service {
 			name: 'handleblock',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'handle.block',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.redisMixin,
 				this.dbBlockMixin,
 			],
@@ -69,8 +67,6 @@ export default class HandleBlockService extends Service {
 	private lastId = '0-0';
 
 	async handleJob() {
-		this.logger.info('handleJob');
-
 		let xAutoClaimResult: IRedisStreamResponse = await this.redisClient.xAutoClaim(
 			Config.REDIS_STREAM_BLOCK_NAME,
 			Config.REDIS_STREAM_BLOCK_GROUP,
@@ -102,14 +98,13 @@ export default class HandleBlockService extends Service {
 					let listTx: String[] = [];
 					try {
 						element.messages.forEach((item: IRedisStreamData) => {
-							this.logger.info(`Handling message ${item.id}`);
-							// let block = JSON.parse(item.message.element.toString());
-
 							const block: BlockEntity = new JsonConvert().deserializeObject(
 								JSON.parse(item.message.element.toString()),
 								BlockEntity,
 							);
-
+							this.logger.info(
+								`Handling message: ${item.id}, block height: ${block.block?.header?.height}`,
+							);
 							listBlockNeedSaveToDb.push(block);
 							let listTxInBlock = block.block?.data?.txs;
 							if (listTxInBlock) {
@@ -146,8 +141,6 @@ export default class HandleBlockService extends Service {
 		} catch (error) {
 			this.logger.error(error);
 		}
-
-		this.logger.info(`handleJob done`);
 	}
 
 	async handleListBlock(listBlock: IBlock[]) {
@@ -170,6 +163,7 @@ export default class HandleBlockService extends Service {
 		listBlockEntity.forEach((block: BlockEntity) => {
 			try {
 				let hash = block?.block_id?.hash;
+				this.logger.info('handle block height: ', block.block?.header?.height);
 				let foundItem = listFoundBlock.find((item: BlockEntity) => {
 					return item?.block_id?.hash === hash;
 				});
@@ -182,6 +176,10 @@ export default class HandleBlockService extends Service {
 		});
 		if (listBlockNeedSaveToDb.length > 0) {
 			let listId = await this.adapter.insertMany(listBlockNeedSaveToDb);
+			this.broker.emit('list-block.upserted', {
+				listBlock: listBlockNeedSaveToDb,
+				chainId: Config.CHAIN_ID,
+			} as ListBlockCreatedParams);
 			return listId;
 		}
 	}
@@ -198,6 +196,9 @@ export default class HandleBlockService extends Service {
 			},
 			{
 				removeOnComplete: true,
+				removeOnFail: {
+					count: 3,
+				},
 				repeat: {
 					every: parseInt(Config.MILISECOND_HANDLE_BLOCK, 10),
 				},
@@ -208,7 +209,7 @@ export default class HandleBlockService extends Service {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('handle.block').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('handle.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

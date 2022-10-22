@@ -13,6 +13,7 @@ const dbCW721BaseMixin = new DbBaseMixin({
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	model: cw721AssetMongoModel(dbInfo.collection),
+	idField: '_id',
 });
 
 export const dbCW721AssetMixin = dbCW721BaseMixin.getMixin();

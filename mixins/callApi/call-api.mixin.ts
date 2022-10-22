@@ -1,13 +1,7 @@
-import { Method } from '@ourparentcenter/moleculer-decorators-extended';
-import { Axios } from 'axios';
-import { defaultMaxListeners } from 'events';
-import { Context, Service, ServiceBroker, ServiceSchema } from 'moleculer';
+import { Service, ServiceSchema } from 'moleculer';
 const axios = require('axios').default;
 const Resilient = require('resilient');
-
-// import { Resilient as Resilient } from 'resilient';
 import { Config } from '../../common';
-import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Service> {
 	private schema: Partial<ServiceSchema> & ThisType<Service>;
 	public constructor() {
@@ -16,7 +10,7 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 				enableLoadBalancer: Config.ENABLE_LOADBALANCER,
 			},
 			methods: {
-				async callApiFromDomain(domain: string[], path: string) {
+				async callApiFromDomain(domain: string[], path: string, retry: Number = Infinity) {
 					let callApiClient = null;
 					if (this.settings.enableLoadBalancer === 'false') {
 						let axiosClient = axios.create({
@@ -24,13 +18,36 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 						});
 						callApiClient = axiosClient;
 					} else {
-						let resilientClient = Resilient({ service: { basePath: '/', retry: Infinity } });
+						let resilientClient = Resilient({
+							service: { basePath: '/', retry: retry },
+						});
 						resilientClient.setServers(domain);
 						callApiClient = resilientClient;
 					}
 					try {
 						let result = await callApiClient.get(path);
-						return result.data;
+						if (result.data) {
+							return result.data;
+						} else {
+							return null;
+						}
+					} catch (error) {
+						this.logger.error(error);
+						return null;
+					}
+				},
+
+				async callApiWithAxios(domain: string, path: string) {
+					let callApiClient = axios.create({
+						baseURL: domain,
+					});
+					try {
+						let result = await callApiClient.get(path);
+						if (result.data) {
+							return result.data;
+						} else {
+							return null;
+						}
 					} catch (error) {
 						this.logger.error(error);
 						return null;

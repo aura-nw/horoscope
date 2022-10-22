@@ -3,11 +3,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import moleculer, { Context, Errors } from 'moleculer';
-import SocketIOMixin from 'moleculer-io';
-import { Service, Method, Post } from '@ourparentcenter/moleculer-decorators-extended';
-import ApiGatewayService from 'moleculer-web';
-import { Config } from '../../common';
+import moleculer, {  } from 'moleculer';
+import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { io } from 'socket.io-client';
 import { LIST_NETWORK } from '../../common/constant';
 /**
@@ -26,11 +23,17 @@ import { LIST_NETWORK } from '../../common/constant';
 
 			return Number(ctx.params.a) + Number(ctx.params.b);
 		},
+		minus(ctx) {
+			//@ts-ignore
+			this.broker.call('io.broadcast', { event: 'abc', args: [ctx.params.a, ctx.params.b] });
+
+			return Number(ctx.params.a) - Number(ctx.params.b);
+		},
 	},
 	started(): any {
-		console.log('network info')
-		console.log(LIST_NETWORK)
-		console.log(LIST_NETWORK[0].chainId)
+		console.log('network info');
+		console.log(LIST_NETWORK);
+		console.log(LIST_NETWORK[0].chainId);
 
 		const socket = io('ws://localhost:3001');
 		socket.on('open', () => {

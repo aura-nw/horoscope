@@ -6,13 +6,15 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { LIST_NETWORK, MODULE_PARAM, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { ISigningInfoEntityResponseFromLCD, ListValidatorAddress } from '../../types';
-import { ValidatorEntity } from 'entities';
+import { IParam, IValidator, ParamEntity, SlashingParam, ValidatorEntity } from '../../entities';
 const tmhash = require('tendermint/lib/hash');
 import { bech32 } from 'bech32';
 import { Utils } from '../../utils/utils';
+import { JsonConvert } from 'json2typescript';
+import { QueueConfig } from '../../config/queue';
 
 export default class CrawlSigningInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
@@ -24,12 +26,7 @@ export default class CrawlSigningInfoService extends Service {
 			name: 'crawlSigningInfo',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'crawl.signinginfo',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
 				this.dbValidatorMixin,
 			],
@@ -49,16 +46,6 @@ export default class CrawlSigningInfoService extends Service {
 				'validator.upsert': {
 					handler: (ctx: Context<ListValidatorAddress, Record<string, unknown>>) => {
 						this.handleJob(ctx.params.listAddress);
-
-						// this.createJob(
-						// 	'crawl.signinginfo',
-						// 	{
-						// 		listAddress: ctx.params.listAddress,
-						// 	},
-						// 	{
-						// 		removeOnComplete: true,
-						// 	},
-						// );
 						return;
 					},
 				},
@@ -67,7 +54,7 @@ export default class CrawlSigningInfoService extends Service {
 	}
 
 	async handleJob(listAddress: string[]) {
-		let listFoundValidator: ValidatorEntity[] = await this.adapter.find({
+		let listFoundValidator: IValidator[] = await this.adapter.find({
 			query: {
 				operator_address: {
 					$in: listAddress,
@@ -78,32 +65,76 @@ export default class CrawlSigningInfoService extends Service {
 		const prefixAddress = LIST_NETWORK.find(
 			(item) => item.chainId === Config.CHAIN_ID,
 		)?.prefixAddress;
-		listFoundValidator.map(async (foundValidator: ValidatorEntity) => {
-			try {
-				let consensusPubkey = foundValidator.consensus_pubkey;
-				this.logger.info(`Found validator with address ${foundValidator.operator_address}`);
-				this.logger.info(`Found validator with consensusPubkey ${consensusPubkey}`);
-
-				const pubkey = this.getAddressHexFromPubkey(consensusPubkey.key.toString());
-				const consensusAddress = this.hexToBech32(
-					pubkey,
-					`${prefixAddress}${Config.CONSENSUS_PREFIX_ADDRESS}`,
-				);
-				let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
-
-				let result: ISigningInfoEntityResponseFromLCD = await this.callApiFromDomain(
-					url,
-					path,
-				);
-				this.logger.info(result);
-				let res = await this.adapter.updateById(foundValidator._id, {
-					$set: { val_signing_info: result.val_signing_info },
-				});
-				this.logger.info(res);
-			} catch (error) {
-				this.logger.error(error);
-			}
+		let paramSlashing: ParamEntity[] = await this.broker.call('v1.crawlparam.find', {
+			query: {
+				'custom_info.chain_id': Config.CHAIN_ID,
+				module: MODULE_PARAM.SLASHING,
+			},
 		});
+		let listBulk: any[] = await Promise.all(
+			listFoundValidator.map(async (foundValidator: IValidator) => {
+				try {
+					let consensusPubkey = foundValidator.consensus_pubkey;
+					this.logger.debug(
+						`Found validator with address ${foundValidator.operator_address}`,
+					);
+					this.logger.debug(`Found validator with consensusPubkey ${consensusPubkey}`);
+
+					const pubkey = this.getAddressHexFromPubkey(consensusPubkey.key.toString());
+					const consensusAddress = this.hexToBech32(
+						pubkey,
+						`${prefixAddress}${Config.CONSENSUS_PREFIX_ADDRESS}`,
+					);
+					let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
+
+					this.logger.debug(path);
+					let result: ISigningInfoEntityResponseFromLCD = await this.callApiFromDomain(
+						url,
+						path,
+					);
+					this.logger.debug(result);
+
+					if (result.val_signing_info) {
+						let uptime: Number = 0;
+						if (paramSlashing.length > 0) {
+							const blockWindow =
+								//@ts-ignore
+								paramSlashing[0].params?.signed_blocks_window.toString();
+							const missedBlock =
+								result.val_signing_info.missed_blocks_counter.toString();
+							uptime =
+								Number(
+									((BigInt(blockWindow) - BigInt(missedBlock)) *
+										BigInt(100000000)) /
+										BigInt(blockWindow),
+								) / 1000000;
+						}
+						return {
+							updateOne: {
+								filter: { _id: foundValidator._id },
+								update: {
+									$set: {
+										val_signing_info: result.val_signing_info,
+										uptime: uptime,
+									},
+								},
+								upsert: true,
+							},
+						};
+					}
+				} catch (error) {
+					this.logger.error(error);
+				}
+				return;
+			}),
+		);
+
+		listBulk = listBulk.filter(function (element) {
+			return element !== undefined;
+		});
+
+		let result = await this.adapter.bulkWrite(listBulk);
+		this.logger.info(`result : ${listBulk.length}`, result);
 	}
 	getAddressHexFromPubkey(pubkey: string) {
 		var bytes = Buffer.from(pubkey, 'base64');
@@ -119,7 +150,7 @@ export default class CrawlSigningInfoService extends Service {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('crawl.signinginfo').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('crawl.signinginfo').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);

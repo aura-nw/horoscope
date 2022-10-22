@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM node:16-alpine3.15
 
 # Working directory
 WORKDIR /app
@@ -52,6 +52,9 @@ COPY . .
 
 # Build and cleanup
 # ENV NODE_ENV=production
+
+# Generate prisma
+RUN npm run graphql:generate
 
 # build
 RUN npm run build \

@@ -1,4 +1,3 @@
-import { uniq } from 'lodash';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
@@ -9,7 +8,7 @@ export interface ICodeID {
 	status: String;
 	contract_type: String;
 }
-export enum Status {
+export enum CodeIDStatus {
 	WAITING = "WAITING",
 	// INDEXING = "INDEXING",
 	COMPLETED = "COMPLETED",
@@ -21,7 +20,7 @@ const definition: definitionType<ICodeID> = (collection?: string) => ({
 	code_id: { type: String },
 	status: {
 		type: String,
-		enum: Status
+		enum: CodeIDStatus
 	},
 	contract_type: { type: String, default: null},
 	custom_info: customInfoModel,
