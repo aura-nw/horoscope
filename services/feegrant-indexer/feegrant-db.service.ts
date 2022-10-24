@@ -57,26 +57,7 @@ export default class FeegrantDB extends Service {
                         return true;
                     },
                 },
-            },
-            events: {
-                'feegrant.upsert': {
-                    handler: (ctx: any) => {
-                        this.createJob(
-                            'feegrant.db',
-                            {
-                                listUpdateFeegrantDb: ctx.params.listUpdateFeegrantDb,
-                            },
-                            {
-                                removeOnComplete: true,
-                                removeOnFail: {
-                                    count: 10,
-                                },
-                            },
-                        );
-                        return;
-                    },
-                },
-            },
+            }
         });
     }
 

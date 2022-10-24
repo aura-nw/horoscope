@@ -74,9 +74,6 @@ export default class HandleAccountVestingService extends Service {
                 })
             }
         }))
-        // this.broker.emit("feegrant.upsert", {
-        //     listUpdateFeegrantDb
-        // })
         this.createJob(
             'feegrant.db',
             {

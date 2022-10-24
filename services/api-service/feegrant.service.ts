@@ -95,7 +95,11 @@ export default class FeegrantService extends MoleculerDBService<
             }
         }
         try {
-            let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+            let query: QueryOptions = {};
+            const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+            if (network && network.databaseName) {
+                this.adapter.useDb(network.databaseName);
+            }
             if (ctx.params.nextKey) {
                 if (ctx.params.reverse) {
                     query._id = { $gt: new ObjectId(ctx.params.nextKey) };

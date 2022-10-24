@@ -17,6 +17,7 @@ import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from '@redis/client';
 import { CustomInfo } from 'entities/custom-info.entity';
+import { QueueConfig } from 'config/queue';
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
@@ -45,12 +46,7 @@ export default class CrawlAccountInfoService extends Service {
 			name: 'handle-feegrant-tx',
 			version: 1,
 			mixins: [
-				QueueService(
-					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-					{
-						prefix: 'feegrant.tx-handle',
-					},
-				),
+				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbTransactionMixin,
 				this.redisMixin
 			],
@@ -88,7 +84,7 @@ export default class CrawlAccountInfoService extends Service {
 			sort: "-tx_response.height",
 			limit: 1
 		}) as ITransaction[]
-		const latestBlock = latestBlockTx[0].tx_response.height.valueOf()
+		const latestBlock = latestBlockTx[0] ? latestBlockTx[0].tx_response.height.valueOf() : this.currentBlock
 		this.logger.info("Feegrant latest block: " + latestBlock)
 		const listTx = await this.adapter.find({
 			query: {
@@ -290,10 +286,19 @@ export default class CrawlAccountInfoService extends Service {
 					}
 				}
 			}
-			this.broker.emit('feegrant.history.upsert', {
-				feegrantList,
-				chainId
-			});
+			this.createJob(
+				'feegrant.history-db',
+				{
+					feegrantList,
+					chainId
+				},
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: 10,
+					},
+				},
+			);
 
 		} catch (error) {
 			this.logger.error(error);
@@ -315,7 +320,7 @@ export default class CrawlAccountInfoService extends Service {
 					count: 10,
 				},
 				repeat: {
-					every: parseInt(Config.MILISECOND_CRAWL_BLOCK, 10),
+					every: parseInt(Config.MILISECOND_GET_TRANSACTION, 10),
 				},
 			},
 		);
