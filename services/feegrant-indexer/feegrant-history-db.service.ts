@@ -51,6 +51,7 @@ export default class CrawlAccountInfoService extends Service {
     }
 
     async handleJob(feegrantList: IFeegrantData[], chainId: string): Promise<any[]> {
+        // list history feegrant action
         const records: any[] = []
         feegrantList.forEach(async (element) => {
             switch (element.action) {
@@ -187,6 +188,7 @@ export default class CrawlAccountInfoService extends Service {
                     }
             }
         });
+        // save to history feegrant DB
         await this.adapter.insertMany(records)
         return []
     }

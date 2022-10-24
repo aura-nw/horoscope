@@ -62,6 +62,7 @@ export default class FeegrantDB extends Service {
     }
 
     async handleJobCheckExpire() {
+        // check expired
         await this.adapter.updateMany({
             'timestamp': {
                 $lte: new Date()
@@ -77,6 +78,7 @@ export default class FeegrantDB extends Service {
     }
 
     async handleJob(listUpdateFeegrantDb: FeegrantEntity[]): Promise<any[]> {
+        // for each new created record received, insert new record 
         await Promise.all(listUpdateFeegrantDb.map(async e => {
             if (e.action == FEEGRANT_ACTION.CREATE) {
                 let record = {
@@ -87,6 +89,7 @@ export default class FeegrantDB extends Service {
             }
         }))
         for (const e of listUpdateFeegrantDb) {
+            // for each new used record received, update spendable
             if (e.action == FEEGRANT_ACTION.USE) {
                 const record = await this.adapter.find({
                     query: {
@@ -105,6 +108,7 @@ export default class FeegrantDB extends Service {
             } else if (e.action == FEEGRANT_ACTION.REVOKE) {
                 this.logger.info(`e.action: ${e.status}`)
                 if (e.status == FEEGRANT_STATUS.USE_UP) {
+                    // for each new used up record received, update status to use up
                     const record = await this.adapter.find({
                         query: {
                             "tx_hash": e.origin_feegrant_txhash
@@ -117,6 +121,7 @@ export default class FeegrantDB extends Service {
                         },
                     });
                 } else {
+                    // for each new revoked record received, update status to revoked
                     const record = await this.adapter.find({
                         query: {
                             "tx_hash": e.origin_feegrant_txhash

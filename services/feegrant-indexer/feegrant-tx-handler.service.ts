@@ -71,7 +71,7 @@ export default class CrawlAccountInfoService extends Service {
 	}
 
 	async initEnv() {
-		//get handled feegrant block
+		//get feegrant latest block which was unprocessing
 		let handledBlockRedis = await this.redisClient.get(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK);
 		this.currentBlock = 0;
 		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : this.currentBlock;
@@ -80,12 +80,13 @@ export default class CrawlAccountInfoService extends Service {
 
 	async handleJob(chainId: string): Promise<any[]> {
 		let feegrantList: IFeegrantData[] = [];
+		// latest block in transaction DB
 		const latestBlockTx = await this.adapter.find({
 			sort: "-tx_response.height",
 			limit: 1
 		}) as ITransaction[]
 		const latestBlock = latestBlockTx[0] ? latestBlockTx[0].tx_response.height.valueOf() : this.currentBlock
-		this.logger.info("Feegrant latest block: " + latestBlock)
+		// get all transactions in 100 sequence blocks, start from currentBlock
 		const listTx = await this.adapter.find({
 			query: {
 				"tx_response.height": {
@@ -95,6 +96,7 @@ export default class CrawlAccountInfoService extends Service {
 			}
 		}) as ITransaction[]
 		try {
+			// filter feegrant transactions
 			if (listTx.length > 0) {
 				for (const tx of listTx) {
 					this.logger.debug();
@@ -286,6 +288,7 @@ export default class CrawlAccountInfoService extends Service {
 					}
 				}
 			}
+			// forward to feegrant history db service
 			this.createJob(
 				'feegrant.history-db',
 				{
@@ -303,6 +306,7 @@ export default class CrawlAccountInfoService extends Service {
 		} catch (error) {
 			this.logger.error(error);
 		}
+		// update feegrant latest block
 		this.currentBlock = this.currentBlock + 100 < latestBlock ? this.currentBlock + 100 : latestBlock
 		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
 		return [];

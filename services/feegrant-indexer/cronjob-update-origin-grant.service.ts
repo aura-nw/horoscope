@@ -35,6 +35,7 @@ export default class HandleAccountVestingService extends Service {
         });
     }
     async handleJob() {
+        // find all records which were unprocessed
         const listUpdate = await this.adapter.find({
             query: {
                 "origin_feegrant_txhash": null
@@ -44,6 +45,7 @@ export default class HandleAccountVestingService extends Service {
         const bulkUpdate: any[] = []
         // list to update feegrant DB
         const listUpdateFeegrantDb: FeegrantEntity[] = []
+        // update origin_feegrant_txhash for all unprocessed records 
         await Promise.all(listUpdate.map(async e => {
             const originalCreate = await this.adapter.find({
                 query: {
@@ -74,6 +76,7 @@ export default class HandleAccountVestingService extends Service {
                 })
             }
         }))
+        // forward all unprocessed actions to feegrant db service
         this.createJob(
             'feegrant.db',
             {
