@@ -49,6 +49,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -418,6 +419,7 @@
                         "schema": {
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ],
                             "type": "string"
@@ -622,6 +624,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -811,6 +814,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -1195,6 +1199,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -1482,6 +1487,7 @@
                         "schema": {
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ],
                             "type": "string"
@@ -2036,6 +2042,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -2307,6 +2314,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -2523,6 +2531,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -2881,6 +2890,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -3001,6 +3011,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -3170,6 +3181,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -3342,6 +3354,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -3521,6 +3534,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -3817,6 +3831,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -4471,6 +4486,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -5024,6 +5040,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -5352,6 +5369,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -5572,6 +5590,7 @@
                             "type": "string",
                             "enum": [
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
