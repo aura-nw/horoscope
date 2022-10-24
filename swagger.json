@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:3000/api",
+            "url": "https://horoscope.aura.network/api",
             "description": "Horoscope "
         },
         {
