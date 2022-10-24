@@ -16,13 +16,9 @@ const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ }
 import { QueueConfig } from '../../config/queue';
 import { Job } from 'bull';
 const QueueService = require('moleculer-bull');
-
 @Service({
 	name: 'CW721-asset-media-manager',
-	mixins: [
-		dbCW721MediaLinkMixin,
-		QueueService(QueueConfig.redis, QueueConfig.opts),
-	],
+	mixins: [dbCW721MediaLinkMixin, QueueService(QueueConfig.redis, QueueConfig.opts)],
 	version: 1,
 	broker: {},
 	queues: {
@@ -31,22 +27,31 @@ const QueueService = require('moleculer-bull');
 			async process(job: Job) {
 				job.progress(10);
 				// @ts-ignore
-				await this.updateMediaLink(job.data.uri, job.data.file_name, job.data.key, job.data.chainId);
+				await this.updateMediaLink(
+					job.data.uri,
+					job.data.type,
+					job.data.file_name,
+					job.data.key,
+					job.data.chainId,
+				);
 				job.progress(100);
+
 				return true;
 			},
-		}
+		},
 	},
 	actions: {
 		'act-insert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.logger.debug(`ctx.params CW721-asset-media-manager insert ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(
+					`ctx.params CW721-asset-media-manager insert ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.chainId}});
+				this.actions.useDb({ query: { chainId: ctx.params.chainId } });
 				// @ts-ignore
 				return await this.adapter.insert(ctx.params);
-			}
+			},
 		},
 		// 'act-count': {
 		// 	async handler(ctx: Context): Promise<any> {
@@ -60,12 +65,17 @@ const QueueService = require('moleculer-bull');
 			// cache: { ttl: 10 },
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+				this.actions.useDb({
+					// @ts-ignore
+					query: { chainId: ctx.params.query['custom_info.chain_id'] },
+				});
 				// @ts-ignore
-				this.logger.info(`ctx.params CW721-asset-media-manager find ${JSON.stringify(ctx.params)}`);
+				this.logger.info(
+					`ctx.params CW721-asset-media-manager find ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.adapter.find(ctx.params);
-			}
+			},
 		},
 		// 'act-list': {
 		// 	async handler(ctx: Context): Promise<any> {
@@ -80,10 +90,12 @@ const QueueService = require('moleculer-bull');
 				// @ts-ignore
 				// this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
 				// @ts-ignore
-				this.logger.debug(`ctx.params CW721-asset-media-manager upsert ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(
+					`ctx.params CW721-asset-media-manager upsert ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.upsert_handler(ctx.params);
-			}
+			},
 		},
 		'update-media-link': {
 			async handler(ctx: Context<any>) {
@@ -91,25 +103,33 @@ const QueueService = require('moleculer-bull');
 				const file_name = ctx.params.file_name;
 				const key = ctx.params.key;
 				const chain_id = ctx.params.chainId;
+				const type = ctx.params.type;
 				// @ts-ignore
 				this.logger.debug('update-media-link ctx.params', uri, file_name, key, chain_id);
 				// @ts-ignore
 				// await this.updateMediaLink(uri, file_name, key);
-				this.createJob('update-media-link',{
-					uri: uri,
-					file_name: file_name,
-					key: key,
-					chainId: chain_id,
-				}, {
-					removeOnComplete: true,
-					removeOnFail: {
-						count: 3,
+				this.createJob(
+					'update-media-link',
+					{
+						uri: uri,
+						type: type,
+						file_name: file_name,
+						key: key,
+						chainId: chain_id,
 					},
-				})
-			}
+					{
+						removeOnComplete: true,
+						removeOnFail: {
+							count: 3,
+						},
+						attempts: 5,
+						backoff: 5000,
+					},
+				);
+			},
 		},
 		useDb: {
-			async handler(ctx: Context){
+			async handler(ctx: Context) {
 				//@ts-ignore
 				const chainId = ctx.params.query['chainId'];
 				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
@@ -117,13 +137,11 @@ const QueueService = require('moleculer-bull');
 					// @ts-ignore
 					this.adapter.useDb(network.databaseName);
 				}
-			}
+			},
 		},
 	},
 })
-
 export default class CW721AssetMediaManagerService extends moleculer.Service {
-
 	async upsert_handler(asset_media: any) {
 		this.logger.debug(`asset `, asset_media);
 		const network = LIST_NETWORK.find((x) => x.chainId == asset_media.custom_info.chain_id);
@@ -140,69 +158,53 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 			await this.adapter.insert(asset_media);
 		}
 		return asset_media._id;
-	};
+	}
 
-	async updateMediaLink(uri: string, file_name: string, key: string, chainId: string) {
+	async updateMediaLink(
+		uri: string,
+		type: string,
+		file_name: string,
+		key: string,
+		chainId: string,
+	) {
 		try {
 			// this.logger.info("updateMediaLink", uri, key);
-			const linkS3 = await Common.handleUri(uri, file_name);
-			// this.logger.info("linkS3", linkS3);
-			await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
-				key,
-				media_link: linkS3,
-				status: MediaStatus.COMPLETED,
-				custom_info: {
-					chain_id: chainId
-				}
-			});
-
-
+			const result: any = await Common.handleUri(uri, type, file_name);
+			this.logger.info(result);
+			this.logger.debug('result handle uri:', JSON.stringify(result));
+			if (result) {
+				this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
+					key,
+					media_link: result.linkS3,
+					content_type: result.contentType,
+					status: MediaStatus.COMPLETED,
+					custom_info: {
+						chain_id: chainId,
+					},
+				});
+			} else {
+				throw new Error('URI is invalid');
+			}
 		} catch (err: any) {
-			this.logger.error("error", uri, key, err);
-			if (err.error?.code) {
-				switch (err.error?.code) {
-					case "ETIMEDOUT":
-						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
-							key,
-							media_link: "",
-							status: MediaStatus.PENDING
-						}, OPTs);
-						break;
-					default:
-						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
-							key,
-							media_link: "",
-							status: MediaStatus.ERROR
-						}, OPTs);
-						break;
-				}
-			}
-			if (err.statusCode) {
-				switch (err.statusCode) {
-					case "504":
-						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
-							key,
-							media_link: "",
-							status: MediaStatus.PENDING
-						}, OPTs);
-						break;
-					default:
-						await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
-							key,
-							media_link: "",
-							status: MediaStatus.ERROR
-						}, OPTs);
-						break;
-				}
-			}
+			this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
+				key,
+				media_link: '',
+				status: MediaStatus.ERROR,
+				custom_info: {
+					chain_id: chainId,
+				},
+			});
+			this.logger.error(err);
+			throw err;
 		}
-	};
+	}
+
 	async _start(): Promise<void> {
 		this.getQueue('update-media-link').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('update-media-link').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('update-media-link').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

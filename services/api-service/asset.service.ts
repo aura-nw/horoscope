@@ -240,7 +240,7 @@ export default class BlockService extends MoleculerDBService<
 			this.logger.debug('query', query);
 			let contract_type = ctx.params.contractType;
 			let asset: any[];
-			if (contract_type == CONTRACT_TYPE.CW721 || CONTRACT_TYPE.CW4973) {
+			if (contract_type == CONTRACT_TYPE.CW721 || contract_type == CONTRACT_TYPE.CW4973) {
 				asset = await this.broker.call(
 					`v1.${contract_type}-asset-manager.act-join-media-link`,
 					{
@@ -527,7 +527,8 @@ export default class BlockService extends MoleculerDBService<
 			let query: QueryOptions = {};
 			let sort = {};
 			switch (ctx.params.contractType) {
-				case CONTRACT_TYPE.CW721, CONTRACT_TYPE.CW4973:
+				case CONTRACT_TYPE.CW4973:
+				case CONTRACT_TYPE.CW721:
 					sort = ctx.params.reverse
 						? { quantity: 1, updatedAt: 1 }
 						: { quantity: -1, updatedAt: -1 };

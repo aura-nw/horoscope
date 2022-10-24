@@ -241,7 +241,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					}
 				}),
 			);
-			await getInforPromises;
+			// await getInforPromises;
 		}
 	}
 

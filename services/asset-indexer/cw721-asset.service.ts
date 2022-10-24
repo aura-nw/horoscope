@@ -212,30 +212,48 @@ export default class CrawlAssetService extends moleculer.Service {
 						OPTs,
 					);
 					if (tokenInfo != null) {
-						let [uri, file_name, media_link_key] = ['', '', ''];
+						let [uri, type, file_name, media_link_key] = ['', '', '', ''];
+
+						let imageLink = null;
+						let metadata = null;
+						if (tokenInfo.data.info.extension && tokenInfo.data.info.extension.image) {
+							metadata = tokenInfo.data.info.extension;
+							imageLink = tokenInfo.data.info.extension.image;
+						}
+
 						try {
-							if (
-								tokenInfo.data.info.extension &&
-								tokenInfo.data.info.extension.image
-							) {
-								[uri, file_name, media_link_key] = Common.getKeyFromUri(
-									tokenInfo.data.info.extension.image,
-								);
-								this.broker.emit('CW721-media.get-media-link', {
-									uri,
-									file_name,
-									media_link_key,
-									chain_id,
-								});
-							} else if (tokenInfo.data.info.token_uri) {
-								[uri, file_name, media_link_key] = Common.getKeyFromUri(
+							// if has token uri
+							if (tokenInfo.data.info.token_uri) {
+								[uri, type, file_name, media_link_key] = Common.getKeyFromUri(
 									tokenInfo.data.info.token_uri,
 								);
+								let schemaIPFS: Buffer = await Common.downloadAttachment(uri);
+								if (schemaIPFS) {
+									metadata = JSON.parse(schemaIPFS.toString());
+								}
+								if (!imageLink) {
+									imageLink = metadata.image;
+								}
+							}
+							if (!imageLink && tokenInfo.data.info.token_uri) {
+								imageLink = tokenInfo.data.info.token_uri;
+							}
+						} catch (error) {
+							this.logger.error('Cannot get schema');
+							this.logger.error(error);
+						}
+
+						try {
+							if (imageLink) {
+								[uri, type, file_name, media_link_key] =
+									Common.getKeyFromUri(imageLink);
 								this.broker.emit('CW721-media.get-media-link', {
 									uri,
+									type,
 									file_name,
 									media_link_key,
 									chain_id,
+									metadata,
 								});
 							}
 						} catch (error) {

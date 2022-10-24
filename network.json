@@ -9,7 +9,7 @@
 		   "https://lcd.dev.aura.network"
 		],
 		"prefixAddress":"aura",
-		"databaseName":"horoscope_dev_auratestnet"
+		"databaseName":"local_auratestnet"
 	},
 	{
 		"chainName":"Aura Serenity",
@@ -21,7 +21,7 @@
 		   "https://lcd.serenity.aura.network"
 		],
 		"prefixAddress":"aura",
-		"databaseName":"horoscope_dev_serenitytestnet001"
+		"databaseName":"local_serenitytestnet001"
 	},
 	{
 		"chainName":"Theta Testnet",

@@ -6,6 +6,7 @@
 	"configurations": [
 		{
 			"type": "node",
+			"runtimeVersion": "16.14.0",
 			"request": "launch",
 			"name": "Debug",
 			"program": "${workspaceRoot}/node_modules/moleculer/bin/moleculer-runner.js",
