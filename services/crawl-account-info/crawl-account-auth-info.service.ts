@@ -93,16 +93,14 @@ export default class CrawlAccountAuthInfoService extends Service {
 						resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC ||
 						resultCallApi.result.type === VESTING_ACCOUNT_TYPE.DELAYED
 					) {
-						const existsJob = await this.broker.call(
-							'v1.delay-job.findOne',
-							{
-								address,
-								type: resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC
+						const existsJob = await this.broker.call('v1.delay-job.findOne', {
+							address,
+							type:
+								resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC
 									? DELAY_JOB_TYPE.PERIODIC_VESTING
 									: DELAY_JOB_TYPE.DELAYED_VESTING,
-								chain_id: chainId,
-							} as QueryDelayJobParams
-						);
+							chain_id: chainId,
+						} as QueryDelayJobParams);
 						if (!existsJob) {
 							let newDelayJob = {} as DelayJobEntity;
 							newDelayJob.content = { address };
@@ -131,12 +129,12 @@ export default class CrawlAccountAuthInfoService extends Service {
 									let expire_time =
 										start_time +
 										number_of_periods *
-										parseInt(
-											resultCallApi.result.value.vesting_periods[0]
-												.length,
-											10,
-										) *
-										1000;
+											parseInt(
+												resultCallApi.result.value.vesting_periods[0]
+													.length,
+												10,
+											) *
+											1000;
 									if (expire_time < new Date().getTime())
 										expire_time +=
 											parseInt(
@@ -147,7 +145,11 @@ export default class CrawlAccountAuthInfoService extends Service {
 									newDelayJob.expire_time = new Date(expire_time);
 									break;
 							}
-							newDelayJob.indexes = address + newDelayJob.type + newDelayJob.expire_time!.getTime() + chainId;
+							newDelayJob.indexes =
+								address +
+								newDelayJob.type +
+								newDelayJob.expire_time!.getTime() +
+								chainId;
 							newDelayJob.custom_info = {
 								chain_id: chainId,
 								chain_name: chain ? chain.chainName : '',
@@ -202,7 +204,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('crawl.account-auth-info').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('crawl.account-auth-info').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);

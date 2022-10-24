@@ -2,18 +2,10 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import {
-	DELAY_JOB_TYPE,
-	LIST_NETWORK,
-	URL_TYPE_CONSTANTS,
-} from '../../common/constant';
+import { DELAY_JOB_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import {
-	UnbondingResponse,
-	DelayJobEntity,
-	AccountInfoEntity,
-} from '../../entities';
+import { UnbondingResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 const QueueService = require('moleculer-bull');
@@ -121,7 +113,11 @@ export default class CrawlAccountUnbondsService extends Service {
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.UNBOND;
 						newDelayJob.expire_time = new Date(unbond.entries[0].completion_time!);
-						newDelayJob.indexes = address + newDelayJob.type + newDelayJob.expire_time!.getTime() + chainId;
+						newDelayJob.indexes =
+							address +
+							newDelayJob.type +
+							newDelayJob.expire_time!.getTime() +
+							chainId;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: chain ? chain.chainName : '',
@@ -171,7 +167,7 @@ export default class CrawlAccountUnbondsService extends Service {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('crawl.account-unbonds').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('crawl.account-unbonds').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);

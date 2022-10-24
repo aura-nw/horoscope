@@ -16,19 +16,19 @@ const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ }
 
 @Service({
 	name: 'CW4973-asset-media-manager',
-	mixins: [
-		dbCW4973MediaLinkMixin,
-	],
+	mixins: [dbCW4973MediaLinkMixin],
 	version: 1,
 	broker: {},
 	actions: {
 		'act-insert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.logger.debug(`ctx.params CW4973-asset-media-manager insert ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(
+					`ctx.params CW4973-asset-media-manager insert ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.adapter.insert(ctx.params);
-			}
+			},
 		},
 		// 'act-count': {
 		// 	async handler(ctx: Context): Promise<any> {
@@ -42,10 +42,12 @@ const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ }
 			cache: { ttl: 10 },
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.logger.info(`ctx.params CW4973-asset-media-manager find ${JSON.stringify(ctx.params)}`);
+				this.logger.info(
+					`ctx.params CW4973-asset-media-manager find ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.adapter.find(ctx.params);
-			}
+			},
 		},
 		// 'act-list': {
 		// 	async handler(ctx: Context): Promise<any> {
@@ -58,10 +60,12 @@ const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ }
 		'act-upsert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				this.logger.debug(`ctx.params CW4973-asset-media-manager upsert ${JSON.stringify(ctx.params)}`);
+				this.logger.debug(
+					`ctx.params CW4973-asset-media-manager upsert ${JSON.stringify(ctx.params)}`,
+				);
 				// @ts-ignore
 				return await this.upsert_handler(ctx.params);
-			}
+			},
 		},
 		'update-media-link': {
 			async handler(ctx: Context<any>) {
@@ -72,13 +76,11 @@ const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ }
 				this.logger.debug('update-media-link ctx.params', uri, file_name, key);
 				// @ts-ignore
 				await this.updateMediaLink(uri, file_name, key);
-			}
+			},
 		},
 	},
 })
-
 export default class CW4973AssetMediaManagerService extends moleculer.Service {
-
 	async upsert_handler(asset_media: any) {
 		this.logger.debug(`asset `, asset_media);
 		let item = await this.adapter.findOne({ key: asset_media.key });
@@ -90,58 +92,72 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 			await this.adapter.insert(asset_media);
 		}
 		return asset_media._id;
-	};
+	}
 
-	async updateMediaLink(uri: string, file_name: string, key: string) {
+	async updateMediaLink(uri: string, type: string, file_name: string, key: string) {
 		try {
 			// this.logger.info("updateMediaLink", uri, key);
-			const linkS3 = await Common.handleUri(uri, file_name);
+			const linkS3 = await Common.handleUri(uri, type, file_name);
 			// this.logger.info("linkS3", linkS3);
 			await this.broker.call(CW4973_MEDIA_MANAGER_ACTION.UPSERT, {
 				key,
 				media_link: linkS3,
-				status: MediaStatus.COMPLETED
+				status: MediaStatus.COMPLETED,
 			});
-
-
 		} catch (err: any) {
-			this.logger.error("error", uri, key, err);
+			this.logger.error('error', uri, key, err);
 			if (err.error?.code) {
 				switch (err.error?.code) {
-					case "ETIMEDOUT":
-						await this.broker.call(CW4973_MEDIA_MANAGER_ACTION.UPSERT, {
-							key,
-							media_link: "",
-							status: MediaStatus.PENDING
-						}, OPTs);
+					case 'ETIMEDOUT':
+						await this.broker.call(
+							CW4973_MEDIA_MANAGER_ACTION.UPSERT,
+							{
+								key,
+								media_link: '',
+								status: MediaStatus.PENDING,
+							},
+							OPTs,
+						);
 						break;
 					default:
-						await this.broker.call(CW4973_MEDIA_MANAGER_ACTION.UPSERT, {
-							key,
-							media_link: "",
-							status: MediaStatus.ERROR
-						}, OPTs);
+						await this.broker.call(
+							CW4973_MEDIA_MANAGER_ACTION.UPSERT,
+							{
+								key,
+								media_link: '',
+								status: MediaStatus.ERROR,
+							},
+							OPTs,
+						);
 						break;
 				}
 			}
 			if (err.statusCode) {
 				switch (err.statusCode) {
-					case "504":
-						await this.broker.call(CW4973_MEDIA_MANAGER_ACTION.UPSERT, {
-							key,
-							media_link: "",
-							status: MediaStatus.PENDING
-						}, OPTs);
+					case '504':
+						await this.broker.call(
+							CW4973_MEDIA_MANAGER_ACTION.UPSERT,
+							{
+								key,
+								media_link: '',
+								status: MediaStatus.PENDING,
+							},
+							OPTs,
+						);
 						break;
 					default:
-						await this.broker.call(CW4973_MEDIA_MANAGER_ACTION.UPSERT, {
-							key,
-							media_link: "",
-							status: MediaStatus.ERROR
-						}, OPTs);
+						await this.broker.call(
+							CW4973_MEDIA_MANAGER_ACTION.UPSERT,
+							{
+								key,
+								media_link: '',
+								status: MediaStatus.ERROR,
+							},
+							OPTs,
+						);
 						break;
 				}
 			}
 		}
-	};
+	}
 }

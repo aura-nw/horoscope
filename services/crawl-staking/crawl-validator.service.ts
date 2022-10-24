@@ -141,7 +141,7 @@ export default class CrawlValidatorService extends Service {
 			// 	pathDelegation,
 			// );
 			let resultAllDelegation: any = null;
-			let resultSelfBonded: any = null; 
+			let resultSelfBonded: any = null;
 			// let [resultSelfBonded]: [
 			// 	IDelegationResponseFromLCD,
 			// ] = await Promise.all([
@@ -175,7 +175,11 @@ export default class CrawlValidatorService extends Service {
 			}
 			this.logger.debug(`result: ${JSON.stringify(resultSelfBonded)}`);
 
-			if (resultAllDelegation && resultAllDelegation.pagination && resultAllDelegation.pagination.total){
+			if (
+				resultAllDelegation &&
+				resultAllDelegation.pagination &&
+				resultAllDelegation.pagination.total
+			) {
 				validator.number_delegators = Number(resultAllDelegation.pagination.total);
 			}
 		} catch (error) {
@@ -206,7 +210,7 @@ export default class CrawlValidatorService extends Service {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('crawl.staking.validator').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.stacktrace}`);
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('crawl.staking.validator').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

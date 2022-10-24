@@ -3,34 +3,36 @@ import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
 export interface ICW721Media {
-	_id: ObjectIdNull,
-	key: String,
-	media_link: String,
-	status: String,
-	content_type: String,
+	_id: ObjectIdNull;
+	key: String;
+	media_link: String;
+	status: String;
+	content_type: String;
 }
 
 export enum MediaStatus {
-	PENDING = "PENDING",
-	COMPLETED = "COMPLETED",
-	ERROR = "ERROR",
-	HANDLING = "HANDLING",
+	PENDING = 'PENDING',
+	COMPLETED = 'COMPLETED',
+	ERROR = 'ERROR',
+	HANDLING = 'HANDLING',
 }
 
 const definition: definitionType<ICW721Media> = (collection?: string) => ({
 	_id: Types.ObjectId,
 	key: {
-		type: String, unique: true, index: true
+		type: String,
+		unique: true,
+		index: true,
 	},
 	media_link: String,
 	status: {
 		type: String,
-		enum: MediaStatus
+		enum: MediaStatus,
 	},
 	content_type: String,
 	custom_info: customInfoModel,
-})
-
+	metadata: Object,
+});
 
 export const cw721MediaMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -40,8 +42,8 @@ export const cw721MediaMongoModel = (collection: string): unknown => {
 		collection: collection,
 		timestamps: {
 			createdAt: true,
-			updatedAt: true
-		}
+			updatedAt: true,
+		},
 		// strict: true
 	});
 	return models[collection] || model(collection, schema);

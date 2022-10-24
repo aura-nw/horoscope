@@ -171,7 +171,7 @@ export default class WebsocketService extends Service {
 		this.logger.info('Start handle safe tx');
 		try {
 			listTx = listTx.filter((txs) =>
-				txs.tx.body.messages.find( (m: any) => listSafeTxAction.includes(m['@type'])),
+				txs.tx.body.messages.find((m: any) => listSafeTxAction.includes(m['@type'])),
 			);
 			this.logger.info('List tx need to handle ' + JSON.stringify(listTx));
 			if (listTx.length > 0) {
@@ -207,7 +207,7 @@ export default class WebsocketService extends Service {
 			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('websocket.tx-handle').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('websocket.tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
@@ -217,7 +217,7 @@ export default class WebsocketService extends Service {
 			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
 		this.getQueue('websocket.safe-tx-handle').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+			this.logger.error(`Job #${job.id} failed!. Result:`, job.failedReason);
 		});
 		this.getQueue('websocket.safe-tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
