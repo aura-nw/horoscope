@@ -24,8 +24,8 @@ const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
-const VALIDATE_CODEID_PREFIX = "validate_codeid";
-const HANDLE_CODEID_PREFIX = "handle_codeid";
+const VALIDATE_CODEID_PREFIX = 'validate_codeid';
+const HANDLE_CODEID_PREFIX = 'handle_codeid';
 
 const callApiMixin = new CallApiMixin().start();
 /**
@@ -67,7 +67,7 @@ const callApiMixin = new CallApiMixin().start();
 				const processingFlag = await this.broker.cacher?.get(cacheKey);
 				if (!processingFlag) {
 					// @ts-ignore
-					await this.broker.cacher?.set(cacheKey, true,CACHER_INDEXER_TTL);
+					await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
 					// @ts-ignore
 					this.logger.debug('Asset handler registered', chain_id, code_id);
 					// @ts-ignore
@@ -96,10 +96,11 @@ export default class CrawlAssetService extends moleculer.Service {
 						let address = resultCallApi.contracts[i];
 						let urlGetTokenInfo = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_TOKEN_INFO}`;
 						let tokenInfo = await this.callApiFromDomain(URL, urlGetTokenInfo);
-						if (tokenInfo?.data?.name === undefined
-							|| tokenInfo?.data?.symbol === undefined
-							|| tokenInfo?.data?.decimals === undefined
-							|| tokenInfo?.data?.total_supply === undefined
+						if (
+							tokenInfo?.data?.name === undefined ||
+							tokenInfo?.data?.symbol === undefined ||
+							tokenInfo?.data?.decimals === undefined ||
+							tokenInfo?.data?.total_supply === undefined
 						) {
 							cw20flag = false;
 							break;
@@ -164,7 +165,6 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.error(err);
 			await this.broker.cacher?.del(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
 		}
-
 	}
 
 	async handleJob(URL: string, chain_id: string, code_id: Number) {
@@ -181,7 +181,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
 						OPTs,
 					);
-				})
+				}),
 			);
 			await insertInforPromises;
 			this.logger.debug('Asset handler DONE!', contractList.length);
@@ -233,7 +233,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					}
 				}),
 			);
-			await getInforPromises;
+			// await getInforPromises;
 		}
 	}
 
@@ -263,7 +263,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			}
 			if (listOwnerAddress.length > 0) {
 				return listOwnerAddress;
-			} else return null
+			} else return null;
 		} catch (error) {
 			this.logger.error('getOwnerList error', error);
 		}
@@ -285,5 +285,4 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.error('getBalance error', error);
 		}
 	}
-
 }
