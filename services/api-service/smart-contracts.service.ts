@@ -193,6 +193,8 @@ export default class SmartContractsService extends MoleculerDBService<
                     $gte: ctx.params.height
                 }
             },
+			// @ts-ignore
+			sort: 'height',
             limit: ctx.params.limit,
             offset: ctx.params.offset * ctx.params.limit
         })
