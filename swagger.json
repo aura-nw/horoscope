@@ -54,7 +54,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     }
                 ],
                 "responses": {
@@ -425,7 +425,7 @@
                             "type": "string"
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     }
                 ],
                 "responses": {
@@ -629,7 +629,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -819,7 +819,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -1204,7 +1204,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -1366,7 +1366,7 @@
                                     },
                                     "chainId": {
                                         "type": "string",
-                                        "example": "aura-testnet",
+                                        "example": "euphoria-1",
                                         "description": "Chain Id of network"
                                     }
                                 }
@@ -2047,7 +2047,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -2319,7 +2319,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -2536,7 +2536,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -3016,7 +3016,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -3052,7 +3052,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -3186,7 +3186,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     }
                 ],
                 "responses": {
@@ -3359,7 +3359,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -3539,7 +3539,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -3836,7 +3836,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -4491,7 +4491,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -5045,7 +5045,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -5493,7 +5493,7 @@
                                                                 "properties": {
                                                                     "chain_id": {
                                                                         "type": "string",
-                                                                        "example": "aura-testnet"
+                                                                        "example": "euphoria-1"
                                                                     },
                                                                     "chain_name": {
                                                                         "type": "string",
@@ -5672,7 +5672,7 @@
                                                                 "properties": {
                                                                     "chain_id": {
                                                                         "type": "string",
-                                                                        "example": "aura-testnet"
+                                                                        "example": "euphoria-1"
                                                                     },
                                                                     "chain_name": {
                                                                         "type": "string",
@@ -14629,13 +14629,7 @@
                 "operationId": "CosmosTxV1Beta1Simulate",
                 "requestBody": {
                     "description": "SimulateRequest is the request type for the Service.Simulate\nRPC method.",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/cosmos.tx.v1beta1.SimulateRequest"
-                            }
-                        }
-                    },
+                    "content": {},
                     "required": true
                 },
                 "responses": {
@@ -14834,13 +14828,7 @@
                 "responses": {
                     "200": {
                         "description": "A successful response.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/cosmos.tx.v1beta1.GetTxsEventResponse"
-                                }
-                            }
-                        }
+                        "content": {}
                     },
                     "default": {
                         "description": "An unexpected error response.",
@@ -15160,13 +15148,7 @@
                 "responses": {
                     "200": {
                         "description": "A successful response.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/cosmos.tx.v1beta1.GetBlockWithTxsResponse"
-                                }
-                            }
-                        }
+                        "content": {}
                     },
                     "default": {
                         "description": "An unexpected error response.",
@@ -15221,13 +15203,7 @@
                 "responses": {
                     "200": {
                         "description": "A successful response.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/cosmos.tx.v1beta1.GetTxResponse"
-                                }
-                            }
-                        }
+                        "content": {}
                     },
                     "default": {
                         "description": "An unexpected error response.",
