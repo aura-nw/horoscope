@@ -176,9 +176,10 @@ Select server LCD if use Legacy API`,
 										JSON.stringify(schema, null, 4),
 										'utf8',
 									);
-								} else {
-									schema = readFileSync('./swagger.json');
 								}
+								// else {
+								// 	schema = readFileSync('./swagger.json');
+								// }
 							} catch (err) {
 								// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 								// @ts-ignore
