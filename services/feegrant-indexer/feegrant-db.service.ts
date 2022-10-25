@@ -18,6 +18,10 @@ const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
+interface UpdateContent {
+    amount: number,
+    status: FEEGRANT_STATUS
+}
 export default class FeegrantDB extends Service {
     private callApiMixin = new CallApiMixin().start();
     private dbFeegrantMixin = dbFeegrantMixin;
@@ -79,65 +83,85 @@ export default class FeegrantDB extends Service {
 
     async handleJob(listUpdateFeegrantDb: FeegrantEntity[]): Promise<any[]> {
         // for each new created record received, insert new record 
-        await Promise.all(listUpdateFeegrantDb.map(async e => {
+        const records_create = [] as any[]
+        await Promise.all(listUpdateFeegrantDb.map(e => {
             if (e.action == FEEGRANT_ACTION.CREATE) {
                 let record = {
                     ...e,
                 } as FeegrantEntity
-                this.logger.info(`Feegrant-create: ${record}`)
-                await this.adapter.insert(record)
+                records_create.push(record)
             }
         }))
+        this.adapter.insertMany(records_create)
+        // process other actions: use, revoke, use up
+        const mapUpdate = new Map<String, UpdateContent>()
+        // initialize map
+        for (const e of listUpdateFeegrantDb) {
+            if (e.action === FEEGRANT_ACTION.USE || FEEGRANT_ACTION.REVOKE) {
+                mapUpdate.set(e.tx_hash, { amount: 0, status: FEEGRANT_STATUS.AVAILABLE })
+            }
+        }
+        // update map
         for (const e of listUpdateFeegrantDb) {
             // for each new used record received, update spendable
             if (e.action == FEEGRANT_ACTION.USE) {
-                const record = await this.adapter.find({
-                    query: {
-                        "tx_hash": e.origin_feegrant_txhash
-                    },
-                    limit: 1
-                }) as FeegrantEntity[]
-                this.logger.info(`Feegrant-use: ${record[0]}`)
-                if (record[0].spend_limit.amount) {
-                    await this.adapter.updateById(record[0]._id, {
-                        $set: {
-                            "amount.amount": (parseInt(record[0].amount.amount.toString()) - parseInt(e.amount.amount.toString())).toString(),
-                        },
-                    });
-                }
+                //@ts-ignore
+                const tmp_amount = mapUpdate.get(e.tx_hash)?.amount + parseInt(e.amount.amount.toString())
+                const tmp_status = mapUpdate.get(e.tx_hash)?.status
+
+                mapUpdate.set(e.tx_hash, {
+                    amount: tmp_amount,
+                    //@ts-ignore
+                    status: tmp_status
+                })
             } else if (e.action == FEEGRANT_ACTION.REVOKE) {
-                this.logger.info(`e.action: ${e.status}`)
                 if (e.status == FEEGRANT_STATUS.USE_UP) {
                     // for each new used up record received, update status to use up
-                    const record = await this.adapter.find({
-                        query: {
-                            "tx_hash": e.origin_feegrant_txhash
-                        },
-                        limit: 1
-                    }) as FeegrantEntity[]
-                    await this.adapter.updateById(record[0]._id, {
-                        $set: {
-                            "status": FEEGRANT_STATUS.USE_UP
-                        },
-                    });
+                    const tmp_amount = mapUpdate.get(e.tx_hash)?.amount
+                    const tmp_status = FEEGRANT_STATUS.USE_UP
+
+                    mapUpdate.set(e.tx_hash, {
+                        //@ts-ignore
+                        amount: tmp_amount,
+                        status: tmp_status
+                    })
                 } else {
                     // for each new revoked record received, update status to revoked
-                    const record = await this.adapter.find({
-                        query: {
-                            "tx_hash": e.origin_feegrant_txhash
-                        },
-                        limit: 1
-                    }) as FeegrantEntity[]
-                    this.logger.info(`record: ${JSON.stringify(e.origin_feegrant_txhash)}`)
-                    this.logger.info(`record: ${JSON.stringify(record)}`)
-                    await this.adapter.updateById(record[0]._id, {
-                        $set: {
-                            "status": FEEGRANT_STATUS.REVOKED
-                        },
+                    const tmp_amount = mapUpdate.get(e.tx_hash)?.amount
+                    const tmp_status = FEEGRANT_STATUS.REVOKED
+
+                    mapUpdate.set(e.tx_hash, {
+                        //@ts-ignore
+                        amount: tmp_amount,
+                        status: tmp_status
                     })
                 }
             }
         }
+        const bulkUpdate = [] as any[]
+        const listOriginalRecords = await this.adapter.find({
+            query: {
+                "tx_hash": {
+                    $in: Array.from(mapUpdate.keys())
+                }
+            }
+        }) as FeegrantEntity[]
+        this.logger.info("Feegrant debug: " + JSON.stringify(listOriginalRecords))
+        listOriginalRecords.forEach(e => [
+            bulkUpdate.push({
+                updateOne: {
+                    filter: { tx_hash: e.tx_hash },
+                    update: {
+                        $set: {
+                            //@ts-ignore
+                            'amount.amount': e.amount.amount ? parseInt(e.amount.amount.toString()) - mapUpdate.get(e.tx_hash)?.amount : null,
+                            'status': mapUpdate.get(e.tx_hash)?.status,
+                        },
+                    },
+                },
+            })
+        ])
+        this.adapter.bulkWrite(bulkUpdate)
         return []
     }
 

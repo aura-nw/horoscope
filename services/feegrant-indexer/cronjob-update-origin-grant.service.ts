@@ -8,7 +8,7 @@ import { Config } from '../../common';
 import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
-export default class HandleAccountVestingService extends Service {
+export default class CronjobUpdateOriginalGrant extends Service {
     private dbFeegrantHistoryMixin = dbFeegrantHistoryMixin;
     public constructor(broker: ServiceBroker) {
 
@@ -45,7 +45,7 @@ export default class HandleAccountVestingService extends Service {
         const bulkUpdate: any[] = []
         // list to update feegrant DB
         const listUpdateFeegrantDb: FeegrantEntity[] = []
-        // update origin_feegrant_txhash for all unprocessed records 
+        // update origin_feegrant_txhash for all unprocessed records
         await Promise.all(listUpdate.map(async e => {
             const originalCreate = await this.adapter.find({
                 query: {
