@@ -216,9 +216,11 @@ export default class CrawlAssetService extends moleculer.Service {
 
 						let imageLink = null;
 						let metadata = null;
-						if (tokenInfo.data.info.extension && tokenInfo.data.info.extension.image) {
+						if (tokenInfo.data.info.extension) {
 							metadata = tokenInfo.data.info.extension;
-							imageLink = tokenInfo.data.info.extension.image;
+							if (tokenInfo.data.info.extension.image) {
+								imageLink = tokenInfo.data.info.extension.image;
+							}
 						}
 
 						try {
@@ -228,6 +230,8 @@ export default class CrawlAssetService extends moleculer.Service {
 									tokenInfo.data.info.token_uri,
 								);
 								let schemaIPFS: Buffer = await Common.downloadAttachment(uri);
+								let schemaType = await Common.getFileTypeFromBuffer(schemaIPFS);
+
 								if (schemaIPFS) {
 									metadata = JSON.parse(schemaIPFS.toString());
 								}
@@ -240,7 +244,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							}
 						} catch (error) {
 							this.logger.error('Cannot get schema');
-							this.logger.error(error);
+							// this.logger.error(error);
 						}
 
 						try {
@@ -269,6 +273,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							tokenInfo,
 							chain_id,
 						);
+						this.logger.debug('insert new asset: ', JSON.stringify(asset));
 						this.broker.call(`v1.CW721-asset-manager.act-${typeEnrich}`, asset, OPTs);
 					}
 				}),
