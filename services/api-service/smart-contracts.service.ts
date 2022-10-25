@@ -64,12 +64,14 @@ export default class SmartContractsService extends MoleculerDBService<
      *          schema:
      *            type: number
      *          description: "Number of records returned"
+	 *          example: 10
      *        - in: query
      *          name: offset
      *          required: true
      *          schema:
      *            type: number
      *          description: "Number of records skipped"
+	 *          example: 0
 	 *      responses:
 	 *        '200':
 	 *          description: Smart contracts
@@ -155,6 +157,30 @@ export default class SmartContractsService extends MoleculerDBService<
 	 */
 	@Get('/', {
 		name: 'getContracts',
+		params: {
+			chainId: 'string',
+			height: {
+				type: 'number',
+				interger: true,
+				convert: true
+			},
+			limit: {
+				type: 'number',
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			offset: {
+				type: 'number',
+				default: 0,
+				integer: true,
+				convert: true,
+				min: 0,
+				max: 100,
+			},
+		}
 	})
 	async getContracts(ctx: Context<GetContractsRequest>) {
 		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
