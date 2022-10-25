@@ -163,3 +163,10 @@ export interface TopAccountsRequest {
 	dayRange: number;
 	limit: number;
 }
+
+export interface GetContractsRequest {
+	chainId: string;
+	height: number;
+	limit: number;
+	offset: number;
+}
