@@ -22,7 +22,7 @@ const QueueService = require('moleculer-bull');
 	version: 1,
 	broker: {},
 	queues: {
-		'update-media-link': {
+		'CW721-asset-media-manager.update-media-link': {
 			concurrency: parseInt(Config.CONCURRENCY_UPDATE_MEDIA_LINK, 10),
 			async process(job: Job) {
 				job.progress(10);
@@ -109,7 +109,7 @@ const QueueService = require('moleculer-bull');
 				// @ts-ignore
 				// await this.updateMediaLink(uri, file_name, key);
 				this.createJob(
-					'update-media-link',
+					'CW721-asset-media-manager.update-media-link',
 					{
 						uri: uri,
 						type: type,
@@ -200,13 +200,13 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 	}
 
 	async _start(): Promise<void> {
-		this.getQueue('update-media-link').on('completed', (job: Job) => {
+		this.getQueue('CW721-asset-media-manager.update-media-link').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('update-media-link').on('failed', (job: Job) => {
+		this.getQueue('CW721-asset-media-manager.update-media-link').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
-		this.getQueue('update-media-link').on('progress', (job: Job) => {
+		this.getQueue('CW721-asset-media-manager.update-media-link').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();

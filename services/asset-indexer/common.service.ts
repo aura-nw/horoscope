@@ -338,6 +338,9 @@ export class Common {
 			return buffer;
 		});
 	}
+	public static async getFileTypeFromBuffer(buffer: Buffer) {
+		return await FileType.fromBuffer(buffer);
+	}
 
 	public static validURI(str: string) {
 		try {
