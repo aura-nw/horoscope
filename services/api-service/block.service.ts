@@ -35,7 +35,6 @@ export default class BlockService extends MoleculerDBService<
 	},
 	IBlock
 > {
-
 	@Get('/', {
 		name: 'getByChain',
 		params: {
@@ -75,9 +74,10 @@ export default class BlockService extends MoleculerDBService<
 				convert: true,
 			},
 			nextKey: {
-				type: 'string',
+				type: 'number',
 				optional: true,
 				default: null,
+				convert: true,
 			},
 			reverse: {
 				type: 'boolean',
@@ -93,31 +93,20 @@ export default class BlockService extends MoleculerDBService<
 	async getByChain(ctx: Context<GetBlockRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		let blockFindNextKey = null;
-		if (ctx.params.nextKey) {
-			try {
-				new ObjectId(ctx.params.nextKey);
-				// blockFindNextKey = await this.adapter.findById(ctx.params.nextKey);
-			} catch (error) {
-				return (response = {
-					code: ErrorCode.WRONG,
-					message: ErrorMessage.VALIDATION_ERROR,
-					data: {
-						message: 'The nextKey is not a valid ObjectId',
-					},
-				});
-			}
-		} else {
-			// let redisClient = await this.getRedisClient();
-			// let handledBlockRedis = await redisClient.get(Config.REDIS_KEY_CURRENT_BLOCK);
-			// blockFindNextKey = await this.adapter.find({
-			// 	query: {
-			// 		'custom_info.chain_id': ctx.params.chainid,
-			// 	},
-			// 	//@ts-ignore
-			// 	sort: '-_id',
-			// 	limit: 1,
-			// });
-		}
+		// if (ctx.params.nextKey) {
+		// 	try {
+		// 		new ObjectId(ctx.params.nextKey);
+		// 		// blockFindNextKey = await this.adapter.findById(ctx.params.nextKey);
+		// 	} catch (error) {
+		// 		return (response = {
+		// 			code: ErrorCode.WRONG,
+		// 			message: ErrorMessage.VALIDATION_ERROR,
+		// 			data: {
+		// 				message: 'The nextKey is not a valid ObjectId',
+		// 			},
+		// 		});
+		// 	}
+		// }
 		try {
 			let query: QueryOptions = {};
 			const chainId = ctx.params.chainid;
@@ -127,7 +116,7 @@ export default class BlockService extends MoleculerDBService<
 			const consensusHexAddress = ctx.params.consensusHexAddress;
 
 			// const sort = ctx.params.reverse ? '_id' : '-_id';
-			const sort = '-_id';
+			const sort = '-block.header.height';
 
 			let needNextKey = true;
 			if (blockHeight) {
@@ -137,12 +126,15 @@ export default class BlockService extends MoleculerDBService<
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
 			if (operatorAddress) {
-				let operatorList: IValidator[] = await this.broker.call('v1.validator.getByCondition', {
-					query: {
-						'custom_info.chain_id': ctx.params.chainid,
-						operator_address: operatorAddress,
+				let operatorList: IValidator[] = await this.broker.call(
+					'v1.validator.getByCondition',
+					{
+						query: {
+							'custom_info.chain_id': ctx.params.chainid,
+							operator_address: operatorAddress,
+						},
 					},
-				});
+				);
 				if (operatorList.length > 0) {
 					query['block.header.proposer_address'] = operatorList[0].consensus_hex_address;
 				}
@@ -156,13 +148,14 @@ export default class BlockService extends MoleculerDBService<
 				needNextKey = false;
 			}
 			let projection: any = { custom_info: 0 };
-			if (!blockHash && !blockHeight){
+			if (!blockHash && !blockHeight) {
 				projection['block.last_commit'] = 0;
 				projection['block.evidence'] = 0;
 			}
 
 			if (ctx.params.nextKey) {
-				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				// query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				query['block.header.height'] = { $lt: Number(ctx.params.nextKey) };
 			}
 			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
 			if (network && network.databaseName) {
@@ -191,11 +184,11 @@ export default class BlockService extends MoleculerDBService<
 			if (resultBlock.length > 0) {
 				if (resultBlock.length == 1) {
 					if (needNextKey) {
-						nextKey = resultBlock[resultBlock.length - 1]?._id;
+						nextKey = resultBlock[resultBlock.length - 1]?.block.header.height;
 					}
 				} else {
 					if (needNextKey) {
-						nextKey = resultBlock[resultBlock.length - 2]?._id;
+						nextKey = resultBlock[resultBlock.length - 2]?.block.header.height;
 					}
 				}
 				if (resultBlock.length <= ctx.params.pageLimit) {
@@ -227,7 +220,7 @@ export default class BlockService extends MoleculerDBService<
 		}
 		return response;
 	}
-		/**
+	/**
 	 *  @swagger
 	 *  /v1/block:
 	 *    get:

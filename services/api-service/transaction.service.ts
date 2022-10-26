@@ -127,9 +127,7 @@ export default class BlockService extends MoleculerDBService<
 	async getByChain(ctx: Context<GetTxRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		if (ctx.params.nextKey) {
-			try {
-				new ObjectId(ctx.params.nextKey);
-			} catch (error) {
+			if (!ObjectId.isValid(ctx.params.nextKey)) {
 				return (response = {
 					code: ErrorCode.WRONG,
 					message: ErrorMessage.VALIDATION_ERROR,
