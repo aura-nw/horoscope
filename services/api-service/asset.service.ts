@@ -245,7 +245,7 @@ export default class BlockService extends MoleculerDBService<
 					`v1.${contract_type}-asset-manager.act-join-media-link`,
 					{
 						query,
-						sort: { _id: -1 },
+						sort: { updatedAt: -1 },
 						limit: ctx.params.pageLimit + 1,
 						offset: ctx.params.pageOffset,
 						nextKey: ctx.params.nextKey,
@@ -254,7 +254,7 @@ export default class BlockService extends MoleculerDBService<
 			} else {
 				asset = await this.broker.call(`v1.${contract_type}-asset-manager.act-find`, {
 					query,
-					sort: '-_id',
+					sort: '-updatedAt',
 					limit: ctx.params.pageLimit + 1,
 					offset: ctx.params.pageOffset,
 					nextKey: ctx.params.nextKey,
@@ -400,7 +400,7 @@ export default class BlockService extends MoleculerDBService<
 						query,
 						limit: ctx.params.pageLimit,
 						offset: ctx.params.pageOffset,
-						sort: '-_id',
+						sort: '-updatedAt',
 					},
 				);
 			} else {
@@ -410,7 +410,7 @@ export default class BlockService extends MoleculerDBService<
 						query,
 						limit: ctx.params.pageLimit,
 						offset: ctx.params.pageOffset,
-						sort: { _id: -1 },
+						sort: { updatedAt: -1 },
 						nextKey: ctx.params.nextKey,
 					},
 				);
