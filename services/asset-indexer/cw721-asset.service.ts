@@ -309,27 +309,46 @@ export default class CrawlAssetService extends moleculer.Service {
 		// let listTokenIDs = await this.actions.getTokenList({ URL, code_id, address }, OPTs);
 
 		if (listTokenIDs != null) {
-			const getInforPromises = await Promise.all(
-				listTokenIDs.map(async (token_id: String) => {
-					this.createJob(
-						'CW721.enrich-tokenid',
-						{
-							url: URL,
-							address: address,
-							code_id: code_id,
-							type_enrich: typeEnrich,
-							chain_id: chain_id,
-							token_id: token_id,
+			listTokenIDs.map((token_id: String) => {
+				this.createJob(
+					'CW721.enrich-tokenid',
+					{
+						url: URL,
+						address: address,
+						code_id: code_id,
+						type_enrich: typeEnrich,
+						chain_id: chain_id,
+						token_id: token_id,
+					},
+					{
+						removeOnComplete: true,
+						removeOnFail: {
+							count: 3,
 						},
-						{
-							removeOnComplete: true,
-							removeOnFail: {
-								count: 3,
-							},
-						},
-					);
-				}),
-			);
+					},
+				);
+			});
+			// const getInforPromises = await Promise.all(
+			// 	listTokenIDs.map(async (token_id: String) => {
+			// 		this.createJob(
+			// 			'CW721.enrich-tokenid',
+			// 			{
+			// 				url: URL,
+			// 				address: address,
+			// 				code_id: code_id,
+			// 				type_enrich: typeEnrich,
+			// 				chain_id: chain_id,
+			// 				token_id: token_id,
+			// 			},
+			// 			{
+			// 				removeOnComplete: true,
+			// 				removeOnFail: {
+			// 					count: 3,
+			// 				},
+			// 			},
+			// 		);
+			// 	}),
+			// );
 			// await getInforPromises;
 		}
 	}

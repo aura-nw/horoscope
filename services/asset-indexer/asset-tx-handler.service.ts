@@ -90,50 +90,81 @@ export default class CrawlAccountInfoService extends Service {
 	async handleJob(URL: string, listTx: ITransaction[], chainId: string): Promise<any[]> {
 		let contractListFromEvent: any[] = [];
 		try {
-			if (listTx.length > 0) {
-				for (const tx of listTx) {
-					this.logger.debug('tx', JSON.stringify(tx));
-					let log = tx.tx_response.logs[0];
-					if (log && log.events) {
-						let events = log.events;
-						let attributes = events.find(
-							(x: any) => x.type == EVENT_TYPE.EXECUTE,
-						)?.attributes;
-						if (attributes) {
-							contractListFromEvent.push(...attributes);
-						}
-					}
-				}
-			}
-			let contractList = _.map(_.uniqBy(contractListFromEvent, 'value'), 'value');
-			this.logger.debug(`contractList ${JSON.stringify(contractList)}`);
-			if (contractList.length > 0) {
+			// if (listTx.length > 0) {
+			// 	for (const tx of listTx) {
+			// 		this.logger.debug('tx', JSON.stringify(tx));
+			// 		let log = tx.tx_response.logs[0];
+			// 		if (log && log.events) {
+			// 			let events = log.events;
+			// 			let attributes = events.find(
+			// 				(x: any) => x.type == EVENT_TYPE.EXECUTE,
+			// 			)?.attributes;
+			// 			if (attributes) {
+			// 				contractListFromEvent.push(...attributes);
+			// 			}
+			// 		}
+			// 	}
+			// }
+			// let contractList = _.map(_.uniqBy(contractListFromEvent, 'value'), 'value');
+			// this.logger.debug(`contractList ${JSON.stringify(contractList)}`);
+
+			const listContractAndTokenId = this.getContractAndTokenIdFromListTx(listTx);
+
+			if (listContractAndTokenId.length > 0) {
 				const updateInforPromises = await Promise.all(
-					contractList.map(async (address) => {
-						const processingFlag = await this.broker.cacher?.get(`contract_${address}`);
+					listContractAndTokenId.map(async (item) => {
+						const contractAddress = item.contractAddress;
+						const tokenId = item.tokenId;
+						const processingFlag = await this.broker.cacher?.get(
+							`contract_${chainId}_${contractAddress}`,
+						);
 						if (!processingFlag) {
-							await this.broker.cacher?.set(`contract_${chainId}_${address}`, true);
+							await this.broker.cacher?.set(
+								`contract_${chainId}_${contractAddress}`,
+								true,
+							);
 							let contractInfo = await this.verifyAddressByCodeID(
 								URL,
-								address,
+								contractAddress,
 								chainId,
 							);
 							if (contractInfo != null) {
 								switch (contractInfo.status) {
 									case CodeIDStatus.COMPLETED:
-										await this.broker.call(
-											`v1.${contractInfo.contract_type}.enrichData`,
-											[
+										if (!tokenId && contractAddress) {
+											await this.broker.call(
+												`v1.${contractInfo.contract_type}.enrichData`,
+												[
+													{
+														URL,
+														chain_id: chainId,
+														code_id: contractInfo.code_id,
+														contractAddress,
+													},
+													ENRICH_TYPE.UPSERT,
+												],
+												OPTs,
+											);
+										}
+										if (tokenId && contractAddress) {
+											this.createJob(
+												'CW721.enrich-tokenid',
 												{
-													URL,
-													chain_id: chainId,
+													url: URL,
+													address: contractAddress,
 													code_id: contractInfo.code_id,
-													address,
+													type_enrich: ENRICH_TYPE.UPSERT,
+													chain_id: chainId,
+													token_id: tokenId,
 												},
-												ENRICH_TYPE.UPSERT,
-											],
-											OPTs,
-										);
+												{
+													removeOnComplete: true,
+													removeOnFail: {
+														count: 3,
+													},
+												},
+											);
+										}
 										break;
 									case CodeIDStatus.TBD:
 										this.broker.emit(`${contractInfo.contract_type}.validate`, {
@@ -151,16 +182,48 @@ export default class CrawlAccountInfoService extends Service {
 								}
 							}
 							// this.logger.debug(`Contract's type does not verify!`, address);
-							await this.broker.cacher?.del(`contract_${chainId}_${address}`);
+							await this.broker.cacher?.del(`contract_${chainId}_${contractAddress}`);
 						}
 					}),
 				);
-				await updateInforPromises;
+				// await updateInforPromises;
 			}
 		} catch (error) {
 			this.logger.error(error);
 		}
 		return [];
+	}
+
+	getContractAndTokenIdFromListTx(listTx: ITransaction[]) {
+		let listContractAndTokenID: any[] = [];
+		if (listTx.length > 0) {
+			listTx.forEach((tx: ITransaction) => {
+				tx.tx_response.events.map((event: IEvent) => {
+					const type = event.type.toString();
+					const attributes = event.attributes;
+					if (type == EVENT_TYPE.WASM) {
+						let contractFromEvent: any = null;
+						let tokenIdFromEvent: any = null;
+						attributes.map((attribute: IAttribute) => {
+							const key = attribute.key.toString();
+							if (key == BASE_64_ENCODE._CONTRACT_ADDRESS) {
+								const value = fromUtf8(fromBase64(attribute.value.toString()));
+								contractFromEvent = value;
+							}
+							if (key == BASE_64_ENCODE.TOKEN_ID) {
+								const value = fromUtf8(fromBase64(attribute.value.toString()));
+								tokenIdFromEvent = value;
+							}
+						});
+						listContractAndTokenID.push({
+							contractAddress: contractFromEvent,
+							tokenId: tokenIdFromEvent,
+						});
+					}
+				});
+			});
+		}
+		return listContractAndTokenID;
 	}
 
 	handleTxBurnCw721(listTx: any[], chainId: string) {
