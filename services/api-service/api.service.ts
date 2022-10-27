@@ -137,6 +137,7 @@ const listLCD = LIST_NETWORK.map((e) => {
 					'v1.feegrant.getGrants',
 					'v1.account-statistics.getTopAccounts',
 					'v1.daily-tx-statistics.getDailyData',
+					'v1.smart-contracts.getContracts'
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
 				use: [swMiddleware],

@@ -373,6 +373,7 @@ export default class CrawlAccountStatsService extends Service {
 			});
 			listAccountStats.map((account: any) => {
 				if (!listData.find((item) => item.address == account.address)) {
+					if (account.per_day.length === 7) account.per_day.shift()
 					account.per_day.push({
 						total_sent_tx: {
 							amount: 0,

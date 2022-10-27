@@ -10,7 +10,7 @@ export interface ICW721Asset {
 	contract_address: String;
 	token_id: String;
 	owner: String;
-	media_link: String,
+	media_link: String;
 	history: String[];
 	is_burned: Boolean;
 }
@@ -62,5 +62,6 @@ export const cw721AssetMongoModel = (collection: string): unknown => {
 		// strict: true
 	});
 	schema.index({ 'custom_info.chain_id': 1, asset_id: 1 });
+	schema.index({ updatedAt: -1 });
 	return models[collection] || model(collection, schema);
 };

@@ -26,10 +26,13 @@ export const CONST_CHAR = {
 	ACTION: 'action',
 	TRANSFER: 'transfer',
 	SENDER: 'sender',
+	RECEIVER: 'receiver',
+	SPENDER: 'spender',
 	CRAWL: 'crawl',
 	API: 'api',
 	RECIPIENT: 'recipient',
 	COIN_RECEIVED: 'coin_received',
+	COIN_SPENT: 'coin_spent',
 	WITHDRAW_REWARDS: 'withdraw_rewards',
 	AMOUNT: 'amount',
 	VALIDATOR: 'validator',
@@ -66,6 +69,7 @@ export const MSG_TYPE = {
 	MSG_IBC_CONNECTION_OPEN_INIT: '/ibc.core.connection.v1.MsgConnectionOpenInit',
 	MSG_FEEGRANT_GRANT: '/cosmos.feegrant.v1beta1.MsgGrantAllowance',
 	MSG_FEEGRANT_REVOKE: '/cosmos.feegrant.v1beta1.MsgRevokeAllowance',
+	MSG_EXEC: '/cosmos.authz.v1beta1.MsgExec',
 };
 
 export const LIST_NETWORK: INetworkInfo[] = require('../network.json');

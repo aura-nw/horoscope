@@ -39,7 +39,7 @@ const QueueService = require('moleculer-bull');
 		QueueService(QueueConfig.redis, QueueConfig.opts),
 	],
 	queues: {
-		'get-media-link': {
+		'CW721-media.get-media-link': {
 			concurrency: parseInt(Config.CONCURRENCY_GET_MEDIA_LINK, 10),
 			async process(job: Job) {
 				const uri = job.data.uri;
@@ -162,7 +162,7 @@ const QueueService = require('moleculer-bull');
 
 							//@ts-ignore
 							this.createJob(
-								'get-media-link',
+								'CW721-media.get-media-link',
 								{
 									uri,
 									file_name,
@@ -271,13 +271,13 @@ export default class CrawlAssetService extends moleculer.Service {
 		// let urlGetListToken = `contract/address/smart/${toBase64(
 		// 	toUtf8(`{"all_tokens":{"limit":100}}`),
 		// )}`;
-		this.getQueue('get-media-link').on('completed', (job: Job) => {
+		this.getQueue('CW721-media.get-media-link').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('get-media-link').on('failed', (job: Job) => {
+		this.getQueue('CW721-media.get-media-link').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
-		this.getQueue('get-media-link').on('progress', (job: Job) => {
+		this.getQueue('CW721-media.get-media-link').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();

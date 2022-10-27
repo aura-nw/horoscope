@@ -22,7 +22,7 @@ import { QueueConfig } from '../../config/queue';
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbTransactionMixin = dbTransactionMixin;
-	private consumer = Date.now().toString();
+	private consumer = this.broker.nodeID;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);

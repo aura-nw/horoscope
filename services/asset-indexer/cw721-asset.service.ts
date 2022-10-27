@@ -31,14 +31,40 @@ const VALIDATE_CODEID_PREFIX = 'validate_codeid';
 const HANDLE_CODEID_PREFIX = 'handle_codeid';
 
 const callApiMixin = new CallApiMixin().start();
-
+import { QueueConfig } from '../../config/queue';
+import { Job } from 'bull';
+const QueueService = require('moleculer-bull');
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
 	name: 'CW721',
 	version: 1,
-	mixins: [callApiMixin, dbCW721AssetMixin],
+	mixins: [callApiMixin, dbCW721AssetMixin, QueueService(QueueConfig.redis, QueueConfig.opts)],
+	queues: {
+		'CW721.enrich-tokenid': {
+			concurrency: parseInt(Config.CONCURRENCY_ENRICH_TOKEN_ID, 10),
+			async process(job: Job) {
+				job.progress(10);
+				const url = job.data.url;
+				const address = job.data.address;
+				const code_id = job.data.code_id;
+				const chain_id = job.data.chain_id;
+				const token_id = job.data.token_id;
+				const typeEnrich = job.data.type_enrich;
+				// @ts-ignore
+				await this.handleJobEnrichTokenId(
+					url,
+					address,
+					code_id,
+					chain_id,
+					token_id,
+					typeEnrich,
+				);
+				job.progress(100);
+			},
+		},
+	},
 	events: {
 		'CW721.validate': {
 			async handler(ctx: Context<any>) {
@@ -189,6 +215,85 @@ export default class CrawlAssetService extends moleculer.Service {
 		}
 	}
 
+	async handleJobEnrichTokenId(
+		url: any,
+		address: string,
+		code_id: number,
+		chain_id: string,
+		token_id: string,
+		type_enrich: string,
+	) {
+		let tokenInfo: any = await this.broker.call(
+			CW721_ACTION.GET_TOKEN_INFOR,
+			{ URL: url, code_id, address, token_id },
+			OPTs,
+		);
+		if (tokenInfo != null) {
+			let [uri, type, file_name, media_link_key] = ['', '', '', ''];
+
+			let imageLink = null;
+			let metadata = null;
+			if (tokenInfo.data.info.extension) {
+				metadata = tokenInfo.data.info.extension;
+				if (tokenInfo.data.info.extension.image) {
+					imageLink = tokenInfo.data.info.extension.image;
+				}
+			}
+
+			try {
+				// if has token uri
+				if (tokenInfo.data.info.token_uri) {
+					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(
+						tokenInfo.data.info.token_uri,
+					);
+					let schemaIPFS: Buffer = await Common.downloadAttachment(uri);
+					// let schemaType = await Common.getFileTypeFromBuffer(schemaIPFS);
+
+					if (schemaIPFS) {
+						metadata = JSON.parse(schemaIPFS.toString());
+					}
+					if (!imageLink) {
+						imageLink = metadata.image;
+					}
+				}
+				if (!imageLink && tokenInfo.data.info.token_uri) {
+					imageLink = tokenInfo.data.info.token_uri;
+				}
+			} catch (error) {
+				this.logger.error('Cannot get schema');
+				// this.logger.error(error);
+			}
+
+			try {
+				if (imageLink) {
+					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(imageLink);
+					this.broker.emit('CW721-media.get-media-link', {
+						uri,
+						type,
+						file_name,
+						media_link_key,
+						chain_id,
+						metadata,
+					});
+				}
+			} catch (error) {
+				this.logger.error('Cannot get media link');
+				this.logger.error(error);
+			}
+
+			const asset = Common.createCW721AssetObject(
+				code_id,
+				address,
+				token_id,
+				media_link_key,
+				tokenInfo,
+				chain_id,
+			);
+			this.logger.debug('insert new asset: ', JSON.stringify(asset));
+			this.broker.call(`v1.CW721-asset-manager.act-${type_enrich}`, asset, OPTs);
+		}
+	}
+
 	@Action()
 	private async enrichData(ctx: Context<[TokenInfo, string]>) {
 		const URL = ctx.params[0].URL;
@@ -196,74 +301,54 @@ export default class CrawlAssetService extends moleculer.Service {
 		const code_id = ctx.params[0].code_id;
 		const typeEnrich = ctx.params[1];
 		const chain_id = ctx.params[0].chain_id;
-		// let listTokenIDs: any = await this.broker.call(
-		// 	CW721_ACTION.GET_TOKEN_LIST,
-		// 	{ URL, code_id, address },
-		// 	OPTs,
-		// );
-		let listTokenIDs = await this.actions.getTokenList({ URL, code_id, address }, OPTs);
+		let listTokenIDs: any = await this.broker.call(
+			CW721_ACTION.GET_TOKEN_LIST,
+			{ URL, code_id, address },
+			OPTs,
+		);
+		// let listTokenIDs = await this.actions.getTokenList({ URL, code_id, address }, OPTs);
 
 		if (listTokenIDs != null) {
-			const getInforPromises = await Promise.all(
-				listTokenIDs.map(async (token_id: String) => {
-					let tokenInfo: any = await this.broker.call(
-						CW721_ACTION.GET_TOKEN_INFOR,
-						{ URL, code_id, address, token_id },
-						OPTs,
-					);
-					if (tokenInfo != null) {
-						let [uri, type, file_name, media_link_key] = ['', '', '', ''];
-						try {
-							let imageLink = null;
-							let metadata = null;
-							if (
-								tokenInfo.data.info.extension &&
-								tokenInfo.data.info.extension.image
-							) {
-								metadata = tokenInfo.data.info.extension;
-								imageLink = tokenInfo.data.info.extension.image;
-							} else if (tokenInfo.data.info.token_uri) {
-								imageLink = tokenInfo.data.info.token_uri;
-							}
-
-							// if (tokenInfo.data.info.token_uri) {
-							// 	[uri, type, file_name, media_link_key] =
-							// 		Common.getKeyFromUri(tokenInfo.data.info.token_uri);
-							// 	let schemaIPFS: Buffer = await Common.downloadAttachment(
-							// 		tokenInfo.data.info.token_uri,
-							// 	);
-							// 	this.logger.info(schemaIPFS.toJSON());
-							// }
-
-							if (imageLink) {
-								[uri, type, file_name, media_link_key] =
-									Common.getKeyFromUri(imageLink);
-								this.broker.emit('CW721-media.get-media-link', {
-									uri,
-									type,
-									file_name,
-									media_link_key,
-									chain_id,
-									metadata,
-								});
-							}
-						} catch (error) {
-							this.logger.error('Cannot get media link');
-							this.logger.error(error);
-						}
-
-						const asset = Common.createCW721AssetObject(
-							code_id,
-							address,
-							token_id,
-							media_link_key,
-							tokenInfo,
-							chain_id,
-						);
-						this.broker.call(`v1.CW721-asset-manager.act-${typeEnrich}`, asset, OPTs);
-					}
-				}),
-			);
+			listTokenIDs.map((token_id: String) => {
+				this.createJob(
+					'CW721.enrich-tokenid',
+					{
+						url: URL,
+						address: address,
+						code_id: code_id,
+						type_enrich: typeEnrich,
+						chain_id: chain_id,
+						token_id: token_id,
+					},
+					{
+						removeOnComplete: true,
+						removeOnFail: {
+							count: 3,
+						},
+					},
+				);
+			});
+			// const getInforPromises = await Promise.all(
+			// 	listTokenIDs.map(async (token_id: String) => {
+			// 		this.createJob(
+			// 			'CW721.enrich-tokenid',
+			// 			{
+			// 				url: URL,
+			// 				address: address,
+			// 				code_id: code_id,
+			// 				type_enrich: typeEnrich,
+			// 				chain_id: chain_id,
+			// 				token_id: token_id,
+			// 			},
+			// 			{
+			// 				removeOnComplete: true,
+			// 				removeOnFail: {
+			// 					count: 3,
+			// 				},
+			// 			},
+			// 		);
+			// 	}),
+			// );
 			// await getInforPromises;
 		}
 	}
@@ -342,5 +427,18 @@ export default class CrawlAssetService extends moleculer.Service {
 	@Action()
 	private async updateById(id: any, update: any) {
 		return await this.adapter.updateById(id, update);
+	}
+
+	_start(): Promise<void> {
+		this.getQueue('CW721.enrich-tokenid').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
+		});
+		this.getQueue('CW721.enrich-tokenid').on('failed', (job: Job) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
+		});
+		this.getQueue('CW721.enrich-tokenid').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
+		});
+		return super._start();
 	}
 }
