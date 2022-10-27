@@ -106,7 +106,7 @@ export default class CrawlAccountInfoService extends Service {
 							// set feegrant + use another fee grant
 							let spend_limit = {} as Coin
 							let basic_allowance = message["allowance"]
-							while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE) {
+							while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE && basic_allowance["@type"] != ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
 								basic_allowance = basic_allowance["allowance"]
 							}
 							if (basic_allowance["@type"] == ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
@@ -248,7 +248,7 @@ export default class CrawlAccountInfoService extends Service {
 						// normal create grant
 						let spend_limit = {} as Coin
 						let basic_allowance = message["allowance"]
-						while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE) {
+						while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE && basic_allowance["@type"] != ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
 							basic_allowance = basic_allowance["allowance"]
 						}
 						if (basic_allowance["@type"] == ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
