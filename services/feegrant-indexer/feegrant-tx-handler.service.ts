@@ -34,6 +34,7 @@ export interface IFeegrantData {
 	expiration: String | null,
 	type: String,
 	spend_limit: Coin,
+	expired: Boolean,
 	custom_info: CustomInfo
 }
 export default class CrawlAccountInfoService extends Service {
@@ -53,14 +54,11 @@ export default class CrawlAccountInfoService extends Service {
 			queues: {
 				'feegrant.tx-handle': {
 					concurrency: 1,
-					process(job: Job) {
+					async process(job: Job) {
 						job.progress(10);
-						const URL = Utils.getUrlByChainIdAndType(
-							job.data.chainId,
-							URL_TYPE_CONSTANTS.LCD,
-						);
+
 						// @ts-ignore
-						this.handleJob(job.data.chainId);
+						await this.handleJob(job.data.chainId);
 
 						job.progress(100);
 						return true;
@@ -86,22 +84,20 @@ export default class CrawlAccountInfoService extends Service {
 			limit: 1
 		}) as ITransaction[]
 		const latestBlock = latestBlockTx[0] ? latestBlockTx[0].tx_response.height.valueOf() : this.currentBlock
-		// get all transactions in 100 sequence blocks, start from currentBlock
+		// get all transactions in BLOCK_PER_BATCH sequence blocks, start from currentBlock
 		const listTx = await this.adapter.find({
 			query: {
 				"tx_response.height": {
 					$gte: this.currentBlock,
-					$lt: this.currentBlock + 100 < latestBlock ? this.currentBlock + 100 : latestBlock
+					$lt: this.currentBlock + Config.BLOCK_PER_BATCH < latestBlock ? this.currentBlock + Config.BLOCK_PER_BATCH : latestBlock
 				}
 			}
 		}) as ITransaction[]
-		try {
-			// filter feegrant transactions
-			if (listTx.length > 0) {
-				for (const tx of listTx) {
-					this.logger.debug();
-					let payer = tx.tx.auth_info.fee.granter
-					const message: any = tx.tx.body.messages[0]
+		// filter feegrant transactions
+		if (listTx.length > 0) {
+			for (const tx of listTx) {
+				let payer = tx.tx.auth_info.fee.granter
+				tx.tx.body.messages.forEach((message: any) => {
 					// if tx is feegrant tx
 					if (payer) {
 						let events = tx.tx_response.events
@@ -110,15 +106,15 @@ export default class CrawlAccountInfoService extends Service {
 							// set feegrant + use another fee grant
 							let spend_limit = {} as Coin
 							let basic_allowance = message["allowance"]
-							this.logger.info(JSON.stringify(basic_allowance))
 							while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE) {
 								basic_allowance = basic_allowance["allowance"]
 							}
-							this.logger.info(JSON.stringify(basic_allowance))
+							if (basic_allowance["@type"] == ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
+								basic_allowance = basic_allowance["basic"]
+							}
 							if (basic_allowance["spend_limit"].length > 0) {
 								spend_limit = basic_allowance["spend_limit"][0] as Coin
 							}
-							this.logger.info(JSON.stringify(spend_limit))
 							let feegrantCreate = {
 								action: FEEGRANT_ACTION.CREATE_WITH_FEEGRANT,
 								granter: message["granter"] as String,
@@ -131,7 +127,8 @@ export default class CrawlAccountInfoService extends Service {
 								expiration: message["expiration"],
 								type: message["allowance"]["@type"],
 								spend_limit,
-								custom_info: tx.custom_info
+								custom_info: tx.custom_info,
+								expired: false
 							}
 							feegrantList.push(feegrantCreate)
 						} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_REVOKE) {
@@ -148,7 +145,8 @@ export default class CrawlAccountInfoService extends Service {
 								expiration: null,
 								type: "",
 								spend_limit: {} as Coin,
-								custom_info: tx.custom_info
+								custom_info: tx.custom_info,
+								expired: false
 							}
 							feegrantList.push(feegrantRevoke)
 						} else {
@@ -205,7 +203,7 @@ export default class CrawlAccountInfoService extends Service {
 								}
 							} catch (error) {
 								this.logger.error(`Error when get message type: ${error}`);
-								continue;
+								return
 							}
 							if (events.find(e => e.type === "revoke_feegrant")) {
 								// use up
@@ -221,7 +219,8 @@ export default class CrawlAccountInfoService extends Service {
 									expiration: null,
 									type: "",
 									spend_limit: {} as Coin,
-									custom_info: tx.custom_info
+									custom_info: tx.custom_info,
+									expired: false
 								}
 								feegrantList.push(feegrantUseup)
 							} else {
@@ -238,7 +237,8 @@ export default class CrawlAccountInfoService extends Service {
 									expiration: null,
 									type: "",
 									spend_limit: {} as Coin,
-									custom_info: tx.custom_info
+									custom_info: tx.custom_info,
+									expired: false
 								}
 								feegrantList.push(feegrantUpdate)
 							}
@@ -250,6 +250,9 @@ export default class CrawlAccountInfoService extends Service {
 						let basic_allowance = message["allowance"]
 						while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE) {
 							basic_allowance = basic_allowance["allowance"]
+						}
+						if (basic_allowance["@type"] == ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
+							basic_allowance = basic_allowance["basic"]
 						}
 						if (basic_allowance["spend_limit"].length > 0) {
 							spend_limit = basic_allowance["spend_limit"][0] as Coin
@@ -266,7 +269,8 @@ export default class CrawlAccountInfoService extends Service {
 							expiration: message["expiration"],
 							type: message["allowance"]["@type"],
 							spend_limit: spend_limit,
-							custom_info: tx.custom_info
+							custom_info: tx.custom_info,
+							expired: false
 						}
 						feegrantList.push(feegrantCreate)
 					} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_REVOKE) {
@@ -282,32 +286,31 @@ export default class CrawlAccountInfoService extends Service {
 							expiration: null,
 							type: "",
 							spend_limit: {} as Coin,
-							custom_info: tx.custom_info
+							custom_info: tx.custom_info,
+							expired: false
 						}
 						feegrantList.push(feegrantRevoke)
 					}
-				}
-			}
-			// forward to feegrant history db service
-			this.createJob(
-				'feegrant.history-db',
-				{
-					feegrantList,
-					chainId
-				},
-				{
-					removeOnComplete: true,
-					removeOnFail: {
-						count: 10,
-					},
-				},
-			);
+				})
 
-		} catch (error) {
-			this.logger.error(error);
+			}
 		}
+		// forward to feegrant history db service
+		this.createJob(
+			'feegrant.history-db',
+			{
+				feegrantList,
+				chainId
+			},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
+			},
+		);
 		// update feegrant latest block
-		this.currentBlock = this.currentBlock + 100 < latestBlock ? this.currentBlock + 100 : latestBlock
+		this.currentBlock = this.currentBlock + Config.BLOCK_PER_BATCH < latestBlock ? this.currentBlock + Config.BLOCK_PER_BATCH : latestBlock
 		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
 		return [];
 	}
@@ -324,7 +327,7 @@ export default class CrawlAccountInfoService extends Service {
 					count: 10,
 				},
 				repeat: {
-					every: parseInt(Config.MILISECOND_GET_TRANSACTION, 10),
+					every: parseInt(Config.MILISECOND_PER_BATCH, 10),
 				},
 			},
 		);

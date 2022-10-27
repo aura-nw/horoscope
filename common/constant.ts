@@ -270,7 +270,6 @@ export enum VESTING_ACCOUNT_TYPE {
 
 export enum FEEGRANT_STATUS {
 	AVAILABLE = 'Available',
-	EXPIRED = 'Expired',
 	USE_UP = 'Use up',
 	REVOKED = 'Revoked',
 	FAIL = "Fail"

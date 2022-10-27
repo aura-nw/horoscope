@@ -75,30 +75,20 @@ export default class FeegrantDB extends Service {
         },
             {
                 $set: {
-                    'status': FEEGRANT_STATUS.EXPIRED
+                    'expired': true
                 }
             }
         )
     }
 
     async handleJob(listUpdateFeegrantDb: FeegrantEntity[]): Promise<any[]> {
-        // for each new created record received, insert new record 
-        const records_create = [] as any[]
-        await Promise.all(listUpdateFeegrantDb.map(e => {
-            if (e.action == FEEGRANT_ACTION.CREATE) {
-                let record = {
-                    ...e,
-                } as FeegrantEntity
-                records_create.push(record)
-            }
-        }))
-        this.adapter.insertMany(records_create)
-        // process other actions: use, revoke, use up
-        const mapUpdate = new Map<String, UpdateContent>()
+        // process unprocess actions: use, revoke, use up
+        const mapUpdate = new Map<String | null, UpdateContent>()
         // initialize map
         for (const e of listUpdateFeegrantDb) {
-            if (e.action === FEEGRANT_ACTION.USE || FEEGRANT_ACTION.REVOKE) {
-                mapUpdate.set(e.tx_hash, { amount: 0, status: FEEGRANT_STATUS.AVAILABLE })
+            if (e.action === FEEGRANT_ACTION.USE || e.action === FEEGRANT_ACTION.REVOKE) {
+                //@ts-ignore
+                mapUpdate.set(e.origin_feegrant_txhash, { amount: 0, status: FEEGRANT_STATUS.AVAILABLE })
             }
         }
         // update map
@@ -106,8 +96,8 @@ export default class FeegrantDB extends Service {
             // for each new used record received, update spendable
             if (e.action == FEEGRANT_ACTION.USE) {
                 //@ts-ignore
-                const tmp_amount = mapUpdate.get(e.tx_hash)?.amount + parseInt(e.amount.amount.toString())
-                const tmp_status = mapUpdate.get(e.tx_hash)?.status
+                const tmp_amount = mapUpdate.get(e.origin_feegrant_txhash)?.amount + parseInt(e.amount.amount.toString())
+                const tmp_status = mapUpdate.get(e.origin_feegrant_txhash)?.status
 
                 mapUpdate.set(e.tx_hash, {
                     amount: tmp_amount,
@@ -117,20 +107,20 @@ export default class FeegrantDB extends Service {
             } else if (e.action == FEEGRANT_ACTION.REVOKE) {
                 if (e.status == FEEGRANT_STATUS.USE_UP) {
                     // for each new used up record received, update status to use up
-                    const tmp_amount = mapUpdate.get(e.tx_hash)?.amount
+                    const tmp_amount = mapUpdate.get(e.origin_feegrant_txhash)?.amount
                     const tmp_status = FEEGRANT_STATUS.USE_UP
 
-                    mapUpdate.set(e.tx_hash, {
+                    mapUpdate.set(e.origin_feegrant_txhash, {
                         //@ts-ignore
                         amount: tmp_amount,
                         status: tmp_status
                     })
                 } else {
                     // for each new revoked record received, update status to revoked
-                    const tmp_amount = mapUpdate.get(e.tx_hash)?.amount
+                    const tmp_amount = mapUpdate.get(e.origin_feegrant_txhash)?.amount
                     const tmp_status = FEEGRANT_STATUS.REVOKED
 
-                    mapUpdate.set(e.tx_hash, {
+                    mapUpdate.set(e.origin_feegrant_txhash, {
                         //@ts-ignore
                         amount: tmp_amount,
                         status: tmp_status
@@ -146,7 +136,6 @@ export default class FeegrantDB extends Service {
                 }
             }
         }) as FeegrantEntity[]
-        this.logger.info("Feegrant debug: " + JSON.stringify(listOriginalRecords))
         listOriginalRecords.forEach(e => [
             bulkUpdate.push({
                 updateOne: {
@@ -187,6 +176,15 @@ export default class FeegrantDB extends Service {
             this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
         });
         this.getQueue('feegrant.db').on('progress', (job: Job) => {
+            this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
+        });
+        this.getQueue('feegrant-check-expire.db').on('completed', (job: Job) => {
+            this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
+        });
+        this.getQueue('feegrant-check-expire.db').on('failed', (job: Job) => {
+            this.logger.error(`Job #${job.id} failed!. Result:`, job.stacktrace);
+        });
+        this.getQueue('feegrant-check-expire.db').on('progress', (job: Job) => {
             this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
         });
         return super._start();

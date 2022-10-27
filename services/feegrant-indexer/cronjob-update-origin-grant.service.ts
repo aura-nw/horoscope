@@ -1,11 +1,13 @@
 import { dbFeegrantHistoryMixin } from '../../mixins/dbMixinMongoose';
 import { ObjectID } from 'bson';
 import { Job } from 'bull';
-import { FEEGRANT_ACTION } from '../../common/constant';
+import { FEEGRANT_ACTION, FEEGRANT_STATUS } from '../../common/constant';
 import { FeegrantEntity } from 'entities';
 import { Service, ServiceBroker } from 'moleculer';
 import { Config } from '../../common';
 import { QueueConfig } from '../../config/queue';
+import _ from 'lodash';
+import { QueryOptions } from 'moleculer-db';
 const QueueService = require('moleculer-bull');
 
 export default class CronjobUpdateOriginalGrant extends Service {
@@ -36,62 +38,69 @@ export default class CronjobUpdateOriginalGrant extends Service {
     }
     async handleJob() {
         // find all records which were unprocessed
-        const listUpdate = await this.adapter.find({
+        const listUnprocess = await this.adapter.find({
             query: {
                 "origin_feegrant_txhash": null
             }
         }) as FeegrantEntity[]
-        // list bulk action to update feegrant history db
-        const bulkUpdate: any[] = []
-        // list to update feegrant DB
-        const listUpdateFeegrantDb: FeegrantEntity[] = []
-        // update origin_feegrant_txhash for all unprocessed records
-        await Promise.all(listUpdate.map(async e => {
-            const originalCreate = await this.adapter.find({
-                query: {
-                    "granter": e.granter,
-                    "grantee": e.grantee,
-                    "action": FEEGRANT_ACTION.CREATE,
-                    "timestamp": {
-                        $lte: e.timestamp
-                    }
-                },
-                sort: "-timestamp",
-                limit: 1
+        if (listUnprocess.length > 0) {
+            // list bulk action to update feegrant history db
+            const bulkUpdate: any[] = []
+            // get distict pairs (granter, grantee) in listUnprocess
+            const distinctPairGranterGrantee = _.uniqBy(listUnprocess, function (elem) { return [elem.granter, elem.grantee].join() }).map(e => { return _.pick(e, ['granter', 'grantee']) })
+            // construct query
+            const query: QueryOptions = {}
+            const queryOr: any[] = []
+            distinctPairGranterGrantee.forEach(e => {
+                queryOr.push({
+                    'granter': e.granter,
+                    'grantee': e.grantee
+                })
+            })
+            query["$or"] = queryOr
+            query["status"] = FEEGRANT_STATUS.AVAILABLE
+            // find grant for each distinctPairGranterGrantee
+            const listOriginalFeegrant = await this.broker.call('v1.db-feegrant.find', {
+                query
             }) as FeegrantEntity[]
-            if (originalCreate.length > 0) {
-                this.logger.info(`${e._id}  ${originalCreate[0].type}   ${originalCreate[0].tx_hash}`)
-                e.origin_feegrant_txhash = originalCreate[0].tx_hash
-                listUpdateFeegrantDb.push(e)
-                bulkUpdate.push({
-                    updateOne: {
-                        filter: { _id: e._id },
-                        update: {
-                            $set: {
-                                'type': originalCreate[0].type,
-                                'origin_feegrant_txhash': originalCreate[0].tx_hash,
+            // list to update feegrant DB
+            const listUpdateFeegrantDb: FeegrantEntity[] = []
+            // find origin_feegrant_txhash for each unprocessed action
+            // construct bulk update origin_feegrant_txhash for each unprocess action
+            listUnprocess.forEach(e => {
+                // e 's original feegrant
+                const originalFeegrant = listOriginalFeegrant.find(x => x.grantee === e.grantee && x.granter === e.granter && x.timestamp.getTime() < e.timestamp.getTime())
+                if (originalFeegrant) {
+                    e.origin_feegrant_txhash = originalFeegrant.tx_hash
+                    listUpdateFeegrantDb.push(e)
+                    bulkUpdate.push({
+                        updateOne: {
+                            filter: { _id: e._id },
+                            update: {
+                                $set: {
+                                    'type': originalFeegrant.type,
+                                    'origin_feegrant_txhash': originalFeegrant.tx_hash,
+                                },
                             },
                         },
-                    },
-                })
-            }
-        }))
-        // forward all unprocessed actions to feegrant db service
-        this.createJob(
-            'feegrant.db',
-            {
-                listUpdateFeegrantDb
-            },
-            {
-                removeOnComplete: true,
-                removeOnFail: {
-                    count: 10,
+                    })
+                }
+            })
+            // forward all unprocessed actions to feegrant db service
+            this.createJob(
+                'feegrant.db',
+                {
+                    listUpdateFeegrantDb
                 },
-            },
-        );
-        this.logger.info(`${JSON.stringify(bulkUpdate)}`)
-        this.logger.info(`listUpdateFeegrantDb: ${JSON.stringify(listUpdateFeegrantDb)}`)
-        await this.adapter.bulkWrite(bulkUpdate)
+                {
+                    removeOnComplete: true,
+                    removeOnFail: {
+                        count: 10,
+                    },
+                },
+            );
+            await this.adapter.bulkWrite(bulkUpdate)
+        }
     }
 
     async _start() {
@@ -104,7 +113,7 @@ export default class CronjobUpdateOriginalGrant extends Service {
                     count: 10,
                 },
                 repeat: {
-                    every: parseInt(Config.MILISECOND_CRONJOB_UPDATE_ORIGIN_GRANT, 10),
+                    every: parseInt(Config.MILISECOND_PER_BATCH, 10),
                 },
             },
         );

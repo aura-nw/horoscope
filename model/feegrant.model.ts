@@ -17,6 +17,7 @@ const definition: definitionType<IFeegrant> = (collection?: string) => ({
         denom: String
     },
     expiration: Date,
+    expired: Boolean,
     amount: {
         amount: String,
         denom: String

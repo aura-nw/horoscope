@@ -53,6 +53,7 @@ export default class CrawlAccountInfoService extends Service {
     async handleJob(feegrantList: IFeegrantData[], chainId: string): Promise<any[]> {
         // list history feegrant action
         const records: any[] = []
+        const records_create: any[] = []
         feegrantList.forEach(async (element) => {
             switch (element.action) {
                 case FEEGRANT_ACTION.CREATE:
@@ -60,31 +61,28 @@ export default class CrawlAccountInfoService extends Service {
                     {
                         let record = {
                             ...element,
-                            status: FEEGRANT_STATUS.AVAILABLE,
+                            status: element.result ? FEEGRANT_STATUS.AVAILABLE : FEEGRANT_STATUS.FAIL,
                             _id: null,
                             action: FEEGRANT_ACTION.CREATE,
-                            origin_feegrant_txhash: null,
+                            origin_feegrant_txhash: element.tx_hash,
                         } as FeegrantEntity
                         record.amount = element.spend_limit
-                        this.logger.info(`Feegrant-history-create: ${record}`)
                         records.push(record)
+                        records_create.push(record)
                         break;
                     }
                 case FEEGRANT_ACTION.USE:
                     // normal use feegrant
                     {
-                        {
-                            const record = {
-                                ...element,
-                                status: FEEGRANT_STATUS.AVAILABLE,
-                                _id: null,
-                                action: FEEGRANT_ACTION.USE,
-                                origin_feegrant_txhash: null,
-                            } as FeegrantEntity
-                            record.granter = element.payer
-                            this.logger.info(`Feegrant-history-use: ${JSON.stringify(record)}`)
-                            records.push(record)
-                        }
+                        const record = {
+                            ...element,
+                            status: FEEGRANT_STATUS.AVAILABLE,
+                            _id: null,
+                            action: FEEGRANT_ACTION.USE,
+                            origin_feegrant_txhash: null,
+                        } as FeegrantEntity
+                        record.granter = element.payer
+                        records.push(record)
                         break
                     }
                 case FEEGRANT_ACTION.USE_UP:
@@ -100,7 +98,6 @@ export default class CrawlAccountInfoService extends Service {
                         } as FeegrantEntity
                         record_use.granter = element.payer
                         record_use.type = ""
-                        this.logger.info(`Feegrant-history-useup_use: ${JSON.stringify(record_use)}`)
                         records.push(record_use)
                         // record revoke
                         const record_revoke = {
@@ -112,7 +109,6 @@ export default class CrawlAccountInfoService extends Service {
                         } as FeegrantEntity
                         record_revoke.granter = element.payer
                         record_revoke.type = ""
-                        this.logger.info(`Feegrant-history-useup_revoke: ${JSON.stringify(record_revoke)}`)
                         records.push(record_revoke)
                         break
                     }
@@ -127,7 +123,6 @@ export default class CrawlAccountInfoService extends Service {
                             action: FEEGRANT_ACTION.REVOKE,
                             origin_feegrant_txhash: null
                         } as FeegrantEntity
-                        this.logger.info(`Feegrant-history-revoke: ${JSON.stringify(record)}`)
                         records.push(record)
                         break
                     }
@@ -142,7 +137,6 @@ export default class CrawlAccountInfoService extends Service {
                             action: FEEGRANT_ACTION.REVOKE,
                             origin_feegrant_txhash: null
                         } as FeegrantEntity
-                        this.logger.info(`Feegrant-history-_revoke: ${JSON.stringify(record_revoke)}`)
                         records.push(record_revoke)
                         // record payfee
                         const record_payfee = {
@@ -164,14 +158,14 @@ export default class CrawlAccountInfoService extends Service {
                         // record create
                         const record_create = {
                             ...element,
-                            status: FEEGRANT_STATUS.AVAILABLE,
+                            status: element.result ? FEEGRANT_STATUS.AVAILABLE : FEEGRANT_STATUS.FAIL,
                             _id: null,
                             action: FEEGRANT_ACTION.CREATE,
-                            origin_feegrant_txhash: null
+                            origin_feegrant_txhash: element.tx_hash
                         } as FeegrantEntity
                         record_create.amount = element.spend_limit
                         records.push(record_create)
-
+                        records_create.push(record_create)
                         // record pay fee
                         const record_payfee = {
                             ...element,
@@ -188,8 +182,16 @@ export default class CrawlAccountInfoService extends Service {
                     }
             }
         });
+        // insert new grants to feegrant DB
+        await this.broker.call('v1.db-feegrant.insert', {
+            entities: records_create
+        })
         // save to history feegrant DB
-        await this.adapter.insertMany(records)
+        try {
+            await this.adapter.insertMany(records)
+        } catch (error) {
+            this.logger.error(error)
+        }
         return []
     }
 

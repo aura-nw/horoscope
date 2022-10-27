@@ -13,7 +13,8 @@ export interface IFeegrant {
 	grantee: String;
 	result: Boolean;
 	type: String;
-	timestamp: Date | null;
+	timestamp: Date;
+	expired: Boolean;
 	spend_limit: ICoin;
 	expiration: Date | null;
 	amount: ICoin;
@@ -38,7 +39,7 @@ export class FeegrantEntity implements IFeegrant {
 	@JsonProperty('type', String)
 	type: String = '';
 	@JsonProperty('timestamp', Date)
-	timestamp: Date | null = null;
+	timestamp: Date = new Date(-8640000000000000);
 	@JsonProperty('spend_limit', Coin, true)
 	spend_limit: Coin = {} as Coin;
 	@JsonProperty('expiration', Date)
@@ -49,6 +50,7 @@ export class FeegrantEntity implements IFeegrant {
 	status: FEEGRANT_STATUS | null = null;
 	@JsonProperty('action', String)
 	action: FEEGRANT_ACTION | "" = "";
-
+	@JsonProperty('expired', Boolean)
+	expired: Boolean = false;
 	custom_info: CustomInfo = {} as CustomInfo;
 }
