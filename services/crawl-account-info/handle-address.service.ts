@@ -71,101 +71,40 @@ export default class HandleAddressService extends Service {
 			listInsert: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listUpdateInfo.push(
-			...[
-				'account-info.upsert-auth',
-				'account-info.upsert-balances',
-				'account-info.upsert-delegates',
-				'account-info.upsert-redelegates',
-				'account-info.upsert-spendable-balances',
-				'account-info.upsert-unbonds',
-			],
-		);
+		listUpdateInfo.push(...[
+			'account-info.upsert-auth',
+			'account-info.upsert-balances',
+			'account-info.upsert-delegates',
+			'account-info.upsert-redelegates',
+			'account-info.upsert-spendable-balances',
+			'account-info.upsert-unbonds',
+		]);
 		if (listTx.length > 0) {
 			for (const element of listTx) {
 				if (source == CONST_CHAR.CRAWL) {
-					// listUpdateInfo.push(...[
-					// 	'account-info.upsert-balances',
-					// 	'account-info.upsert-spendable-balances'
-					// ]);
 					try {
-						element.tx.body.messages.map((message: any) => {
-							switch (message['@type']) {
-								case MSG_TYPE.MSG_SEND:
-									listAddresses.push(message.from_address, message.to_address);
-									break;
-								case MSG_TYPE.MSG_DELEGATE:
-									listAddresses.push(message.delegator_address);
-									// listUpdateInfo.push('account-info.upsert-delegates');
-									break;
-								case MSG_TYPE.MSG_REDELEGATE:
-									listAddresses.push(message.delegator_address);
-									// listUpdateInfo.push(...[
-									// 	'account-info.upsert-delegates',
-									// 	'account-info.upsert-redelegates'
-									// ]);
-									break;
-								case MSG_TYPE.MSG_UNDELEGATE:
-									listAddresses.push(message.delegator_address);
-									// listUpdateInfo.push(...[
-									// 	'account-info.upsert-delegates',
-									// 	'account-info.upsert-unbonds'
-									// ]);
-									break;
-								case MSG_TYPE.MSG_EXECUTE_CONTRACT:
-									listAddresses.push(message.sender);
-									break;
-								case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
-									listAddresses.push(message.sender);
-									break;
-								case MSG_TYPE.MSG_STORE_CODE:
-									listAddresses.push(message.sender);
-									break;
-								case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
-									listAddresses.push(message.from_address, message.to_address);
-									break;
-								case MSG_TYPE.MSG_DEPOSIT:
-									listAddresses.push(message.depositor);
-									break;
-								case MSG_TYPE.MSG_WITHDRAW_REWARDS:
-									listAddresses.push(message.delegator_address);
-									break;
-								case MSG_TYPE.MSG_SUBMIT_PROPOSAL:
-									listAddresses.push(message.proposer);
-									break;
-								case MSG_TYPE.MSG_VOTE:
-									listAddresses.push(message.voter);
-									break;
-								case MSG_TYPE.MSG_IBC_TRANSFER:
-									listAddresses.push(message.sender);
-									break;
-								case MSG_TYPE.MSG_IBC_RECEIVE:
-									let data = JSON.parse(
-										element.tx_response.logs
-											.find((log: any) =>
-												log.events.find(
-													(event: any) =>
-														event.type === CONST_CHAR.RECV_PACKET,
-												),
-											)
-											.events.find(
-												(event: any) =>
-													event.type === CONST_CHAR.RECV_PACKET,
-											)
-											.attributes.find(
-												(attribute: any) =>
-													attribute.key === CONST_CHAR.PACKET_DATA,
-											).value,
-									);
-									listAddresses.push(data.receiver);
-									break;
-								case MSG_TYPE.MSG_MULTI_SEND:
-									listAddresses.push(message.inputs[0].address);
-									message.outputs.map((output: any) => {
-										listAddresses.push(output.address);
-									});
-									break;
-							}
+						// element.tx.body.messages.map((message: any) => {
+						// 	if (message['@type'] === MSG_TYPE.MSG_EXEC) {
+						// 		listAddresses.push(message.grantee);
+						// 		message.map((msg: any) => {
+						// 			listAddresses.push(
+						// 				...[this.handleMessage(msg, element.tx_response.logs)]
+						// 			);
+						// 		});
+						// 	} else {
+						// 		listAddresses.push(
+						// 			...[this.handleMessage(message, element.tx_response.logs)]
+						// 		);
+						// 	}
+						// });
+
+						element.tx_response.logs.map((log: any) => {
+							let event = log.events.filter((e: any) =>
+								e.type == CONST_CHAR.COIN_RECEIVED || e.type == CONST_CHAR.COIN_SPENT)
+								.map((e: any) => e.attributes).map((e: any) =>
+									e.filter((x: any) => x.key === CONST_CHAR.RECEIVER || x.key === CONST_CHAR.SPENDER
+									).map((x: any) => x.value)).flat();
+							listAddresses.push(...event);
 						});
 					} catch (error) {
 						this.logger.error(`Error when get message type: ${error}`);
@@ -173,13 +112,6 @@ export default class HandleAddressService extends Service {
 					}
 				} else if (source == CONST_CHAR.API) {
 					listAddresses.push(element.address);
-					// listUpdateInfo.push(...[
-					// 	'account-info.upsert-balances',
-					// 	'account-info.upsert-delegates',
-					// 	'account-info.upsert-redelegates',
-					// 	'account-info.upsert-spendable-balances',
-					// 	'account-info.upsert-unbonds'
-					// ]);
 				}
 			}
 
@@ -212,6 +144,84 @@ export default class HandleAddressService extends Service {
 					chainId,
 				} as CrawlAccountClaimedRewardsParams);
 		}
+	}
+
+	handleMessage(message: any, logs: any) {
+		let listAddresses: any[] = [];
+		switch (message['@type']) {
+			case MSG_TYPE.MSG_SEND:
+				listAddresses.push(message.from_address, message.to_address);
+				break;
+			case MSG_TYPE.MSG_DELEGATE:
+				listAddresses.push(message.delegator_address);
+				// listUpdateInfo.push('account-info.upsert-delegates');
+				break;
+			case MSG_TYPE.MSG_REDELEGATE:
+				listAddresses.push(message.delegator_address);
+				// listUpdateInfo.push(...[
+				// 	'account-info.upsert-delegates',
+				// 	'account-info.upsert-redelegates'
+				// ]);
+				break;
+			case MSG_TYPE.MSG_UNDELEGATE:
+				listAddresses.push(message.delegator_address);
+				// listUpdateInfo.push(...[
+				// 	'account-info.upsert-delegates',
+				// 	'account-info.upsert-unbonds'
+				// ]);
+				break;
+			case MSG_TYPE.MSG_EXECUTE_CONTRACT:
+				listAddresses.push(message.sender);
+				break;
+			case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
+				listAddresses.push(message.sender);
+				break;
+			case MSG_TYPE.MSG_STORE_CODE:
+				listAddresses.push(message.sender);
+				break;
+			case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
+				listAddresses.push(message.from_address, message.to_address);
+				break;
+			case MSG_TYPE.MSG_DEPOSIT:
+				listAddresses.push(message.depositor);
+				break;
+			case MSG_TYPE.MSG_WITHDRAW_REWARDS:
+				listAddresses.push(message.delegator_address);
+				break;
+			case MSG_TYPE.MSG_SUBMIT_PROPOSAL:
+				listAddresses.push(message.proposer);
+				break;
+			case MSG_TYPE.MSG_VOTE:
+				listAddresses.push(message.voter);
+				break;
+			case MSG_TYPE.MSG_IBC_TRANSFER:
+				listAddresses.push(message.sender);
+				break;
+			case MSG_TYPE.MSG_IBC_RECEIVE:
+				let data = JSON.parse(
+					logs.find((log: any) =>
+						log.events.find(
+							(event: any) =>
+								event.type === CONST_CHAR.RECV_PACKET,
+						),
+					).events.find(
+						(event: any) =>
+							event.type === CONST_CHAR.RECV_PACKET,
+					).attributes.find(
+						(attribute: any) =>
+							attribute.key === CONST_CHAR.PACKET_DATA,
+					).value,
+				);
+				listAddresses.push(data.receiver);
+				break;
+			case MSG_TYPE.MSG_MULTI_SEND:
+				listAddresses.push(message.inputs[0].address);
+				message.outputs.map((output: any) => {
+					listAddresses.push(output.address);
+				});
+				break;
+		}
+		return listAddresses;
 	}
 
 	onlyUnique(value: any, index: any, self: any) {
