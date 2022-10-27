@@ -40,7 +40,19 @@ export default class CrawlBlockService extends Service {
 						// @ts-ignore
 						await this.initEnv();
 						// @ts-ignore
-						await this.handleJob();
+						await this.handleJobCrawlBlock();
+						job.progress(100);
+						return true;
+					},
+				},
+				'crawl.block-from-lcd': {
+					concurrency: 1,
+					async process(job: Job) {
+						job.progress(10);
+						const url = job.data.url;
+						const pathBlock = job.data.path;
+						// @ts-ignore
+						await this.handleJobCrawlBlockLCD(url, path);
 						job.progress(100);
 						return true;
 					},
@@ -67,20 +79,32 @@ export default class CrawlBlockService extends Service {
 		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : this.currentBlock;
 		this.logger.info(`currentBlock: ${this.currentBlock}`);
 	}
-	async handleJob() {
+	async handleJobCrawlBlock() {
+		let redisClient: RedisClientType = await this.getRedisClient();
+
+		const latestBlockRedis = parseInt(
+			(await redisClient.get(Config.REDIS_KEY_LATEST_BLOCK)) ?? '0',
+			10,
+		);
+
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.RPC);
 		const responseGetLatestBlock = await this.callApiFromDomain(
 			url,
 			`${Config.GET_LATEST_BLOCK_API}`,
 		);
 		const latestBlockNetwork = parseInt(responseGetLatestBlock.result.block.header.height);
+
+		if (latestBlockNetwork > latestBlockRedis) {
+			await redisClient.set(Config.REDIS_KEY_LATEST_BLOCK, latestBlockNetwork);
+		}
+
 		this.logger.info(`latestBlockNetwork: ${latestBlockNetwork}`);
 
 		const startBlock = this.currentBlock + 1;
 
 		let endBlock = startBlock + parseInt(Config.NUMBER_OF_BLOCK_PER_CALL) - 1;
-		if (endBlock > latestBlockNetwork) {
-			endBlock = latestBlockNetwork;
+		if (endBlock > Math.max(latestBlockNetwork, latestBlockRedis)) {
+			endBlock = Math.max(latestBlockNetwork, latestBlockRedis);
 		}
 		this.logger.info('startBlock: ' + startBlock + ' endBlock: ' + endBlock);
 		try {
@@ -107,12 +131,15 @@ export default class CrawlBlockService extends Service {
 			}
 			this.handleListBlock(data);
 			this.currentBlock = endBlock;
-			let redisClient: RedisClientType = await this.getRedisClient();
+
 			redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
 		} catch (error) {
 			this.logger.error(error);
 			throw new Error('cannot crawl block');
 		}
+	}
+	async handleJobCrawlBlockLCD(url: string, path: string) {
+		let block = await this.callApiFromDomain(url, path);
 	}
 	async handleListBlock(data: ResponseFromRPC) {
 		const listBlock: BlockResponseFromLCD = data.result;
@@ -157,9 +184,7 @@ export default class CrawlBlockService extends Service {
 		this.redisClient = await this.getRedisClient();
 		this.createJob(
 			'crawl.block',
-			{
-				param: `param`,
-			},
+			{},
 			{
 				removeOnComplete: true,
 				removeOnFail: {
