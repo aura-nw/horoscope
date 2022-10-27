@@ -82,34 +82,34 @@ export default class HandleAddressService extends Service {
 		if (listTx.length > 0) {
 			for (const element of listTx) {
 				if (source == CONST_CHAR.CRAWL) {
-					try {
-						// element.tx.body.messages.map((message: any) => {
-						// 	if (message['@type'] === MSG_TYPE.MSG_EXEC) {
-						// 		listAddresses.push(message.grantee);
-						// 		message.map((msg: any) => {
-						// 			listAddresses.push(
-						// 				...[this.handleMessage(msg, element.tx_response.logs)]
-						// 			);
-						// 		});
-						// 	} else {
-						// 		listAddresses.push(
-						// 			...[this.handleMessage(message, element.tx_response.logs)]
-						// 		);
-						// 	}
-						// });
+					// try {
+					// element.tx.body.messages.map((message: any) => {
+					// 	if (message['@type'] === MSG_TYPE.MSG_EXEC) {
+					// 		listAddresses.push(message.grantee);
+					// 		message.map((msg: any) => {
+					// 			listAddresses.push(
+					// 				...[this.handleMessage(msg, element.tx_response.logs)]
+					// 			);
+					// 		});
+					// 	} else {
+					// 		listAddresses.push(
+					// 			...[this.handleMessage(message, element.tx_response.logs)]
+					// 		);
+					// 	}
+					// });
 
-						element.tx_response.logs.map((log: any) => {
-							let event = log.events.filter((e: any) =>
-								e.type == CONST_CHAR.COIN_RECEIVED || e.type == CONST_CHAR.COIN_SPENT)
-								.map((e: any) => e.attributes).map((e: any) =>
-									e.filter((x: any) => x.key === CONST_CHAR.RECEIVER || x.key === CONST_CHAR.SPENDER
-									).map((x: any) => x.value)).flat();
-							listAddresses.push(...event);
-						});
-					} catch (error) {
-						this.logger.error(`Error when get message type: ${error}`);
-						continue;
-					}
+					element.tx_response.logs.map((log: any) => {
+						let event = log.events.filter((e: any) =>
+							e.type == CONST_CHAR.COIN_RECEIVED || e.type == CONST_CHAR.COIN_SPENT)
+							.map((e: any) => e.attributes).map((e: any) =>
+								e.filter((x: any) => x.key === CONST_CHAR.RECEIVER || x.key === CONST_CHAR.SPENDER
+								).map((x: any) => x.value)).flat();
+						listAddresses.push(...event);
+					});
+					// } catch (error) {
+					// 	this.logger.error(`Error when get message type: ${error}`);
+					// 	continue;
+					// }
 				} else if (source == CONST_CHAR.API) {
 					listAddresses.push(element.address);
 				}
@@ -134,6 +134,7 @@ export default class HandleAddressService extends Service {
 				this.logger.info(`${JSON.stringify(result)}`);
 			} catch (error) {
 				this.logger.error(`Account(s) already exists`);
+				throw error;
 			}
 			listUpdateInfo.map((item) => {
 				this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });

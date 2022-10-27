@@ -91,6 +91,7 @@ export default class CrawlAccountDelegatesService extends Service {
 				let resultCallApi;
 				while (!done) {
 					resultCallApi = await this.callApiFromDomain(url, urlToCall);
+					if (!resultCallApi) throw new Error('Error when call LCD API');
 
 					listDelegates.push(...resultCallApi.delegation_responses);
 					if (resultCallApi.pagination.next_key === null) {
@@ -136,6 +137,7 @@ export default class CrawlAccountDelegatesService extends Service {
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
+			throw error;
 		}
 	}
 

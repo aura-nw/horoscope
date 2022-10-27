@@ -88,6 +88,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 				}
 
 				let resultCallApi = await this.callApiFromDomain(url, param);
+				if (!resultCallApi) throw new Error('Error when call LCD API');
 				try {
 					if (
 						resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC ||
@@ -158,7 +159,8 @@ export default class CrawlAccountAuthInfoService extends Service {
 						}
 					}
 				} catch (error) {
-					this.logger.info(`This account is not a vesting account`);
+					this.logger.info(error);
+					throw error;
 				}
 
 				accountInfo.account_auth = resultCallApi;
@@ -196,6 +198,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
+			throw error;
 		}
 	}
 

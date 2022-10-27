@@ -82,6 +82,7 @@ export default class HandleDelayJobService extends Service {
 							);
 						} catch (error) {
 							this.logger.error(error);
+							throw error;
 						}
 						break;
 					case DELAY_JOB_TYPE.UNBOND:
@@ -135,6 +136,7 @@ export default class HandleDelayJobService extends Service {
 							);
 						} catch (error) {
 							this.logger.error(error);
+							throw error;
 						}
 						break;
 					case DELAY_JOB_TYPE.DELAYED_VESTING:
@@ -175,6 +177,7 @@ export default class HandleDelayJobService extends Service {
 							);
 						} catch (error) {
 							this.logger.error(error);
+							throw error;
 						}
 						break;
 					case DELAY_JOB_TYPE.PERIODIC_VESTING:
@@ -249,6 +252,7 @@ export default class HandleDelayJobService extends Service {
 							);
 						} catch (error) {
 							this.logger.error(error);
+							throw error;
 						}
 						break;
 				}
