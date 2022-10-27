@@ -37,7 +37,7 @@ export interface IFeegrantData {
 	expired: Boolean,
 	custom_info: CustomInfo
 }
-export default class CrawlAccountInfoService extends Service {
+export default class FeegrantTxHandler extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbTransactionMixin = dbTransactionMixin;
 	private currentBlock = 0
