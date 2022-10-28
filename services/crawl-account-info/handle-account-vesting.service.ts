@@ -52,33 +52,39 @@ export default class HandleAccountVestingService extends Service {
 			if (
 				new Date(
 					parseInt(account.account_auth.result.value.base_vesting_account.end_time, 10) *
-						1000,
+					1000,
 				).getTime() >= new Date().getTime()
 			) {
-				let listSpendableBalances: Coin[] = [];
-				const param =
-					Config.GET_PARAMS_SPENDABLE_BALANCE +
-					`/${account.address}?pagination.limit=100`;
-				const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+				try {
+					let listSpendableBalances: Coin[] = [];
+					const param =
+						Config.GET_PARAMS_SPENDABLE_BALANCE +
+						`/${account.address}?pagination.limit=100`;
+					const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-				let urlToCall = param;
-				let done = false;
-				let resultCallApi;
-				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, urlToCall);
-					if (!resultCallApi) throw new Error('Error when call LCD API');
+					let urlToCall = param;
+					let done = false;
+					let resultCallApi;
+					while (!done) {
+						resultCallApi = await this.callApiFromDomain(url, urlToCall);
+						if (!resultCallApi) throw new Error('Error when call LCD API');
 
-					listSpendableBalances.push(...resultCallApi.balances);
-					if (resultCallApi.pagination.next_key === null) {
-						done = true;
-					} else {
-						urlToCall = `${param}&pagination.key=${encodeURIComponent(
-							resultCallApi.pagination.next_key,
-						)}`;
+						if (resultCallApi.balances.length > 0)
+							listSpendableBalances.push(...resultCallApi.balances);
+						if (resultCallApi.pagination.next_key === null) {
+							done = true;
+						} else {
+							urlToCall = `${param}&pagination.key=${encodeURIComponent(
+								resultCallApi.pagination.next_key,
+							)}`;
+						}
 					}
+					account.account_spendable_balances = listSpendableBalances;
+					listUpdateQueries.push(this.adapter.updateById(account._id, account));
+				} catch (error) {
+					this.logger.error(error);
+					throw error;
 				}
-				account.account_spendable_balances = listSpendableBalances;
-				listUpdateQueries.push(this.adapter.updateById(account._id, account));
 			}
 		});
 		await Promise.all(listUpdateQueries);

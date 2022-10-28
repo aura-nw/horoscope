@@ -10,6 +10,7 @@ export const QueueConfig = {
 }
 export const queues = [
     'asset.tx-handle',
+    'contract.tx-handle',
     'crawl.account-auth-info',
     'crawl.account-balances',
     'crawl.account-claimed-rewards',

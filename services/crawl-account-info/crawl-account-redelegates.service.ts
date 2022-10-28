@@ -97,7 +97,8 @@ export default class CrawlAccountRedelegatesService extends Service {
 					resultCallApi = await this.callApiFromDomain(url, urlToCall);
 					if (!resultCallApi) throw new Error('Error when call LCD API');
 
-					listRedelegates.push(...resultCallApi.redelegation_responses);
+					if (resultCallApi.redelegation_responses.length > 0)
+						listRedelegates.push(...resultCallApi.redelegation_responses);
 					if (resultCallApi.pagination.next_key === null) {
 						done = true;
 					} else {
