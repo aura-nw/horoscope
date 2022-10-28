@@ -58,10 +58,10 @@ export default class FeegrantTxHandler extends Service {
 						job.progress(10);
 
 						// @ts-ignore
-						await this.handleJob(job.data.chainId);
+						const list: any[] = await this.handleJob(job.data.chainId);
 
 						job.progress(100);
-						return true;
+						return list;
 					},
 				},
 			}
@@ -312,7 +312,7 @@ export default class FeegrantTxHandler extends Service {
 		// update feegrant latest block
 		this.currentBlock = this.currentBlock + Config.BLOCK_PER_BATCH < latestBlock ? this.currentBlock + Config.BLOCK_PER_BATCH : latestBlock
 		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
-		return [];
+		return feegrantList;
 	}
 
 
