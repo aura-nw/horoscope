@@ -46,5 +46,6 @@ export const cw721MediaMongoModel = (collection: string): unknown => {
 		},
 		// strict: true
 	});
+	schema.index({ updatedAt: -1 });
 	return models[collection] || model(collection, schema);
 };

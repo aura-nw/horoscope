@@ -17,7 +17,7 @@ import { QueueConfig } from '../../config/queue';
 export default class HandleBlockService extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbBlockMixin = dbBlockMixin;
-	private consumer = Date.now().toString();
+	private consumer = this.broker.nodeID;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -90,57 +90,62 @@ export default class HandleBlockService extends Service {
 			this.consumer,
 			[{ key: Config.REDIS_STREAM_BLOCK_NAME, id: idXReadGroup }],
 		);
-		try {
-			if (result)
-				result.forEach(async (element: IRedisStreamResponse) => {
-					let listBlockNeedSaveToDb: IBlock[] = [];
-					let listMessageNeedAck: String[] = [];
-					let listTx: String[] = [];
-					try {
-						element.messages.forEach((item: IRedisStreamData) => {
-							const block: BlockEntity = new JsonConvert().deserializeObject(
-								JSON.parse(item.message.element.toString()),
-								BlockEntity,
-							);
-							this.logger.info(
-								`Handling message: ${item.id}, block height: ${block.block?.header?.height}`,
-							);
-							listBlockNeedSaveToDb.push(block);
-							let listTxInBlock = block.block?.data?.txs;
-							if (listTxInBlock) {
-								listTx.push(...listTxInBlock);
-							}
+		if (result)
+			result.forEach(async (element: IRedisStreamResponse) => {
+				let listBlockNeedSaveToDb: IBlock[] = [];
+				let listMessageNeedAck: String[] = [];
+				let listTx: String[] = [];
+				try {
+					element.messages.forEach((item: IRedisStreamData) => {
+						const block: BlockEntity = new JsonConvert().deserializeObject(
+							JSON.parse(item.message.element.toString()),
+							BlockEntity,
+						);
+						this.logger.info(
+							`Handling message: ${item.id}, block height: ${block.block?.header?.height}`,
+						);
+						listBlockNeedSaveToDb.push(block);
+						let listTxInBlock = block.block?.data?.txs;
+						if (listTxInBlock) {
+							listTx.push(...listTxInBlock);
+						}
 
-							listMessageNeedAck.push(item.id);
-							this.lastId = item.id.toString();
-						});
+						listMessageNeedAck.push(item.id);
+						this.lastId = item.id.toString();
+					});
 
-						if (listBlockNeedSaveToDb.length > 0) {
-							this.handleListBlock(listBlockNeedSaveToDb);
-						}
-						if (listTx.length > 0) {
-							this.broker.emit('list-transaction.created', {
-								listTx: listTx,
-							} as ListTxInBlockParams);
-						}
-						if (listMessageNeedAck.length > 0) {
-							this.redisClient.xAck(
-								Config.REDIS_STREAM_BLOCK_NAME,
-								Config.REDIS_STREAM_BLOCK_GROUP,
-								listMessageNeedAck,
-							);
-							this.redisClient.xDel(
-								Config.REDIS_STREAM_BLOCK_NAME,
-								listMessageNeedAck,
-							);
-						}
-					} catch (error) {
-						this.logger.error(error);
+					if (listBlockNeedSaveToDb.length > 0) {
+						this.handleListBlock(listBlockNeedSaveToDb);
 					}
-				});
-		} catch (error) {
-			this.logger.error(error);
-		}
+					if (listTx.length > 0) {
+						// this.broker.emit('list-transaction.created', {
+						// 	listTx: listTx,
+						// } as ListTxInBlockParams);
+						this.createJob(
+							'crawl.transaction',
+							{
+								listTx: listTx,
+							},
+							{
+								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
+							},
+						);
+					}
+					if (listMessageNeedAck.length > 0) {
+						this.redisClient.xAck(
+							Config.REDIS_STREAM_BLOCK_NAME,
+							Config.REDIS_STREAM_BLOCK_GROUP,
+							listMessageNeedAck,
+						);
+						this.redisClient.xDel(Config.REDIS_STREAM_BLOCK_NAME, listMessageNeedAck);
+					}
+				} catch (error) {
+					this.logger.error(error);
+				}
+			});
 	}
 
 	async handleListBlock(listBlock: IBlock[]) {
