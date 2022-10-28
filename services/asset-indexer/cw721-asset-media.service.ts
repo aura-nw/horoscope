@@ -243,7 +243,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				case MediaStatus.PENDING: {
 					await this.broker.call(
 						CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK,
-						{ uri, file_name, key, chainId: chain_id },
+						{ uri, file_name, type, key, chainId: chain_id },
 						OPTs,
 					);
 					break;

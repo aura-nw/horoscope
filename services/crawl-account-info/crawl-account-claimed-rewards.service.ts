@@ -20,7 +20,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		MSG_TYPE.MSG_REDELEGATE,
 		MSG_TYPE.MSG_UNDELEGATE,
 		MSG_TYPE.MSG_WITHDRAW_REWARDS,
-		MSG_TYPE.MSG_EXEC
+		MSG_TYPE.MSG_EXEC,
 	];
 
 	public constructor(public broker: ServiceBroker) {
@@ -107,38 +107,42 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		for (let tx of listTx) {
 			if (tx.tx_response.code !== 0) continue;
 
-			await Promise.all(tx.tx.body.messages.filter((msg: any) =>
-				this.listMessageAction.includes(msg['@type'])
-			).map(async (msg: any, index: any) => {
-				const userAddress = msg.delegator_address;
+			await Promise.all(
+				tx.tx.body.messages
+					.filter((msg: any) => this.listMessageAction.includes(msg['@type']))
+					.map(async (msg: any, index: any) => {
+						const userAddress = msg.delegator_address;
 
-				try {
-					if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
-						await Promise.all(msg.msgs.map(async (m: any) => {
-							let insertAcc = await this.handleStakeRewards(
-								m,
-								index,
-								tx.tx_response.logs,
-								userAddress,
-								chainId
-							);
-							if (insertAcc) listAccounts.push(insertAcc);
-						}))
-					} else {
-						let insertAcc = await this.handleStakeRewards(
-							msg,
-							index,
-							tx.tx_response.logs,
-							userAddress,
-							chainId
-						);
-						if (insertAcc) listAccounts.push(insertAcc);
-					}
-				} catch (error) {
-					this.logger.error(error);
-					throw error;
-				}
-			}));
+						try {
+							if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
+								await Promise.all(
+									msg.msgs.map(async (m: any) => {
+										let insertAcc = await this.handleStakeRewards(
+											m,
+											index,
+											tx.tx_response.logs,
+											userAddress,
+											chainId,
+										);
+										if (insertAcc) listAccounts.push(insertAcc);
+									}),
+								);
+							} else {
+								let insertAcc = await this.handleStakeRewards(
+									msg,
+									index,
+									tx.tx_response.logs,
+									userAddress,
+									chainId,
+								);
+								if (insertAcc) listAccounts.push(insertAcc);
+							}
+						} catch (error) {
+							this.logger.error(error);
+							throw error;
+						}
+					}),
+			);
 		}
 
 		try {
@@ -173,7 +177,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		index: any,
 		logs: any,
 		userAddress: string,
-		chainId: string
+		chainId: string,
 	) {
 		if (!userAddress) {
 			userAddress = msg.delegator_address;
@@ -234,9 +238,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				const redelegateClaimedReward = coinReceived.find(
 					(x: any) => x.key === CONST_CHAR.AMOUNT,
 				).value;
-				if (
-					Number(resultCallApi.validator.commission.commission_rates.rate) !== 1
-				) {
+				if (Number(resultCallApi.validator.commission.commission_rates.rate) !== 1) {
 					let srcAmount = '0';
 					try {
 						srcAmount = redelegateClaimedReward.match(/\d+/g)[0];
@@ -251,8 +253,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						account.account_claimed_rewards.find(
 							(x: any) => x.validator_address === valSrcAddress,
 						)!.amount = (
-							parseInt(srcReward.amount.toString(), 10) +
-							parseInt(srcAmount, 10)
+							parseInt(srcReward.amount.toString(), 10) + parseInt(srcAmount, 10)
 						).toString();
 					} else {
 						account.account_claimed_rewards.push({
@@ -276,8 +277,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						account.account_claimed_rewards.find(
 							(x: any) => x.validator_address === valDstAddress,
 						)!.amount = (
-							parseInt(dstReward.amount.toString(), 10) +
-							parseInt(dstAmount, 10)
+							parseInt(dstReward.amount.toString(), 10) + parseInt(dstAmount, 10)
 						).toString();
 					} else {
 						account.account_claimed_rewards.push({
@@ -303,8 +303,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						account.account_claimed_rewards.find(
 							(x: any) => x.validator_address === valDstAddress,
 						)!.amount = (
-							parseInt(dstReward.amount.toString(), 10) +
-							parseInt(dstAmount, 10)
+							parseInt(dstReward.amount.toString(), 10) + parseInt(dstAmount, 10)
 						).toString();
 					} else {
 						account.account_claimed_rewards.push({
@@ -353,9 +352,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				const log = logs[index];
 				const claimedRewardWithdraw = log.events
 					.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS)
-					.attributes.find(
-						(attr: any) => attr.key === CONST_CHAR.AMOUNT,
-					).value;
+					.attributes.find((attr: any) => attr.key === CONST_CHAR.AMOUNT).value;
 				let amountWithdraw = '0';
 				try {
 					amountWithdraw = claimedRewardWithdraw.match(/\d+/g)[0];
@@ -370,7 +367,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 					account.account_claimed_rewards.find(
 						(x: any) => x.validator_address === msg.validator_address,
 					)!.amount = (
-						parseInt(rewardWithdraw.amount.toString(), 10) + parseInt(amountWithdraw, 10)
+						parseInt(rewardWithdraw.amount.toString(), 10) +
+						parseInt(amountWithdraw, 10)
 					).toString();
 				} else {
 					account.account_claimed_rewards.push({
