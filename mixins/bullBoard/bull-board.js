@@ -5,11 +5,12 @@ const { createBullBoard } = require('@bull-board/api');
 const { BullAdapter } = require('@bull-board/api/bullAdapter');
 const { ExpressAdapter } = require('@bull-board/express');
 const { QueueConfig, queues } = require('../../config/queue');
+const { Config } = require('../../common');
 
 module.exports = {
   started() {
     const serverAdapter = new ExpressAdapter();
-    serverAdapter.setBasePath('/admin/queues');
+    serverAdapter.setBasePath(`/admin/queues/${Config.REDIS_DB_NUMBER}`);
     const {
       addQueue, removeQueue, setQueues, replaceQueues
     } = createBullBoard({
@@ -18,7 +19,7 @@ module.exports = {
     });
     
     this.addRoute({
-      path: '/admin/queues',
+      path: `/admin/queues/${Config.REDIS_DB_NUMBER}`,
       use: [serverAdapter.getRouter()]
     });
     let listQueues = queues.map(queue_name => {
