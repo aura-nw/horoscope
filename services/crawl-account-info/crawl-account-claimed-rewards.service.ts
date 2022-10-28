@@ -136,29 +136,35 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 					}
 				} catch (error) {
 					this.logger.error(error);
+					throw error;
 				}
 			}));
 		}
 
-		listAccounts.map((element) => {
-			if (element._id)
-				listUpdateQueries.push(
-					this.adapter.updateById(element._id, {
-						$set: { account_claimed_rewards: element.account_claimed_rewards },
-					}),
-				);
-			else {
-				const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-					element,
-					AccountInfoEntity,
-				);
-				item.custom_info = {
-					chain_id: chainId,
-					chain_name: chain ? chain.chainName : '',
-				};
-				listUpdateQueries.push(this.adapter.insert(item));
-			}
-		});
+		try {
+			listAccounts.map((element) => {
+				if (element._id)
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_claimed_rewards: element.account_claimed_rewards },
+						}),
+					);
+				else {
+					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
+						element,
+						AccountInfoEntity,
+					);
+					item.custom_info = {
+						chain_id: chainId,
+						chain_name: chain ? chain.chainName : '',
+					};
+					listUpdateQueries.push(this.adapter.insert(item));
+				}
+			});
+		} catch (error) {
+			this.logger.error(error);
+			throw error;
+		}
 		await Promise.all(listUpdateQueries);
 	}
 

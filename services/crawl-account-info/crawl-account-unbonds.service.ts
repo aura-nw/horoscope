@@ -95,6 +95,7 @@ export default class CrawlAccountUnbondsService extends Service {
 				let resultCallApi;
 				while (!done) {
 					resultCallApi = await this.callApiFromDomain(url, urlToCall);
+					if (!resultCallApi) throw new Error('Error when call LCD API');
 
 					listUnbonds.push(...resultCallApi.unbonding_responses);
 					if (resultCallApi.pagination.next_key === null) {
@@ -159,6 +160,7 @@ export default class CrawlAccountUnbondsService extends Service {
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
+			throw error;
 		}
 	}
 

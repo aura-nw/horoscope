@@ -92,6 +92,7 @@ export default class CrawlAccountBalancesService extends Service {
 				let resultCallApi;
 				while (!done) {
 					resultCallApi = await this.callApiFromDomain(url, urlToCall);
+					if (!resultCallApi) throw new Error('Error when call LCD API');
 
 					listBalances.push(...resultCallApi.balances);
 					if (resultCallApi.pagination.next_key === null) {
@@ -166,6 +167,7 @@ export default class CrawlAccountBalancesService extends Service {
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
+			throw error;
 		}
 	}
 
