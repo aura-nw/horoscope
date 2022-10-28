@@ -157,13 +157,19 @@ export default class CrawlAccountRedelegatesService extends Service {
 					listUpdateQueries.push(this.adapter.insert(item));
 				}
 			});
+			await Promise.all(listUpdateQueries);
+		} catch (error) {
+			this.logger.error(error);
+			throw error;
+		}
+		try {
+			listUpdateQueries = [];
 			listDelayJobs.map((element) => {
 				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', element));
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
-			throw error;
 		}
 	}
 
