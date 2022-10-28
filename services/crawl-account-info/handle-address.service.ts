@@ -134,7 +134,6 @@ export default class HandleAddressService extends Service {
 				this.logger.info(`${JSON.stringify(result)}`);
 			} catch (error) {
 				this.logger.error(`Account(s) already exists`);
-				throw error;
 			}
 			listUpdateInfo.map((item) => {
 				this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });
