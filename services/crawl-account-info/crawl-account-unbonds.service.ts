@@ -97,7 +97,8 @@ export default class CrawlAccountUnbondsService extends Service {
 					resultCallApi = await this.callApiFromDomain(url, urlToCall);
 					if (!resultCallApi) throw new Error('Error when call LCD API');
 
-					listUnbonds.push(...resultCallApi.unbonding_responses);
+					if (resultCallApi.unbonding_responses.length > 0)
+						listUnbonds.push(...resultCallApi.unbonding_responses);
 					if (resultCallApi.pagination.next_key === null) {
 						done = true;
 					} else {

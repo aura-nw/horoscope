@@ -93,7 +93,8 @@ export default class CrawlAccountDelegatesService extends Service {
 					resultCallApi = await this.callApiFromDomain(url, urlToCall);
 					if (!resultCallApi) throw new Error('Error when call LCD API');
 
-					listDelegates.push(...resultCallApi.delegation_responses);
+					if (resultCallApi.delegation_responses.length > 0)
+						listDelegates.push(...resultCallApi.delegation_responses);
 					if (resultCallApi.pagination.next_key === null) {
 						done = true;
 					} else {

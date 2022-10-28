@@ -96,7 +96,8 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 					resultCallApi = await this.callApiFromDomain(url, urlToCall);
 					if (!resultCallApi) throw new Error('Error when call LCD API');
 
-					listSpendableBalances.push(...resultCallApi.balances);
+					if (resultCallApi.balances.length > 0)
+						listSpendableBalances.push(...resultCallApi.balances);
 					if (resultCallApi.pagination.next_key === null) {
 						done = true;
 					} else {
