@@ -30,10 +30,10 @@ export default class CrawlAccountUnbondsService extends Service {
 			queues: {
 				'crawl.account-unbonds': {
 					concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_UNBONDS, 10),
-					process(job: Job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						this.handleJob(job.data.listAddresses, job.data.chainId);
+						await this.handleJob(job.data.listAddresses, job.data.chainId);
 						job.progress(100);
 						return true;
 					},

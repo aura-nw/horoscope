@@ -37,10 +37,10 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			queues: {
 				'crawl.account-claimed-rewards': {
 					concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_CLAIMED_REWARDS, 10),
-					process(job: Job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						this.handleJob(job.data.listTx, job.data.chainId);
+						await this.handleJob(job.data.listTx, job.data.chainId);
 						job.progress(100);
 						return true;
 					},

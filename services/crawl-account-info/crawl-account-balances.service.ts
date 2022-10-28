@@ -30,10 +30,10 @@ export default class CrawlAccountBalancesService extends Service {
 			queues: {
 				'crawl.account-balances': {
 					concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_BALANCES, 10),
-					process(job: Job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						this.handleJob(job.data.listAddresses, job.data.chainId);
+						await this.handleJob(job.data.listAddresses, job.data.chainId);
 						job.progress(100);
 						return true;
 					},
