@@ -17,10 +17,11 @@ import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from '@redis/client';
 import { CustomInfo } from 'entities/custom-info.entity';
-import { QueueConfig } from 'config/queue';
+import { QueueConfig } from '../../config/queue';
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
+const util = require('util');
 
 export interface IFeegrantData {
 	action: String,
@@ -124,7 +125,7 @@ export default class FeegrantTxHandler extends Service {
 								timestamp: tx.tx_response.timestamp,
 								amount: tx.tx.auth_info.fee.amount[0],
 								tx_hash: tx.tx_response.txhash,
-								expiration: message["expiration"],
+								expiration: message["allowance"]["expiration"],
 								type: message["allowance"]["@type"],
 								spend_limit,
 								custom_info: tx.custom_info,
@@ -266,7 +267,7 @@ export default class FeegrantTxHandler extends Service {
 							amount: tx.tx.auth_info.fee.amount[0] as Coin,
 							payer,
 							tx_hash: tx.tx_response.txhash,
-							expiration: message["expiration"],
+							expiration: message["allowance"]["expiration"],
 							type: message["allowance"]["@type"],
 							spend_limit: spend_limit,
 							custom_info: tx.custom_info,
@@ -312,6 +313,7 @@ export default class FeegrantTxHandler extends Service {
 		// update feegrant latest block
 		this.currentBlock = this.currentBlock + Config.BLOCK_PER_BATCH < latestBlock ? this.currentBlock + Config.BLOCK_PER_BATCH : latestBlock
 		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
+		this.logger.info(JSON.stringify(feegrantList))
 		return feegrantList;
 	}
 
@@ -320,7 +322,9 @@ export default class FeegrantTxHandler extends Service {
 		this.redisClient = await this.getRedisClient();
 		this.createJob(
 			'feegrant.tx-handle',
-			{},
+			{
+				chainId: Config.CHAIN_ID
+			},
 			{
 				removeOnComplete: true,
 				removeOnFail: {

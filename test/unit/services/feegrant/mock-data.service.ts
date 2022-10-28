@@ -1,4 +1,12 @@
+import { Types } from "mongoose"
+
 export const tx_use = {
+    "_id": 11,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
     "tx": {
         "body": {
             "messages": [
@@ -51,10 +59,10 @@ export const tx_use = {
         ]
     },
     "tx_response": {
-        "height": "1262554",
+        "height": 1262554,
         "txhash": "4CE66C589443419C4057326902C51DCC04B027A6AD52A1C1075E5555A15992BE",
         "codespace": "",
-        "code": 0,
+        "code": "0",
         "data": "0A1E0A1C2F636F736D6F732E62616E6B2E763162657461312E4D736753656E64",
         "raw_log": "[{\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"amount\",\"value\":\"1000ueaura\"}]},{\"type\":\"coin_spent\",\"attributes\":[{\"key\":\"spender\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"amount\",\"value\":\"1000ueaura\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.bank.v1beta1.MsgSend\"},{\"key\":\"sender\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"sender\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"amount\",\"value\":\"1000ueaura\"}]}]}]",
         "logs": [
@@ -387,6 +395,12 @@ export const tx_use = {
 }
 
 export const tx_create = {
+    "_id": 1,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
     "tx": {
         "body": {
             "messages": [
@@ -443,10 +457,10 @@ export const tx_create = {
         ]
     },
     "tx_response": {
-        "height": "1262689",
+        "height": 1262689,
         "txhash": "243EF2A1E124CFE103DA39270C5AC4B7C3E33C8741A04394B398BF91B8DAB8FC",
         "codespace": "",
-        "code": 0,
+        "code": "0",
         "data": "0A2C0A2A2F636F736D6F732E6665656772616E742E763162657461312E4D73674772616E74416C6C6F77616E6365",
         "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgGrantAllowance\"}]},{\"type\":\"set_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"grantee\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"}]}]}]",
         "logs": [
@@ -660,6 +674,12 @@ export const tx_create = {
 }
 
 export const tx_revoke = {
+    "_id": 10,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
     "tx": {
         "body": {
             "messages": [
@@ -706,10 +726,10 @@ export const tx_revoke = {
         ]
     },
     "tx_response": {
-        "height": "1262657",
+        "height": 1262657,
         "txhash": "F139DA992DFE6BFBBC29BFB93ED0981CF36A24ECC5325C0EBCF081C2A5E270DA",
         "codespace": "",
-        "code": 0,
+        "code": "0",
         "data": "0A2D0A2B2F636F736D6F732E6665656772616E742E763162657461312E4D73675265766F6B65416C6C6F77616E6365",
         "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgRevokeAllowance\"}]},{\"type\":\"revoke_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"grantee\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"}]}]}]",
         "logs": [
@@ -913,6 +933,12 @@ export const tx_revoke = {
 }
 
 export const tx_revoke_with_feegrant = {
+    "_id": 9,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
     "tx": {
         "body": {
             "messages": [
@@ -959,10 +985,10 @@ export const tx_revoke_with_feegrant = {
         ]
     },
     "tx_response": {
-        "height": "1338935",
+        "height": 1338935,
         "txhash": "94F41B7F641E7FE272F7ABFF5989C9BA3240EF848A44294245BD923C86536C7A",
         "codespace": "",
-        "code": 0,
+        "code": "0",
         "data": "0A2D0A2B2F636F736D6F732E6665656772616E742E763162657461312E4D73675265766F6B65416C6C6F77616E6365",
         "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgRevokeAllowance\"}]},{\"type\":\"revoke_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"grantee\",\"value\":\"aura18mlzkmmnuk4t44s52ulex070tc7xyrrmqu5ku2\"}]}]}]",
         "logs": [
@@ -1196,6 +1222,12 @@ export const tx_revoke_with_feegrant = {
 }
 
 export const tx_create_with_feegrant = {
+    "_id": 2,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
     "tx": {
         "body": {
             "messages": [
@@ -1252,10 +1284,10 @@ export const tx_create_with_feegrant = {
         ]
     },
     "tx_response": {
-        "height": "1293212",
+        "height": 1293212,
         "txhash": "37A071BC61D43DADBA617EB5E7D38BE0721DEE67AE129D456B74A4811E542495",
         "codespace": "",
-        "code": 0,
+        "code": "0",
         "data": "0A2C0A2A2F636F736D6F732E6665656772616E742E763162657461312E4D73674772616E74416C6C6F77616E6365",
         "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgGrantAllowance\"}]},{\"type\":\"set_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"grantee\",\"value\":\"aura18mlzkmmnuk4t44s52ulex070tc7xyrrmqu5ku2\"}]}]}]",
         "logs": [
@@ -1499,6 +1531,12 @@ export const tx_create_with_feegrant = {
 }
 
 export const tx_use_up = {
+    "_id": 12,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
     "tx": {
         "body": {
             "messages": [
@@ -1551,10 +1589,10 @@ export const tx_use_up = {
         ]
     },
     "tx_response": {
-        "height": "1292889",
+        "height": 1292889,
         "txhash": "E22F876F4AF7F5FCAE1DF631A62EC84F82951B385F936023D88C71A8EA7CA550",
         "codespace": "",
-        "code": 0,
+        "code": "0",
         "data": "0A1E0A1C2F636F736D6F732E62616E6B2E763162657461312E4D736753656E64",
         "raw_log": "[{\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"},{\"key\":\"amount\",\"value\":\"1000ueaura\"}]},{\"type\":\"coin_spent\",\"attributes\":[{\"key\":\"spender\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"amount\",\"value\":\"1000ueaura\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.bank.v1beta1.MsgSend\"},{\"key\":\"sender\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"},{\"key\":\"sender\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"amount\",\"value\":\"1000ueaura\"}]}]}]",
         "logs": [
@@ -1887,6 +1925,12 @@ export const tx_use_up = {
 }
 
 export const tx_create_but_existed = {
+    "_id": 3,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
     "tx": {
         "body": {
             "messages": [
@@ -1943,10 +1987,10 @@ export const tx_create_but_existed = {
         ]
     },
     "tx_response": {
-        "height": "1293608",
+        "height": 1293608,
         "txhash": "B38768A44F3C3ADD5B15A1560901569DB07A85443343FE5E64F850A1C8F50B66",
         "codespace": "sdk",
-        "code": 18,
+        "code": "18",
         "data": "",
         "raw_log": "failed to execute message; message index: 0: fee allowance already exists: invalid request",
         "logs": [],
@@ -2136,6 +2180,12 @@ export const tx_create_but_existed = {
 }
 
 export const tx_create_period = {
+    "_id": 4,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
     "tx": {
         "body": {
             "messages": [
@@ -2208,10 +2258,10 @@ export const tx_create_period = {
         ]
     },
     "tx_response": {
-        "height": "1596987",
+        "height": 1596987,
         "txhash": "DD4A1D1372E8E6C9F8290552A11FFC3998AD5854AC700C8E56EFC9BA1EDC5C8F",
         "codespace": "",
-        "code": 0,
+        "code": "0",
         "data": "0A2C0A2A2F636F736D6F732E6665656772616E742E763162657461312E4D73674772616E74416C6C6F77616E6365",
         "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgGrantAllowance\"}]},{\"type\":\"set_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"grantee\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"}]}]}]",
         "logs": [
@@ -2446,6 +2496,12 @@ export const tx_create_period = {
 }
 
 export const tx_create_period_contract = {
+    "_id": 5,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
     "tx": {
         "body": {
             "messages": [
@@ -2524,10 +2580,10 @@ export const tx_create_period_contract = {
         ]
     },
     "tx_response": {
-        "height": "1597028",
+        "height": 1597028,
         "txhash": "C46AC8D198D030F41C19DB4BE465E942CC5BD276F6BCDB3A2DDB7EFB2F6EC5C0",
         "codespace": "",
-        "code": 0,
+        "code": "0",
         "data": "0A2C0A2A2F636F736D6F732E6665656772616E742E763162657461312E4D73674772616E74416C6C6F77616E6365",
         "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgGrantAllowance\"}]},{\"type\":\"set_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"grantee\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"}]}]}]",
         "logs": [
@@ -2771,6 +2827,12 @@ export const tx_create_period_contract = {
 // grantee: aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr
 export const listTxFromPairGranterGrantee = {
     "tx_revoke": {
+        "_id": 13,
+        "indexes": {},
+        "custom_info": {
+            "chain_id": "euphoria-1",
+            "chain_name": "Aura Euphoria"
+        },
         "tx": {
             "body": {
                 "messages": [
@@ -2817,10 +2879,10 @@ export const listTxFromPairGranterGrantee = {
             ]
         },
         "tx_response": {
-            "height": "1612439",
+            "height": 1612439,
             "txhash": "BC2C321D5D7B13AFEE1C104D08B3B53703E11EEDE076CC5DC7483927E62BB195",
             "codespace": "",
-            "code": 0,
+            "code": "0",
             "data": "0A2D0A2B2F636F736D6F732E6665656772616E742E763162657461312E4D73675265766F6B65416C6C6F77616E6365",
             "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgRevokeAllowance\"}]},{\"type\":\"revoke_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"grantee\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"}]}]}]",
             "logs": [
@@ -3028,6 +3090,12 @@ export const listTxFromPairGranterGrantee = {
         }
     },
     "tx_create": {
+        "_id": 6,
+        "indexes": {},
+        "custom_info": {
+            "chain_id": "euphoria-1",
+            "chain_name": "Aura Euphoria"
+        },
         "tx": {
             "body": {
                 "messages": [
@@ -3084,10 +3152,10 @@ export const listTxFromPairGranterGrantee = {
             ]
         },
         "tx_response": {
-            "height": "1612470",
+            "height": 1612470,
             "txhash": "132A20FAECAF1A9D884F8C6BA9CA73139336A53655574F47DB7B6EC5ABA25020",
             "codespace": "",
-            "code": 0,
+            "code": "0",
             "data": "0A2C0A2A2F636F736D6F732E6665656772616E742E763162657461312E4D73674772616E74416C6C6F77616E6365",
             "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgGrantAllowance\"}]},{\"type\":\"set_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"grantee\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"}]}]}]",
             "logs": [
@@ -3305,6 +3373,12 @@ export const listTxFromPairGranterGrantee = {
         }
     },
     "tx_use": {
+        "_id": 14,
+        "indexes": {},
+        "custom_info": {
+            "chain_id": "euphoria-1",
+            "chain_name": "Aura Euphoria"
+        },
         "tx": {
             "body": {
                 "messages": [
@@ -3357,10 +3431,10 @@ export const listTxFromPairGranterGrantee = {
             ]
         },
         "tx_response": {
-            "height": "1612502",
+            "height": 1612502,
             "txhash": "9E4675728C45CC88F95A5A5E0B7017AFA30A9408573F014388DE1E2FBCD67D78",
             "codespace": "",
-            "code": 0,
+            "code": "0",
             "data": "0A1E0A1C2F636F736D6F732E62616E6B2E763162657461312E4D736753656E64",
             "raw_log": "[{\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"amount\",\"value\":\"300ueaura\"}]},{\"type\":\"coin_spent\",\"attributes\":[{\"key\":\"spender\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"},{\"key\":\"amount\",\"value\":\"300ueaura\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.bank.v1beta1.MsgSend\"},{\"key\":\"sender\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"sender\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"},{\"key\":\"amount\",\"value\":\"300ueaura\"}]}]}]",
             "logs": [
@@ -3697,6 +3771,12 @@ export const listTxFromPairGranterGrantee = {
         }
     },
     "tx_create_grant_but_existed": {
+        "_id": 7,
+        "indexes": {},
+        "custom_info": {
+            "chain_id": "euphoria-1",
+            "chain_name": "Aura Euphoria"
+        },
         "tx": {
             "body": {
                 "messages": [
@@ -3753,10 +3833,10 @@ export const listTxFromPairGranterGrantee = {
             ]
         },
         "tx_response": {
-            "height": "1612540",
+            "height": 1612540,
             "txhash": "BC4D4F7E1F78B17393A448876DD634F43DB7EC933A67684C8E3F077DAA35881B",
             "codespace": "sdk",
-            "code": 18,
+            "code": "18",
             "data": "",
             "raw_log": "failed to execute message; message index: 0: fee allowance already exists: invalid request",
             "logs": [],
@@ -3920,6 +4000,12 @@ export const listTxFromPairGranterGrantee = {
         }
     },
     "tx_use_up": {
+        "_id": 15,
+        "indexes": {},
+        "custom_info": {
+            "chain_id": "euphoria-1",
+            "chain_name": "Aura Euphoria"
+        },
         "tx": {
             "body": {
                 "messages": [
@@ -3972,10 +4058,10 @@ export const listTxFromPairGranterGrantee = {
             ]
         },
         "tx_response": {
-            "height": "1612569",
+            "height": 1612569,
             "txhash": "CB759540B027E376B1909913ED32C0140432711608DF1074EE017EAACC04B64F",
             "codespace": "",
-            "code": 0,
+            "code": "0",
             "data": "0A1E0A1C2F636F736D6F732E62616E6B2E763162657461312E4D736753656E64",
             "raw_log": "[{\"events\":[{\"type\":\"coin_received\",\"attributes\":[{\"key\":\"receiver\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"amount\",\"value\":\"300ueaura\"}]},{\"type\":\"coin_spent\",\"attributes\":[{\"key\":\"spender\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"},{\"key\":\"amount\",\"value\":\"300ueaura\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.bank.v1beta1.MsgSend\"},{\"key\":\"sender\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"},{\"key\":\"module\",\"value\":\"bank\"}]},{\"type\":\"transfer\",\"attributes\":[{\"key\":\"recipient\",\"value\":\"aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr\"},{\"key\":\"sender\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"},{\"key\":\"amount\",\"value\":\"300ueaura\"}]}]}]",
             "logs": [
@@ -4312,6 +4398,12 @@ export const listTxFromPairGranterGrantee = {
         }
     },
     "tx_create_with_feegrant": {
+        "_id": 8,
+        "indexes": {},
+        "custom_info": {
+            "chain_id": "euphoria-1",
+            "chain_name": "Aura Euphoria"
+        },
         "tx": {
             "body": {
                 "messages": [
@@ -4368,10 +4460,10 @@ export const listTxFromPairGranterGrantee = {
             ]
         },
         "tx_response": {
-            "height": "1612679",
+            "height": 1612679,
             "txhash": "3095A2646E2252275B7F10D9D92E4CDDBF1ED30B85CB6E8762F7F312123C2841",
             "codespace": "",
-            "code": 0,
+            "code": "0",
             "data": "0A2C0A2A2F636F736D6F732E6665656772616E742E763162657461312E4D73674772616E74416C6C6F77616E6365",
             "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgGrantAllowance\"}]},{\"type\":\"set_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"grantee\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"}]}]}]",
             "logs": [
@@ -4619,6 +4711,12 @@ export const listTxFromPairGranterGrantee = {
         }
     },
     "revoke_with_feegrant": {
+        "_id": 17,
+        "indexes": {},
+        "custom_info": {
+            "chain_id": "euphoria-1",
+            "chain_name": "Aura Euphoria"
+        },
         "tx": {
             "body": {
                 "messages": [
@@ -4665,10 +4763,10 @@ export const listTxFromPairGranterGrantee = {
             ]
         },
         "tx_response": {
-            "height": "1612708",
+            "height": 1612708,
             "txhash": "E66BFB84A4B09A8E04CC96A82C7E46F7F5881EF4229F08A61DBBDDAE3AE30E7A",
             "codespace": "",
-            "code": 0,
+            "code": "0",
             "data": "0A2D0A2B2F636F736D6F732E6665656772616E742E763162657461312E4D73675265766F6B65416C6C6F77616E6365",
             "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgRevokeAllowance\"}]},{\"type\":\"revoke_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el\"},{\"key\":\"grantee\",\"value\":\"aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr\"}]}]}]",
             "logs": [
