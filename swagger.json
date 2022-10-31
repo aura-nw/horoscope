@@ -7,32 +7,12 @@
     },
     "servers": [
         {
-            "url": "http://localhost:3000/api",
+            "url": "https://horoscope.aura.network/api",
             "description": "Horoscope "
-        },
-        {
-            "url": "https://lcd.dev.aura.network",
-            "description": "Aura devnet LCD"
-        },
-        {
-            "url": "https://lcd.serenity.aura.network",
-            "description": "Aura Serenity LCD"
-        },
-        {
-            "url": "https://lcd.theta.aura.network",
-            "description": "Theta Testnet LCD"
-        },
-        {
-            "url": "https://osmosistest-lcd.quickapi.com",
-            "description": "Osmosis Testnet LCD"
         },
         {
             "url": "https://lcd.osmosis.zone",
             "description": "Osmosis Mainnet LCD"
-        },
-        {
-            "url": "https://lcd.evmos.aura.network",
-            "description": "Evmos Testnet LCD"
         },
         {
             "url": "https://lcd.euphoria.aura.network",
@@ -68,18 +48,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     }
                 ],
                 "responses": {
@@ -443,19 +418,14 @@
                         "required": true,
                         "schema": {
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ],
                             "type": "string"
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     }
                 ],
                 "responses": {
@@ -653,18 +623,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -848,18 +813,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -1238,18 +1198,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -1411,7 +1366,7 @@
                                     },
                                     "chainId": {
                                         "type": "string",
-                                        "example": "aura-testnet",
+                                        "example": "euphoria-1",
                                         "description": "Chain Id of network"
                                     }
                                 }
@@ -1531,13 +1486,8 @@
                         "required": false,
                         "schema": {
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ],
                             "type": "string"
@@ -2091,18 +2041,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -2368,18 +2313,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -2590,18 +2530,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -2954,13 +2889,8 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -3080,18 +3010,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -3127,7 +3052,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -3255,18 +3180,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     }
                 ],
                 "responses": {
@@ -3433,18 +3353,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -3618,18 +3533,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -3920,18 +3830,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -4580,18 +4485,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -5139,18 +5039,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "aura-testnet"
+                        "example": "euphoria-1"
                     },
                     {
                         "in": "query",
@@ -5473,13 +5368,8 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -5603,7 +5493,7 @@
                                                                 "properties": {
                                                                     "chain_id": {
                                                                         "type": "string",
-                                                                        "example": "aura-testnet"
+                                                                        "example": "euphoria-1"
                                                                     },
                                                                     "chain_name": {
                                                                         "type": "string",
@@ -5699,13 +5589,8 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "aura-testnet",
-                                "serenity-testnet-001",
-                                "halo-testnet-001",
-                                "theta-testnet-001",
-                                "osmo-test-4",
-                                "evmos_9000-4",
                                 "euphoria-1",
+                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -5787,7 +5672,7 @@
                                                                 "properties": {
                                                                     "chain_id": {
                                                                         "type": "string",
-                                                                        "example": "aura-testnet"
+                                                                        "example": "euphoria-1"
                                                                     },
                                                                     "chain_name": {
                                                                         "type": "string",
@@ -14744,13 +14629,7 @@
                 "operationId": "CosmosTxV1Beta1Simulate",
                 "requestBody": {
                     "description": "SimulateRequest is the request type for the Service.Simulate\nRPC method.",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/cosmos.tx.v1beta1.SimulateRequest"
-                            }
-                        }
-                    },
+                    "content": {},
                     "required": true
                 },
                 "responses": {
@@ -14949,13 +14828,7 @@
                 "responses": {
                     "200": {
                         "description": "A successful response.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/cosmos.tx.v1beta1.GetTxsEventResponse"
-                                }
-                            }
-                        }
+                        "content": {}
                     },
                     "default": {
                         "description": "An unexpected error response.",
@@ -15275,13 +15148,7 @@
                 "responses": {
                     "200": {
                         "description": "A successful response.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/cosmos.tx.v1beta1.GetBlockWithTxsResponse"
-                                }
-                            }
-                        }
+                        "content": {}
                     },
                     "default": {
                         "description": "An unexpected error response.",
@@ -15336,13 +15203,7 @@
                 "responses": {
                     "200": {
                         "description": "A successful response.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/cosmos.tx.v1beta1.GetTxResponse"
-                                }
-                            }
-                        }
+                        "content": {}
                     },
                     "default": {
                         "description": "An unexpected error response.",
