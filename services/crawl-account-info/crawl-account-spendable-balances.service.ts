@@ -70,6 +70,8 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
+				this.logger.info(`Handle address: ${address}`);
+
 				let listSpendableBalances: any[] = [];
 
 				const param =

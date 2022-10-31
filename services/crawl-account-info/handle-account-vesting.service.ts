@@ -49,6 +49,8 @@ export default class HandleAccountVestingService extends Service {
 			},
 		});
 		continuousVestingAccounts.map(async (account: any) => {
+			this.logger.info(`Handle address: ${account.address}`);
+
 			if (
 				new Date(
 					parseInt(account.account_auth.result.value.base_vesting_account.end_time, 10) *

@@ -75,6 +75,8 @@ export default class CrawlAccountAuthInfoService extends Service {
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
+				this.logger.info(`Handle address: ${address}`);
+
 				const param = Config.GET_PARAMS_AUTH_INFO + `/${address}`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 

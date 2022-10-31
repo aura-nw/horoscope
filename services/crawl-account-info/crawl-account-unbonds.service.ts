@@ -71,6 +71,8 @@ export default class CrawlAccountUnbondsService extends Service {
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
+				this.logger.info(`Handle address: ${address}`);
+
 				let listUnbonds: UnbondingResponse[] = [];
 
 				const param =
