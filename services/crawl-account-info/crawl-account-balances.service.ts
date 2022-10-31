@@ -70,6 +70,8 @@ export default class CrawlAccountBalancesService extends Service {
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
+				this.logger.info(`Handle address: ${address}`);
+
 				let listBalances: any[] = [];
 
 				const param = Config.GET_PARAMS_BALANCE + `/${address}?pagination.limit=100`;

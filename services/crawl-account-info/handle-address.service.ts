@@ -80,6 +80,8 @@ export default class HandleAddressService extends Service {
 			'account-info.upsert-unbonds',
 		]);
 		if (listTx.length > 0) {
+			this.logger.info(`Handle Txs: ${JSON.stringify(listTx)}`);
+
 			for (const element of listTx) {
 				if (source == CONST_CHAR.CRAWL) {
 					// try {

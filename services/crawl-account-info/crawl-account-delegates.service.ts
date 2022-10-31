@@ -69,6 +69,8 @@ export default class CrawlAccountDelegatesService extends Service {
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
+				this.logger.info(`Handle address: ${address}`);
+
 				let listDelegates: DelegationResponse[] = [];
 
 				const param = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
