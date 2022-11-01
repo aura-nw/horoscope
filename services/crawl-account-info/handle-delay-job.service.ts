@@ -39,9 +39,15 @@ export default class HandleDelayJobService extends Service {
 	async handleJob() {
 		let listUpdateQueries: any[] = [];
 
-		let currentJobs: DelayJobEntity[] = await this.broker.call('v1.delay-job.findPendingJobs', {
-			chain_id: Config.CHAIN_ID,
-		});
+		let currentJobs: DelayJobEntity[];
+		try {
+			currentJobs = await this.broker.call('v1.delay-job.findPendingJobs', {
+				chain_id: Config.CHAIN_ID,
+			});
+		} catch (error) {
+			this.logger.error(error);
+			throw error;
+		}
 		currentJobs.map(async (job: any) => {
 			if (job.expire_time <= new Date().getTime()) {
 				switch (job.type) {
@@ -52,7 +58,7 @@ export default class HandleDelayJobService extends Service {
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
 							let oldRedelegates =
-									updateRedelegates.redelegation_responses[0].entries,
+								updateRedelegates.redelegation_responses[0].entries,
 								removeRedelegate = oldRedelegates.find(
 									(x: RedelegateEntry) =>
 										new Date(
@@ -212,13 +218,13 @@ export default class HandleDelayJobService extends Service {
 											.length,
 										10,
 									)) *
-									1000,
+								1000,
 							);
 							if (
 								newJobExpireTime.getTime() >=
 								new Date(
 									parseInt(updateInfo.account_auth.result.value.end_time, 10) *
-										1000,
+									1000,
 								).getTime()
 							)
 								listUpdateQueries.push(

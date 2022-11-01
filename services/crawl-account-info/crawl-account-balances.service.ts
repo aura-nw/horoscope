@@ -80,10 +80,16 @@ export default class CrawlAccountBalancesService extends Service {
 				if (network && network.databaseName) {
 					this.adapter.useDb(network.databaseName);
 				}
-				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
-					address,
-					'custom_info.chain_id': chainId,
-				});
+				let accountInfo: AccountInfoEntity;
+				try {
+					accountInfo = await this.adapter.findOne({
+						address,
+						'custom_info.chain_id': chainId,
+					});
+				} catch (error) {
+					this.logger.error(error);
+					throw error;
+				}
 				if (!accountInfo) {
 					accountInfo = {} as AccountInfoEntity;
 					accountInfo.address = address;
@@ -93,8 +99,12 @@ export default class CrawlAccountBalancesService extends Service {
 				let done = false;
 				let resultCallApi;
 				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, urlToCall);
-					if (!resultCallApi) throw new Error('Error when call LCD API');
+					try {
+						resultCallApi = await this.callApiFromDomain(url, param);
+					} catch (error) {
+						this.logger.error(error);
+						throw error;
+					}
 
 					if (resultCallApi.balances.length > 0)
 						listBalances.push(...resultCallApi.balances);
@@ -109,33 +119,48 @@ export default class CrawlAccountBalancesService extends Service {
 
 				if (listBalances) {
 					if (listBalances.length > 1) {
-						await Promise.all(
-							listBalances.map(async (balance) => {
-								if (balance.denom.startsWith('ibc/')) {
-									let hash = balance.denom.split('/')[1];
-									let ibcDenom: IBCDenomEntity = await this.broker.call(
+						await Promise.all(listBalances.map(async (balance) => {
+							if (balance.denom.startsWith('ibc/')) {
+								let hash = balance.denom.split('/')[1];
+								let ibcDenom: IBCDenomEntity;
+								try {
+									ibcDenom = await this.broker.call(
 										'v1.ibc-denom.getByHash',
 										{ hash: balance.denom, denom: '' },
 									);
-									if (ibcDenom) {
-										balance.denom = ibcDenom.denom;
-										balance.minimal_denom = ibcDenom.hash;
-									} else {
-										const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
-										let denomResult = await this.callApiFromDomain(
+								} catch (error) {
+									this.logger.error(error);
+									throw error;
+								}
+								if (ibcDenom) {
+									balance.denom = ibcDenom.denom;
+									balance.minimal_denom = ibcDenom.hash;
+								} else {
+									const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
+									let denomResult;
+									try {
+										denomResult = await this.callApiFromDomain(
 											url,
 											hashParam,
 										);
-										balance.minimal_denom = balance.denom;
-										balance.denom = denomResult.denom_trace.base_denom;
+									} catch (error) {
+										this.logger.error(error);
+										throw error;
+									}
+									balance.minimal_denom = balance.denom;
+									balance.denom = denomResult.denom_trace.base_denom;
+									try {
 										this.broker.call('v1.ibc-denom.addNewDenom', {
 											hash: `ibc/${hash}`,
 											denom: balance.denom,
 										});
+									} catch (error) {
+										this.logger.error(error);
+										throw error;
 									}
 								}
-							}),
-						);
+							}
+						}));
 					}
 					accountInfo.account_balances = listBalances;
 				}
