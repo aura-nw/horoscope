@@ -82,10 +82,16 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				if (network && network.databaseName) {
 					this.adapter.useDb(network.databaseName);
 				}
-				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
-					address,
-					'custom_info.chain_id': chainId,
-				});
+				let accountInfo: AccountInfoEntity;
+				try {
+					accountInfo = await this.adapter.findOne({
+						address,
+						'custom_info.chain_id': chainId,
+					});
+				} catch (error) {
+					this.logger.error(error);
+					throw error;
+				}
 				if (!accountInfo) {
 					accountInfo = {} as AccountInfoEntity;
 					accountInfo.address = address;
@@ -95,8 +101,12 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				let done = false;
 				let resultCallApi;
 				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, urlToCall);
-					if (!resultCallApi) throw new Error('Error when call LCD API');
+					try {
+						resultCallApi = await this.callApiFromDomain(url, param);
+					} catch (error) {
+						this.logger.error(error);
+						throw error;
+					}
 
 					if (resultCallApi.balances.length > 0)
 						listSpendableBalances.push(...resultCallApi.balances);

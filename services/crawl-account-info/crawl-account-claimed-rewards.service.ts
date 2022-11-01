@@ -111,7 +111,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 
 			await Promise.all(
 				tx.tx.body.messages
-					.filter((msg: any) => this.listMessageAction.includes(msg['@type']))
+					.filter((msg: any) => 
+						this.listMessageAction.includes(msg['@type']) && tx.tx_response.code === 0)
 					.map(async (msg: any, index: any) => {
 						const userAddress = msg.delegator_address;
 
