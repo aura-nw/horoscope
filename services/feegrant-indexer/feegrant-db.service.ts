@@ -128,7 +128,6 @@ export default class FeegrantDB extends Service {
                 }
             }
         }
-        console.log([...mapUpdate.entries()])
         const bulkUpdate = [] as any[]
         const listOriginalRecords = await this.adapter.find({
             query: {

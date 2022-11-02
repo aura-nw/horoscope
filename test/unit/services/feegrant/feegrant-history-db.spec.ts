@@ -165,11 +165,6 @@ describe('Test feegrant-history-db service', () => {
 
     it("Test add new actions to feegrant history DB", async () => {
         const results = await feegarntHistoryDbService.adapter.find({})
-        //@ts-ignore
-        console.log(JSON.stringify(results.map(result => {
-            return _.omit(result.toObject(), ["_id"])
-        }).sort(compare)));
-        // console.log(.sort(compare))
 
         //@ts-ignore
         expect(results.map(result => {
