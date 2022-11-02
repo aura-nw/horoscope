@@ -102,7 +102,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				let resultCallApi;
 				while (!done) {
 					try {
-						resultCallApi = await this.callApiFromDomain(url, param);
+						resultCallApi = await this.callApiFromDomain(url, urlToCall);
 					} catch (error) {
 						this.logger.error(error);
 						throw error;
