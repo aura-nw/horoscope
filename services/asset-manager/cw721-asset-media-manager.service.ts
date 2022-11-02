@@ -220,14 +220,27 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 								link_s3: result.linkS3,
 								content_type: result.contentType,
 							};
+							this.broker.call('v1.CW721-asset-manager.update', {
+								_id: CW721._id,
+								image: {
+									link_s3: result.linkS3,
+									content_type: result.contentType,
+								},
+							});
 						}
 						if (CW721.metadata.animation_url == sourceUri) {
 							CW721.animation = {
 								link_s3: result.linkS3,
 								content_type: result.contentType,
 							};
+							this.broker.call('v1.CW721-asset-manager.update', {
+								_id: CW721._id,
+								animation: {
+									link_s3: result.linkS3,
+									content_type: result.contentType,
+								},
+							});
 						}
-						this.broker.call(CW721_MANAGER_ACTION.UPSERT, CW721);
 						this.logger.info(CW721);
 					});
 				}

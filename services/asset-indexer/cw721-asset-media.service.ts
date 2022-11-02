@@ -234,14 +234,28 @@ export default class CrawlAssetService extends moleculer.Service {
 								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
 							};
+							this.broker.call('v1.CW721-asset-manager.update', {
+								_id: CW721._id,
+								image: {
+									link_s3: media[0].media_link,
+									content_type: media[0].content_type,
+								},
+							});
 						}
 						if (CW721.metadata.animation_url == sourceUri) {
 							CW721.animation = {
 								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
 							};
+							this.broker.call('v1.CW721-asset-manager.update', {
+								_id: CW721._id,
+								animation: {
+									link_s3: media[0].media_link,
+									content_type: media[0].content_type,
+								},
+							});
 						}
-						this.broker.call(CW721_MANAGER_ACTION.UPSERT, CW721);
+						// this.broker.call(CW721_MANAGER_ACTION.UPSERT, CW721);
 						this.logger.info(CW721);
 					});
 				}
