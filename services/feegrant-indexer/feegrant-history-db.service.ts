@@ -12,7 +12,7 @@ import { FEEGRANT_ACTION, FEEGRANT_STATUS, LIST_NETWORK } from '../../common/con
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbFeegrantHistoryMixin } from '../../mixins/dbMixinMongoose';
 import { IFeegrantData } from './feegrant-tx-handler.service';
-import { QueueConfig } from 'config/queue';
+import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
@@ -174,6 +174,7 @@ export default class CrawlAccountInfoService extends Service {
                             action: FEEGRANT_ACTION.USE,
                             origin_feegrant_txhash: null
                         } as FeegrantEntity
+                        record_payfee.result = true
                         record_payfee.type = ""
                         record_payfee.grantee = element.granter
                         record_payfee.granter = element.payer

@@ -38,12 +38,12 @@ const getDbInfo = (where: string, what: string, defaultValue: string) => {
 };
 
 const genericDbInfo = (where: string): DBInfo => ({
-	dialect: getDbInfo(where, 'DIALECT', 'local') as DBDialog,
+	dialect: process.env["NODE_ENV"] != "test" ? getDbInfo(where, 'DIALECT', 'local') as DBDialog : getDbInfo(where, 'TEST_DIALECT', 'local') as DBDialog,
 	user: getDbInfo(where, 'USER', ''),
 	password: getDbInfo(where, 'PASSWORD', ''),
 	host: getDbInfo(where, 'HOST', ''),
 	port: +getDbInfo(where, 'PORT', '0'),
-	dbname: getDbInfo(where, 'DBNAME', ''),
+	dbname: process.env["NODE_ENV"] != "test" ? getDbInfo(where, 'DBNAME', '') : getDbInfo(where, 'DBNAME_TEST', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),
 	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false'),
 	replicaSet: getDbInfo(where, 'REPLICA_SET', ''),
@@ -53,7 +53,7 @@ const genericDbInfo = (where: string): DBInfo => ({
 
 export default class ConfigClass {
 	public static NODE_ENV: string;
-	// public static IS_TEST = ConfigClass.NODE_ENV === 'test';
+	public static IS_TEST = ConfigClass.NODE_ENV === 'test';
 	// public static HOST = process.env.HOST || '0.0.0.0';
 	// public static PORT = +(process.env.PORT || 80);
 	// public static REQUEST_TIMEOUT = +(process.env.REQUEST_TIMEOUT || 10000);
