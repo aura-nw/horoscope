@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  
 }
 
 datasource db {
@@ -11,46 +12,26 @@ datasource db {
 }
 
 // DB models
-model account_auth {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  address     String     @db.String
-  account     Account?
+model account_info {
+  id                         String                 @id @default(auto()) @map("_id") @db.ObjectId
+  account_auth               Account
+  account_balances           Coin[]
+  account_delegations        DelegationResponse[]
+  account_redelegations      RedelegationResponse[]
+  account_spendable_balances Coin[]
+  account_unbonding          UnbondingResponse[]
+  account_claimed_rewards    Reward[]
+  custom_info                CustomInfo
+}
+
+model account_statistics {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  address     String
+  per_day     DailyStats[]
+  one_day     DailyStats
+  three_days  DailyStats
+  seven_days  DailyStats
   custom_info CustomInfo
-}
-
-model account_balances {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  address     String     @db.String
-  balances    Coin[]
-  custom_info CustomInfo
-}
-
-model account_delegations {
-  id                   String               @id @default(auto()) @map("_id") @db.ObjectId
-  address              String               @db.String
-  delegation_responses DelegationResponse[]
-  custom_info          CustomInfo
-}
-
-model account_redelegations {
-  id                     String                 @id @default(auto()) @map("_id") @db.ObjectId
-  address                String                 @db.String
-  redelegation_responses RedelegationResponse[]
-  custom_info            CustomInfo
-}
-
-model account_spendable_balances {
-  id                 String     @id @default(auto()) @map("_id") @db.ObjectId
-  address            String     @db.String
-  spendable_balances Coin[]
-  custom_info        CustomInfo
-}
-
-model account_unbonds {
-  id                  String              @id @default(auto()) @map("_id") @db.ObjectId
-  address             String              @db.String
-  unbonding_responses UnbondingResponse[]
-  custom_info         CustomInfo
 }
 
 model block {
@@ -77,32 +58,56 @@ model community_pool {
 }
 
 model cw20_asset {
-  id                String     @id @default(auto()) @map("_id") @db.ObjectId
-  asset_id          String?    @db.String
-  code_id           String?    @db.String
-  asset_info        Json?      @db.Json
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  asset_id         String?    @db.String
+  code_id          String?    @db.String
+  asset_info       Json?      @db.Json
   contract_address String?    @db.String
-  token_id          String?    @db.String
-  owner             String?    @db.String
-  balance           String?    @db.String
-  history           String[]
-  createdAt         DateTime?  @db.Timestamp
-  updatedAt         DateTime?  @db.Timestamp
-  custom_info       CustomInfo
+  token_id         String?    @db.String
+  owner            String?    @db.String
+  balance          String?    @db.String
+  history          String[]
+  createdAt        DateTime?  @db.Timestamp
+  updatedAt        DateTime?  @db.Timestamp
+  custom_info      CustomInfo
 }
 
 model cw721_asset {
-  id                String     @id @default(auto()) @map("_id") @db.ObjectId
-  asset_id          String?    @db.String
-  code_id           String?    @db.String
-  asset_info        Json?      @db.Json
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  asset_id         String?    @db.String
+  code_id          String?    @db.String
+  asset_info       Json?      @db.Json
   contract_address String?    @db.String
-  token_id          String?    @db.String
-  owner             String?    @db.String
-  history           String[]
-  createdAt         DateTime?  @db.Timestamp
-  updatedAt         DateTime?  @db.Timestamp
-  custom_info       CustomInfo
+  token_id         String?    @db.String
+  owner            String?    @db.String
+  history          String[]
+  createdAt        DateTime?  @db.Timestamp
+  updatedAt        DateTime?  @db.Timestamp
+  custom_info      CustomInfo
+}
+
+model daily_tx_statistics {
+  id                     String     @id @default(auto()) @map("_id") @db.ObjectId
+  daily_txs              Int        @db.Int
+  daily_active_addresses Int        @db.Int
+  unique_addresses       Int        @db.Int
+  date                   DateTime?  @db.Timestamp
+  custom_info            CustomInfo
+}
+
+model delay_job {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  content     Json       @db.Json
+  type        String     @db.String
+  expire_time DateTime   @db.Timestamp
+  indexes     String     @db.String
+  custom_info CustomInfo
+}
+
+model ibc_denom {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  hash  String @db.String
+  denom String @db.String
 }
 
 model inflation {
@@ -141,6 +146,18 @@ model proposal {
   custom_info        CustomInfo
 }
 
+model smart_contracts {
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  height           Int        @db.Int
+  code_id          Int        @db.Int
+  contract_name    String     @db.String
+  contract_address String     @db.String
+  creator_address  String     @db.String
+  contract_hash    String     @db.String
+  tx_hash          String     @db.String
+  custom_info      CustomInfo
+}
+
 model supply {
   id          String     @id @default(auto()) @map("_id") @db.ObjectId
   supply      Coin[]
@@ -171,7 +188,18 @@ model validator {
   custom_info           CustomInfo
 }
 
-// AccountAuth type
+model vote {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  voter_address String     @db.String
+  proposal_id   Int        @db.Int
+  answer        String     @db.String
+  txhash        String     @db.String
+  timestamp     DateTime   @db.Timestamp
+  height        Int        @db.Int
+  custom_info   CustomInfo
+}
+
+// AccountInfo type
 type Account {
   height String?        @db.String
   result AccountResult?
@@ -194,7 +222,6 @@ type AccountPubKey {
   value String? @db.String
 }
 
-// AccountDelegations type
 type Delegation {
   delegator_address String? @db.String
   validator_address String? @db.String
@@ -206,7 +233,6 @@ type DelegationResponse {
   balance    Coin?
 }
 
-// AccountRedelegations type
 type RedelegationEntry {
   creation_height String? @db.String
   completion_time String? @db.String
@@ -231,7 +257,6 @@ type RedelegationResponse {
   entries      RedelegateEntry[]
 }
 
-// AccountUnbonds type
 type UndelegateEntry {
   creation_height String? @db.String
   completion_time String? @db.String
@@ -243,6 +268,25 @@ type UnbondingResponse {
   delegator_address String?           @db.String
   validator_address String?           @db.String
   entries           UndelegateEntry[]
+}
+
+type Reward {
+  validator_address String
+  amount            String
+  denom             String
+}
+
+// AccountStatistics type
+type DailyStats {
+  total_sent_tx         Stats
+  total_received_tx     Stats
+  total_sent_amount     Stats
+  total_received_amount Stats
+}
+
+type Stats {
+  amount     Int
+  percentage Float
 }
 
 // Block type
