@@ -64,7 +64,7 @@ export default class WebsocketService extends Service {
 				},
 			},
 			settings: {
-				port: 3003,
+				port: 3000,
 				io: {
 					options: {}, //socket.io options
 					namespaces: {

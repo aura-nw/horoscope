@@ -30,10 +30,10 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 			queues: {
 				'crawl.account-spendable-balances': {
 					concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_SPENDABLE_BALANCES, 10),
-					process(job: Job) {
+					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						this.handleJob(job.data.listAddresses, job.data.chainId);
+						await this.handleJob(job.data.listAddresses, job.data.chainId);
 						job.progress(100);
 						return true;
 					},
@@ -70,6 +70,8 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
+				this.logger.info(`Handle address: ${address}`);
+
 				let listSpendableBalances: any[] = [];
 
 				const param =
@@ -80,10 +82,16 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				if (network && network.databaseName) {
 					this.adapter.useDb(network.databaseName);
 				}
-				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
-					address,
-					'custom_info.chain_id': chainId,
-				});
+				let accountInfo: AccountInfoEntity;
+				try {
+					accountInfo = await this.adapter.findOne({
+						address,
+						'custom_info.chain_id': chainId,
+					});
+				} catch (error) {
+					this.logger.error(error);
+					throw error;
+				}
 				if (!accountInfo) {
 					accountInfo = {} as AccountInfoEntity;
 					accountInfo.address = address;
@@ -93,10 +101,15 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				let done = false;
 				let resultCallApi;
 				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, urlToCall);
-					if (!resultCallApi) throw new Error('Error when call LCD API');
+					try {
+						resultCallApi = await this.callApiFromDomain(url, param);
+					} catch (error) {
+						this.logger.error(error);
+						throw error;
+					}
 
-					listSpendableBalances.push(...resultCallApi.balances);
+					if (resultCallApi.balances.length > 0)
+						listSpendableBalances.push(...resultCallApi.balances);
 					if (resultCallApi.pagination.next_key === null) {
 						done = true;
 					} else {

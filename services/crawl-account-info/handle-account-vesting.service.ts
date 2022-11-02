@@ -3,7 +3,6 @@ import { Job } from 'bull';
 import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
 import { URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from '../../common/constant';
-import { AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { Coin } from 'entities/coin.entity';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
@@ -23,7 +22,6 @@ export default class HandleAccountVestingService extends Service {
 				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
-				this.callApiMixin,
 			],
 			queues: {
 				'handle.account-continuous-vesting': {
@@ -42,17 +40,25 @@ export default class HandleAccountVestingService extends Service {
 
 	async handleContinuousVestingJob() {
 		let listUpdateQueries: any[] = [];
-		let continuousVestingAccounts = await this.adapter.find({
-			query: {
-				'account_auth.result.type': VESTING_ACCOUNT_TYPE.CONTINUOUS,
-				'custom_info.chain_id': Config.CHAIN_ID,
-			},
-		});
+		let continuousVestingAccounts;
+		try {
+			continuousVestingAccounts = await this.adapter.find({
+				query: {
+					'account_auth.result.type': VESTING_ACCOUNT_TYPE.CONTINUOUS,
+					'custom_info.chain_id': Config.CHAIN_ID,
+				},
+			});
+		} catch (error) {
+			this.logger.error(error);
+			throw error;
+		}
 		continuousVestingAccounts.map(async (account: any) => {
+			this.logger.info(`Handle address: ${account.address}`);
+
 			if (
 				new Date(
 					parseInt(account.account_auth.result.value.base_vesting_account.end_time, 10) *
-						1000,
+					1000,
 				).getTime() >= new Date().getTime()
 			) {
 				let listSpendableBalances: Coin[] = [];
@@ -65,10 +71,15 @@ export default class HandleAccountVestingService extends Service {
 				let done = false;
 				let resultCallApi;
 				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, urlToCall);
-					if (!resultCallApi) throw new Error('Error when call LCD API');
+					try {
+						resultCallApi = await this.callApiFromDomain(url, urlToCall);
+					} catch (error) {
+						this.logger.error(error);
+						throw error;
+					}
 
-					listSpendableBalances.push(...resultCallApi.balances);
+					if (resultCallApi.balances.length > 0)
+						listSpendableBalances.push(...resultCallApi.balances);
 					if (resultCallApi.pagination.next_key === null) {
 						done = true;
 					} else {
@@ -81,7 +92,13 @@ export default class HandleAccountVestingService extends Service {
 				listUpdateQueries.push(this.adapter.updateById(account._id, account));
 			}
 		});
-		await Promise.all(listUpdateQueries);
+
+		try {
+			await Promise.all(listUpdateQueries);
+		} catch (error) {
+			this.logger.error(error);
+			throw error;
+		}
 	}
 
 	async _start() {
