@@ -105,64 +105,84 @@ export const transactionMongoModel = (collection: string): unknown => {
 	schema.index({ 'tx_response.height': 1, 'custom_info.chain_id': 1 });
 	schema.index({ 'tx_response.height': -1, 'custom_info.chain_id': 1 });
 
-	// schema.index(
-	// 	{ 'indexes.delegate_validator': 1 },
-	// 	{ name: 'delegate_validator_asc', sparse: true },
-	// );
-	// schema.index(
-	// 	{ 'indexes.execute__contract_address': 1 },
-	// 	{ name: 'execute_smart_contract_asc', sparse: true },
-	// );
-	// schema.index(
-	// 	{ 'indexes.proposal_deposit_proposal_id': 1 },
-	// 	{ name: 'instantiate_code_id_asc', sparse: true },
-	// );
-	// schema.index(
-	// 	{ 'indexes.instantiate__contract_address': 1 },
-	// 	{ name: 'instantiate_contract_address_asc', sparse: true },
-	// );
-	// schema.index({ 'indexes.message_action': 1 }, { name: 'message_action', sparse: true });
-	// schema.index(
-	// 	{ 'indexes.proposal_vote_proposal_id': 1 },
-	// 	{ name: 'proposal_vote_proposal_id_asc', sparse: true },
-	// );
-	// schema.index(
-	// 	{ 'indexes.proposal_vote_proposal_option': 1 },
-	// 	{ name: 'proposal_vote_proposal_option_asc', sparse: true },
-	// );
-	// schema.index(
-	// 	{ 'indexes.redelegate_destination_validator': 1 },
-	// 	{ name: 'redelegate_destination_asc', sparse: true },
-	// );
-	// schema.index(
-	// 	{ 'indexes.redelegate_source_validator': 1 },
-	// 	{ name: 'redelegate_source_asc', sparse: true },
-	// );
-	// schema.index(
-	// 	{ 'indexes.send_packet_packet_sequence': 1 },
-	// 	{ name: 'send_packet_packet_sequence_asc', sparse: true },
-	// );
-	// schema.index(
-	// 	{ 'indexes.store_code_code_id': 1 },
-	// 	{ name: 'store_code_code_id_asc', sparse: true },
-	// );
-	// schema.index(
-	// 	{ 'indexes.submit_proposal_proposal_id': 1 },
-	// 	{ name: 'submit_proposal_asc', sparse: true },
-	// );
-	// schema.index({ 'indexes.delegate_validator': 1 }, { sparse: true });
-	// schema.index({ 'indexes.execute__contract_address': 1 }, { sparse: true });
-	// schema.index({ 'indexes.proposal_deposit_proposal_id': 1 }, { sparse: true });
-	// schema.index({ 'indexes.delegate_validator': 1 }, { sparse: true });
-	// schema.index({ 'indexes.execute__contract_address': 1 }, { sparse: true });
-	// schema.index({ 'indexes.proposal_deposit_proposal_id': 1 }, { sparse: true });
-	// schema.index({ 'indexes.delegate_validator': 1 }, { sparse: true });
-	// schema.index({ 'indexes.execute__contract_address': 1 }, { sparse: true });
-	// schema.index({ 'indexes.proposal_deposit_proposal_id': 1 }, { sparse: true });
-	// schema.index({
-	// 	'custom_info.chain_id': 1,
-	// 	'tx_response.events.type': 1,
-	// 	'tx_response.events.attributes.key': 1,
-	// });
+	schema.index(
+		{ 'indexes.delegate_validator': 1 },
+		{ name: 'delegate_validator_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.execute__contract_address': 1 },
+		{ name: 'execute_smart_contract_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.proposal_deposit_proposal_id': 1 },
+		{ name: 'proposal_deposit_proposal_id_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.instantiate__contract_address': 1 },
+		{ name: 'instantiate_contract_address_asc', sparse: true },
+	);
+	schema.index({ 'indexes.message_action': 1 }, { name: 'message_action', sparse: true });
+	schema.index(
+		{ 'indexes.proposal_vote_proposal_id': 1 },
+		{ name: 'proposal_vote_proposal_id_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.proposal_vote_proposal_option': 1 },
+		{ name: 'proposal_vote_proposal_option_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.redelegate_destination_validator': 1 },
+		{ name: 'redelegate_destination_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.redelegate_source_validator': 1 },
+		{ name: 'redelegate_source_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.send_packet_packet_sequence': 1 },
+		{ name: 'send_packet_packet_sequence_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.store_code_code_id': 1 },
+		{ name: 'store_code_code_id_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.submit_proposal_proposal_id': 1 },
+		{ name: 'submit_proposal_proposal_id_asc', sparse: true },
+	);
+	schema.index({ 'indexes.message_sender': 1 }, { name: 'message_sender_asc', sparse: true });
+
+	schema.index(
+		{ 'indexes.recv_packet_packet_sequence': 1 },
+		{ name: 'recv_packet_packet_sequence_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.timeout_packet_packet_sequence': 1 },
+		{ name: 'timeout_packet_packet_sequence_asc', sparse: true },
+	);
+	schema.index(
+		{ 'indexes.transfer_recipient': 1 },
+		{ name: 'transfer_recipient_asc', sparse: true },
+	);
+	schema.index({ 'indexes.transfer_sender': 1 }, { name: 'transfer_sender_asc', sparse: true });
+
+	schema.index({ 'indexes.unbond_validator': 1 }, { name: 'unbond_validator_asc', sparse: true });
+	schema.index(
+		{ 'indexes.acknowledge_packet_packet_sequence': 1 },
+		{ name: 'acknowledge_packet_packet_sequence_asc', sparse: true },
+	);
+	schema.index({ 'indexes.wasm_action': 1 }, { name: 'wasm_action_asc', sparse: true });
+	schema.index(
+		{ 'indexes.wasm__contract_address': 1 },
+		{ name: 'wasm__contract_address_asc', sparse: true },
+	);
+	schema.index({ 'indexes.wasm_owner': 1 }, { name: 'wasm_owner_asc', sparse: true });
+	schema.index({ 'indexes.wasm_recipient': 1 }, { name: 'wasm_recipient_asc', sparse: true });
+	schema.index({ 'indexes.wasm_spender': 1 }, { name: 'wasm_spender_asc', sparse: true });
+	schema.index(
+		{ 'indexes.withdraw_rewards_validator': 1 },
+		{ name: 'withdraw_rewards_validator_asc', sparse: true },
+	);
+
 	return models[collection] || model(collection, schema);
 };

@@ -175,6 +175,7 @@ export class Common {
 		media_link_key: String,
 		tokenInfo: CW721AssetInfo,
 		chainId: String,
+		metadata: Object,
 	) {
 		let network = LIST_NETWORK.find((item) => item.chainId === chainId);
 		return {
@@ -192,6 +193,7 @@ export class Common {
 				chain_name: network?.chainName,
 			},
 			is_burned: false,
+			metadata: metadata,
 		};
 	};
 	public static createCW20AssetObject = function (

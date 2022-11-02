@@ -119,19 +119,19 @@ export const VOTE_MANAGER_ACTION = {
 };
 
 export const CW20_MANAGER_ACTION = {
-	FIND: 'v1.cw20-asset-manager.act-find',
-	COUNT: 'v1.cw20-asset-manager.act-count',
-	INSERT: 'v1.cw20-asset-manager.act-insert',
-	LIST: 'v1.cw20-asset-manager.act-list',
-	UPSERT: 'v1.cw20-asset-manager.act-upsert',
+	FIND: 'v1.CW20-asset-manager.act-find',
+	COUNT: 'v1.CW20-asset-manager.act-count',
+	INSERT: 'v1.CW20-asset-manager.act-insert',
+	LIST: 'v1.CW20-asset-manager.act-list',
+	UPSERT: 'v1.CW20-asset-manager.act-upsert',
 };
 
 export const CW721_MANAGER_ACTION = {
-	FIND: 'v1.cw721-asset-manager.act-find',
-	COUNT: 'v1.cw721-asset-manager.act-count',
-	INSERT: 'v1.cw721-asset-manager.act-insert',
-	LIST: 'v1.cw721-asset-manager.act-list',
-	UPSERT: 'v1.cw721-asset-manager.act-upsert',
+	FIND: 'v1.CW721-asset-manager.act-find',
+	COUNT: 'v1.CW721-asset-manager.act-count',
+	INSERT: 'v1.CW721-asset-manager.act-insert',
+	LIST: 'v1.CW721-asset-manager.act-list',
+	UPSERT: 'v1.CW721-asset-manager.act-upsert',
 };
 
 export const CW721_MEDIA_MANAGER_ACTION = {
@@ -317,4 +317,9 @@ export const TOP_ACCOUNT_STATS_FIELD = {
 	TXS_RECEIVED: 'TXS_RECEIVED',
 	AMOUNT_SENT: 'AMOUNT_SENT',
 	AMOUNT_RECEIVED: 'AMOUNT_RECEIVED',
+};
+
+export const CW721_FIELD = {
+	IMAGE: 'IMAGE',
+	ANIMATION: 'ANIMATION',
 };

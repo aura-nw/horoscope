@@ -177,7 +177,7 @@ Select server LCD if use Legacy API`,
 										'utf8',
 									);
 								}
-								// else {
+								//  else {
 								// 	schema = readFileSync('./swagger.json');
 								// }
 							} catch (err) {

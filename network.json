@@ -9,7 +9,7 @@
 		   "https://lcd.dev.aura.network"
 		],
 		"prefixAddress":"aura",
-		"databaseName":"horoscope_dev_auratestnet"
+		"databaseName":"local_auratestnet"
 	},
 	{
 		"chainName":"Aura Serenity",
@@ -21,7 +21,7 @@
 		   "https://lcd.serenity.aura.network"
 		],
 		"prefixAddress":"aura",
-		"databaseName":"horoscope_dev_serenitytestnet001"
+		"databaseName":"local_serenitytestnet001"
 	},
 	{
 		"chainName":"Theta Testnet",
@@ -33,7 +33,7 @@
 			"https://lcd.theta.aura.network"
 		],
 		"prefixAddress":"cosmos",
-		"databaseName":"horoscope_dev_thetatestnet001"
+		"databaseName":"local_thetatestnet001"
 	},
 	{
 		"chainName":"Osmosis Testnet",
@@ -45,7 +45,7 @@
 			"https://osmosistest-lcd.quickapi.com"
 		],
 		"prefixAddress":"osmo",
-		"databaseName":"horoscope_dev_osmotest4"
+		"databaseName":"local_osmotest4"
 
 	},
 	{
@@ -58,7 +58,7 @@
 			"https://lcd.osmosis.zone"
 		],
 		"prefixAddress":"osmo",
-		"databaseName":"horoscope_dev_osmosis1"
+		"databaseName":"local_osmosis1"
 	},
 	{
 		"chainName":"Evmos Testnet",
@@ -70,7 +70,7 @@
 			"https://lcd.evmos.aura.network"
 		],
 		"prefixAddress":"evmos",
-		"databaseName":"horoscope_dev_evmos90004"
+		"databaseName":"local_evmos90004"
 	},
 	{
 		"chainName":"Aura Euphoria",
@@ -82,7 +82,7 @@
 		   "https://lcd.euphoria.aura.network"
 		],
 		"prefixAddress":"aura",
-		"databaseName":"horoscope_dev_euphoria1"
+		"databaseName":"local_euphoria1"
 	},
 	{
 		"chainName":"Cosmos Mainnet",
@@ -94,6 +94,6 @@
 		   "https://cosmos-lcd.quickapi.com"
 		],
 		"prefixAddress":"cosmos",
-		"databaseName":"horoscope_dev_cosmoshub4"
+		"databaseName":"local_cosmoshub4"
 	}
 ]
