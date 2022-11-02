@@ -231,13 +231,13 @@ export default class CrawlAssetService extends moleculer.Service {
 					listFoundCW721.map((CW721: CW721AssetEntity) => {
 						if (CW721.metadata.image == sourceUri) {
 							CW721.image = {
-								link_s3: media[0].link_s3,
+								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
 							};
 						}
 						if (CW721.metadata.animation_url == sourceUri) {
 							CW721.animation = {
-								link_s3: media[0].link_s3,
+								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
 							};
 						}

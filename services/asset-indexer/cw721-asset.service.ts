@@ -280,11 +280,11 @@ export default class CrawlAssetService extends moleculer.Service {
 				metadata,
 			);
 
-			this.logger.debug('insert new asset: ', JSON.stringify(asset));
 			const resultInsert: any = await this.broker.call(
 				`v1.CW721-asset-manager.act-${type_enrich}`,
 				asset,
 			);
+			this.logger.debug('insert new asset: ', JSON.stringify(resultInsert));
 			// const assetId = resultInsert._id.toString();
 			try {
 				if (animationLink) {
@@ -297,7 +297,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						media_link_key,
 						chain_id,
 						field: CW721_FIELD.ANIMATION,
-						cw721_id: resultInsert._id.toString(),
+						cw721_id: resultInsert._id,
 					});
 				}
 				if (imageLink) {
@@ -310,7 +310,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						media_link_key,
 						chain_id,
 						field: CW721_FIELD.IMAGE,
-						cw721_id: resultInsert._id.toString(),
+						cw721_id: resultInsert._id,
 					});
 				}
 			} catch (error) {
