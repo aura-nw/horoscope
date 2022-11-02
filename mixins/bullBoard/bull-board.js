@@ -10,7 +10,7 @@ const { LIST_NETWORK } = require('../../common/constant');
 
 module.exports = {
   started() {
-    LIST_NETWORK.map((e) => {
+    LIST_NETWORK.filter((e) => e.redisDbNumber).map((e) => {
       const serverAdapter = new ExpressAdapter();
       serverAdapter.setBasePath(`/admin/queues/${e.chainId}`);
       const {

@@ -1,14 +1,7 @@
+import { ICW721Media } from '../entities/cw721-media-link.entity';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
-
-export interface ICW721Media {
-	_id: ObjectIdNull;
-	key: String;
-	media_link: String;
-	status: String;
-	content_type: String;
-}
 
 export enum MediaStatus {
 	PENDING = 'PENDING',
@@ -22,6 +15,10 @@ const definition: definitionType<ICW721Media> = (collection?: string) => ({
 	key: {
 		type: String,
 		unique: true,
+		index: true,
+	},
+	source: {
+		type: String,
 		index: true,
 	},
 	media_link: String,
@@ -47,5 +44,9 @@ export const cw721MediaMongoModel = (collection: string): unknown => {
 		// strict: true
 	});
 	schema.index({ updatedAt: -1 });
+	//@ts-ignore
+	schema.index({ 'metadata.image': 1 }, { name: 'metadata_image_asc', sparse: true });
+	//@ts-ignore
+	schema.index({ 'metadata.animation_url': 1 }, { name: 'metadata_image_asc', sparse: true });
 	return models[collection] || model(collection, schema);
 };
