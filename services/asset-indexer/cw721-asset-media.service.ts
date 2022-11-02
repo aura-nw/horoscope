@@ -32,6 +32,7 @@ const GET_MEDIA_LINK_PREFIX = 'get_media_link';
 import { QueueConfig } from '../../config/queue';
 import { Job } from 'bull';
 import { CW721AssetEntity } from '../../entities/cw721-asset.entity';
+import { ObjectId } from 'bson';
 const QueueService = require('moleculer-bull');
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -218,13 +219,13 @@ export default class CrawlAssetService extends moleculer.Service {
 				OPTs,
 			);
 		} else {
+			let queryAssetCW721: any = {};
+			queryAssetCW721['_id'] = new ObjectId(cw721_id);
 			if (media[0].status == MediaStatus.COMPLETED) {
 				let listFoundCW721: CW721AssetEntity[] = await this.broker.call(
 					CW721_MANAGER_ACTION.FIND,
 					{
-						query: {
-							_id: cw721_id,
-						},
+						query: queryAssetCW721,
 					},
 				);
 				if (listFoundCW721 && listFoundCW721.length > 0) {
