@@ -99,7 +99,7 @@ export default class FeegrantDB extends Service {
                 const tmp_amount = mapUpdate.get(e.origin_feegrant_txhash)?.amount + parseInt(e.amount.amount.toString())
                 const tmp_status = mapUpdate.get(e.origin_feegrant_txhash)?.status
 
-                mapUpdate.set(e.tx_hash, {
+                mapUpdate.set(e.origin_feegrant_txhash, {
                     amount: tmp_amount,
                     //@ts-ignore
                     status: tmp_status
@@ -128,6 +128,7 @@ export default class FeegrantDB extends Service {
                 }
             }
         }
+        console.log([...mapUpdate.entries()])
         const bulkUpdate = [] as any[]
         const listOriginalRecords = await this.adapter.find({
             query: {
