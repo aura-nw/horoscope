@@ -59,6 +59,7 @@ export default class CronjobUpdateOriginalGrant extends Service {
             })
             query["$or"] = queryOr
             query["status"] = FEEGRANT_STATUS.AVAILABLE
+            query["result"] = true
             // find grant for each distinctPairGranterGrantee
             const listOriginalFeegrant = await this.broker.call('v1.db-feegrant.find', {
                 query
@@ -69,8 +70,12 @@ export default class CronjobUpdateOriginalGrant extends Service {
             // construct bulk update origin_feegrant_txhash for each unprocess action
             listUnprocess.forEach(e => {
                 // e 's original feegrant
-                const originalFeegrant = listOriginalFeegrant.find(x => x.grantee === e.grantee && x.granter === e.granter && x.timestamp.getTime() < e.timestamp.getTime())
-                if (originalFeegrant) {
+                // each unprocessed action: find original by looking up feegrant which has timestamp is max of all less than or equal its timestamp
+                const suspiciousFeegrants = listOriginalFeegrant.filter(x => x.grantee === e.grantee && x.granter === e.granter && x.timestamp.getTime() < e.timestamp.getTime())
+                if (suspiciousFeegrants.length > 0) {
+                    const originalFeegrant = suspiciousFeegrants.reduce((prev, current) => {
+                        return prev.timestamp.getTime() > current.timestamp.getTime() ? prev : current
+                    })
                     e.origin_feegrant_txhash = originalFeegrant.tx_hash
                     listUpdateFeegrantDb.push(e)
                     bulkUpdate.push({
@@ -78,7 +83,6 @@ export default class CronjobUpdateOriginalGrant extends Service {
                             filter: { _id: e._id },
                             update: {
                                 $set: {
-                                    'type': originalFeegrant.type,
                                     'origin_feegrant_txhash': originalFeegrant.tx_hash,
                                 },
                             },
@@ -104,19 +108,21 @@ export default class CronjobUpdateOriginalGrant extends Service {
     }
 
     async _start() {
-        this.createJob(
-            'cronjob.update-origin-grant',
-            {},
-            {
-                removeOnComplete: true,
-                removeOnFail: {
-                    count: 10,
+        if (process.env["NODE_ENV"] != "test") {
+            this.createJob(
+                'cronjob.update-origin-grant',
+                {},
+                {
+                    removeOnComplete: true,
+                    removeOnFail: {
+                        count: 10,
+                    },
+                    repeat: {
+                        every: parseInt(Config.MILISECOND_PER_BATCH, 10),
+                    },
                 },
-                repeat: {
-                    every: parseInt(Config.MILISECOND_PER_BATCH, 10),
-                },
-            },
-        );
+            );
+        }
 
         this.getQueue('cronjob.update-origin-grant').on('completed', (job: Job) => {
             this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);

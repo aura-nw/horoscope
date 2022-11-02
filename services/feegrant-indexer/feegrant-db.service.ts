@@ -156,19 +156,21 @@ export default class FeegrantDB extends Service {
 
 
     async _start() {
-        this.createJob(
-            'feegrant-check-expire.db',
-            {},
-            {
-                removeOnComplete: true,
-                removeOnFail: {
-                    count: 10,
+        if (process.env["NODE_ENV"] != "test") {
+            this.createJob(
+                'feegrant-check-expire.db',
+                {},
+                {
+                    removeOnComplete: true,
+                    removeOnFail: {
+                        count: 10,
+                    },
+                    repeat: {
+                        every: parseInt(Config.MILISECOND_CHECK_EXPIRE, 10),
+                    },
                 },
-                repeat: {
-                    every: parseInt(Config.MILISECOND_CHECK_EXPIRE, 10),
-                },
-            },
-        );
+            );
+        }
         this.getQueue('feegrant.db').on('completed', (job: Job) => {
             this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
         });
