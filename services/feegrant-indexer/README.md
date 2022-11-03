@@ -13,7 +13,7 @@
 ## Filter feegrant transactions
 
 | **Type transaction**	| **Action**                          | **Status**                                      |
-|:---------------------:|:---------------------------------------:|:---------------------------------------:|
+|---------------------|---------------------------------------|---------------------------------------|
 |create|create|Available|
 |use|use|Available|
 |revoke|revoke|Revoked|
@@ -35,7 +35,7 @@
 | timestamp | String | action's time |
 | spend_limit | amount: String<br>denom: String | allowance limit |
 |expiration| String | allowance expiration|
-| amount | amount: String<br>denom: String | if<br>create: spend_limit<br>use: fee in transaction<br>useup: feegrant fee in transaction<br>revoke: null<br>_create: spend_limit<br>_revoke: null|
+| amount | amount: String<br>denom: String | if action is: <br>create: spend_limit<br>use: fee in transaction<br>useup: feegrant fee in transaction<br>revoke: null<br>_create: spend_limit<br>_revoke: null|
 | status | String | feegrant status|
 | action | String |action: create, use, useup, revoke, _create, _revoke|
 |custom_info| customInfoModel | chain info |
