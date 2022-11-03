@@ -32,7 +32,7 @@ import { Resolvers, TypeDefs } from '../../types/graphql/schema';
         }),
     ],
     settings: {
-        port: Config.PORT || 3000,
+        port: 3003,
         // API Gateway route options
         routeOptions: {
             path: "/graphql",

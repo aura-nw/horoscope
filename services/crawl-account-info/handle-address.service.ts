@@ -91,7 +91,7 @@ export default class HandleAddressService extends Service {
 								.map((e: any) => e.attributes).map((e: any) =>
 									e.filter((x: any) => x.key === CONST_CHAR.RECEIVER || x.key === CONST_CHAR.SPENDER
 									).map((x: any) => x.value)).flat();
-							listAddresses.push(...event);
+							if (event) listAddresses.push(...event);
 						} catch (error) {
 							this.logger.error(error);
 							throw error;
