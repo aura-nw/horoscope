@@ -101,6 +101,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 
 	async handleJob(listTx: any[], chainId: string) {
 		this.logger.info(`Handle Txs: ${JSON.stringify(listTx)}`);
+		if (listTx.length === 0) return;
 
 		let listAccounts: AccountInfoEntity[] = [],
 			listUpdateQueries: any[] = [];
