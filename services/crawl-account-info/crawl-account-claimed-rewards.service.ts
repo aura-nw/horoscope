@@ -6,14 +6,12 @@ import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../co
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
-import RedisMixin from '../../mixins/redis/redis.mixin';
 import { QueueConfig } from '../../config/queue';
 import { Utils } from '../../utils/utils';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
-	private redisMixin = new RedisMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
 	private listMessageAction = [
 		MSG_TYPE.MSG_DELEGATE,
@@ -32,7 +30,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
-				this.redisMixin,
 			],
 			queues: {
 				'crawl.account-claimed-rewards': {
@@ -90,6 +87,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								removeOnFail: {
 									count: 10,
 								},
+								timeout: 600000
 							},
 						);
 						return;
@@ -186,10 +184,16 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		if (!userAddress) {
 			userAddress = msg.delegator_address;
 		}
-		let account: AccountInfoEntity = await this.adapter.findOne({
-			address: userAddress,
-			'custom_info.chain_id': chainId,
-		});
+		let account: AccountInfoEntity;
+		try {
+			account = await this.adapter.findOne({
+				address: userAddress,
+				'custom_info.chain_id': chainId,
+			});
+		} catch (error) {
+			this.logger.error(error);
+			throw error;
+		}
 		if (!account) {
 			account = {} as AccountInfoEntity;
 			account.address = userAddress;
@@ -238,7 +242,13 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 
 				const paramValidator = Config.GET_VALIDATOR + valSrcAddress;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-				let resultCallApi = await this.callApiFromDomain(url, paramValidator);
+				let resultCallApi;
+				try {
+					resultCallApi = await this.callApiFromDomain(url, paramValidator);
+				} catch (error) {
+					this.logger.error(error);
+					throw error;
+				}
 				const redelegateClaimedReward = coinReceived.find(
 					(x: any) => x.key === CONST_CHAR.AMOUNT,
 				).value;
@@ -389,7 +399,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 	}
 
 	async _start() {
-		this.redisClient = await this.getRedisClient();
 		this.getQueue('crawl.account-claimed-rewards').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
