@@ -101,79 +101,79 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 
 	async handleJob(listTx: any[], chainId: string) {
 		this.logger.info(`Handle Txs: ${JSON.stringify(listTx)}`);
-		if (listTx.length === 0) return;
+		if (listTx.length > 0) {
+			let listAccounts: AccountInfoEntity[] = [],
+				listUpdateQueries: any[] = [];
+			chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
+			const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
+			for (let tx of listTx) {
+				if (tx.tx_response.code !== 0) continue;
 
-		let listAccounts: AccountInfoEntity[] = [],
-			listUpdateQueries: any[] = [];
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		for (let tx of listTx) {
-			if (tx.tx_response.code !== 0) continue;
+				await Promise.all(
+					tx.tx.body.messages
+						.filter((msg: any) =>
+							this.listMessageAction.includes(msg['@type']) && tx.tx_response.code === 0)
+						.map(async (msg: any, index: any) => {
+							const userAddress = msg.delegator_address;
 
-			await Promise.all(
-				tx.tx.body.messages
-					.filter((msg: any) => 
-						this.listMessageAction.includes(msg['@type']) && tx.tx_response.code === 0)
-					.map(async (msg: any, index: any) => {
-						const userAddress = msg.delegator_address;
-
-						try {
-							if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
-								await Promise.all(
-									msg.msgs.map(async (m: any) => {
-										let insertAcc = await this.handleStakeRewards(
-											m,
-											index,
-											tx.tx_response.logs,
-											userAddress,
-											chainId,
-										);
-										if (insertAcc) listAccounts.push(insertAcc);
-									}),
-								);
-							} else {
-								let insertAcc = await this.handleStakeRewards(
-									msg,
-									index,
-									tx.tx_response.logs,
-									userAddress,
-									chainId,
-								);
-								if (insertAcc) listAccounts.push(insertAcc);
+							try {
+								if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
+									await Promise.all(
+										msg.msgs.map(async (m: any) => {
+											let insertAcc = await this.handleStakeRewards(
+												m,
+												index,
+												tx.tx_response.logs,
+												userAddress,
+												chainId,
+											);
+											if (insertAcc) listAccounts.push(insertAcc);
+										}),
+									);
+								} else {
+									let insertAcc = await this.handleStakeRewards(
+										msg,
+										index,
+										tx.tx_response.logs,
+										userAddress,
+										chainId,
+									);
+									if (insertAcc) listAccounts.push(insertAcc);
+								}
+							} catch (error) {
+								this.logger.error(error);
+								throw error;
 							}
-						} catch (error) {
-							this.logger.error(error);
-							throw error;
-						}
-					}),
-			);
-		}
-
-		try {
-			listAccounts.map((element) => {
-				if (element._id)
-					listUpdateQueries.push(
-						this.adapter.updateById(element._id, {
-							$set: { account_claimed_rewards: element.account_claimed_rewards },
 						}),
-					);
-				else {
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-						element,
-						AccountInfoEntity,
-					);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: chain ? chain.chainName : '',
-					};
-					listUpdateQueries.push(this.adapter.insert(item));
-				}
-			});
-		} catch (error) {
-			this.logger.error(error);
-			throw error;
+				);
+			}
+
+			try {
+				listAccounts.map((element) => {
+					if (element._id)
+						listUpdateQueries.push(
+							this.adapter.updateById(element._id, {
+								$set: { account_claimed_rewards: element.account_claimed_rewards },
+							}),
+						);
+					else {
+						const item: AccountInfoEntity = new JsonConvert().deserializeObject(
+							element,
+							AccountInfoEntity,
+						);
+						item.custom_info = {
+							chain_id: chainId,
+							chain_name: chain ? chain.chainName : '',
+						};
+						listUpdateQueries.push(this.adapter.insert(item));
+					}
+				});
+			} catch (error) {
+				this.logger.error(error);
+				throw error;
+			}
+			await Promise.all(listUpdateQueries);
 		}
-		await Promise.all(listUpdateQueries);
 	}
 
 	async handleStakeRewards(
