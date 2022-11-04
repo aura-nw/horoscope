@@ -91,6 +91,10 @@ export default class HandleAddressService extends Service {
 								.map((e: any) => e.attributes).map((e: any) =>
 									e.filter((x: any) => x.key === CONST_CHAR.RECEIVER || x.key === CONST_CHAR.SPENDER
 									).map((x: any) => x.value)).flat();
+							event = event.filter((e: string) =>
+								e.startsWith('aura') || e.startsWith('cosmos')
+								|| e.startsWith('evmos') || e.startsWith('osmo')
+							);
 							if (event) listAddresses.push(...event);
 						} catch (error) {
 							this.logger.error(error);
