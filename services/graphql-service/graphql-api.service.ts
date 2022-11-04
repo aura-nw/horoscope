@@ -24,12 +24,6 @@ import { Resolvers, TypeDefs } from '../../types/graphql/schema';
         ApolloService({
             typeDefs: TypeDefs,
             resolvers: Resolvers,
-            // API Gateway route options
-            routeOptions: {
-                path: "/graphql",
-                cors: true,
-                mappingPolicy: "restrict",
-            },
 
             // https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
             serverOptions: {
@@ -38,7 +32,13 @@ import { Resolvers, TypeDefs } from '../../types/graphql/schema';
         }),
     ],
     settings: {
-        port: Config.PORT || 3000,
+        port: 3003,
+        // API Gateway route options
+        routeOptions: {
+            path: "/graphql",
+            cors: true,
+            mappingPolicy: "restrict",
+        },
     }
 })
 export default class GraphQLApiService extends moleculer.Service {

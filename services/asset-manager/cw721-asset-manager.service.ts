@@ -163,7 +163,9 @@ export default class CW721AssetManagerService extends moleculer.Service {
 				item.contract_address != asset.contract_address ||
 				item.token_id != asset.token_id ||
 				item.owner != asset.owner ||
-				item.is_burned != asset.is_burned
+				item.is_burned != asset.is_burned ||
+				item.image != asset.image ||
+				item.animation != asset.animation
 			) {
 				await this.adapter.updateById(item._id, asset);
 			}

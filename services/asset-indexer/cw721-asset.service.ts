@@ -15,6 +15,7 @@ import {
 	ENRICH_TYPE,
 	CONTRACT_TYPE,
 	LIST_NETWORK,
+	CW721_FIELD,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
@@ -233,15 +234,19 @@ export default class CrawlAssetService extends moleculer.Service {
 
 			let imageLink = null;
 			let metadata = null;
+			let animationLink = null;
 			if (tokenInfo.data.info.extension) {
 				metadata = tokenInfo.data.info.extension;
 				if (tokenInfo.data.info.extension.image) {
 					imageLink = tokenInfo.data.info.extension.image;
 				}
+				if (tokenInfo.data.info.extension.animation_url) {
+					animationLink = tokenInfo.data.info.extension.animation_url;
+				}
 			}
 
 			try {
-				// if has token uri
+				// if has token uri, download and validate schema
 				if (tokenInfo.data.info.token_uri) {
 					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(
 						tokenInfo.data.info.token_uri,
@@ -264,23 +269,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				// this.logger.error(error);
 			}
 
-			try {
-				if (imageLink) {
-					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(imageLink);
-					this.broker.emit('CW721-media.get-media-link', {
-						uri,
-						type,
-						file_name,
-						media_link_key,
-						chain_id,
-						metadata,
-					});
-				}
-			} catch (error) {
-				this.logger.error('Cannot get media link');
-				this.logger.error(error);
-			}
-
+			//create a record to save cw721
 			const asset = Common.createCW721AssetObject(
 				code_id,
 				address,
@@ -288,9 +277,46 @@ export default class CrawlAssetService extends moleculer.Service {
 				media_link_key,
 				tokenInfo,
 				chain_id,
+				metadata,
 			);
-			this.logger.debug('insert new asset: ', JSON.stringify(asset));
-			this.broker.call(`v1.CW721-asset-manager.act-${type_enrich}`, asset, OPTs);
+
+			const resultInsert: any = await this.broker.call(
+				`v1.CW721-asset-manager.act-${type_enrich}`,
+				asset,
+			);
+			this.logger.debug('insert new asset: ', JSON.stringify(resultInsert));
+			// const assetId = resultInsert._id.toString();
+			try {
+				if (animationLink) {
+					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(animationLink);
+					this.broker.emit('CW721-media.get-media-link', {
+						sourceUri: animationLink,
+						uri,
+						type,
+						file_name,
+						media_link_key,
+						chain_id,
+						field: CW721_FIELD.ANIMATION,
+						cw721_id: resultInsert._id,
+					});
+				}
+				if (imageLink) {
+					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(imageLink);
+					this.broker.emit('CW721-media.get-media-link', {
+						sourceUri: imageLink,
+						uri,
+						type,
+						file_name,
+						media_link_key,
+						chain_id,
+						field: CW721_FIELD.IMAGE,
+						cw721_id: resultInsert._id,
+					});
+				}
+			} catch (error) {
+				this.logger.error('Cannot get media link');
+				this.logger.error(error);
+			}
 		}
 	}
 

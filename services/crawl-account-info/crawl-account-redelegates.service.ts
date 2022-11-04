@@ -69,6 +69,10 @@ export default class CrawlAccountRedelegatesService extends Service {
 			listDelayJobs: DelayJobEntity[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
+		listAddresses = listAddresses.filter((addr: string) =>
+			addr.startsWith('aura') || addr.startsWith('cosmos')
+			|| addr.startsWith('evmos') || addr.startsWith('osmo')
+		);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
 				this.logger.info(`Handle address: ${address}`);
@@ -103,7 +107,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 				let resultCallApi;
 				while (!done) {
 					try {
-						resultCallApi = await this.callApiFromDomain(url, param);
+						resultCallApi = await this.callApiFromDomain(url, urlToCall);
 					} catch (error) {
 						this.logger.error(error);
 						throw error;

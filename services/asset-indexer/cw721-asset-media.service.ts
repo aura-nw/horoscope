@@ -10,7 +10,12 @@ import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { MediaStatus } from '../../model/cw721-asset-media.model';
 import { Config } from '../../common';
 import { Types } from 'mongoose';
-import { CONTRACT_TYPE, CW721_MEDIA_MANAGER_ACTION } from '../../common/constant';
+import {
+	CONTRACT_TYPE,
+	CW721_FIELD,
+	CW721_MANAGER_ACTION,
+	CW721_MEDIA_MANAGER_ACTION,
+} from '../../common/constant';
 import { QueryOptions } from 'moleculer-db';
 import { Common } from './common.service';
 // import { RedisClientType, commandOptions } from '@redis/client';
@@ -26,6 +31,8 @@ const GET_MEDIA_LINK_PREFIX = 'get_media_link';
 
 import { QueueConfig } from '../../config/queue';
 import { Job } from 'bull';
+import { CW721AssetEntity } from '../../entities/cw721-asset.entity';
+import { ObjectId } from 'bson';
 const QueueService = require('moleculer-bull');
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -47,9 +54,10 @@ const QueueService = require('moleculer-bull');
 				const media_link_key = job.data.media_link_key;
 				const chain_id = job.data.chain_id;
 				const type = job.data.type;
-				const metadata = job.data.metadata;
-				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${media_link_key}`;
-
+				const cacheKey = job.data.cacheKey;
+				const field = job.data.field;
+				const sourceUri = job.data.sourceUri;
+				const cw721_id = job.data.cw721_id;
 				job.progress(10);
 				// @ts-ignore
 				// await this.getMediaLink(uri, type, file_name, media_link_key, chain_id);
@@ -69,12 +77,14 @@ const QueueService = require('moleculer-bull');
 						try {
 							// @ts-ignore
 							await this.getMediaLink(
+								sourceUri,
 								uri,
 								type,
 								file_name,
 								media_link_key,
 								chain_id,
-								metadata,
+								field,
+								cw721_id,
 							);
 						} catch (error) {
 							// @ts-ignore
@@ -106,8 +116,10 @@ const QueueService = require('moleculer-bull');
 				const media_link_key = ctx.params.media_link_key;
 				const chain_id = ctx.params.chain_id;
 				const type = ctx.params.type;
-				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${media_link_key}`;
-				const metadata = ctx.params.metadata;
+				const field = ctx.params.field;
+				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${type}_${field}_${media_link_key}`;
+				const cw721_id = ctx.params.cw721_id;
+				const sourceUri = ctx.params.sourceUri;
 				// @ts-ignore
 				// this.logger.info("this.broker.cacher",util.inspect(this.broker.cacher));
 				// @ts-ignore
@@ -117,35 +129,7 @@ const QueueService = require('moleculer-bull');
 					media_link_key,
 					CONTRACT_TYPE.CW721,
 				);
-				// test create job without redlock
-				// try {
-				// 	// @ts-ignore
-				// 	// await this.getMediaLink(uri, file_name, media_link_key);
 
-				// 	//@ts-ignore
-				// 	this.createJob(
-				// 		'get-media-link',
-				// 		{
-				// 			uri,
-				// 			file_name,
-				// 			media_link_key,
-				// 			chain_id,
-				// 			cacheKey,
-				// 		},
-				// 		{
-				// 			removeOnComplete: true,
-				// 			removeOnFail: {
-				// 				count: 3,
-				// 			},
-				// 		},
-				// 	);
-				// } catch (error) {
-				// 	// @ts-ignore
-				// 	this.logger.error('create job getMediaLink error', media_link_key, error);
-				// }
-
-				// // @ts-ignore
-				// await this.getMediaLink(uri, file_name, media_link_key, chain_id);
 				// @ts-ignore
 				const processingFlag = (await this.broker.cacher?.get(cacheKey)) ? true : false;
 
@@ -170,7 +154,9 @@ const QueueService = require('moleculer-bull');
 									media_link_key,
 									chain_id,
 									cacheKey,
-									metadata,
+									cw721_id,
+									field,
+									sourceUri: sourceUri,
 								},
 								{
 									removeOnComplete: true,
@@ -188,7 +174,7 @@ const QueueService = require('moleculer-bull');
 						// @ts-ignore
 						await this.broker.cacher?.del(cacheKey);
 						// @ts-ignore
-						await locked();
+						// await locked();
 						// @ts-ignore
 						// this.logger.info('getMediaLink locked', media_link_key);
 						// await this.unlock(cacheKey);
@@ -204,73 +190,119 @@ const QueueService = require('moleculer-bull');
 })
 export default class CrawlAssetService extends moleculer.Service {
 	async getMediaLink(
+		sourceUri: string,
 		uri: string,
 		type: string,
 		file_name: string,
 		key: string,
 		chain_id: string,
-		metadata: string,
+		field: string,
+		cw721_id: string,
 	) {
 		this.logger.info('getMediaLink', uri, file_name, key);
-		let query: QueryOptions = { key, 'custom_info.chain_id': chain_id };
-		const media: any[] = await this.broker.call(
-			CW721_MEDIA_MANAGER_ACTION.FIND,
-			{ query },
-			OPTs,
-		);
+		let query: QueryOptions = { 'custom_info.chain_id': chain_id, source: sourceUri };
+		const media: any[] = await this.broker.call(CW721_MEDIA_MANAGER_ACTION.FIND, { query });
 		this.logger.debug('media', media);
 
 		if (media.length === 0) {
-			await this.broker.call(
-				CW721_MEDIA_MANAGER_ACTION.INSERT,
-				{
-					_id: new Types.ObjectId(),
-					key,
-					media_link: '',
-					status: MediaStatus.HANDLING,
-					chainId: chain_id,
-					metadata,
-				},
-				OPTs,
-			);
+			await this.broker.call(CW721_MEDIA_MANAGER_ACTION.INSERT, {
+				_id: new Types.ObjectId(),
+				key,
+				source: sourceUri,
+				media_link: '',
+				status: MediaStatus.HANDLING,
+				chainId: chain_id,
+			});
 			await this.broker.call(
 				CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK,
-				{ uri, file_name, type, key, chainId: chain_id },
+				{ uri, file_name, type, key, chainId: chain_id, field, sourceUri },
 				OPTs,
 			);
 		} else {
-			switch (media[0].status) {
-				case MediaStatus.PENDING: {
-					await this.broker.call(
-						CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK,
-						{ uri, file_name, type, key, chainId: chain_id },
-						OPTs,
-					);
-					break;
+			let queryAssetCW721: any = {};
+			queryAssetCW721['_id'] = new ObjectId(cw721_id);
+			if (media[0].status == MediaStatus.COMPLETED) {
+				let listFoundCW721: CW721AssetEntity[] = await this.broker.call(
+					CW721_MANAGER_ACTION.FIND,
+					{
+						query: queryAssetCW721,
+					},
+				);
+				if (listFoundCW721 && listFoundCW721.length > 0) {
+					listFoundCW721.map((CW721: CW721AssetEntity) => {
+						this.logger.debug('CW721 update: ', JSON.stringify(CW721));
+						if (CW721?.metadata?.image == sourceUri) {
+							CW721.image = {
+								link_s3: media[0].media_link,
+								content_type: media[0].content_type,
+							};
+							// this.broker.call('v1.CW721-asset-manager.update', {
+							// 	_id: CW721._id,
+							// 	image: {
+							// 		link_s3: media[0].media_link,
+							// 		content_type: media[0].content_type,
+							// 	},
+							// });
+						}
+						if (CW721?.metadata?.animation_url == sourceUri) {
+							CW721.animation = {
+								link_s3: media[0].media_link,
+								content_type: media[0].content_type,
+							};
+
+							// this.broker.call('v1.CW721-asset-manager.update', {
+							// 	_id: CW721._id,
+							// 	animation: {
+							// 		link_s3: media[0].media_link,
+							// 		content_type: media[0].content_type,
+							// 	},
+							// });
+						}
+						this.broker.call(CW721_MANAGER_ACTION.UPSERT, CW721);
+						this.logger.info(CW721);
+					});
 				}
-				case MediaStatus.COMPLETED:
-					// do nothing
-					break;
-				case MediaStatus.HANDLING:
-					// do nothing
-					break;
-				case MediaStatus.ERROR:
-					// do nothing
-					break;
 			}
 		}
+
+		// if (media.length === 0) {
+		// 	await this.broker.call(CW721_MEDIA_MANAGER_ACTION.INSERT, {
+		// 		_id: new Types.ObjectId(),
+		// 		key,
+		// 		source: sourceUri,
+		// 		media_link: '',
+		// 		status: MediaStatus.HANDLING,
+		// 		chainId: chain_id,
+		// 	});
+		// 	await this.broker.call(
+		// 		CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK,
+		// 		{ uri, file_name, type, key, chainId: chain_id, field, sourceUri },
+		// 		OPTs,
+		// 	);
+		// } else {
+		// 	switch (media[0].status) {
+		// 		case MediaStatus.PENDING: {
+		// 			await this.broker.call(
+		// 				CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK,
+		// 				{ uri, file_name, type, key, chainId: chain_id, field, sourceUri },
+		// 				OPTs,
+		// 			);
+		// 			break;
+		// 		}
+		// 		case MediaStatus.COMPLETED:
+		// 			// do nothing
+		// 			break;
+		// 		case MediaStatus.HANDLING:
+		// 			// do nothing
+		// 			break;
+		// 		case MediaStatus.ERROR:
+		// 			// do nothing
+		// 			break;
+		// 	}
+		// }
 	}
 
 	async _start(): Promise<void> {
-		// let uri =
-		// 	'ipfs://bafybeid6su5bvoiah5e5nree7p53kjoti3x6hcjmoql4guhvb25njxe52i/mohamed-nohassi-odxB5oIG_iA-unsplash.jpg';
-		// let key = Common.getKeyFromUri(uri);
-		// let result = await Common.handleUri(key[0], key[1]);
-		// this.logger.info('result: ', result);
-
-		// let urlGetListToken = `contract/address/smart/${toBase64(
-		// 	toUtf8(`{"all_tokens":{"limit":100}}`),
-		// )}`;
 		this.getQueue('CW721-media.get-media-link').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

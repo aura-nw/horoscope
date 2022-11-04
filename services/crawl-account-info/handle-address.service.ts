@@ -91,7 +91,11 @@ export default class HandleAddressService extends Service {
 								.map((e: any) => e.attributes).map((e: any) =>
 									e.filter((x: any) => x.key === CONST_CHAR.RECEIVER || x.key === CONST_CHAR.SPENDER
 									).map((x: any) => x.value)).flat();
-							listAddresses.push(...event);
+							event = event.filter((e: string) =>
+								e.startsWith('aura') || e.startsWith('cosmos')
+								|| e.startsWith('evmos') || e.startsWith('osmo')
+							);
+							if (event) listAddresses.push(...event);
 						} catch (error) {
 							this.logger.error(error);
 							throw error;
@@ -103,28 +107,30 @@ export default class HandleAddressService extends Service {
 			}
 
 			let listUniqueAddresses = listAddresses.filter(this.onlyUnique);
-			try {
-				listUniqueAddresses.map((address) => {
-					const account: AccountInfoEntity = {} as AccountInfoEntity;
-					account.address = address;
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-						account,
-						AccountInfoEntity,
-					);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: chain ? chain.chainName : '',
-					};
-					listInsert.push({ insertOne: { document: item } });
+			if (listUniqueAddresses.length > 0) {
+				try {
+					listUniqueAddresses.map((address) => {
+						const account: AccountInfoEntity = {} as AccountInfoEntity;
+						account.address = address;
+						const item: AccountInfoEntity = new JsonConvert().deserializeObject(
+							account,
+							AccountInfoEntity,
+						);
+						item.custom_info = {
+							chain_id: chainId,
+							chain_name: chain ? chain.chainName : '',
+						};
+						listInsert.push({ insertOne: { document: item } });
+					});
+					const result = await this.adapter.bulkWrite(listInsert);
+					this.logger.info(`${JSON.stringify(result)}`);
+				} catch (error) {
+					this.logger.error(`Account(s) already exists`);
+				}
+				listUpdateInfo.map((item) => {
+					this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });
 				});
-				const result = await this.adapter.bulkWrite(listInsert);
-				this.logger.info(`${JSON.stringify(result)}`);
-			} catch (error) {
-				this.logger.error(`Account(s) already exists`);
 			}
-			listUpdateInfo.map((item) => {
-				this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });
-			});
 			if (source !== CONST_CHAR.API)
 				this.broker.emit('account-info.upsert-claimed-rewards', {
 					listTx,
