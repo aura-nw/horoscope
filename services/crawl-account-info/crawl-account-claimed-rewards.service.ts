@@ -166,11 +166,11 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						listUpdateQueries.push(this.adapter.insert(item));
 					}
 				});
+				await Promise.all(listUpdateQueries);
 			} catch (error) {
 				this.logger.error(error);
 				throw error;
 			}
-			await Promise.all(listUpdateQueries);
 		}
 	}
 
@@ -392,8 +392,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 					} as Rewards);
 				}
 				break;
-			default:
-				return null;
 		}
 		return account;
 	}
