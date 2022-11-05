@@ -307,6 +307,7 @@ export const PATH_COSMOS_SDK = {
 	GET_PARAMS_AUTH_INFO: 'auth/accounts',
 	GET_PARAMS_SPENDABLE_BALANCE: 'cosmos/bank/v1beta1/spendable_balances',
 	GET_PARAMS_IBC_DENOM: 'ibc/apps/transfer/v1/denom_traces',
+	GET_VALIDATOR: 'cosmos/staking/v1beta1/validators/',
 	GET_SUPPLY: 'cosmos/bank/v1beta1/supply',
 	VERIFY_API_GET_HASH: 'api/v1/smart-contract/get-hash/',
 	COSMWASM_CONTRACT_PARAM: 'cosmwasm/wasm/v1/contract/',
