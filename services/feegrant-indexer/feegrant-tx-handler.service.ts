@@ -62,7 +62,7 @@ export default class FeegrantTxHandler extends Service {
 						const list: any[] = await this.handleJob(job.data.chainId);
 
 						job.progress(100);
-						return list;
+						return true;
 					},
 				},
 			}
@@ -74,24 +74,35 @@ export default class FeegrantTxHandler extends Service {
 		let handledBlockRedis = await this.redisClient.get(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK);
 		this.currentBlock = 0;
 		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : this.currentBlock;
-		this.logger.info(`currentFeegrantBlock: ${this.currentBlock}`);
 	}
 
 	async handleJob(chainId: string): Promise<any[]> {
 		let feegrantList: IFeegrantData[] = [];
 		// latest block in transaction DB
-		const latestBlockTx = await this.adapter.find({
+		const latestBlockTx = await this.adapter.lean({
 			sort: "-tx_response.height",
-			limit: 1
+			limit: 1,
+			projection: {
+				"tx_response.height": 1
+			},
 		}) as ITransaction[]
 		const latestBlock = latestBlockTx[0] ? latestBlockTx[0].tx_response.height.valueOf() : this.currentBlock
+		this.logger.info(`Feegrant from  ${this.currentBlock} to ${(this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock)}`)
 		// get all transactions in BLOCK_PER_BATCH sequence blocks, start from currentBlock
-		const listTx = await this.adapter.find({
+		const listTx = await this.adapter.lean({
 			query: {
 				"tx_response.height": {
 					$gte: this.currentBlock,
-					$lt: this.currentBlock + Config.BLOCK_PER_BATCH < latestBlock ? this.currentBlock + Config.BLOCK_PER_BATCH : latestBlock
+					$lt: this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
 				}
+			},
+			projection: {
+				"tx.body.messages": 1,
+				"tx.auth_info": 1,
+				"tx_response.events": 1,
+				"tx_response.code": 1,
+				"tx_response.timestamp": 1,
+				"tx_response.txhash": 1,
 			}
 		}) as ITransaction[]
 		// filter feegrant transactions
@@ -311,7 +322,7 @@ export default class FeegrantTxHandler extends Service {
 			},
 		);
 		// update feegrant latest block
-		this.currentBlock = this.currentBlock + Config.BLOCK_PER_BATCH < latestBlock ? this.currentBlock + Config.BLOCK_PER_BATCH : latestBlock
+		this.currentBlock = this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
 		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
 		this.logger.info(JSON.stringify(feegrantList))
 		return feegrantList;

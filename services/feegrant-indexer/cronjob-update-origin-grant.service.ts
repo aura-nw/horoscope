@@ -38,16 +38,28 @@ export default class CronjobUpdateOriginalGrant extends Service {
     }
     async handleJob() {
         // find all records which were unprocessed
-        const listUnprocess = await this.adapter.find({
+        const listUnprocess = await this.adapter.lean({
             query: {
                 "origin_feegrant_txhash": null
-            }
+            },
+            projection: {
+                granter: 1,
+                grantee: 1,
+                origin_feegrant_txhash: 1,
+                _id: 1,
+                timestamp: 1
+            },
+            limit: 2000
         }) as FeegrantEntity[]
         if (listUnprocess.length > 0) {
             // list bulk action to update feegrant history db
             const bulkUpdate: any[] = []
             // get distict pairs (granter, grantee) in listUnprocess
-            const distinctPairGranterGrantee = _.uniqBy(listUnprocess, function (elem) { return [elem.granter, elem.grantee].join() }).map(e => { return _.pick(e, ['granter', 'grantee']) })
+            const distinctPairGranterGrantee = _.uniqBy(listUnprocess, function (elem) {
+                return [elem.granter, elem.grantee].join()
+            }).map(e => {
+                return _.pick(e, ['granter', 'grantee'])
+            })
             // construct query
             const query: QueryOptions = {}
             const queryOr: any[] = []
@@ -71,7 +83,11 @@ export default class CronjobUpdateOriginalGrant extends Service {
             listUnprocess.forEach(e => {
                 // e 's original feegrant
                 // each unprocessed action: find original by looking up feegrant which has timestamp is max of all less than or equal its timestamp
-                const suspiciousFeegrants = listOriginalFeegrant.filter(x => x.grantee === e.grantee && x.granter === e.granter && x.timestamp.getTime() < e.timestamp.getTime())
+                const suspiciousFeegrants = listOriginalFeegrant.filter(
+                    x => x.grantee === e.grantee &&
+                        x.granter === e.granter &&
+                        x.timestamp.getTime() < e.timestamp.getTime()
+                )
                 if (suspiciousFeegrants.length > 0) {
                     const originalFeegrant = suspiciousFeegrants.reduce((prev, current) => {
                         return prev.timestamp.getTime() > current.timestamp.getTime() ? prev : current

@@ -336,3 +336,10 @@ export const TOP_ACCOUNT_STATS_FIELD = {
 	AMOUNT_SENT: 'AMOUNT_SENT',
 	AMOUNT_RECEIVED: 'AMOUNT_RECEIVED',
 };
+
+export const ALLOWANCE_TYPE = {
+	BASIC_ALLOWANCE: "/cosmos.feegrant.v1beta1.BasicAllowance",
+	PERIODIC_ALLOWANCE: "/cosmos.feegrant.v1beta1.PeriodicAllowance",
+	ALLOWED_MSGS_ALLOWANCE: "/cosmos.feegrant.v1beta1.AllowedMsgAllowance",
+	ALLOWED_CONTRACT_ALLOWANCE: "/cosmos.feegrant.v1beta1.AllowedContractAllowance",
+}

@@ -54,6 +54,12 @@ export default class FeegrantService extends MoleculerDBService<
                 default: FEEGRANT_STATUS.AVAILABLE,
                 enum: Object.values(FEEGRANT_STATUS),
             },
+            expired: {
+                type: 'boolean',
+                optional: true,
+                default: false,
+                convert: true,
+            },
             pageLimit: {
                 type: 'number',
                 optional: true,
@@ -116,6 +122,7 @@ export default class FeegrantService extends MoleculerDBService<
                 query["grantee"] = ctx.params.grantee
             }
             query["status"] = ctx.params.status
+            query["expired"] = ctx.params.expired
             this.logger.info(query)
             let [result, count]: [any[], number] = await Promise.all([
                 this.adapter.lean({
@@ -185,8 +192,15 @@ export default class FeegrantService extends MoleculerDBService<
      *          required: false
      *          schema:
      *            type: string
-     *            enum: ["Available","Expired", "Use up", "Revoked", "Fail"]
+     *            enum: ["Available", "Use up", "Revoked", "Fail"]
      *          description: "Status of feegrant"
+     *        - in: query
+     *          name: expired
+     *          required: false
+     *          schema:
+     *            type: boolean
+     *            default: false
+     *          description: "Expire status of feegrant"
      *        - in: query
      *          name: pageOffset
      *          required: false
@@ -264,7 +278,10 @@ export default class FeegrantService extends MoleculerDBService<
      *                              example: '/cosmos.feegrant.v1beta1.BasicAllowance'
      *                            status:
      *                              type: string
-     *                              example: 'Expired'
+     *                              example: 'Use up'
+     *                            expired:
+     *                              type: boolean
+     *                              example: false
      *                            origin_feegrant_txhash:
      *                              type: string
      *                              example: '2E5E6067AECE06B6AAA9969BBF5EE7277C12E05B1317176hgfjfghjhfgjhjkhjkjh'

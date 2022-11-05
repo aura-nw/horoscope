@@ -129,11 +129,15 @@ export default class FeegrantDB extends Service {
             }
         }
         const bulkUpdate = [] as any[]
-        const listOriginalRecords = await this.adapter.find({
+        const listOriginalRecords = await this.adapter.lean({
             query: {
                 "tx_hash": {
                     $in: Array.from(mapUpdate.keys())
                 }
+            },
+            projection: {
+                "tx_hash": 1,
+                amount: 1,
             }
         }) as FeegrantEntity[]
         listOriginalRecords.forEach(e => [

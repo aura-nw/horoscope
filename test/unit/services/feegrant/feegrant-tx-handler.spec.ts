@@ -27,7 +27,7 @@ describe('Test feegrant-tx-handler service', () => {
                 Promise.resolve(mockData)
             );
             // Replace adapter's insert with a mock
-            service.adapter.find = mockFind;
+            service.adapter.lean = mockFind;
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result
@@ -64,7 +64,7 @@ describe('Test feegrant-tx-handler service', () => {
                 Promise.resolve(mockData)
             );
             // Replace adapter's insert with a mock
-            service.adapter.find = mockFind;
+            service.adapter.lean = mockFind;
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result
@@ -98,7 +98,7 @@ describe('Test feegrant-tx-handler service', () => {
                 Promise.resolve(mockData)
             );
             // Replace adapter's insert with a mock
-            service.adapter.find = mockFind;
+            service.adapter.lean = mockFind;
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result
@@ -132,7 +132,7 @@ describe('Test feegrant-tx-handler service', () => {
                 Promise.resolve(mockData)
             );
             // Replace adapter's insert with a mock
-            service.adapter.find = mockFind;
+            service.adapter.lean = mockFind;
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result
@@ -169,7 +169,7 @@ describe('Test feegrant-tx-handler service', () => {
                 Promise.resolve(mockData)
             );
             // Replace adapter's insert with a mock
-            service.adapter.find = mockFind;
+            service.adapter.lean = mockFind;
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result
@@ -203,7 +203,7 @@ describe('Test feegrant-tx-handler service', () => {
                 Promise.resolve(mockData)
             );
             // Replace adapter's insert with a mock
-            service.adapter.find = mockFind;
+            service.adapter.lean = mockFind;
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result
@@ -240,7 +240,7 @@ describe('Test feegrant-tx-handler service', () => {
                 Promise.resolve(mockData)
             );
             // Replace adapter's insert with a mock
-            service.adapter.find = mockFind;
+            service.adapter.lean = mockFind;
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result
@@ -274,7 +274,7 @@ describe('Test feegrant-tx-handler service', () => {
                 Promise.resolve(mockData)
             );
             // Replace adapter's insert with a mock
-            service.adapter.find = mockFind;
+            service.adapter.lean = mockFind;
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result
@@ -311,7 +311,7 @@ describe('Test feegrant-tx-handler service', () => {
                 Promise.resolve(mockData)
             );
             // Replace adapter's insert with a mock
-            service.adapter.find = mockFind;
+            service.adapter.lean = mockFind;
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result

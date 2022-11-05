@@ -137,6 +137,7 @@ export interface GetFeegrantRequest extends ChainIdParams, PageLimit {
 	granter: string;
 	grantee: string;
 	status: string;
+	expired: boolean
 }
 export interface QueryDelayJobParams {
 	address: string;
