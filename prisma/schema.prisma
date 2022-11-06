@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  
 }
 
 datasource db {
@@ -14,6 +13,7 @@ datasource db {
 // DB models
 model account_info {
   id                         String                 @id @default(auto()) @map("_id") @db.ObjectId
+  address                    String
   account_auth               Account
   account_balances           Coin[]
   account_delegations        DelegationResponse[]
@@ -201,25 +201,8 @@ model vote {
 
 // AccountInfo type
 type Account {
-  height String?        @db.String
-  result AccountResult?
-}
-
-type AccountResult {
-  type  String?       @db.String
-  value AccountValue?
-}
-
-type AccountValue {
-  address        String?        @db.String
-  public_key     AccountPubKey?
-  account_number String?        @db.String
-  sequence       String?        @db.String
-}
-
-type AccountPubKey {
-  type  String? @db.String
-  value String? @db.String
+  height String? @db.String
+  result Json?   @db.Json
 }
 
 type Delegation {
@@ -234,10 +217,10 @@ type DelegationResponse {
 }
 
 type RedelegationEntry {
-  creation_height String? @db.String
-  completion_time String? @db.String
-  initial_balance String? @db.String
-  shares_dst      String? @db.String
+  creation_height String?   @db.String
+  completion_time DateTime? @db.Timestamp
+  initial_balance String?   @db.String
+  shares_dst      String?   @db.String
 }
 
 type RedelegateEntry {
@@ -258,10 +241,10 @@ type RedelegationResponse {
 }
 
 type UndelegateEntry {
-  creation_height String? @db.String
-  completion_time String? @db.String
-  initial_balance String? @db.String
-  balance         String? @db.String
+  creation_height String?   @db.String
+  completion_time DateTime? @db.Timestamp
+  initial_balance String?   @db.String
+  balance         String?   @db.String
 }
 
 type UnbondingResponse {
