@@ -99,8 +99,8 @@ model delay_job {
   id          String     @id @default(auto()) @map("_id") @db.ObjectId
   content     Json       @db.Json
   type        String     @db.String
-  expire_time DateTime   @db.Timestamp
-  indexes     String     @db.String
+  expire_time DateTime?  @db.Timestamp
+  indexes     String?    @db.String
   custom_info CustomInfo
 }
 
@@ -405,7 +405,7 @@ type AuthInfo {
 type TxInput {
   body       Body?
   auth_info  AuthInfo?
-  signatures String // TODO: change to String[]? (currently error due to findMany)
+  signatures String[]
 }
 
 type Attribute {
@@ -426,18 +426,18 @@ type Log {
 }
 
 type TxResponse {
-  height     String? @db.String // TODO: change to Int? (currently error due to findMany)
-  txhash     String? @db.String
-  codespace  String? @db.String
-  code       String? @db.String
-  data       String? @db.String
-  raw_log    String? @db.String
+  height     Int?      @db.Int
+  txhash     String?   @db.String
+  codespace  String?   @db.String
+  code       String?   @db.String
+  data       String?   @db.String
+  raw_log    String?   @db.String
   logs       Log[]
-  info       String? @db.String
-  gas_wanted String? @db.String
-  gas_used   String? @db.String
-  tx         Json?   @db.Json
-  timestamp  String? @db.String // TODO: change to DateTime? (currently error due to findMany)
+  info       String?   @db.String
+  gas_wanted String?   @db.String
+  gas_used   String?   @db.String
+  tx         Json?     @db.Json
+  timestamp  DateTime? @db.Timestamp
   events     Event[]
 }
 

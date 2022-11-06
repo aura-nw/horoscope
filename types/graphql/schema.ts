@@ -456,7 +456,7 @@ export const TypeDefs = gql`
 	type TxInput {
 		body: Body
 		auth_info: AuthInfo
-		signatures: String # TODO: change to String[]? (currently error due to findMany)
+		signatures: [String]
 	}
 	type Attribute {
 		key: String
@@ -473,7 +473,7 @@ export const TypeDefs = gql`
 		events: [Event]
 	}
 	type TxResponse {
-		height: String # TODO: change to Int? (currently error due to findMany)
+		height: Int
 		txhash: String
 		codespace: String
 		code: String
@@ -484,7 +484,7 @@ export const TypeDefs = gql`
 		gas_wanted: String
 		gas_used: String
 		tx: Json
-		timestamp: String # TODO: change to DateTime? (currently error due to findMany)
+		timestamp: DateTime
 		events: [Event]
 	}
 	type TxResult {
