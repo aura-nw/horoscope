@@ -34,6 +34,7 @@ import {
 	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
 import { Utils } from '../../utils/utils';
+// import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -41,7 +42,7 @@ import { Utils } from '../../utils/utils';
 @Service({
 	name: 'asset',
 	version: 1,
-	// Mixins: [dbCW721AssetMixin],
+	// mixins: [dbCW721AssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
 	{
@@ -591,6 +592,78 @@ export default class BlockService extends MoleculerDBService<
 			};
 		}
 		return response;
+	}
+
+	async _start(): Promise<void> {
+		// let listAggregate: any[] = [];
+		// // @ts-ignore
+		// const chainId = 'euphoria-1';
+		// const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+		// if (network && network.databaseName) {
+		// 	// @ts-ignore
+		// 	this.adapter.useDb(network.databaseName);
+		// }
+
+		// listAggregate.push(
+		// 	{
+		// 		$match: {
+		// 			media_link: { $ne: '' },
+		// 		},
+		// 	},
+		// 	{
+		// 		$lookup: {
+		// 			from: 'cw721_media_link',
+		// 			localField: 'media_link',
+		// 			foreignField: 'key',
+		// 			as: 'media_info',
+		// 		},
+		// 	},
+		// 	// {
+		// 	// 	$limit: 10,
+		// 	// },
+		// );
+
+		// // @ts-ignore
+		// this.logger.debug(JSON.stringify(listAggregate));
+		// // @ts-ignore
+		// let listResult = await this.adapter.aggregate(listAggregate);
+		// let listBulk: any[] = [];
+		// listResult.forEach(async (result: any) => {
+		// 	if (result.media_info && result.media_info.length > 0) {
+		// 		let link = result.media_info[0].media_link;
+		// 		let contentType = result.media_info[0].content_type;
+
+		// 		let image: any = {};
+		// 		if (link) {
+		// 			image['link_s3'] = link;
+		// 		}
+		// 		if (contentType) {
+		// 			image['content_type'] = contentType;
+		// 		}
+
+		// 		listBulk.push({
+		// 			updateOne: {
+		// 				filter: {
+		// 					_id: result._id,
+		// 				},
+		// 				update: {
+		// 					$set: {
+		// 						image: image,
+		// 					},
+		// 				},
+		// 			},
+		// 		});
+		// 	}
+		// });
+
+		// if (listBulk.length > 0) {
+		// 	//@ts-ignore
+		// 	let resultBulk = await this.adapter.bulkWrite(listBulk);
+		// 	this.logger.info(resultBulk);
+		// 	listBulk = [];
+		// }
+
+		return super._start();
 	}
 
 	/**

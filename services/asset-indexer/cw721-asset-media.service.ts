@@ -15,6 +15,7 @@ import {
 	CW721_FIELD,
 	CW721_MANAGER_ACTION,
 	CW721_MEDIA_MANAGER_ACTION,
+	LIST_NETWORK,
 } from '../../common/constant';
 import { QueryOptions } from 'moleculer-db';
 import { Common } from './common.service';
@@ -221,6 +222,8 @@ export default class CrawlAssetService extends moleculer.Service {
 		} else {
 			let queryAssetCW721: any = {};
 			queryAssetCW721['_id'] = new ObjectId(cw721_id);
+			queryAssetCW721['custom_info.chain_id'] = chain_id;
+
 			if (media[0].status == MediaStatus.COMPLETED) {
 				let listFoundCW721: CW721AssetEntity[] = await this.broker.call(
 					CW721_MANAGER_ACTION.FIND,
@@ -303,6 +306,54 @@ export default class CrawlAssetService extends moleculer.Service {
 	}
 
 	async _start(): Promise<void> {
+		// @ts-ignore
+		// const chainId = 'euphoria-1';
+		// const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+		// if (network && network.databaseName) {
+		// 	// @ts-ignore
+		// 	this.adapter.useDb(network.databaseName);
+		// }
+		// let listMedia = await this.adapter.find({});
+		// let listBulk: any[] = [];
+		// listMedia.map(async (media: any) => {
+		// 	if (media.key && media.status == 'COMPLETED') {
+		// 		let listCw721: any[] = await this.broker.call(
+		// 			'v1.CW721-asset-manager.act-find',
+		// 			{
+		// 				query: {
+		// 					'custom_info.chain_id': chainId,
+		// 					media_link: media.key,
+		// 				},
+		// 			},
+		// 			{ timeout: 0 },
+		// 		);
+		// 		listCw721.map(async (cw721: any) => {
+		// 			let imageLink = cw721?.asset_info?.data?.info?.extension?.image;
+		// 			// let result = await this.adapter.updateById(media._id, {
+		// 			// 	$set: { source: imageLink },
+		// 			// });
+		// 			if (imageLink) {
+		// 				let result = await this.adapter.updateById(media._id, {
+		// 					$set: { source: imageLink },
+		// 				});
+		// 				this.logger.info('result update: ', result);
+		// 			}
+		// 			// listBulk.push({
+		// 			// 	updateOne: {
+		// 			// 		filter: {
+		// 			// 			_id: media._id,
+		// 			// 		},
+		// 			// 		update: {
+		// 			// 			$set: { source: imageLink },
+		// 			// 		},
+		// 			// 	},
+		// 			// });
+		// 			// this.logger.info('result update: ', result);
+		// 		});
+		// 		let result = await this.adapter.bulkWrite(listBulk);
+		// 		this.logger.info(result);
+		// 	}
+		// });
 		this.getQueue('CW721-media.get-media-link').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
