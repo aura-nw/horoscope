@@ -57,7 +57,7 @@ export default class ValidatorService extends MoleculerDBService<
 				integer: true,
 				convert: true,
 				min: 1,
-				max: 100,
+				max: 1000,
 			},
 			pageOffset: {
 				type: 'number',
