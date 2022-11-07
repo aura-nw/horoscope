@@ -58,6 +58,7 @@ describe('Test cronjob-update-original-grant service', () => {
                 "tx_hash": "243EF2A1E124CFE103DA39270C5AC4B7C3E33C8741A04394B398BF91B8DAB8FC",
                 "type": "/cosmos.feegrant.v1beta1.BasicAllowance",
                 "status": "Available",
+                "expired": false,
                 "origin_feegrant_txhash": "243EF2A1E124CFE103DA39270C5AC4B7C3E33C8741A04394B398BF91B8DAB8FC",
                 "__v": 0,
                 "spend_limit": {
@@ -77,6 +78,7 @@ describe('Test cronjob-update-original-grant service', () => {
                     "chain_name": "Aura Euphoria"
                 },
                 "action": "create",
+                "expired": false,
                 "granter": "aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el",
                 "grantee": "aura18mlzkmmnuk4t44s52ulex070tc7xyrrmqu5ku2",
                 "result": true,
@@ -103,6 +105,7 @@ describe('Test cronjob-update-original-grant service', () => {
                     "chain_name": "Aura Euphoria"
                 },
                 "action": "create",
+                "expired": false,
                 "granter": "aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr",
                 "grantee": "aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el",
                 "result": true,
@@ -132,6 +135,7 @@ describe('Test cronjob-update-original-grant service', () => {
                 "granter": "aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr",
                 "grantee": "aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el",
                 "result": true,
+                "expired": false,
                 "timestamp": new Date("2022-10-27T03:17:44Z"),
                 "tx_hash": "C46AC8D198D030F41C19DB4BE465E942CC5BD276F6BCDB3A2DDB7EFB2F6EC5C0",
                 "type": "/cosmos.feegrant.v1beta1.AllowedContractAllowance",
@@ -158,6 +162,7 @@ describe('Test cronjob-update-original-grant service', () => {
                 "granter": "aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el",
                 "grantee": "aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr",
                 "result": true,
+                "expired": false,
                 "timestamp": new Date("2022-10-04T03:08:33Z"),
                 "tx_hash": "243EF2A1E124CFE103DA39270C5AC4B7C3E33C8741A04394B398BF91B8DAfake",
                 "type": "/cosmos.feegrant.v1beta1.BasicAllowance",

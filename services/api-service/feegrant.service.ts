@@ -103,7 +103,7 @@ export default class FeegrantService extends MoleculerDBService<
         try {
             let query: QueryOptions = {};
             const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
-            if (network && network.databaseName) {
+            if (network && network.databaseName && process.env["NODE_ENV"] != "test") {
                 this.adapter.useDb(network.databaseName);
             }
             if (ctx.params.nextKey) {
