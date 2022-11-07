@@ -87,7 +87,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								removeOnFail: {
 									count: 10,
 								},
-								timeout: 600000
 							},
 						);
 						return;
@@ -109,8 +108,11 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 
 				await Promise.all(
 					tx.tx.body.messages
-						.filter((msg: any) =>
-							this.listMessageAction.includes(msg['@type']) && tx.tx_response.code === 0)
+						.filter(
+							(msg: any) =>
+								this.listMessageAction.includes(msg['@type']) &&
+								tx.tx_response.code === 0,
+						)
 						.map(async (msg: any, index: any) => {
 							const userAddress = msg.delegator_address;
 
@@ -330,7 +332,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				break;
 			case MSG_TYPE.MSG_UNDELEGATE:
 				const undelegateValAddress = msg.validator_address;
-				const undelegateIndexReward = msg.events
+				const undelegateIndexReward = logs[index].events
 					.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED)
 					.attributes.findIndex((x: any) => x.value === userAddress);
 				const undelegateClaimedReward = logs[index].events.find(

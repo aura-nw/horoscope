@@ -7,19 +7,51 @@
     },
     "servers": [
         {
-            "url": "https://horoscope.aura.network/api",
+            "url": "http://localhost:3000/api",
             "description": "Horoscope "
+        },
+        {
+            "url": "https://lcd.dev.aura.network",
+            "description": "Aura Devnet LCD"
+        },
+        {
+            "url": "https://lcd.serenity.aura.network",
+            "description": "Aura Serenity LCD"
+        },
+        {
+            "url": "https://lcd.theta.aura.network",
+            "description": "Theta Testnet LCD"
+        },
+        {
+            "url": "https://osmosistest-lcd.quickapi.com",
+            "description": "Osmosis Testnet LCD"
         },
         {
             "url": "https://lcd.osmosis.zone",
             "description": "Osmosis Mainnet LCD"
         },
         {
+            "url": "https://evmos-testnet-api.polkachu.com",
+            "description": "Evmos Testnet LCD"
+        },
+        {
+            "url": "https://evmos.test.api.coldyvalidator.net",
+            "description": "Evmos Testnet LCD"
+        },
+        {
             "url": "https://lcd.euphoria.aura.network",
             "description": "Aura Euphoria LCD"
         },
         {
-            "url": "https://cosmos-lcd.quickapi.com",
+            "url": "https://cosmos-api.polkachu.com",
+            "description": "Cosmos Mainnet LCD"
+        },
+        {
+            "url": "https://cosmos-api.cyphercore.io",
+            "description": "Cosmos Mainnet LCD"
+        },
+        {
+            "url": "https://cosmoshub-api.lavenderfive.com:443",
             "description": "Cosmos Mainnet LCD"
         }
     ],
@@ -48,13 +80,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     }
                 ],
                 "responses": {
@@ -418,14 +455,19 @@
                         "required": true,
                         "schema": {
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ],
                             "type": "string"
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     }
                 ],
                 "responses": {
@@ -623,13 +665,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -813,13 +860,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -1198,13 +1250,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -1366,7 +1423,7 @@
                                     },
                                     "chainId": {
                                         "type": "string",
-                                        "example": "euphoria-1",
+                                        "example": "aura-testnet",
                                         "description": "Chain Id of network"
                                     }
                                 }
@@ -1486,8 +1543,13 @@
                         "required": false,
                         "schema": {
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ],
                             "type": "string"
@@ -1643,7 +1705,36 @@
                                                                                                         "type": "string"
                                                                                                     },
                                                                                                     "extension": {
-                                                                                                        "type": "string"
+                                                                                                        "type": "object",
+                                                                                                        "properties": {
+                                                                                                            "image": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "image_data": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "external_url": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "description": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "name": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "attributes": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "background_color": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "animation_url": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "youtube_url": {
+                                                                                                                "type": "string"
+                                                                                                            }
+                                                                                                        }
                                                                                                     }
                                                                                                 }
                                                                                             }
@@ -1696,30 +1787,61 @@
                                                                                 "type": "string",
                                                                                 "example": "2022-08-17T06:20:19.342Z"
                                                                             },
-                                                                            "media_info": {
-                                                                                "type": "array",
-                                                                                "items": {
-                                                                                    "type": "object",
-                                                                                    "properties": {
-                                                                                        "key": {
-                                                                                            "type": "string"
-                                                                                        },
-                                                                                        "media_link": {
-                                                                                            "type": "string",
-                                                                                            "example": "s3://aws.aura.network"
-                                                                                        },
-                                                                                        "status": {
-                                                                                            "type": "string",
-                                                                                            "example": "COMPLETED"
-                                                                                        },
-                                                                                        "createdAt": {
-                                                                                            "type": "string",
-                                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                                        },
-                                                                                        "updatedAt": {
-                                                                                            "type": "string",
-                                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                                        }
+                                                                            "metadata": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "image": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "image_data": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "external_url": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "description": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "name": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "attributes": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "background_color": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "animation_url": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "youtube_url": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "image": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "link_s3": {
+                                                                                        "type": "string",
+                                                                                        "example": "https://s3-horoscope/a"
+                                                                                    },
+                                                                                    "content_type": {
+                                                                                        "type": "string",
+                                                                                        "example": "image/jpg"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "animation": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "link_s3": {
+                                                                                        "type": "string",
+                                                                                        "example": "https://s3-horoscope/b"
+                                                                                    },
+                                                                                    "content_type": {
+                                                                                        "type": "string",
+                                                                                        "example": "video/mp4"
                                                                                     }
                                                                                 }
                                                                             }
@@ -2041,13 +2163,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -2141,7 +2268,36 @@
                                                                                         "type": "string"
                                                                                     },
                                                                                     "extension": {
-                                                                                        "type": "string"
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "image": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "image_data": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "external_url": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "description": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "name": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "attributes": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "background_color": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "animation_url": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "youtube_url": {
+                                                                                                "type": "string"
+                                                                                            }
+                                                                                        }
                                                                                     }
                                                                                 }
                                                                             }
@@ -2194,30 +2350,61 @@
                                                                 "type": "string",
                                                                 "example": "2022-08-17T06:20:19.342Z"
                                                             },
-                                                            "media_info": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "object",
-                                                                    "properties": {
-                                                                        "key": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "media_link": {
-                                                                            "type": "string",
-                                                                            "example": "s3://aws.aura.network"
-                                                                        },
-                                                                        "status": {
-                                                                            "type": "string",
-                                                                            "example": "COMPLETED"
-                                                                        },
-                                                                        "createdAt": {
-                                                                            "type": "string",
-                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                        },
-                                                                        "updatedAt": {
-                                                                            "type": "string",
-                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                        }
+                                                            "metadata": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "image": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "image_data": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "external_url": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "description": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "attributes": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "background_color": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "animation_url": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "youtube_url": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "image": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "link_s3": {
+                                                                        "type": "string",
+                                                                        "example": "https://s3-horoscope/a"
+                                                                    },
+                                                                    "content_type": {
+                                                                        "type": "string",
+                                                                        "example": "image/jpg"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "animation": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "link_s3": {
+                                                                        "type": "string",
+                                                                        "example": "https://s3-horoscope/b"
+                                                                    },
+                                                                    "content_type": {
+                                                                        "type": "string",
+                                                                        "example": "video/mp4"
                                                                     }
                                                                 }
                                                             }
@@ -2313,13 +2500,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -2530,13 +2722,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -2889,8 +3086,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -3010,13 +3212,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -3052,7 +3259,7 @@
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -3180,13 +3387,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     }
                 ],
                 "responses": {
@@ -3353,13 +3565,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -3533,13 +3750,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -3815,6 +4037,185 @@
                 }
             }
         },
+        "/v1/smart-contracts": {
+            "get": {
+                "tags": [
+                    "Smart Contracts"
+                ],
+                "summary": "Get synced smart contracts",
+                "description": "Get synced smart contracts",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainId",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
+                                "euphoria-1",
+                                "cosmoshub-4"
+                            ]
+                        },
+                        "description": "Chain Id of network need to query",
+                        "example": "aura-testnet"
+                    },
+                    {
+                        "in": "query",
+                        "name": "height",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        },
+                        "description": "Smart contract's creation block height"
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        },
+                        "description": "Number of records returned",
+                        "example": 10
+                    },
+                    {
+                        "in": "query",
+                        "name": "offset",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        },
+                        "description": "Number of records skipped",
+                        "example": 0
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Smart contracts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "smart-contracts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "height": {
+                                                                "type": "number",
+                                                                "example": 3243718
+                                                            },
+                                                            "code_id": {
+                                                                "type": "number",
+                                                                "example": 19
+                                                            },
+                                                            "contract_name": {
+                                                                "type": "string",
+                                                                "example": "Flex"
+                                                            },
+                                                            "contract_address": {
+                                                                "type": "string",
+                                                                "example": "auracdxq3eq341wfew3rwg45rgevst5e452grw3rg3"
+                                                            },
+                                                            "creator_address": {
+                                                                "type": "string",
+                                                                "example": "auracdxq3eq341wfew3rwg45rgevst5e452grw3rg3"
+                                                            },
+                                                            "contract_hash": {
+                                                                "type": "string",
+                                                                "example": "DNFSIL323J298JW01JHFUH9Q8JA39W9J92H32FJF04EJF3084JRG30HE820J"
+                                                            },
+                                                            "tx_hash": {
+                                                                "type": "string",
+                                                                "example": "CSERNFVIQLN24E78DSHEU7I6QGSUHUG176G2W71T349YWS2HDB827YG3WF8Y"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.account-info"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/transaction": {
             "get": {
                 "tags": [
@@ -3830,13 +4231,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -3846,6 +4252,25 @@
                             "type": "string"
                         },
                         "description": "Block height of transaction"
+                    },
+                    {
+                        "in": "query",
+                        "name": "fromHeight",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Tx from block height"
+                    },
+                    {
+                        "in": "query",
+                        "name": "needFullLog",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": "false"
+                        },
+                        "description": "Get full log tx"
                     },
                     {
                         "in": "query",
@@ -4485,13 +4910,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -5039,13 +5469,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
                         "description": "Chain Id of network need to query",
-                        "example": "euphoria-1"
+                        "example": "aura-testnet"
                     },
                     {
                         "in": "query",
@@ -5368,8 +5803,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -5493,7 +5933,7 @@
                                                                 "properties": {
                                                                     "chain_id": {
                                                                         "type": "string",
-                                                                        "example": "euphoria-1"
+                                                                        "example": "aura-testnet"
                                                                     },
                                                                     "chain_name": {
                                                                         "type": "string",
@@ -5589,8 +6029,13 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "aura-testnet",
+                                "serenity-testnet-001",
+                                "halo-testnet-001",
+                                "theta-testnet-001",
+                                "osmo-test-4",
+                                "evmos_9000-4",
                                 "euphoria-1",
-                                "osmosis-1",
                                 "cosmoshub-4"
                             ]
                         },
@@ -5672,7 +6117,7 @@
                                                                 "properties": {
                                                                     "chain_id": {
                                                                         "type": "string",
-                                                                        "example": "euphoria-1"
+                                                                        "example": "aura-testnet"
                                                                     },
                                                                     "chain_name": {
                                                                         "type": "string",
@@ -14629,7 +15074,13 @@
                 "operationId": "CosmosTxV1Beta1Simulate",
                 "requestBody": {
                     "description": "SimulateRequest is the request type for the Service.Simulate\nRPC method.",
-                    "content": {},
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/cosmos.tx.v1beta1.SimulateRequest"
+                            }
+                        }
+                    },
                     "required": true
                 },
                 "responses": {
@@ -14828,7 +15279,13 @@
                 "responses": {
                     "200": {
                         "description": "A successful response.",
-                        "content": {}
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/cosmos.tx.v1beta1.GetTxsEventResponse"
+                                }
+                            }
+                        }
                     },
                     "default": {
                         "description": "An unexpected error response.",
@@ -15148,7 +15605,13 @@
                 "responses": {
                     "200": {
                         "description": "A successful response.",
-                        "content": {}
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/cosmos.tx.v1beta1.GetBlockWithTxsResponse"
+                                }
+                            }
+                        }
                     },
                     "default": {
                         "description": "An unexpected error response.",
@@ -15203,7 +15666,13 @@
                 "responses": {
                     "200": {
                         "description": "A successful response.",
-                        "content": {}
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/cosmos.tx.v1beta1.GetTxResponse"
+                                }
+                            }
+                        }
                     },
                     "default": {
                         "description": "An unexpected error response.",
