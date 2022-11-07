@@ -1,4 +1,4 @@
-import { DELAY_JOB_TYPE } from "common/constant";
+import { DELAY_JOB_TYPE } from 'common/constant';
 
 export interface PageLimit {
 	pageOffset: number;
@@ -72,6 +72,8 @@ export interface GetTxRequest
 	query: string;
 	addressInContract: string;
 	sequenceIBC: string;
+	fromHeight: number;
+	needFullLog: boolean;
 }
 export interface GetPowerEventTxRequest extends ChainIdParams, PageLimit, AddressParams {}
 
