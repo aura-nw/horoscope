@@ -73,9 +73,12 @@ export default class CrawlAccountAuthInfoService extends Service {
 			listDelayJobs: DelayJobEntity[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter((addr: string) =>
-			addr.startsWith('aura') || addr.startsWith('cosmos')
-			|| addr.startsWith('evmos') || addr.startsWith('osmo')
+		listAddresses = listAddresses.filter(
+			(addr: string) =>
+				addr.startsWith('aura') ||
+				addr.startsWith('cosmos') ||
+				addr.startsWith('evmos') ||
+				addr.startsWith('osmo'),
 		);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
@@ -108,7 +111,10 @@ export default class CrawlAccountAuthInfoService extends Service {
 				}
 
 				if (
-					resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC ||
+					(resultCallApi &&
+						resultCallApi.result &&
+						resultCallApi.result.type &&
+						resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC) ||
 					resultCallApi.result.type === VESTING_ACCOUNT_TYPE.DELAYED
 				) {
 					let existsJob;
@@ -133,8 +139,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 								newDelayJob.type = DELAY_JOB_TYPE.DELAYED_VESTING;
 								newDelayJob.expire_time = new Date(
 									parseInt(
-										resultCallApi.result.value.base_vesting_account
-											.end_time,
+										resultCallApi.result.value.base_vesting_account.end_time,
 										10,
 									) * 1000,
 								);
@@ -153,17 +158,15 @@ export default class CrawlAccountAuthInfoService extends Service {
 								let expire_time =
 									start_time +
 									number_of_periods *
-									parseInt(
-										resultCallApi.result.value.vesting_periods[0]
-											.length,
-										10,
-									) *
-									1000;
+										parseInt(
+											resultCallApi.result.value.vesting_periods[0].length,
+											10,
+										) *
+										1000;
 								if (expire_time < new Date().getTime())
 									expire_time +=
 										parseInt(
-											resultCallApi.result.value.vesting_periods[0]
-												.length,
+											resultCallApi.result.value.vesting_periods[0].length,
 											10,
 										) * 1000;
 								newDelayJob.expire_time = new Date(expire_time);

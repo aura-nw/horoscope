@@ -304,7 +304,7 @@ export const PATH_COSMOS_SDK = {
 	GET_PARAMS_BALANCE: 'cosmos/bank/v1beta1/balances',
 	GET_PARAMS_DELEGATE: 'cosmos/staking/v1beta1/delegations',
 	GET_PARAMS_DELEGATOR: 'cosmos/staking/v1beta1/delegators',
-	GET_PARAMS_AUTH_INFO: 'cosmos/auth/v1beta1/accounts',
+	GET_PARAMS_AUTH_INFO: 'auth/accounts',
 	GET_PARAMS_SPENDABLE_BALANCE: 'cosmos/bank/v1beta1/spendable_balances',
 	GET_PARAMS_IBC_DENOM: 'ibc/apps/transfer/v1/denom_traces',
 	GET_VALIDATOR: 'cosmos/staking/v1beta1/validators/',
