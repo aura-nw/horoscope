@@ -320,7 +320,10 @@ export class Common {
 			// 	});
 			// }
 			return this.downloadAttachment(uri).then(async (buffer) => {
-				let type = (await FileType.fromBuffer(buffer))?.mime;
+				let type: any = (await FileType.fromBuffer(buffer))?.mime;
+				if (type === 'application/xml') {
+					type = 'image/svg+xml';
+				}
 				return uploadAttachmentToS3(type, buffer);
 			});
 		} else {
