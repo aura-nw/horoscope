@@ -265,9 +265,9 @@ export const SEARCH_TX_QUERY = {
 };
 
 export enum VESTING_ACCOUNT_TYPE {
-	CONTINUOUS = 'cosmos-sdk/ContinuousVestingAccount',
-	PERIODIC = 'cosmos-sdk/PeriodicVestingAccount',
-	DELAYED = 'cosmos-sdk/DelayedVestingAccount',
+	CONTINUOUS = '/cosmos.vesting.v1beta1.ContinuousVestingAccount',
+	PERIODIC = '/cosmos.vesting.v1beta1.PeriodicVestingAccount',
+	DELAYED = '/cosmos.vesting.v1beta1.DelayedVestingAccount',
 }
 
 export enum DELAY_JOB_TYPE {
@@ -304,7 +304,7 @@ export const PATH_COSMOS_SDK = {
 	GET_PARAMS_BALANCE: 'cosmos/bank/v1beta1/balances',
 	GET_PARAMS_DELEGATE: 'cosmos/staking/v1beta1/delegations',
 	GET_PARAMS_DELEGATOR: 'cosmos/staking/v1beta1/delegators',
-	GET_PARAMS_AUTH_INFO: 'auth/accounts',
+	GET_PARAMS_AUTH_INFO: 'cosmos/auth/v1beta1/accounts',
 	GET_PARAMS_SPENDABLE_BALANCE: 'cosmos/bank/v1beta1/spendable_balances',
 	GET_PARAMS_IBC_DENOM: 'ibc/apps/transfer/v1/denom_traces',
 	GET_VALIDATOR: 'cosmos/staking/v1beta1/validators/',

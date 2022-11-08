@@ -44,7 +44,7 @@ export default class HandleAccountVestingService extends Service {
 		try {
 			continuousVestingAccounts = await this.adapter.find({
 				query: {
-					'account_auth.result.type': VESTING_ACCOUNT_TYPE.CONTINUOUS,
+					'account_auth.account.@type': VESTING_ACCOUNT_TYPE.CONTINUOUS,
 					'custom_info.chain_id': Config.CHAIN_ID,
 				},
 			});
@@ -57,8 +57,7 @@ export default class HandleAccountVestingService extends Service {
 
 			if (
 				new Date(
-					parseInt(account.account_auth.result.value.base_vesting_account.end_time, 10) *
-					1000,
+					parseInt(account.account_auth.account.base_vesting_account.end_time, 10) * 1000,
 				).getTime() >= new Date().getTime()
 			) {
 				let listSpendableBalances: Coin[] = [];

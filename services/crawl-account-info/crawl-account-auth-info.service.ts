@@ -89,6 +89,10 @@ export default class CrawlAccountAuthInfoService extends Service {
 
 				let accountInfo: AccountInfoEntity;
 				try {
+					const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+					if (network && network.databaseName) {
+						this.adapter.useDb(network.databaseName);
+					}
 					accountInfo = await this.adapter.findOne({
 						address,
 						'custom_info.chain_id': chainId,
@@ -112,17 +116,17 @@ export default class CrawlAccountAuthInfoService extends Service {
 
 				if (
 					(resultCallApi &&
-						resultCallApi.result &&
-						resultCallApi.result.type &&
-						resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC) ||
-					resultCallApi.result.type === VESTING_ACCOUNT_TYPE.DELAYED
+						resultCallApi.account &&
+						resultCallApi.account['@type'] &&
+						resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.PERIODIC) ||
+					resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED
 				) {
 					let existsJob;
 					try {
 						existsJob = await this.broker.call('v1.delay-job.findOne', {
 							address,
 							type:
-								resultCallApi.result.type === VESTING_ACCOUNT_TYPE.PERIODIC
+								resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.PERIODIC
 									? DELAY_JOB_TYPE.PERIODIC_VESTING
 									: DELAY_JOB_TYPE.DELAYED_VESTING,
 							chain_id: chainId,
@@ -134,12 +138,12 @@ export default class CrawlAccountAuthInfoService extends Service {
 					if (!existsJob) {
 						let newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
-						switch (resultCallApi.result.type) {
+						switch (resultCallApi.account['@type']) {
 							case VESTING_ACCOUNT_TYPE.DELAYED:
 								newDelayJob.type = DELAY_JOB_TYPE.DELAYED_VESTING;
 								newDelayJob.expire_time = new Date(
 									parseInt(
-										resultCallApi.result.value.base_vesting_account.end_time,
+										resultCallApi.account.base_vesting_account.end_time,
 										10,
 									) * 1000,
 								);
@@ -147,26 +151,23 @@ export default class CrawlAccountAuthInfoService extends Service {
 							case VESTING_ACCOUNT_TYPE.PERIODIC:
 								newDelayJob.type = DELAY_JOB_TYPE.PERIODIC_VESTING;
 								const start_time =
-									parseInt(resultCallApi.result.value.start_time, 10) * 1000;
+									parseInt(resultCallApi.account.start_time, 10) * 1000;
 								const number_of_periods =
 									(new Date().getTime() - start_time) /
-									(parseInt(
-										resultCallApi.result.value.vesting_periods[0].length,
-										10,
-									) *
+									(parseInt(resultCallApi.account.vesting_periods[0].length, 10) *
 										1000);
 								let expire_time =
 									start_time +
 									number_of_periods *
 										parseInt(
-											resultCallApi.result.value.vesting_periods[0].length,
+											resultCallApi.account.vesting_periods[0].length,
 											10,
 										) *
 										1000;
 								if (expire_time < new Date().getTime())
 									expire_time +=
 										parseInt(
-											resultCallApi.result.value.vesting_periods[0].length,
+											resultCallApi.account.vesting_periods[0].length,
 											10,
 										) * 1000;
 								newDelayJob.expire_time = new Date(expire_time);

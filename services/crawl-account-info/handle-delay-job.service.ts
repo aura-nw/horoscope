@@ -58,7 +58,7 @@ export default class HandleDelayJobService extends Service {
 								'custom_info.chain_id': Config.CHAIN_ID,
 							});
 							let oldRedelegates =
-								updateRedelegates.redelegation_responses[0].entries,
+									updateRedelegates.redelegation_responses[0].entries,
 								removeRedelegate = oldRedelegates.find(
 									(x: RedelegateEntry) =>
 										new Date(
@@ -155,11 +155,11 @@ export default class HandleDelayJobService extends Service {
 							let oldAmount = newSpendableBalances.find(
 								(x: Coin) =>
 									x.denom ===
-									updateInfo.account_auth.result.value.base_vesting_account
+									updateInfo.account_auth.account.base_vesting_account
 										.original_vesting[0].denom,
 							).amount;
 							let vestingInfo =
-								updateInfo.account_auth.result.value.base_vesting_account
+								updateInfo.account_auth.account.base_vesting_account
 									.original_vesting;
 							newSpendableBalances.find(
 								(x: Coin) => x.denom === vestingInfo[0].denom,
@@ -196,35 +196,37 @@ export default class HandleDelayJobService extends Service {
 							let oldAmount = newSpendableBalances.find(
 								(x: Coin) =>
 									x.denom ===
-									updateInfo.account_auth.result.value.original_vesting[0].denom,
+									updateInfo.account_auth.account.original_vesting[0].denom,
 							).amount;
 							let vestingInfo =
-								updateInfo.account_auth.result.value.base_vesting_account
+								updateInfo.account_auth.account.base_vesting_account
 									.original_vesting;
 							newSpendableBalances.find(
 								(x: Coin) => x.denom === vestingInfo[0].denom,
 							).amount = (
 								parseInt(oldAmount, 10) +
 								parseInt(
-									updateInfo.account_auth.result.value.vesting_periods[0]
-										.amount[0].amount,
+									updateInfo.account_auth.account.vesting_periods[0].amount[0]
+										.amount,
 									10,
 								)
 							).toString();
 							let newJobExpireTime = new Date(
 								(job.expire_time.getTime() +
 									parseInt(
-										updateInfo.account_auth.result.value.vesting_periods[0]
-											.length,
+										updateInfo.account_auth.account.vesting_periods[0].length,
 										10,
 									)) *
-								1000,
+									1000,
 							);
 							if (
 								newJobExpireTime.getTime() >=
 								new Date(
-									parseInt(updateInfo.account_auth.result.value.end_time, 10) *
-									1000,
+									parseInt(
+										updateInfo.account_auth.account.base_vesting_account
+											.end_time,
+										10,
+									) * 1000,
 								).getTime()
 							)
 								listUpdateQueries.push(
