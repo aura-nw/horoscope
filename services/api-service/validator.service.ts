@@ -119,7 +119,7 @@ export default class ValidatorService extends MoleculerDBService<
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: '_id',
+					sort: '-percent_voting_power',
 				}),
 				this.adapter.count({
 					query: query,
