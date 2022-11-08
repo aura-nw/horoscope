@@ -14,6 +14,7 @@ export * from './cw20-asset.model';
 export * from './delay-job.model';
 export * from './account-info.model';
 export * from './ibc-denom.model';
+export * from './feegrant.model';
 export * from './daily-tx-statistics.model';
 export * from './account-statistics.model';
 export * from './cw4973-asset.model';

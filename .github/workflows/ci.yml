@@ -17,7 +17,7 @@ jobs:
           echo REPO_MANIFEST_NAME=gitops >> $GITHUB_ENV
           echo REPO_MANIFEST_URL=github.com/aura-nw/gitops.git >> $GITHUB_ENV
           echo REPO_MANIFEST_BRANCH=master >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_DEV=./clusters/k8s-dev/horoscope >> $GITHUB_ENV
+          echo REPO_MANIFEST_ENV_DEV=./clusters/k8s-dev/horoscope/horoscope-crawl-auratestnet >> $GITHUB_ENV
           echo REPO_MANIFEST_ENV_TEST_PERFORMANCE=./clusters/k8s-dev/indexer-load-test >> $GITHUB_ENV
           echo REPO_MANIFEST_ENV_STAGING=./clusters/k8s-prod/indexer >> $GITHUB_ENV
           echo REPO_MANIFEST_ENV_MAIN=./clusters/k8s-main/indexer >> $GITHUB_ENV

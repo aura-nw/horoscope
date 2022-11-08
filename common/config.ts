@@ -38,12 +38,12 @@ const getDbInfo = (where: string, what: string, defaultValue: string) => {
 };
 
 const genericDbInfo = (where: string): DBInfo => ({
-	dialect: getDbInfo(where, 'DIALECT', 'local') as DBDialog,
+	dialect: process.env["NODE_ENV"] != "test" ? getDbInfo(where, 'DIALECT', 'local') as DBDialog : getDbInfo(where, 'TEST_DIALECT', 'local') as DBDialog,
 	user: getDbInfo(where, 'USER', ''),
 	password: getDbInfo(where, 'PASSWORD', ''),
 	host: getDbInfo(where, 'HOST', ''),
 	port: +getDbInfo(where, 'PORT', '0'),
-	dbname: getDbInfo(where, 'DBNAME', ''),
+	dbname: process.env["NODE_ENV"] != "test" ? getDbInfo(where, 'DBNAME', '') : getDbInfo(where, 'DBNAME_TEST', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),
 	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false'),
 	replicaSet: getDbInfo(where, 'REPLICA_SET', ''),
@@ -53,7 +53,7 @@ const genericDbInfo = (where: string): DBInfo => ({
 
 export default class ConfigClass {
 	public static NODE_ENV: string;
-	// public static IS_TEST = ConfigClass.NODE_ENV === 'test';
+	public static IS_TEST = ConfigClass.NODE_ENV === 'test';
 	// public static HOST = process.env.HOST || '0.0.0.0';
 	// public static PORT = +(process.env.PORT || 80);
 	// public static REQUEST_TIMEOUT = +(process.env.REQUEST_TIMEOUT || 10000);
@@ -101,6 +101,8 @@ export default class ConfigClass {
 	public static DB_ACCOUNT_REWARDS: any;
 	public static DB_DELAY_JOB: any;
 	public static DB_IBC_DENOM: any;
+	public static DB_FEEGRANT_HISTORY: any;
+	public static DB_FEEGRANT: any;
 	public static DB_DAILY_TX_STATISTICS: any;
 	public static DB_ACCOUNT_STATISTICS: any;
 	public static DB_SMART_CONTRACTS: any;
@@ -154,6 +156,7 @@ export default class ConfigClass {
 		process.env.GET_PARAMS_SPENDABLE_BALANCE || PATH_COSMOS_SDK.GET_PARAMS_SPENDABLE_BALANCE;
 	public GET_PARAMS_IBC_DENOM =
 		process.env.GET_PARAMS_IBC_DENOM || PATH_COSMOS_SDK.GET_PARAMS_IBC_DENOM;
+	public GET_VALIDATOR = process.env.GET_VALIDATOR || PATH_COSMOS_SDK.GET_VALIDATOR;
 	public GET_SUPPLY = process.env.GET_SUPPLY || PATH_COSMOS_SDK.GET_SUPPLY;
 	// Dynamic property key
 	[index: string]: any;
@@ -169,7 +172,7 @@ export default class ConfigClass {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			this.NODE_ENV
-		}`;
+			}`;
 		this.DB_USER = genericDbInfo('USER');
 		this.DB_PRODUCT = genericDbInfo('PRODUCT');
 		this.DB_PROPOSAL = genericDbInfo('PROPOSAL');
@@ -200,6 +203,8 @@ export default class ConfigClass {
 		this.DB_DELAY_JOB = genericDbInfo('DELAY_JOB');
 		this.DB_IBC_DENOM = genericDbInfo('IBC_DENOM');
 		this.DB_VOTE = genericDbInfo('VOTE');
+		this.DB_FEEGRANT_HISTORY = genericDbInfo('feegrant_history');
+		this.DB_FEEGRANT = genericDbInfo('feegrant');
 		this.DB_DAILY_TX_STATISTICS = genericDbInfo('DAILY_TX_STATISTICS');
 		this.DB_ACCOUNT_STATISTICS = genericDbInfo('ACCOUNT_STATISTICS');
 		this.DB_SMART_CONTRACTS = genericDbInfo('SMART_CONTRACTS');

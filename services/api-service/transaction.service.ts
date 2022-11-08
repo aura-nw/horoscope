@@ -54,6 +54,8 @@ export default class BlockService extends MoleculerDBService<
 				}),
 			},
 			blockHeight: { type: 'number', optional: true, convert: true },
+			fromHeight: { type: 'number', optional: true, convert: true },
+			needFullLog: { type: 'boolean', optional: true, convert: true, default: false },
 			txHash: { type: 'string', optional: true },
 			address: { type: 'string', optional: true },
 			addressInContract: { type: 'string', optional: true },
@@ -139,6 +141,7 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		const blockHeight = ctx.params.blockHeight;
+		const fromHeight = ctx.params.fromHeight;
 		const txHash = ctx.params.txHash;
 		const address = ctx.params.address;
 		const searchType = ctx.params.searchType;
@@ -147,6 +150,7 @@ export default class BlockService extends MoleculerDBService<
 		const queryParam = ctx.params.query;
 		const addressInContract = ctx.params.addressInContract;
 		const sequenceIBC = ctx.params.sequenceIBC;
+		const needFullLog = ctx.params.needFullLog;
 		let findOne = false;
 		let projection: any = { indexes: 0, custom_info: 0 };
 		//TODO: fix slow when count in query
@@ -169,16 +173,21 @@ export default class BlockService extends MoleculerDBService<
 		if (blockHeight) {
 			query['tx_response.height'] = blockHeight;
 		}
+		if (fromHeight) {
+			query['tx_response.height'] = { $gte: fromHeight };
+		}
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
 		} else {
 			// project field when get list tx
-			projection['tx'] = 0;
-			projection['tx_response.tx.body.messages'] = { $slice: 3 };
-			projection['tx_response.events'] = { $slice: 3 };
-			projection['tx_response.logs'] = 0;
-			projection['tx_response.data'] = 0;
-			projection['tx_response.raw_log'] = 0;
+			if (!needFullLog) {
+				projection['tx'] = 0;
+				projection['tx_response.tx.body.messages'] = { $slice: 3 };
+				projection['tx_response.events'] = { $slice: 3 };
+				projection['tx_response.logs'] = 0;
+				projection['tx_response.data'] = 0;
+				projection['tx_response.raw_log'] = 0;
+			}
 
 			//only show ibc token denom when search IBC tx
 			if (sequenceIBC) {
@@ -667,6 +676,19 @@ export default class BlockService extends MoleculerDBService<
 	 *          schema:
 	 *            type: string
 	 *          description: "Block height of transaction"
+	 *        - in: query
+	 *          name: fromHeight
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *          description: "Tx from block height"
+	 *        - in: query
+	 *          name: needFullLog
+	 *          required: false
+	 *          schema:
+	 *            type: boolean
+	 *            default: "false"
+	 *          description: "Get full log tx"
 	 *        - in: query
 	 *          name: txHash
 	 *          required: false

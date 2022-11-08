@@ -16,6 +16,7 @@ import {
 	CONTRACT_TYPE,
 	LIST_NETWORK,
 	CW721_FIELD,
+	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
@@ -34,6 +35,7 @@ const HANDLE_CODEID_PREFIX = 'handle_codeid';
 const callApiMixin = new CallApiMixin().start();
 import { QueueConfig } from '../../config/queue';
 import { Job } from 'bull';
+import { Utils } from '../../utils/utils';
 const QueueService = require('moleculer-bull');
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -297,7 +299,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						media_link_key,
 						chain_id,
 						field: CW721_FIELD.ANIMATION,
-						cw721_id: resultInsert._id,
+						cw721_id: resultInsert,
 					});
 				}
 				if (imageLink) {
@@ -310,7 +312,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						media_link_key,
 						chain_id,
 						field: CW721_FIELD.IMAGE,
-						cw721_id: resultInsert._id,
+						cw721_id: resultInsert,
 					});
 				}
 			} catch (error) {
@@ -456,6 +458,24 @@ export default class CrawlAssetService extends moleculer.Service {
 	}
 
 	_start(): Promise<void> {
+		// const URL = Utils.getUrlByChainIdAndType('aura-testnet', URL_TYPE_CONSTANTS.LCD);
+		// this.createJob(
+		// 	'CW721.enrich-tokenid',
+		// 	{
+		// 		url: URL,
+		// 		address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
+		// 		code_id: '259',
+		// 		type_enrich: 'upsert',
+		// 		chain_id: 'aura-testnet',
+		// 		token_id: 'token 8',
+		// 	},
+		// 	{
+		// 		removeOnComplete: true,
+		// 		removeOnFail: {
+		// 			count: 3,
+		// 		},
+		// 	},
+		// );
 		this.getQueue('CW721.enrich-tokenid').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
