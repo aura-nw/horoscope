@@ -276,16 +276,16 @@ export enum FEEGRANT_STATUS {
 	AVAILABLE = 'Available',
 	USE_UP = 'Use up',
 	REVOKED = 'Revoked',
-	FAIL = "Fail"
+	FAIL = 'Fail',
 }
 
 export enum FEEGRANT_ACTION {
-	CREATE = "create",
-	REVOKE = "revoke",
-	USE = "use",
-	USE_UP = "useup",
-	CREATE_WITH_FEEGRANT = "_create",
-	REVOKE_WITH_FEEGRANT = "_revoke"
+	CREATE = 'create',
+	REVOKE = 'revoke',
+	USE = 'use',
+	USE_UP = 'useup',
+	CREATE_WITH_FEEGRANT = '_create',
+	REVOKE_WITH_FEEGRANT = '_revoke',
 }
 
 export enum DELAY_JOB_TYPE {
@@ -339,8 +339,13 @@ export const TOP_ACCOUNT_STATS_FIELD = {
 };
 
 export const ALLOWANCE_TYPE = {
-	BASIC_ALLOWANCE: "/cosmos.feegrant.v1beta1.BasicAllowance",
-	PERIODIC_ALLOWANCE: "/cosmos.feegrant.v1beta1.PeriodicAllowance",
-	ALLOWED_MSGS_ALLOWANCE: "/cosmos.feegrant.v1beta1.AllowedMsgAllowance",
-	ALLOWED_CONTRACT_ALLOWANCE: "/cosmos.feegrant.v1beta1.AllowedContractAllowance",
-}
+	BASIC_ALLOWANCE: '/cosmos.feegrant.v1beta1.BasicAllowance',
+	PERIODIC_ALLOWANCE: '/cosmos.feegrant.v1beta1.PeriodicAllowance',
+	ALLOWED_MSGS_ALLOWANCE: '/cosmos.feegrant.v1beta1.AllowedMsgAllowance',
+	ALLOWED_CONTRACT_ALLOWANCE: '/cosmos.feegrant.v1beta1.AllowedContractAllowance',
+};
+
+export const CW721_FIELD = {
+	IMAGE: 'IMAGE',
+	ANIMATION: 'ANIMATION',
+};
