@@ -4,9 +4,9 @@ process.env.TEST = 'true';
 
 import { Context, Errors, ServiceBroker } from 'moleculer';
 import { Config } from '../../../../common';
-import FeegrantDb from '../../../../services/feegrant-indexer/feegrant-db.service';
+import FeegrantDb from '../../../../services/feegrant/feegrant-db.service';
 import { ITransaction } from '../../../../entities';
-import FeegrantTxHandler from '../../../../services/feegrant-indexer/feegrant-tx-handler.service';
+import FeegrantTxHandler from '../../../../services/feegrant/feegrant-tx-handler.service';
 import * as Data from './mock-data'
 import _ from 'lodash';
 

@@ -72,12 +72,21 @@ export default class FeegrantTxHandler extends Service {
 	async initEnv() {
 		//get feegrant latest block which was unprocessing
 		let handledBlockRedis = await this.redisClient.get(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK);
-		this.currentBlock = 0;
+		this.currentBlock = 0
 		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : this.currentBlock;
 	}
 
 	async handleJob(chainId: string): Promise<any[]> {
 		let feegrantList: IFeegrantData[] = [];
+		// oldest block in Tx DB
+		const oldestBlockTx = await this.adapter.lean({
+			sort: "tx_response.height",
+			limit: 1,
+			projection: {
+				"tx_response.height": 1
+			},
+		}) as ITransaction[]
+		this.currentBlock = oldestBlockTx[0] ? oldestBlockTx[0].tx_response.height.valueOf() : 0
 		// latest block in transaction DB
 		const latestBlockTx = await this.adapter.lean({
 			sort: "-tx_response.height",

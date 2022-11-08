@@ -5,7 +5,7 @@ process.env.TEST = 'true';
 import { Context, Errors, ServiceBroker } from 'moleculer';
 import { Config } from '../../../../common';
 import { ITransaction } from '../../../../entities';
-import FeegrantTxHandler from '../../../../services/feegrant-indexer/feegrant-tx-handler.service';
+import FeegrantTxHandler from '../../../../services/feegrant/feegrant-tx-handler.service';
 import * as Data from './mock-data'
 
 describe('Test feegrant-tx-handler service', () => {

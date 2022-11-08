@@ -2,8 +2,8 @@
 
 process.env.TEST = 'true';
 import { ServiceBroker } from 'moleculer';
-import FeegrantDb from '../../../../services/feegrant-indexer/feegrant-db.service';
-import CronjobUpdateOriginalGrant from '../../../../services/feegrant-indexer/cronjob-update-origin-grant.service';
+import FeegrantDb from '../../../../services/feegrant/feegrant-db.service';
+import CronjobUpdateOriginalGrant from '../../../../services/feegrant/cronjob-update-origin-grant.service';
 import _ from 'lodash';
 describe('Test cronjob-update-original-grant service', () => {
     const broker = new ServiceBroker({ logger: false });
