@@ -21,3 +21,4 @@ export * from './db-daily-tx-statistics.mixin';
 export * from './db-account-statistics.mixin';
 export * from './db-delay-job.mixin';
 export * from './db-smart-contracts.mixin';
+export * from './db-daily-cw20-holder.mixin';

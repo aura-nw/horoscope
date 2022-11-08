@@ -104,6 +104,7 @@ export default class ConfigClass {
 	public static DB_DAILY_TX_STATISTICS: any;
 	public static DB_ACCOUNT_STATISTICS: any;
 	public static DB_SMART_CONTRACTS: any;
+	public static DB_DAILY_CW20_HOLDER: any;
 
 	public ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
 
@@ -202,5 +203,6 @@ export default class ConfigClass {
 		this.DB_DAILY_TX_STATISTICS = genericDbInfo('DAILY_TX_STATISTICS');
 		this.DB_ACCOUNT_STATISTICS = genericDbInfo('ACCOUNT_STATISTICS');
 		this.DB_SMART_CONTRACTS = genericDbInfo('SMART_CONTRACTS');
+		this.DB_DAILY_CW20_HOLDER = genericDbInfo('DAILY_CW20_HOLDER');
 	}
 }
