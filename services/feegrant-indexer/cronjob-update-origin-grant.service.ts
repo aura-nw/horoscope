@@ -16,7 +16,7 @@ export default class CronjobUpdateOriginalGrant extends Service {
 
         super(broker);
         this.parseServiceSchema({
-            name: 'cronjob-update-original-grant',
+            name: 'cronjobUpdateOriginGrant',
             version: 1,
             mixins: [
                 QueueService(QueueConfig.redis, QueueConfig.opts),
@@ -73,7 +73,7 @@ export default class CronjobUpdateOriginalGrant extends Service {
             query["status"] = FEEGRANT_STATUS.AVAILABLE
             query["result"] = true
             // find grant for each distinctPairGranterGrantee
-            const listOriginalFeegrant = await this.broker.call('v1.db-feegrant.find', {
+            const listOriginalFeegrant = await this.broker.call('v1.feegrantDb.find', {
                 query
             }) as FeegrantEntity[]
             // list to update feegrant DB
@@ -107,18 +107,20 @@ export default class CronjobUpdateOriginalGrant extends Service {
                 }
             })
             // forward all unprocessed actions to feegrant db service
-            this.createJob(
-                'feegrant.db',
-                {
-                    listUpdateFeegrantDb
-                },
-                {
-                    removeOnComplete: true,
-                    removeOnFail: {
-                        count: 10,
+            if (process.env["NODE_ENV"] != "test") {
+                this.createJob(
+                    'feegrant.db',
+                    {
+                        listUpdateFeegrantDb
                     },
-                },
-            );
+                    {
+                        removeOnComplete: true,
+                        removeOnFail: {
+                            count: 10,
+                        },
+                    },
+                );
+            }
             await this.adapter.bulkWrite(bulkUpdate)
         }
     }

@@ -14,8 +14,8 @@ describe('Test cronjob-update-original-grant service', () => {
     })
 
     beforeAll(async () => {
-        broker.start()
-        await Promise.all([cronjobUpdateOriginalGrantService.waitForServices(['v1.db-feegrant']), cronjobUpdateOriginalGrantService.adapter.insertMany(sample)])
+        await broker.start()
+        await Promise.all([cronjobUpdateOriginalGrantService.waitForServices(['v1.feegrantDb']), cronjobUpdateOriginalGrantService.adapter.insertMany(sample)])
         await feegrantDbService.adapter.insertMany([
             {
                 "_id": null,
@@ -184,7 +184,7 @@ describe('Test cronjob-update-original-grant service', () => {
     });
     afterAll(async () => {
         await Promise.all([cronjobUpdateOriginalGrantService.adapter.removeMany({}), feegrantDbService.adapter.removeMany({})])
-        broker.stop()
+        await broker.stop()
     });
     it("Test update origin tx hash for each action", async () => {
         const results = await cronjobUpdateOriginalGrantService.adapter.find({

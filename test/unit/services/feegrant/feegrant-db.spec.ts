@@ -183,11 +183,11 @@ describe('Test feegrant-db service', () => {
         await feegrantDbService.adapter.removeMany({});
     })
     beforeAll(async () => {
-        broker.start();
+        await broker.start();
 
     });
     afterAll(async () => {
-        broker.stop()
+        await broker.stop()
     });
     it("test check expire cronjob", async () => {
         await feegrantDbService.handleJobCheckExpire()

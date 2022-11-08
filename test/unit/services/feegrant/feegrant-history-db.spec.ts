@@ -20,13 +20,13 @@ describe('Test feegrant-history-db service', () => {
 
     // feegrantDbService.actions = { insert: mockInsert }
     beforeAll(async () => {
-        broker.start()
-        await feegarntHistoryDbService.waitForServices(['v1.db-feegrant'])
+        await broker.start()
+        await feegarntHistoryDbService.waitForServices(['v1.feegrantDb'])
         await feegarntHistoryDbService.handleJob(sample, "")
     });
     afterAll(async () => {
         await Promise.all([feegarntHistoryDbService.adapter.removeMany({}), feegrantDbService.adapter.removeMany({})])
-        broker.stop()
+        await broker.stop()
     });
     it("Test add new grant to feegrant DB", async () => {
         const results = await feegrantDbService.adapter.find({})

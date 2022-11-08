@@ -29,7 +29,7 @@ export default class FeegrantDB extends Service {
     public constructor(public broker: ServiceBroker) {
         super(broker);
         this.parseServiceSchema({
-            name: 'db-feegrant',
+            name: 'feegrantDb',
             version: 1,
             mixins: [
                 QueueService(QueueConfig.redis, QueueConfig.opts),

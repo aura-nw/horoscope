@@ -10,7 +10,7 @@
     "graphql:generate": "npx prisma generate",
     "cli": "moleculer connect Redis",
     "ci": "jest --watch",
-    "test": "jest --coverage",
+    "test": "jest --coverage --runInBand --forceExit",
     "lint": "eslint --ext .js,.ts .",
     "dc:up": "docker-compose up --build -d",
     "dc:logs": "docker-compose logs -f",

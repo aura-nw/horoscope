@@ -45,7 +45,7 @@ export default class FeegrantTxHandler extends Service {
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'handle-feegrant-tx',
+			name: 'feegrantTxHandler',
 			version: 1,
 			mixins: [
 				QueueService(QueueConfig.redis, QueueConfig.opts),
@@ -308,19 +308,21 @@ export default class FeegrantTxHandler extends Service {
 			}
 		}
 		// forward to feegrant history db service
-		this.createJob(
-			'feegrant.history-db',
-			{
-				feegrantList,
-				chainId
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
+		if (process.env["NODE_ENV"] != "test") {
+			this.createJob(
+				'feegrant.history-db',
+				{
+					feegrantList,
+					chainId
 				},
-			},
-		);
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: 10,
+					},
+				},
+			);
+		}
 		// update feegrant latest block
 		this.currentBlock = this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
 		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
@@ -331,21 +333,23 @@ export default class FeegrantTxHandler extends Service {
 
 	async _start() {
 		this.redisClient = await this.getRedisClient();
-		this.createJob(
-			'feegrant.tx-handle',
-			{
-				chainId: Config.CHAIN_ID
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
+		if (process.env["NODE_ENV"] != "test") {
+			this.createJob(
+				'feegrant.tx-handle',
+				{
+					chainId: Config.CHAIN_ID
 				},
-				repeat: {
-					every: parseInt(Config.MILISECOND_PER_BATCH, 10),
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: 10,
+					},
+					repeat: {
+						every: parseInt(Config.MILISECOND_PER_BATCH, 10),
+					},
 				},
-			},
-		);
+			);
+		}
 		await this.initEnv()
 		this.getQueue('feegrant.tx-handle').on('completed', (job: Job) => {
 			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);

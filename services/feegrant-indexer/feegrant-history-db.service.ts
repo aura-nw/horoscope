@@ -26,7 +26,7 @@ export default class CrawlAccountInfoService extends Service {
     public constructor(public broker: ServiceBroker) {
         super(broker);
         this.parseServiceSchema({
-            name: 'history-db-feegrant',
+            name: 'feegrantHistoryDb',
             version: 1,
             mixins: [
                 QueueService(QueueConfig.redis, QueueConfig.opts),
@@ -184,9 +184,13 @@ export default class CrawlAccountInfoService extends Service {
             }
         });
         // insert new grants to feegrant DB
-        await this.broker.call('v1.db-feegrant.insert', {
-            entities: records_create
-        })
+        try {
+            await this.broker.call('v1.feegrantDb.insert', {
+                entities: records_create
+            })
+        } catch (error) {
+            this.logger.error(error)
+        }
         // save to history feegrant DB
         try {
             await this.adapter.insertMany(records)

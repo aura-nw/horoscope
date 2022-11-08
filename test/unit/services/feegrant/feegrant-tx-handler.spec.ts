@@ -16,8 +16,8 @@ describe('Test feegrant-tx-handler service', () => {
         Promise.resolve(listTx)
     );
 
-    beforeAll(() => broker.start());
-    afterAll(() => broker.stop());
+    beforeAll(async () => await broker.start());
+    afterAll(async () => await broker.stop());
     describe("Test filter", () => {
         it("Could filter create", async () => {
             const mockData: ITransaction[] = []
