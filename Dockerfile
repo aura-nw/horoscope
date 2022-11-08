@@ -1,5 +1,6 @@
 FROM node:16-alpine3.15
-
+RUN apk add --update python make g++\
+   && rm -rf /var/cache/apk/*
 # Working directory
 WORKDIR /app
 
