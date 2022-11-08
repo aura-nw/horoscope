@@ -67,6 +67,8 @@ export const MSG_TYPE = {
 	MSG_IBC_UPDATE_CLIENT: '/ibc.core.client.v1.MsgUpdateClient',
 	MSG_IBC_CONNECTION_OPEN_ACK: '/ibc.core.connection.v1.MsgConnectionOpenAck',
 	MSG_IBC_CONNECTION_OPEN_INIT: '/ibc.core.connection.v1.MsgConnectionOpenInit',
+	MSG_FEEGRANT_GRANT: '/cosmos.feegrant.v1beta1.MsgGrantAllowance',
+	MSG_FEEGRANT_REVOKE: '/cosmos.feegrant.v1beta1.MsgRevokeAllowance',
 	MSG_EXEC: '/cosmos.authz.v1beta1.MsgExec',
 };
 
@@ -270,6 +272,22 @@ export enum VESTING_ACCOUNT_TYPE {
 	DELAYED = '/cosmos.vesting.v1beta1.DelayedVestingAccount',
 }
 
+export enum FEEGRANT_STATUS {
+	AVAILABLE = 'Available',
+	USE_UP = 'Use up',
+	REVOKED = 'Revoked',
+	FAIL = "Fail"
+}
+
+export enum FEEGRANT_ACTION {
+	CREATE = "create",
+	REVOKE = "revoke",
+	USE = "use",
+	USE_UP = "useup",
+	CREATE_WITH_FEEGRANT = "_create",
+	REVOKE_WITH_FEEGRANT = "_revoke"
+}
+
 export enum DELAY_JOB_TYPE {
 	REDELEGATE = 'redelegate',
 	UNBOND = 'unbond',
@@ -320,7 +338,9 @@ export const TOP_ACCOUNT_STATS_FIELD = {
 	AMOUNT_RECEIVED: 'AMOUNT_RECEIVED',
 };
 
-export const CW721_FIELD = {
-	IMAGE: 'IMAGE',
-	ANIMATION: 'ANIMATION',
-};
+export const ALLOWANCE_TYPE = {
+	BASIC_ALLOWANCE: "/cosmos.feegrant.v1beta1.BasicAllowance",
+	PERIODIC_ALLOWANCE: "/cosmos.feegrant.v1beta1.PeriodicAllowance",
+	ALLOWED_MSGS_ALLOWANCE: "/cosmos.feegrant.v1beta1.AllowedMsgAllowance",
+	ALLOWED_CONTRACT_ALLOWANCE: "/cosmos.feegrant.v1beta1.AllowedContractAllowance",
+}
