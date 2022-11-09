@@ -15,7 +15,9 @@ describe('Test feegrant-tx-handler service', () => {
     const mockFind = jest.fn(params =>
         Promise.resolve(listTx)
     );
-
+    service.adapter.lean = jest.fn(params =>
+        Promise.resolve([])
+    );
     beforeAll(async () => await broker.start());
     afterAll(async () => await broker.stop());
     describe("Test filter", () => {
