@@ -199,7 +199,13 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 				});
 				let query: any = {
 					'custom_info.chain_id': chainId,
-					$or: [{ 'metadata.image': sourceUri }, { 'metadata.animation_url': sourceUri }],
+					$or: [
+						{ 'metadata.image': sourceUri },
+						{ 'metadata.animation_url': sourceUri },
+						{
+							'asset_info.data.info.token_uri': sourceUri,
+						},
+					],
 				};
 				// if (field == CW721_FIELD.IMAGE) {
 				// 	query['metadata.image'] = sourceUri;

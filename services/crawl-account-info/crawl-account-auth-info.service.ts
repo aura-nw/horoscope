@@ -4,6 +4,7 @@ import { Job } from 'bull';
 import { Config } from '../../common';
 import {
 	DELAY_JOB_TYPE,
+	EVMOS_TYPE_ACCOUNT,
 	LIST_NETWORK,
 	URL_TYPE_CONSTANTS,
 	VESTING_ACCOUNT_TYPE,
@@ -186,6 +187,20 @@ export default class CrawlAccountAuthInfoService extends Service {
 					}
 				}
 
+				if (
+					resultCallApi &&
+					resultCallApi.account &&
+					resultCallApi.account['@type'] == EVMOS_TYPE_ACCOUNT.ETH_ACCOUNT
+				) {
+					if (resultCallApi.account.base_account) {
+						resultCallApi.account.address = resultCallApi.account.base_account.address;
+						resultCallApi.account.pub_key = resultCallApi.account.base_account.pub_key;
+						resultCallApi.account.account_number =
+							resultCallApi.account.base_account.account_number;
+						resultCallApi.account.sequence =
+							resultCallApi.account.base_account.sequence;
+					}
+				}
 				accountInfo.account_auth = resultCallApi;
 
 				listAccounts.push(accountInfo);
