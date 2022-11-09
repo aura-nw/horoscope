@@ -20,3 +20,4 @@ export * from './account-statistics.model';
 export * from './cw4973-asset.model';
 export * from './cw4973-asset-media.model';
 export * from './smart-contracts.model';
+export * from './daily-cw20-holder.model';
