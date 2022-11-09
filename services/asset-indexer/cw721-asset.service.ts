@@ -67,6 +67,14 @@ const QueueService = require('moleculer-bull');
 				job.progress(100);
 			},
 		},
+		'CW721.migrate-old-data': {
+			concurrency: 1,
+			async process(job: Job) {
+				const chain_id = job.data.chain_id;
+				//@ts-ignore
+				this.handleMigrateOldData(chain_id);
+			},
+		},
 	},
 	events: {
 		'CW721.validate': {
@@ -456,8 +464,89 @@ export default class CrawlAssetService extends moleculer.Service {
 	private async updateById(id: any, update: any) {
 		return await this.adapter.updateById(id, update);
 	}
+	async handleMigrateOldData(chainId: string) {
+		let listAggregate: any[] = [];
+		const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+		if (network && network.databaseName) {
+			// @ts-ignore
+			this.adapter.useDb(network.databaseName);
+		}
 
+		listAggregate.push(
+			{
+				$match: {
+					media_link: { $ne: '' },
+				},
+			},
+			{
+				$lookup: {
+					from: 'cw721_media_link',
+					localField: 'media_link',
+					foreignField: 'key',
+					as: 'media_info',
+				},
+			},
+			{
+				$limit: 10,
+			},
+		);
+
+		// @ts-ignore
+		this.logger.debug(JSON.stringify(listAggregate));
+		// @ts-ignore
+		let listResult = await this.adapter.aggregate(listAggregate);
+		let listBulk: any[] = [];
+		listResult.forEach(async (result: any) => {
+			if (result.media_info && result.media_info.length > 0) {
+				let link = result.media_info[0].media_link;
+				let contentType = result.media_info[0].content_type;
+
+				let image: any = {};
+				if (link) {
+					image['link_s3'] = link;
+				}
+				if (contentType) {
+					image['content_type'] = contentType;
+				}
+
+				listBulk.push({
+					updateOne: {
+						filter: {
+							_id: result._id,
+						},
+						update: {
+							$set: {
+								image: image,
+							},
+						},
+					},
+				});
+			}
+		});
+
+		if (listBulk.length > 0) {
+			//@ts-ignore
+			let resultBulk = await this.adapter.bulkWrite(listBulk);
+			this.logger.info(resultBulk);
+			listBulk = [];
+		}
+	}
 	_start(): Promise<void> {
+		//@ts-ignore
+		// this.createJob(
+		// 	'CW721.migrate-old-data',
+		// 	{
+		// 		chain_id: 'euphoria-1',
+		// 	},
+		// 	{
+		// 		removeOnComplete: true,
+		// 		removeOnFail: {
+		// 			count: 3,
+		// 		},
+		// 		// attempts: 5,
+		// 		// backoff: 5000,
+		// 	},
+		// );
 		// const URL = Utils.getUrlByChainIdAndType('aura-testnet', URL_TYPE_CONSTANTS.LCD);
 		// this.createJob(
 		// 	'CW721.enrich-tokenid',

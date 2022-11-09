@@ -101,6 +101,7 @@ export default class CrawlTransactionService extends Service {
 
 	writeHeapDump() {
 		if (Config.PATH_HEAP_DUMP) {
+			this.logger.info('write to heap log');
 			heapdump.writeSnapshot(
 				Config.PATH_HEAP_DUMP + new Date().toISOString().split('T')[0] + '.heapsnapshot',
 			);
