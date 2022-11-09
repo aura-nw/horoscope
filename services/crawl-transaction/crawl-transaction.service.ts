@@ -117,7 +117,7 @@ export default class CrawlTransactionService extends Service {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 		let result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
 		heapdump.writeSnapshot(
-			'app/tmp/heap_' + new Date().toISOString().split('T')[0] + '.heapsnapshot',
+			'/app/tmp/heap_' + new Date().toISOString().split('T')[0] + '.heapsnapshot',
 		);
 		if (result) {
 			this.redisClient.sendCommand([
