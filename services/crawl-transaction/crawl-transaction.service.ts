@@ -99,16 +99,19 @@ export default class CrawlTransactionService extends Service {
 		});
 	}
 
+	writeHeapDump() {
+		if (Config.PATH_HEAP_DUMP) {
+			heapdump.writeSnapshot(
+				Config.PATH_HEAP_DUMP + new Date().toISOString().split('T')[0] + '.heapsnapshot',
+			);
+		}
+	}
 	async handleJob(listTx: string[]) {
 		listTx.map((tx: string) => {
-			heapdump.writeSnapshot(
-				'app/tmp/heap_' + new Date().toISOString().split('T')[0] + '.heapsnapshot',
-			);
+			this.writeHeapDump();
 			const txHash = sha256(Buffer.from(tx, 'base64')).toUpperCase();
 			this.crawlTransaction(txHash);
-			heapdump.writeSnapshot(
-				'app/tmp/heap_' + new Date().toISOString().split('T')[0] + '.heapsnapshot',
-			);
+			this.writeHeapDump();
 		});
 	}
 
@@ -116,9 +119,7 @@ export default class CrawlTransactionService extends Service {
 		this.logger.info(`txhash: ${txHash}`);
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 		let result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
-		heapdump.writeSnapshot(
-			'/app/tmp/heap_' + new Date().toISOString().split('T')[0] + '.heapsnapshot',
-		);
+		this.writeHeapDump();
 		if (result) {
 			this.redisClient.sendCommand([
 				'XADD',

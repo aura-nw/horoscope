@@ -38,12 +38,18 @@ const getDbInfo = (where: string, what: string, defaultValue: string) => {
 };
 
 const genericDbInfo = (where: string): DBInfo => ({
-	dialect: process.env["NODE_ENV"] != "test" ? getDbInfo(where, 'DIALECT', 'local') as DBDialog : getDbInfo(where, 'TEST_DIALECT', 'local') as DBDialog,
+	dialect:
+		process.env['NODE_ENV'] != 'test'
+			? (getDbInfo(where, 'DIALECT', 'local') as DBDialog)
+			: (getDbInfo(where, 'TEST_DIALECT', 'local') as DBDialog),
 	user: getDbInfo(where, 'USER', ''),
 	password: getDbInfo(where, 'PASSWORD', ''),
 	host: getDbInfo(where, 'HOST', ''),
 	port: +getDbInfo(where, 'PORT', '0'),
-	dbname: process.env["NODE_ENV"] != "test" ? getDbInfo(where, 'DBNAME', '') : getDbInfo(where, 'DBNAME_TEST', ''),
+	dbname:
+		process.env['NODE_ENV'] != 'test'
+			? getDbInfo(where, 'DBNAME', '')
+			: getDbInfo(where, 'DBNAME_TEST', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),
 	retryWrites: getDbInfo(where, 'RETRY_WRITES', 'false'),
 	replicaSet: getDbInfo(where, 'REPLICA_SET', ''),
@@ -157,6 +163,7 @@ export default class ConfigClass {
 		process.env.GET_PARAMS_IBC_DENOM || PATH_COSMOS_SDK.GET_PARAMS_IBC_DENOM;
 	public GET_VALIDATOR = process.env.GET_VALIDATOR || PATH_COSMOS_SDK.GET_VALIDATOR;
 	public GET_SUPPLY = process.env.GET_SUPPLY || PATH_COSMOS_SDK.GET_SUPPLY;
+	public PATH_HEAP_DUMP = process.env.PATH_HEAP_DUMP || '/app/tmp/heap_';
 	// Dynamic property key
 	[index: string]: any;
 
@@ -171,7 +178,7 @@ export default class ConfigClass {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			this.NODE_ENV
-			}`;
+		}`;
 		this.DB_USER = genericDbInfo('USER');
 		this.DB_PRODUCT = genericDbInfo('PRODUCT');
 		this.DB_PROPOSAL = genericDbInfo('PROPOSAL');
