@@ -35,6 +35,7 @@ export const queues = [
 	'crawl.daily-tx',
 	'crawl.account-stats',
 	'crawl.transaction',
+	'crawl.transaction-hash',
 	'add-proposer',
 	'handle.block',
 	'handle.transaction.delegate',
