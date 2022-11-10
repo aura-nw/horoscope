@@ -267,10 +267,10 @@ export default class CrawlAssetService extends moleculer.Service {
 					if (schemaIPFS) {
 						metadata = JSON.parse(schemaIPFS.toString());
 					}
-					if (!imageLink) {
+					if (!imageLink && metadata.image) {
 						imageLink = metadata.image;
 					}
-					if (!animationLink) {
+					if (!animationLink && metadata.animation_url) {
 						animationLink = metadata.animation_url;
 					}
 				}
