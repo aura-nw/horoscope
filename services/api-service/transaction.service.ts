@@ -153,12 +153,13 @@ export default class BlockService extends MoleculerDBService<
 		const needFullLog = ctx.params.needFullLog;
 		let findOne = false;
 		let projection: any = { indexes: 0, custom_info: 0 };
+
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
 		// ctx.params.countTotal = false;
-		// const sort = ctx.params.reverse ? '_id' : '-_id';
+		const sort = ctx.params.reverse ? 'indexes.height' : '-indexes.height';
 
-		const sort = '-indexes.height';
+		// const sort = '-indexes.height';
 		let query: QueryOptions = {};
 		if (ctx.params.txHash) {
 			ctx.params.nextKey = undefined;
@@ -167,7 +168,11 @@ export default class BlockService extends MoleculerDBService<
 			findOne = true;
 		}
 		if (ctx.params.nextKey) {
-			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+			if (ctx.params.reverse) {
+				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
+			} else {
+				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+			}
 		}
 		query['custom_info.chain_id'] = ctx.params.chainid;
 		if (blockHeight) {
@@ -210,7 +215,10 @@ export default class BlockService extends MoleculerDBService<
 			let queryAnd: any[] = [];
 			queryParamFormat.forEach((e: any) => {
 				let tempQuery = {
-					[`indexes.${e.type}_${e.key}`]: { $exists: true, $eq: e.value },
+					[`indexes.${e.type}_${e.key}`]: {
+						$exists: true,
+						$eq: decodeURIComponent(e.value),
+					},
 				};
 				queryAnd.push(tempQuery);
 			});

@@ -164,7 +164,7 @@ export default class ConfigClass {
 		process.env.GET_PARAMS_IBC_DENOM || PATH_COSMOS_SDK.GET_PARAMS_IBC_DENOM;
 	public GET_VALIDATOR = process.env.GET_VALIDATOR || PATH_COSMOS_SDK.GET_VALIDATOR;
 	public GET_SUPPLY = process.env.GET_SUPPLY || PATH_COSMOS_SDK.GET_SUPPLY;
-	public PATH_HEAP_DUMP = process.env.PATH_HEAP_DUMP || '/app/tmp/heap_';
+	public PATH_HEAP_DUMP = process.env.PATH_HEAP_DUMP || '/app/heap_';
 	// Dynamic property key
 	[index: string]: any;
 

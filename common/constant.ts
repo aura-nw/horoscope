@@ -349,3 +349,7 @@ export const CW721_FIELD = {
 	IMAGE: 'IMAGE',
 	ANIMATION: 'ANIMATION',
 };
+
+export const EVMOS_TYPE_ACCOUNT = {
+	ETH_ACCOUNT: '/ethermint.types.v1.EthAccount',
+};

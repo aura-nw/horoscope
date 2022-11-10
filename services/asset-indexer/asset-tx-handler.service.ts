@@ -88,26 +88,7 @@ export default class CrawlAccountInfoService extends Service {
 	}
 
 	async handleJob(URL: string, listTx: ITransaction[], chainId: string): Promise<any[]> {
-		let contractListFromEvent: any[] = [];
 		try {
-			// if (listTx.length > 0) {
-			// 	for (const tx of listTx) {
-			// 		this.logger.debug('tx', JSON.stringify(tx));
-			// 		let log = tx.tx_response.logs[0];
-			// 		if (log && log.events) {
-			// 			let events = log.events;
-			// 			let attributes = events.find(
-			// 				(x: any) => x.type == EVENT_TYPE.EXECUTE,
-			// 			)?.attributes;
-			// 			if (attributes) {
-			// 				contractListFromEvent.push(...attributes);
-			// 			}
-			// 		}
-			// 	}
-			// }
-			// let contractList = _.map(_.uniqBy(contractListFromEvent, 'value'), 'value');
-			// this.logger.debug(`contractList ${JSON.stringify(contractList)}`);
-
 			const listContractAndTokenId = this.getContractAndTokenIdFromListTx(listTx);
 
 			if (listContractAndTokenId.length > 0) {
@@ -165,6 +146,13 @@ export default class CrawlAccountInfoService extends Service {
 												},
 											);
 										}
+										break;
+									case CodeIDStatus.WAITING:
+										this.broker.emit(`${contractInfo.contract_type}.validate`, {
+											URL,
+											chain_id: chainId,
+											code_id: contractInfo.code_id,
+										});
 										break;
 									case CodeIDStatus.TBD:
 										this.broker.emit(`${contractInfo.contract_type}.validate`, {
@@ -271,6 +259,7 @@ export default class CrawlAccountInfoService extends Service {
 			if (res.length > 0) {
 				if (
 					res[0].status === CodeIDStatus.COMPLETED ||
+					res[0].status === CodeIDStatus.WAITING ||
 					res[0].status === CodeIDStatus.TBD
 				) {
 					return {

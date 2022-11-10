@@ -267,16 +267,18 @@ export default class CrawlAssetService extends moleculer.Service {
 					if (schemaIPFS) {
 						metadata = JSON.parse(schemaIPFS.toString());
 					}
-					if (!imageLink) {
+					if (!imageLink && metadata.image) {
 						imageLink = metadata.image;
 					}
-				}
-				if (!imageLink && tokenInfo.data.info.token_uri) {
-					imageLink = tokenInfo.data.info.token_uri;
+					if (!animationLink && metadata.animation_url) {
+						animationLink = metadata.animation_url;
+					}
 				}
 			} catch (error) {
 				this.logger.error('Cannot get schema');
-				// this.logger.error(error);
+				if (!imageLink && tokenInfo.data.info.token_uri) {
+					imageLink = tokenInfo.data.info.token_uri;
+				}
 			}
 
 			//create a record to save cw721
@@ -547,16 +549,16 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 		// backoff: 5000,
 		// 	},
 		// );
-		// const URL = Utils.getUrlByChainIdAndType('aura-testnet', URL_TYPE_CONSTANTS.LCD);
+		// const URL = Utils.getUrlByChainIdAndType('serenity-testnet-001', URL_TYPE_CONSTANTS.LCD);
 		// this.createJob(
 		// 	'CW721.enrich-tokenid',
 		// 	{
 		// 		url: URL,
-		// 		address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
-		// 		code_id: '259',
+		// 		address: 'aura1yyjcevv8rspv25n8cklk568v6jcfzp40wrh757mfrhsmf7jjxmtqaf0qrd',
+		// 		code_id: '7',
 		// 		type_enrich: 'upsert',
-		// 		chain_id: 'aura-testnet',
-		// 		token_id: 'token 8',
+		// 		chain_id: 'serenity-testnet-001',
+		// 		token_id: '5',
 		// 	},
 		// 	{
 		// 		removeOnComplete: true,
