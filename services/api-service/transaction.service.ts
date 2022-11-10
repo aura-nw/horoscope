@@ -215,7 +215,10 @@ export default class BlockService extends MoleculerDBService<
 			let queryAnd: any[] = [];
 			queryParamFormat.forEach((e: any) => {
 				let tempQuery = {
-					[`indexes.${e.type}_${e.key}`]: { $exists: true, $eq: e.value },
+					[`indexes.${e.type}_${e.key}`]: {
+						$exists: true,
+						$eq: decodeURIComponent(e.value),
+					},
 				};
 				queryAnd.push(tempQuery);
 			});
