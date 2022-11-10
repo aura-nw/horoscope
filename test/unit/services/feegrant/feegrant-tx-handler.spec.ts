@@ -234,10 +234,10 @@ describe('Test feegrant-tx-handler service', () => {
                 expired: false
             }]);
         });
-        it("Could filter revoke with feegrant", async () => {
+        it("Could filter revoke with feegrant then use up", async () => {
             const mockData: ITransaction[] = []
             //@ts-ignore
-            mockData.push(Data.tx_revoke_with_feegrant)
+            mockData.push(Data.tx_revoke_with_feegrant_then_useup)
             const mockFind = jest.fn(params =>
                 Promise.resolve(mockData)
             );
@@ -246,7 +246,7 @@ describe('Test feegrant-tx-handler service', () => {
 
             let result = await service.handleJob({ chainId: Config.CHAIN_ID })
             // Check the result
-            expect(result).toEqual([{
+            expect(result.sort(compare)).toEqual([{
                 action: "_revoke",
                 granter: "aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el",
                 grantee: "aura18mlzkmmnuk4t44s52ulex070tc7xyrrmqu5ku2",
@@ -266,7 +266,27 @@ describe('Test feegrant-tx-handler service', () => {
                     "chain_name": "Aura Euphoria"
                 },
                 expired: false
-            }]);
+            }, {
+                action: "useup",
+                granter: "aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr",
+                grantee: "aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el",
+                payer: "aura1086crld2mmg4w46lgp48u7eyrhdlk4fh6978vr",
+                result: true,
+                timestamp: "2022-10-10T03:30:33Z",
+                amount: {
+                    "denom": "",
+                    "amount": "0"
+                },
+                tx_hash: "94F41B7F641E7FE272F7ABFF5989C9BA3240EF848A44294245BD923C86536C7A",
+                expiration: null,
+                type: "",
+                spend_limit: {},
+                custom_info: {
+                    "chain_id": "euphoria-1",
+                    "chain_name": "Aura Euphoria"
+                },
+                expired: false
+            }].sort(compare));
         });
         it("Could filter create period", async () => {
             const mockData: ITransaction[] = []
@@ -346,3 +366,16 @@ describe('Test feegrant-tx-handler service', () => {
 });
 
 
+function compare(a: any, b: any) {
+    if (a.tx_hash < b.tx_hash) {
+        return -1;
+    }
+    if (a.tx_hash > b.tx_hash) {
+        return 1;
+    }
+    if (a.tx_hash == b.tx_hash) {
+        if (a.action > b.action) return 1
+        else return -1
+    }
+    return 0;
+}

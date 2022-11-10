@@ -51,11 +51,11 @@ export default class FeegrantDB extends Service {
                 },
                 'feegrant-check-expire.db': {
                     concurrency: 1,
-                    process(job: Job) {
+                    async process(job: Job) {
                         job.progress(10);
 
                         // @ts-ignore
-                        this.handleJobCheckExpire();
+                        await this.handleJobCheckExpire();
 
                         job.progress(100);
                         return true;
@@ -68,7 +68,7 @@ export default class FeegrantDB extends Service {
     async handleJobCheckExpire() {
         // check expired
         await this.adapter.updateMany({
-            'timestamp': {
+            'expiration': {
                 $lte: new Date()
             },
             'status': FEEGRANT_STATUS.AVAILABLE
