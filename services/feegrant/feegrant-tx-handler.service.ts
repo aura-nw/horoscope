@@ -151,6 +151,28 @@ export default class FeegrantTxHandler extends Service {
 								custom_info: tx.custom_info,
 								expired: false
 							}
+							if (events.find(e => e.type === "revoke_feegrant")) {
+								// use up
+								let feegrantUseup = {
+									action: FEEGRANT_ACTION.USE_UP,
+									granter: payer,
+									grantee: message["granter"] as String,
+									result: tx.tx_response.code.toString() === "0",
+									timestamp: tx.tx_response.timestamp,
+									amount: {
+										amount: "0",
+										denom: ""
+									},
+									payer,
+									tx_hash: tx.tx_response.txhash,
+									expiration: null,
+									type: "",
+									spend_limit: {} as Coin,
+									custom_info: tx.custom_info,
+									expired: false
+								}
+								feegrantList.push(feegrantUseup)
+							}
 							feegrantList.push(feegrantCreate)
 						} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_REVOKE) {
 							// revoke feegrant  + use another fee grant
@@ -168,6 +190,28 @@ export default class FeegrantTxHandler extends Service {
 								spend_limit: {} as Coin,
 								custom_info: tx.custom_info,
 								expired: false
+							}
+							if (events.find(e => e.type === "revoke_feegrant")) {
+								// use up
+								let feegrantUseup = {
+									action: FEEGRANT_ACTION.USE_UP,
+									granter: payer,
+									grantee: message["granter"] as String,
+									result: tx.tx_response.code.toString() === "0",
+									timestamp: tx.tx_response.timestamp,
+									amount: {
+										amount: "0",
+										denom: ""
+									},
+									payer,
+									tx_hash: tx.tx_response.txhash,
+									expiration: null,
+									type: "",
+									spend_limit: {} as Coin,
+									custom_info: tx.custom_info,
+									expired: false
+								}
+								feegrantList.push(feegrantUseup)
 							}
 							feegrantList.push(feegrantRevoke)
 						} else {

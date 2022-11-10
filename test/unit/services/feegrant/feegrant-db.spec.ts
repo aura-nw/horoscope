@@ -94,7 +94,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "1000"
                 },
-                "expiration": null
+                "expiration": new Date("2022-10-08T03:20:14Z")
             },
             {
                 "_id": null,
@@ -175,7 +175,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "2000"
                 },
-                "expiration": null
+                "expiration": new Date("2025-10-05T03:08:33Z")
             },
         ])
     })
@@ -184,7 +184,7 @@ describe('Test feegrant-db service', () => {
     })
     beforeAll(async () => {
         await broker.start();
-
+        await feegrantDbService.getQueue('feegrant-check-expire.db').empty()
     });
     afterAll(async () => {
         await broker.stop()
@@ -246,7 +246,7 @@ describe('Test feegrant-db service', () => {
                     "amount": "2000"
                 },
                 "expiration": null,
-                "expired": true
+                "expired": false
             },
             {
                 "custom_info": {
@@ -271,7 +271,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "1000"
                 },
-                "expiration": null,
+                "expiration": new Date("2022-10-08T03:20:14Z"),
                 "expired": true
             },
             {
@@ -298,7 +298,7 @@ describe('Test feegrant-db service', () => {
                     "amount": "2000"
                 },
                 "expiration": null,
-                "expired": true
+                "expired": false
             },
             {
                 "custom_info": {
@@ -324,7 +324,7 @@ describe('Test feegrant-db service', () => {
                     "amount": "2000"
                 },
                 "expiration": null,
-                "expired": true
+                "expired": false
             },
             {
                 "custom_info": {
@@ -349,7 +349,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "2000"
                 },
-                "expiration": null,
+                "expiration": new Date("2025-10-05T03:08:33Z"),
                 "expired": false
             },
         ].sort(compare))
@@ -500,7 +500,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "1000"
                 },
-                "expiration": null,
+                "expiration": new Date("2022-10-08T03:20:14Z"),
                 "expired": false
             },
             {
@@ -578,7 +578,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "1000"
                 },
-                "expiration": null,
+                "expiration": new Date("2025-10-05T03:08:33Z"),
                 "expired": false
             },
         ].sort(compare))
@@ -729,7 +729,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "1000"
                 },
-                "expiration": null,
+                "expiration": new Date("2022-10-08T03:20:14Z"),
                 "expired": false
             },
             {
@@ -807,7 +807,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "2000"
                 },
-                "expiration": null,
+                "expiration": new Date("2025-10-05T03:08:33Z"),
                 "expired": false
             },
         ].sort(compare))
@@ -957,7 +957,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "1000"
                 },
-                "expiration": null,
+                "expiration": new Date("2022-10-08T03:20:14Z"),
                 "expired": false
             },
             {
@@ -1035,7 +1035,7 @@ describe('Test feegrant-db service', () => {
                     "denom": "ueaura",
                     "amount": "2000"
                 },
-                "expiration": null,
+                "expiration": new Date("2025-10-05T03:08:33Z"),
                 "expired": false
             },
         ].sort(compare))
