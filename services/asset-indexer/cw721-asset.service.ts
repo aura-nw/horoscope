@@ -270,6 +270,9 @@ export default class CrawlAssetService extends moleculer.Service {
 					if (!imageLink) {
 						imageLink = metadata.image;
 					}
+					if (!animationLink) {
+						animationLink = metadata.animation_url;
+					}
 				}
 			} catch (error) {
 				this.logger.error('Cannot get schema');
