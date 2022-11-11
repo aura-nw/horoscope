@@ -234,7 +234,64 @@ describe('Test feegrant-tx-handler service', () => {
                 expired: false
             }]);
         });
-        it("Could filter revoke with feegrant then use up", async () => {
+        it("Could filter create with feegrant then use up", async () => {
+            const mockData: ITransaction[] = []
+            //@ts-ignore
+            mockData.push(Data.tx_create_with_feegrant_then_useup)
+            const mockFind = jest.fn(params =>
+                Promise.resolve(mockData)
+            );
+            // Replace adapter's insert with a mock
+            service.adapter.lean = mockFind;
+
+            let result = await service.handleJob({ chainId: Config.CHAIN_ID })
+            // Check the result
+            expect(result.sort(compare)).toEqual([{
+                action: "_create",
+                granter: "aura1g7l9maqfjm6je04y7kmasrj706vvnk6xns4zdm",
+                grantee: "aura1d3n0v5f23sqzkhlcnewhksaj8l3x7jey8hq0sc",
+                payer: "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9",
+                result: true,
+                timestamp: "2022-11-11T03:54:16Z",
+                amount: {
+                    "denom": "ueaura",
+                    "amount": "500"
+                },
+                tx_hash: "E0BC92F06ECB4C2D27DF92436CE1FC55AA7E0E474EE2B6701983173397B5F273",
+                expiration: null,
+                type: "/cosmos.feegrant.v1beta1.BasicAllowance",
+                spend_limit: {
+                    "denom": "ueaura",
+                    "amount": "500"
+                },
+                custom_info: {
+                    "chain_id": "euphoria-1",
+                    "chain_name": "Aura Euphoria"
+                },
+                expired: false
+            }, {
+                action: "useup",
+                granter: "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9",
+                grantee: "aura1g7l9maqfjm6je04y7kmasrj706vvnk6xns4zdm",
+                payer: "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9",
+                result: true,
+                timestamp: "2022-11-11T03:54:16Z",
+                amount: {
+                    "denom": "",
+                    "amount": "0"
+                },
+                tx_hash: "E0BC92F06ECB4C2D27DF92436CE1FC55AA7E0E474EE2B6701983173397B5F273",
+                expiration: null,
+                type: "",
+                spend_limit: {},
+                custom_info: {
+                    "chain_id": "euphoria-1",
+                    "chain_name": "Aura Euphoria"
+                },
+                expired: false
+            }].sort(compare));
+        });
+        it("Could filter revoke with feegrant", async () => {
             const mockData: ITransaction[] = []
             //@ts-ignore
             mockData.push(Data.tx_revoke_with_feegrant_then_useup)
@@ -278,6 +335,60 @@ describe('Test feegrant-tx-handler service', () => {
                     "amount": "0"
                 },
                 tx_hash: "94F41B7F641E7FE272F7ABFF5989C9BA3240EF848A44294245BD923C86536C7A",
+                expiration: null,
+                type: "",
+                spend_limit: {},
+                custom_info: {
+                    "chain_id": "euphoria-1",
+                    "chain_name": "Aura Euphoria"
+                },
+                expired: false
+            }].sort(compare));
+        });
+        it("Could filter revoke with feegrant then use up", async () => {
+            const mockData: ITransaction[] = []
+            //@ts-ignore
+            mockData.push(Data.tx_revoke_with_feegrant_then_useup)
+            const mockFind = jest.fn(params =>
+                Promise.resolve(mockData)
+            );
+            // Replace adapter's insert with a mock
+            service.adapter.lean = mockFind;
+
+            let result = await service.handleJob({ chainId: Config.CHAIN_ID })
+            // Check the result
+            expect(result.sort(compare)).toEqual([{
+                action: "_revoke",
+                granter: "aura1td8tqeup7kvz3hxhckrej746d822m9naq70w6y",
+                grantee: "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9",
+                payer: "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9",
+                result: true,
+                timestamp: "2022-11-11T03:08:11Z",
+                amount: {
+                    "denom": "ueaura",
+                    "amount": "1000"
+                },
+                tx_hash: "F2978E8CC0A83E5AD3FCAB62D0A783B474F05227FDA024273E508915C6C75E22",
+                expiration: null,
+                type: "",
+                spend_limit: {},
+                custom_info: {
+                    "chain_id": "euphoria-1",
+                    "chain_name": "Aura Euphoria"
+                },
+                expired: false
+            }, {
+                action: "useup",
+                granter: "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9",
+                grantee: "aura1td8tqeup7kvz3hxhckrej746d822m9naq70w6y",
+                payer: "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9",
+                result: true,
+                timestamp: "2022-11-11T03:08:11Z",
+                amount: {
+                    "denom": "",
+                    "amount": "0"
+                },
+                tx_hash: "F2978E8CC0A83E5AD3FCAB62D0A783B474F05227FDA024273E508915C6C75E22",
                 expiration: null,
                 type: "",
                 spend_limit: {},
