@@ -191,7 +191,7 @@ export default class FeegrantTxHandler extends Service {
 								custom_info: tx.custom_info,
 								expired: false
 							}
-							if (events.find(e => e.type === "revoke_feegrant")) {
+							if (events[0]["type"] === "revoke_feegrant") {
 								// use up
 								let feegrantUseup = {
 									action: FEEGRANT_ACTION.USE_UP,

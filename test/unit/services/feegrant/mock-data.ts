@@ -932,7 +932,321 @@ export const tx_revoke = {
     }
 }
 
-export const tx_revoke_with_feegrant_then_useup = {
+export const tx_create_with_feegrant_then_useup = {
+    "_id": 23,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
+    "tx": {
+        "body": {
+            "messages": [
+                {
+                    "@type": "/cosmos.feegrant.v1beta1.MsgGrantAllowance",
+                    "granter": "aura1g7l9maqfjm6je04y7kmasrj706vvnk6xns4zdm",
+                    "grantee": "aura1d3n0v5f23sqzkhlcnewhksaj8l3x7jey8hq0sc",
+                    "allowance": {
+                        "@type": "/cosmos.feegrant.v1beta1.BasicAllowance",
+                        "spend_limit": [
+                            {
+                                "denom": "ueaura",
+                                "amount": "500"
+                            }
+                        ],
+                        "expiration": null
+                    }
+                }
+            ],
+            "memo": "",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+        },
+        "auth_info": {
+            "signer_infos": [
+                {
+                    "public_key": {
+                        "@type": "/cosmos.crypto.secp256k1.PubKey",
+                        "key": "A/XgTaKBg4bSloLiIYM/uHruRFILJjolPsDXSxFIAINg"
+                    },
+                    "mode_info": {
+                        "single": {
+                            "mode": "SIGN_MODE_DIRECT"
+                        }
+                    },
+                    "sequence": "10"
+                }
+            ],
+            "fee": {
+                "amount": [
+                    {
+                        "denom": "ueaura",
+                        "amount": "500"
+                    }
+                ],
+                "gas_limit": "200000",
+                "payer": "",
+                "granter": "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9"
+            }
+        },
+        "signatures": [
+            "OdNAxt/+1SNQ1Em3sS1KqUM+TiQ88mbEgROhBrUu6aAvc/418OTsfLPgvSiZ4eSQtkdH3+pPO2AIDKChvUbVig=="
+        ]
+    },
+    "tx_response": {
+        "height": "2658473",
+        "txhash": "E0BC92F06ECB4C2D27DF92436CE1FC55AA7E0E474EE2B6701983173397B5F273",
+        "codespace": "",
+        "code": 0,
+        "data": "0A2C0A2A2F636F736D6F732E6665656772616E742E763162657461312E4D73674772616E74416C6C6F77616E6365",
+        "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgGrantAllowance\"}]},{\"type\":\"set_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura1g7l9maqfjm6je04y7kmasrj706vvnk6xns4zdm\"},{\"key\":\"grantee\",\"value\":\"aura1d3n0v5f23sqzkhlcnewhksaj8l3x7jey8hq0sc\"}]}]}]",
+        "logs": [
+            {
+                "msg_index": 0,
+                "log": "",
+                "events": [
+                    {
+                        "type": "message",
+                        "attributes": [
+                            {
+                                "key": "action",
+                                "value": "/cosmos.feegrant.v1beta1.MsgGrantAllowance"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "set_feegrant",
+                        "attributes": [
+                            {
+                                "key": "granter",
+                                "value": "aura1g7l9maqfjm6je04y7kmasrj706vvnk6xns4zdm"
+                            },
+                            {
+                                "key": "grantee",
+                                "value": "aura1d3n0v5f23sqzkhlcnewhksaj8l3x7jey8hq0sc"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "info": "",
+        "gas_wanted": "200000",
+        "gas_used": "72668",
+        "tx": {
+            "@type": "/cosmos.tx.v1beta1.Tx",
+            "body": {
+                "messages": [
+                    {
+                        "@type": "/cosmos.feegrant.v1beta1.MsgGrantAllowance",
+                        "granter": "aura1g7l9maqfjm6je04y7kmasrj706vvnk6xns4zdm",
+                        "grantee": "aura1d3n0v5f23sqzkhlcnewhksaj8l3x7jey8hq0sc",
+                        "allowance": {
+                            "@type": "/cosmos.feegrant.v1beta1.BasicAllowance",
+                            "spend_limit": [
+                                {
+                                    "denom": "utaura",
+                                    "amount": "500"
+                                }
+                            ],
+                            "expiration": null
+                        }
+                    }
+                ],
+                "memo": "",
+                "timeout_height": "0",
+                "extension_options": [],
+                "non_critical_extension_options": []
+            },
+            "auth_info": {
+                "signer_infos": [
+                    {
+                        "public_key": {
+                            "@type": "/cosmos.crypto.secp256k1.PubKey",
+                            "key": "A/XgTaKBg4bSloLiIYM/uHruRFILJjolPsDXSxFIAINg"
+                        },
+                        "mode_info": {
+                            "single": {
+                                "mode": "SIGN_MODE_DIRECT"
+                            }
+                        },
+                        "sequence": "10"
+                    }
+                ],
+                "fee": {
+                    "amount": [
+                        {
+                            "denom": "ueaura",
+                            "amount": "500"
+                        }
+                    ],
+                    "gas_limit": "200000",
+                    "payer": "",
+                    "granter": "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9"
+                }
+            },
+            "signatures": [
+                "OdNAxt/+1SNQ1Em3sS1KqUM+TiQ88mbEgROhBrUu6aAvc/418OTsfLPgvSiZ4eSQtkdH3+pPO2AIDKChvUbVig=="
+            ]
+        },
+        "timestamp": "2022-11-11T03:54:16Z",
+        "events": [
+            {
+                "type": "revoke_feegrant",
+                "attributes": [
+                    {
+                        "key": "Z3JhbnRlcg==",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "Z3JhbnRlZQ==",
+                        "value": "YXVyYTFnN2w5bWFxZmptNmplMDR5N2ttYXNyajcwNnZ2bms2eG5zNHpkbQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "use_feegrant",
+                "attributes": [
+                    {
+                        "key": "Z3JhbnRlcg==",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "Z3JhbnRlZQ==",
+                        "value": "YXVyYTFnN2w5bWFxZmptNmplMDR5N2ttYXNyajcwNnZ2bms2eG5zNHpkbQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "coin_spent",
+                "attributes": [
+                    {
+                        "key": "c3BlbmRlcg==",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "YW1vdW50",
+                        "value": "NTAwdXRhdXJh",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "coin_received",
+                "attributes": [
+                    {
+                        "key": "cmVjZWl2ZXI=",
+                        "value": "YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "YW1vdW50",
+                        "value": "NTAwdXRhdXJh",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "transfer",
+                "attributes": [
+                    {
+                        "key": "cmVjaXBpZW50",
+                        "value": "YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "c2VuZGVy",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "YW1vdW50",
+                        "value": "NTAwdXRhdXJh",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "message",
+                "attributes": [
+                    {
+                        "key": "c2VuZGVy",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "tx",
+                "attributes": [
+                    {
+                        "key": "ZmVl",
+                        "value": "NTAwdXRhdXJh",
+                        "index": true
+                    },
+                    {
+                        "key": "ZmVlX3BheWVy",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "tx",
+                "attributes": [
+                    {
+                        "key": "YWNjX3NlcQ==",
+                        "value": "YXVyYTFnN2w5bWFxZmptNmplMDR5N2ttYXNyajcwNnZ2bms2eG5zNHpkbS8xMA==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "tx",
+                "attributes": [
+                    {
+                        "key": "c2lnbmF0dXJl",
+                        "value": "T2ROQXh0LysxU05RMUVtM3NTMUtxVU0rVGlRODhtYkVnUk9oQnJVdTZhQXZjLzQxOE9Uc2ZMUGd2U2laNGVTUXRrZEgzK3BQTzJBSURLQ2h2VWJWaWc9PQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "message",
+                "attributes": [
+                    {
+                        "key": "YWN0aW9u",
+                        "value": "L2Nvc21vcy5mZWVncmFudC52MWJldGExLk1zZ0dyYW50QWxsb3dhbmNl",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "set_feegrant",
+                "attributes": [
+                    {
+                        "key": "Z3JhbnRlcg==",
+                        "value": "YXVyYTFnN2w5bWFxZmptNmplMDR5N2ttYXNyajcwNnZ2bms2eG5zNHpkbQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "Z3JhbnRlZQ==",
+                        "value": "YXVyYTFkM24wdjVmMjNzcXpraGxjbmV3aGtzYWo4bDN4N2pleThocTBzYw==",
+                        "index": true
+                    }
+                ]
+            }
+        ]
+    }
+}
+
+export const tx_revoke_with_feegrant = {
     "_id": 9,
     "indexes": {},
     "custom_info": {
@@ -1213,6 +1527,300 @@ export const tx_revoke_with_feegrant_then_useup = {
                     {
                         "key": "Z3JhbnRlZQ==",
                         "value": "YXVyYTE4bWx6a21tbnVrNHQ0NHM1MnVsZXgwNzB0Yzd4eXJybXF1NWt1Mg==",
+                        "index": true
+                    }
+                ]
+            }
+        ]
+    }
+}
+
+export const tx_revoke_with_feegrant_then_useup = {
+    "_id": 22,
+    "indexes": {},
+    "custom_info": {
+        "chain_id": "euphoria-1",
+        "chain_name": "Aura Euphoria"
+    },
+    "tx": {
+        "body": {
+            "messages": [
+                {
+                    "@type": "/cosmos.feegrant.v1beta1.MsgRevokeAllowance",
+                    "granter": "aura1td8tqeup7kvz3hxhckrej746d822m9naq70w6y",
+                    "grantee": "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9"
+                }
+            ],
+            "memo": "",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+        },
+        "auth_info": {
+            "signer_infos": [
+                {
+                    "public_key": {
+                        "@type": "/cosmos.crypto.secp256k1.PubKey",
+                        "key": "Ay7cQsxOTq4wexPpf7aTOBqtXy5EDTeaJ9Yp/NmSG95T"
+                    },
+                    "mode_info": {
+                        "single": {
+                            "mode": "SIGN_MODE_DIRECT"
+                        }
+                    },
+                    "sequence": "1"
+                }
+            ],
+            "fee": {
+                "amount": [
+                    {
+                        "denom": "ueaura",
+                        "amount": "1000"
+                    }
+                ],
+                "gas_limit": "200000",
+                "payer": "",
+                "granter": "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9"
+            }
+        },
+        "signatures": [
+            "o6AJqwUQxebc6MsMp3DGEkuZdfMjLpFqCn/NrR5BYcdT9iNxoKwFACvwfPS6FD4cbLVh1CeBY259DaTBcvpyEA=="
+        ]
+    },
+    "tx_response": {
+        "height": "2657795",
+        "txhash": "F2978E8CC0A83E5AD3FCAB62D0A783B474F05227FDA024273E508915C6C75E22",
+        "codespace": "",
+        "code": 0,
+        "data": "0A2D0A2B2F636F736D6F732E6665656772616E742E763162657461312E4D73675265766F6B65416C6C6F77616E6365",
+        "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgRevokeAllowance\"}]},{\"type\":\"revoke_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura1td8tqeup7kvz3hxhckrej746d822m9naq70w6y\"},{\"key\":\"grantee\",\"value\":\"aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9\"}]}]}]",
+        "logs": [
+            {
+                "msg_index": 0,
+                "log": "",
+                "events": [
+                    {
+                        "type": "message",
+                        "attributes": [
+                            {
+                                "key": "action",
+                                "value": "/cosmos.feegrant.v1beta1.MsgRevokeAllowance"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "revoke_feegrant",
+                        "attributes": [
+                            {
+                                "key": "granter",
+                                "value": "aura1td8tqeup7kvz3hxhckrej746d822m9naq70w6y"
+                            },
+                            {
+                                "key": "grantee",
+                                "value": "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "info": "",
+        "gas_wanted": "200000",
+        "gas_used": "64195",
+        "tx": {
+            "@type": "/cosmos.tx.v1beta1.Tx",
+            "body": {
+                "messages": [
+                    {
+                        "@type": "/cosmos.feegrant.v1beta1.MsgRevokeAllowance",
+                        "granter": "aura1td8tqeup7kvz3hxhckrej746d822m9naq70w6y",
+                        "grantee": "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9"
+                    }
+                ],
+                "memo": "",
+                "timeout_height": "0",
+                "extension_options": [],
+                "non_critical_extension_options": []
+            },
+            "auth_info": {
+                "signer_infos": [
+                    {
+                        "public_key": {
+                            "@type": "/cosmos.crypto.secp256k1.PubKey",
+                            "key": "Ay7cQsxOTq4wexPpf7aTOBqtXy5EDTeaJ9Yp/NmSG95T"
+                        },
+                        "mode_info": {
+                            "single": {
+                                "mode": "SIGN_MODE_DIRECT"
+                            }
+                        },
+                        "sequence": "1"
+                    }
+                ],
+                "fee": {
+                    "amount": [
+                        {
+                            "denom": "utaura",
+                            "amount": "1000"
+                        }
+                    ],
+                    "gas_limit": "200000",
+                    "payer": "",
+                    "granter": "aura12054zwwajdj6ujna9xjhe2umhkaha0yc6zvlf9"
+                }
+            },
+            "signatures": [
+                "o6AJqwUQxebc6MsMp3DGEkuZdfMjLpFqCn/NrR5BYcdT9iNxoKwFACvwfPS6FD4cbLVh1CeBY259DaTBcvpyEA=="
+            ]
+        },
+        "timestamp": "2022-11-11T03:08:11Z",
+        "events": [
+            {
+                "type": "revoke_feegrant",
+                "attributes": [
+                    {
+                        "key": "Z3JhbnRlcg==",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "Z3JhbnRlZQ==",
+                        "value": "YXVyYTF0ZDh0cWV1cDdrdnozaHhoY2tyZWo3NDZkODIybTluYXE3MHc2eQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "use_feegrant",
+                "attributes": [
+                    {
+                        "key": "Z3JhbnRlcg==",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "Z3JhbnRlZQ==",
+                        "value": "YXVyYTF0ZDh0cWV1cDdrdnozaHhoY2tyZWo3NDZkODIybTluYXE3MHc2eQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "coin_spent",
+                "attributes": [
+                    {
+                        "key": "c3BlbmRlcg==",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "YW1vdW50",
+                        "value": "MTAwMHV0YXVyYQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "coin_received",
+                "attributes": [
+                    {
+                        "key": "cmVjZWl2ZXI=",
+                        "value": "YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "YW1vdW50",
+                        "value": "MTAwMHV0YXVyYQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "transfer",
+                "attributes": [
+                    {
+                        "key": "cmVjaXBpZW50",
+                        "value": "YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "c2VuZGVy",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "YW1vdW50",
+                        "value": "MTAwMHV0YXVyYQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "message",
+                "attributes": [
+                    {
+                        "key": "c2VuZGVy",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "tx",
+                "attributes": [
+                    {
+                        "key": "ZmVl",
+                        "value": "MTAwMHV0YXVyYQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "ZmVlX3BheWVy",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "tx",
+                "attributes": [
+                    {
+                        "key": "YWNjX3NlcQ==",
+                        "value": "YXVyYTF0ZDh0cWV1cDdrdnozaHhoY2tyZWo3NDZkODIybTluYXE3MHc2eS8x",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "tx",
+                "attributes": [
+                    {
+                        "key": "c2lnbmF0dXJl",
+                        "value": "bzZBSnF3VVF4ZWJjNk1zTXAzREdFa3VaZGZNakxwRnFDbi9OclI1QlljZFQ5aU54b0t3RkFDdndmUFM2RkQ0Y2JMVmgxQ2VCWTI1OURhVEJjdnB5RUE9PQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "message",
+                "attributes": [
+                    {
+                        "key": "YWN0aW9u",
+                        "value": "L2Nvc21vcy5mZWVncmFudC52MWJldGExLk1zZ1Jldm9rZUFsbG93YW5jZQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "revoke_feegrant",
+                "attributes": [
+                    {
+                        "key": "Z3JhbnRlcg==",
+                        "value": "YXVyYTF0ZDh0cWV1cDdrdnozaHhoY2tyZWo3NDZkODIybTluYXE3MHc2eQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "Z3JhbnRlZQ==",
+                        "value": "YXVyYTEyMDU0end3YWpkajZ1am5hOXhqaGUydW1oa2FoYTB5YzZ6dmxmOQ==",
                         "index": true
                     }
                 ]
