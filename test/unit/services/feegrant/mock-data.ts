@@ -932,7 +932,7 @@ export const tx_revoke = {
     }
 }
 
-export const tx_revoke_with_feegrant = {
+export const tx_revoke_with_feegrant_then_useup = {
     "_id": 9,
     "indexes": {},
     "custom_info": {

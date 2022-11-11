@@ -47,7 +47,10 @@ export default class CronjobUpdateOriginalGrant extends Service {
                 grantee: 1,
                 origin_feegrant_txhash: 1,
                 _id: 1,
-                timestamp: 1
+                timestamp: 1,
+                action: 1,
+                amount: 1,
+                status: 1
             },
             limit: 2000
         }) as FeegrantEntity[]
