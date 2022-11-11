@@ -227,6 +227,17 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 								link_s3: result.linkS3,
 								content_type: result.contentType,
 							};
+							this.broker.call('v1.CW721-asset-manager.act-update-by-id', {
+								obj: CW721,
+								updateOperator: {
+									$set: {
+										image: {
+											link_s3: result.linkS3,
+											content_type: result.contentType,
+										},
+									},
+								},
+							});
 							// this.broker.call('v1.CW721-asset-manager.update', {
 							// 	_id: CW721._id,
 							// 	image: {
@@ -240,6 +251,17 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 								link_s3: result.linkS3,
 								content_type: result.contentType,
 							};
+							this.broker.call('v1.CW721-asset-manager.act-update-by-id', {
+								obj: CW721,
+								updateOperator: {
+									$set: {
+										animation: {
+											link_s3: result.linkS3,
+											content_type: result.contentType,
+										},
+									},
+								},
+							});
 							// this.broker.call('v1.CW721-asset-manager.update', {
 							// 	_id: CW721._id,
 							// 	animation: {
