@@ -1,7 +1,7 @@
 # Feegrant
 
 ## Architecture
-![image](docs/images/feegrant.png)
+![image](../../docs/images/feegrant.png)
 
 | **Service**             	| **Function**                                                                                             	|
 |---------------------	|------------------------------------------------------------------------------------------------------	|
@@ -21,7 +21,8 @@
 |create with feegrant| 1: create<br>2: use | 1: Available<br>2: Available|
 |revoke with feegrant| 1: revoke<br>2: use | 1: Revoked<br>2: Available |
 |create fail| creat| Fail|
-
+|create with feegrant the use up|  1: use up<br>2: create| 1: Use up<br>2: Available|
+|revoke with feegrant the use up|  1: use up<br>2: revoke| 1: Use up<br>2: Revoked|
 ## Data
 | **Field**	| **Type**                          | **Description**                                      |
 |---------------------|---------------------------------------|---------------------------------------|
