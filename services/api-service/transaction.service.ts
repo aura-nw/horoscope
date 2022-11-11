@@ -217,7 +217,7 @@ export default class BlockService extends MoleculerDBService<
 				let tempQuery = {
 					[`indexes.${e.type}_${e.key}`]: {
 						$exists: true,
-						$eq: decodeURIComponent(e.value),
+						$eq: e.value,
 					},
 				};
 				queryAnd.push(tempQuery);
