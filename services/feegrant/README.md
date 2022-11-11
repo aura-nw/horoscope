@@ -1,7 +1,7 @@
 # Feegrant
 
 ## Architecture
-![image](docs/images/feegrant.png)
+![image](../../docs/images/feegrant.png)
 
 | **Service**             	| **Function**                                                                                             	|
 |---------------------	|------------------------------------------------------------------------------------------------------	|
