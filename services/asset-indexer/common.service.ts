@@ -364,4 +364,8 @@ export class Common {
 
 		return text;
 	}
+
+	public static updateBase64InUrl(base64: string) {
+		return base64.replace(/\+/g, '-').replace(/\//g, '_');
+	}
 }
