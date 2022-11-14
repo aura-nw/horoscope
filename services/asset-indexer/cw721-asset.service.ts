@@ -570,7 +570,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 	},
 		// );
 		// let listUri = [
-		// 	'https://nft-ipfs-indexer.s3.ap-southeast-1.amazonaws.com/y7jODGlffKwA8Iyw40fAtsVyWFTrDzCk.jpg',
+		// 	'',
 		// ];
 		// listUri.map(async (uri) => {
 		// 	let schemaIPFS: Buffer = await Common.downloadAttachment(uri);

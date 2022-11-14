@@ -39,16 +39,16 @@ export default class CrawlTransactionService extends Service {
 						return true;
 					},
 				},
-				// 'crawl.transaction-hash': {
-				// 	concurrency: 1,
-				// 	async process(job: Job) {
-				// 		job.progress(10);
-				// 		// @ts-ignore
-				// 		await this.crawlTransaction(job.data.txhash);
-				// 		job.progress(100);
-				// 		return true;
-				// 	},
-				// },
+				'crawl.transaction-hash': {
+					concurrency: 1,
+					async process(job: Job) {
+						job.progress(10);
+						// @ts-ignore
+						await this.crawlTransaction(job.data.txhash);
+						job.progress(100);
+						return true;
+					},
+				},
 			},
 			events: {
 				'list-transaction.created': {
@@ -148,18 +148,6 @@ export default class CrawlTransactionService extends Service {
 	}
 	async _start() {
 		this.redisClient = await this.getRedisClient();
-		this.createJob(
-			'crawl.transaction-hash',
-			{
-				txhash: 'D27E38AAA6FF81A8B1B9F7C584AD0B06102207994BD1C04B4FA47C6CB43B2A2E',
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
-				},
-			},
-		);
 		this.getQueue('crawl.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
