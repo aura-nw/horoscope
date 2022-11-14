@@ -226,6 +226,7 @@ export default class HandleTransactionService extends Service {
 						}
 					});
 				});
+				listAddress = [...new Set(listAddress)];
 				if (listAddress && listAddress.length > 0) {
 					indexes['addresses'] = listAddress;
 				}

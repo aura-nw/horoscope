@@ -570,18 +570,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 	},
 		// );
 		// let listUri = [
-		// 	'https://cloudflare-ipfs.com/ipfs/bafkreifc7sh35rlrqyhjwmjudy4kh5u5y7n56bhxmyvanc6kugijnnx3py',
-		// 	'https://cloudflare-ipfs.com/ipfs/bafkreic3oiksy4fkfdrzohor77fnu2qw7ekvm3u4hmo26vtojgcifyy54e',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/mau-logo-chu-ht-dep-01-480x400.jpg',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/Tong-hop-Logo-BTS-dep-nhat.png',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/giphy.gif',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/cover-df.svg',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/QmQ1fvmdBsn7RJqjWZtBxXp3367j843Hb71F1sm3YBCQuN.mp4',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/sample_960x400_ocean_with_audio.webm',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/Free_Test_Data_100KB_MP3.mp3',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/Free_Test_Data_500KB_WAV.wav',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/sample1.ogg',
-		// 	// 'https://nft-ipfs-indexer.s3.amazonaws.com/Parrot.glb',
+		// 	'https://nft-ipfs-indexer.s3.ap-southeast-1.amazonaws.com/y7jODGlffKwA8Iyw40fAtsVyWFTrDzCk.jpg',
 		// ];
 		// listUri.map(async (uri) => {
 		// 	let schemaIPFS: Buffer = await Common.downloadAttachment(uri);
