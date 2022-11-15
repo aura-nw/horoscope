@@ -38,6 +38,9 @@ export class VoteEntity implements IVote {
 	@JsonProperty('height', Number)
 	height: Number = 0;
 
+	@JsonProperty('code', Number)
+	code: Number = 0;
+
 	@JsonProperty('custom_info', CustomInfo, true)
 	custom_info: CustomInfo = {} as CustomInfo;
 }

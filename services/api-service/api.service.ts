@@ -26,12 +26,12 @@ import { LIST_NETWORK } from '../../common/constant';
 const BullBoard = require('../../mixins/bullBoard/bull-board');
 
 const tlBucket = 60000;
-const swMiddleware = swStats.getMiddleware({
-	name: 'swagger-stats',
-	timelineBucketDuration: tlBucket,
-	uriPath: '/dashboard',
-	swaggerSpec: swaggerSpec,
-});
+// const swMiddleware = swStats.getMiddleware({
+// 	name: 'swagger-stats',
+// 	timelineBucketDuration: tlBucket,
+// 	uriPath: '/dashboard',
+// 	swaggerSpec: swaggerSpec,
+// });
 
 const listLCD = LIST_NETWORK.map((e) => {
 	return e.LCD;
@@ -138,10 +138,10 @@ const listLCD = LIST_NETWORK.map((e) => {
 					'v1.account-statistics.getTopAccounts',
 					'v1.daily-tx-statistics.getDailyData',
 					'v1.smart-contracts.getContracts',
-					'v1.daily-cw20-holder.getCw20HolderChangePercent'
+					'v1.daily-cw20-holder.getCw20HolderChangePercent',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
-				use: [swMiddleware],
+				// use: [swMiddleware],
 				// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
 				mergeParams: true,
 

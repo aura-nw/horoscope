@@ -432,8 +432,10 @@ export default class CrawlAssetService extends moleculer.Service {
 		const URL = ctx.params.URL;
 		try {
 			const str = `{"all_nft_info":{"token_id":"${ctx.params.token_id}"}}`;
-			const stringEncode64bytes = Buffer.from(str).toString('base64');
-			let urlGetOwner = `${CONTRACT_URI}${ctx.params.address}/smart/${stringEncode64bytes}`;
+			const stringEncode64bytes = Common.updateBase64InUrl(toBase64(toUtf8(str)));
+			let urlGetOwner = `${CONTRACT_URI}${ctx.params.address}/smart/${encodeURIComponent(
+				stringEncode64bytes,
+			)}`;
 			let tokenInfo = await this.callApiFromDomain(URL, urlGetOwner);
 			if (tokenInfo?.data?.access?.owner !== undefined) {
 				return tokenInfo;
@@ -533,7 +535,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			listBulk = [];
 		}
 	}
-	_start(): Promise<void> {
+	async _start(): Promise<void> {
 		//@ts-ignore
 		// this.createJob(
 		// 	'CW721.migrate-old-data',
@@ -549,16 +551,16 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 		// backoff: 5000,
 		// 	},
 		// );
-		// const URL = Utils.getUrlByChainIdAndType('serenity-testnet-001', URL_TYPE_CONSTANTS.LCD);
+		// const URL = Utils.getUrlByChainIdAndType('aura-testnet', URL_TYPE_CONSTANTS.LCD);
 		// this.createJob(
 		// 	'CW721.enrich-tokenid',
 		// 	{
 		// 		url: URL,
-		// 		address: 'aura1yyjcevv8rspv25n8cklk568v6jcfzp40wrh757mfrhsmf7jjxmtqaf0qrd',
-		// 		code_id: '7',
+		// 		address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
+		// 		code_id: '259',
 		// 		type_enrich: 'upsert',
-		// 		chain_id: 'serenity-testnet-001',
-		// 		token_id: '5',
+		// 		chain_id: 'aura-testnet',
+		// 		token_id: '╰‿╯',
 		// 	},
 		// 	{
 		// 		removeOnComplete: true,
@@ -567,6 +569,15 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 		},
 		// 	},
 		// );
+		// let listUri = [
+		// 	'',
+		// ];
+		// listUri.map(async (uri) => {
+		// 	let schemaIPFS: Buffer = await Common.downloadAttachment(uri);
+		// 	let schemaType = await Common.getFileTypeFromBuffer(schemaIPFS);
+		// 	this.logger.info(uri, ' ', schemaType);
+		// });
+
 		this.getQueue('CW721.enrich-tokenid').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

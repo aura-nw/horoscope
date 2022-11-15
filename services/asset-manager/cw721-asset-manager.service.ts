@@ -138,6 +138,16 @@ import { LIST_NETWORK } from '../../common/constant';
 				return await this.upsert_handler(ctx.params);
 			},
 		},
+		'act-update-by-id': {
+			async handler(ctx: Context): Promise<any> {
+				// @ts-ignore
+				this.logger.debug(
+					`ctx.params cw721-asset-manager update ${JSON.stringify(ctx.params)}`,
+				);
+				// @ts-ignore
+				return await this.updateById(ctx.params.obj, ctx.params.updateOperator);
+			},
+		},
 		useDb: {
 			async handler(ctx: Context) {
 				//@ts-ignore
@@ -173,6 +183,15 @@ export default class CW721AssetManagerService extends moleculer.Service {
 			await this.adapter.insert(asset);
 		}
 		return asset._id;
+	}
+
+	async updateById(asset: any, updateOperator: any) {
+		this.logger.debug(`updateById asset `, asset);
+		// @ts-ignore
+		this.actions.useDb({ query: { chainId: asset.custom_info.chain_id } });
+		if (asset._id) {
+			return await this.adapter.updateById(asset._id, updateOperator);
+		}
 	}
 
 	@Action()

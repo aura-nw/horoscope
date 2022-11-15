@@ -3,7 +3,7 @@ import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../common/constant';
 // @ts-ignore
 import { tmhash } from 'tendermint/lib/hash';
 import { bech32 } from 'bech32';
-
+import { fromBech32 } from '@cosmjs/encoding';
 export class Utils {
 	public static getUrlByChainIdAndType(chainId: string, typeUrl: string) {
 		let chain = LIST_NETWORK.find((chain) => chain.chainId === chainId);
@@ -69,5 +69,20 @@ export class Utils {
 			}
 		});
 		return queryObject;
+	}
+
+	public static isValidAddress(address: string, length: number = -1) {
+		try {
+			let decodeResult = fromBech32(address);
+			if (length == -1) {
+				return true;
+			}
+			if (decodeResult.data.length == length) {
+				return true;
+			}
+		} catch (error) {
+			return false;
+		}
+		return false;
 	}
 }

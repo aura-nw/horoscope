@@ -107,12 +107,18 @@ export default class CrawlTransactionService extends Service {
 	}
 
 	async writeHeapDump() {
-		if (Config.PATH_HEAP_DUMP) {
-			let path =
-				Config.PATH_HEAP_DUMP + new Date().toISOString().split('T')[0] + '.heapsnapshot';
-			this.logger.info('write to heap log: ', path);
+		try {
+			if (Config.PATH_HEAP_DUMP) {
+				let path =
+					Config.PATH_HEAP_DUMP +
+					new Date().toISOString().split('T')[0] +
+					'.heapsnapshot';
+				this.logger.info('write to heap log: ', path);
 
-			heapdump.writeSnapshot(path);
+				heapdump.writeSnapshot(path);
+			}
+		} catch (error) {
+			this.logger.error(error);
 		}
 	}
 	async handleJob(listTx: string[]) {
