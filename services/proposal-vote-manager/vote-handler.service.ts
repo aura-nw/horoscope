@@ -9,6 +9,7 @@ import { CustomInfo } from '../../entities/custom-info.entity';
 import { VoteEntity } from '../../entities/vote.entity';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
+import { QueryOptions } from 'moleculer-db';
 import { QueueConfig } from '../../config/queue';
 
 interface TakeVoteRequest {
@@ -39,6 +40,17 @@ export default class VoteHandlerService extends Service {
 						return true;
 					},
 				},
+				'proposal.updatecode': {
+					concurrency: 1,
+					async process(job: Job) {
+						job.progress(10);
+
+						// @ts-ignore
+						await this.runJobUpdateCode()
+						job.progress(100);
+						return true;
+					},
+				}
 			},
 			events: {
 				// listen to event from tx-handler
@@ -114,8 +126,49 @@ export default class VoteHandlerService extends Service {
 			this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
 		}
 	}
-
+	async runJobUpdateCode() {
+		const unprocessedVotes = await this.adapter.lean({
+			query: {
+				"code": {
+					$exists: false
+				}
+			},
+			projection: {
+				"_id": 1,
+				"txhash": 1
+			},
+			limit: 100
+		}) as []
+		const queryIn = unprocessedVotes.map(vote => vote["txhash"]) as string[]
+		// this.logger.info(JSON.stringify(queryIn))
+		const mapTxCode = await this.broker.call("v1.feegrantTxHandler.find", {
+			query: {
+				"tx_response.txhash": {
+					$in: ["B48D909B5C407706736933408A38A9FD8EDBAB0C11880289D60693EF421ACAFB"]
+				}
+			},
+			projection: {
+				"tx_response.txhash": 1,
+				"tx_response.code": 1
+			},
+			limit: 10
+		}) as []
+		this.logger.info(JSON.stringify(mapTxCode))
+	}
 	async _start() {
+		this.createJob(
+			'proposal.updatecode',
+			{},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
+				repeat: {
+					every: parseInt("5000", 10),
+				},
+			},
+		);
 		this.getQueue('proposal.vote').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
