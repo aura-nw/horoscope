@@ -107,6 +107,7 @@ export default class VoteHandlerService extends Service {
 				timestamp,
 				height,
 				custom_info: chainInfo,
+				code,
 			};
 			const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
 			this.logger.info('voteEntity', JSON.stringify(voteEntity));
