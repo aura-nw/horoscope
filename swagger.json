@@ -1643,7 +1643,36 @@
                                                                                                         "type": "string"
                                                                                                     },
                                                                                                     "extension": {
-                                                                                                        "type": "string"
+                                                                                                        "type": "object",
+                                                                                                        "properties": {
+                                                                                                            "image": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "image_data": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "external_url": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "description": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "name": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "attributes": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "background_color": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "animation_url": {
+                                                                                                                "type": "string"
+                                                                                                            },
+                                                                                                            "youtube_url": {
+                                                                                                                "type": "string"
+                                                                                                            }
+                                                                                                        }
                                                                                                     }
                                                                                                 }
                                                                                             }
@@ -1696,30 +1725,61 @@
                                                                                 "type": "string",
                                                                                 "example": "2022-08-17T06:20:19.342Z"
                                                                             },
-                                                                            "media_info": {
-                                                                                "type": "array",
-                                                                                "items": {
-                                                                                    "type": "object",
-                                                                                    "properties": {
-                                                                                        "key": {
-                                                                                            "type": "string"
-                                                                                        },
-                                                                                        "media_link": {
-                                                                                            "type": "string",
-                                                                                            "example": "s3://aws.aura.network"
-                                                                                        },
-                                                                                        "status": {
-                                                                                            "type": "string",
-                                                                                            "example": "COMPLETED"
-                                                                                        },
-                                                                                        "createdAt": {
-                                                                                            "type": "string",
-                                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                                        },
-                                                                                        "updatedAt": {
-                                                                                            "type": "string",
-                                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                                        }
+                                                                            "metadata": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "image": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "image_data": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "external_url": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "description": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "name": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "attributes": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "background_color": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "animation_url": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "youtube_url": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "image": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "link_s3": {
+                                                                                        "type": "string",
+                                                                                        "example": "https://s3-horoscope/a"
+                                                                                    },
+                                                                                    "content_type": {
+                                                                                        "type": "string",
+                                                                                        "example": "image/jpg"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "animation": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "link_s3": {
+                                                                                        "type": "string",
+                                                                                        "example": "https://s3-horoscope/b"
+                                                                                    },
+                                                                                    "content_type": {
+                                                                                        "type": "string",
+                                                                                        "example": "video/mp4"
                                                                                     }
                                                                                 }
                                                                             }
@@ -1908,30 +1968,61 @@
                                                                                 "type": "string",
                                                                                 "example": "2022-08-17T06:20:19.342Z"
                                                                             },
-                                                                            "media_info": {
-                                                                                "type": "array",
-                                                                                "items": {
-                                                                                    "type": "object",
-                                                                                    "properties": {
-                                                                                        "key": {
-                                                                                            "type": "string"
-                                                                                        },
-                                                                                        "media_link": {
-                                                                                            "type": "string",
-                                                                                            "example": "s3://aws.aura.network"
-                                                                                        },
-                                                                                        "status": {
-                                                                                            "type": "string",
-                                                                                            "example": "COMPLETED"
-                                                                                        },
-                                                                                        "createdAt": {
-                                                                                            "type": "string",
-                                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                                        },
-                                                                                        "updatedAt": {
-                                                                                            "type": "string",
-                                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                                        }
+                                                                            "metadata": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "image": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "image_data": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "external_url": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "description": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "name": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "attributes": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "background_color": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "animation_url": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "youtube_url": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "image": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "link_s3": {
+                                                                                        "type": "string",
+                                                                                        "example": "https://s3-horoscope/a"
+                                                                                    },
+                                                                                    "content_type": {
+                                                                                        "type": "string",
+                                                                                        "example": "image/jpg"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "animation": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "link_s3": {
+                                                                                        "type": "string",
+                                                                                        "example": "https://s3-horoscope/b"
+                                                                                    },
+                                                                                    "content_type": {
+                                                                                        "type": "string",
+                                                                                        "example": "video/mp4"
                                                                                     }
                                                                                 }
                                                                             }
@@ -2141,7 +2232,36 @@
                                                                                         "type": "string"
                                                                                     },
                                                                                     "extension": {
-                                                                                        "type": "string"
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "image": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "image_data": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "external_url": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "description": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "name": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "attributes": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "background_color": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "animation_url": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "youtube_url": {
+                                                                                                "type": "string"
+                                                                                            }
+                                                                                        }
                                                                                     }
                                                                                 }
                                                                             }
@@ -2194,30 +2314,61 @@
                                                                 "type": "string",
                                                                 "example": "2022-08-17T06:20:19.342Z"
                                                             },
-                                                            "media_info": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "object",
-                                                                    "properties": {
-                                                                        "key": {
-                                                                            "type": "string"
-                                                                        },
-                                                                        "media_link": {
-                                                                            "type": "string",
-                                                                            "example": "s3://aws.aura.network"
-                                                                        },
-                                                                        "status": {
-                                                                            "type": "string",
-                                                                            "example": "COMPLETED"
-                                                                        },
-                                                                        "createdAt": {
-                                                                            "type": "string",
-                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                        },
-                                                                        "updatedAt": {
-                                                                            "type": "string",
-                                                                            "example": "2022-08-17T06:20:19.342Z"
-                                                                        }
+                                                            "metadata": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "image": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "image_data": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "external_url": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "description": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "attributes": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "background_color": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "animation_url": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "youtube_url": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "image": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "link_s3": {
+                                                                        "type": "string",
+                                                                        "example": "https://s3-horoscope/a"
+                                                                    },
+                                                                    "content_type": {
+                                                                        "type": "string",
+                                                                        "example": "image/jpg"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "animation": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "link_s3": {
+                                                                        "type": "string",
+                                                                        "example": "https://s3-horoscope/b"
+                                                                    },
+                                                                    "content_type": {
+                                                                        "type": "string",
+                                                                        "example": "video/mp4"
                                                                     }
                                                                 }
                                                             }
