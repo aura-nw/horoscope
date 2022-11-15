@@ -126,8 +126,8 @@ const QueueService = require('moleculer-bull');
 				const chain_id = ctx.params.chain_id;
 				const type = ctx.params.type;
 				const field = ctx.params.field;
-				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${type}_${field}_${media_link_key}`;
 				const cw721_id = ctx.params.cw721_id;
+				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${type}_${field}_${media_link_key}_${cw721_id}`;
 				const sourceUri = ctx.params.sourceUri;
 				// @ts-ignore
 				// this.logger.info("this.broker.cacher",util.inspect(this.broker.cacher));

@@ -36,6 +36,7 @@ const callApiMixin = new CallApiMixin().start();
 import { QueueConfig } from '../../config/queue';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
+import { isValidObjectId } from 'mongoose';
 const QueueService = require('moleculer-bull');
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -293,12 +294,15 @@ export default class CrawlAssetService extends moleculer.Service {
 				metadata,
 			);
 
-			const resultInsert: any = await this.broker.call(
+			let resultInsert: any = await this.broker.call(
 				`v1.CW721-asset-manager.act-${type_enrich}`,
 				asset,
 			);
 			this.logger.debug('insert new asset: ', JSON.stringify(resultInsert));
 			// const assetId = resultInsert._id.toString();
+			if (isValidObjectId(resultInsert._id)) {
+				resultInsert = resultInsert._id;
+			}
 			try {
 				if (animationLink) {
 					[uri, type, file_name, media_link_key, source_uri] =
