@@ -240,7 +240,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			OPTs,
 		);
 		if (tokenInfo != null) {
-			let [uri, type, file_name, media_link_key] = ['', '', '', ''];
+			let [uri, type, file_name, media_link_key, source_uri] = ['', '', '', '', ''];
 
 			let imageLink = null;
 			let metadata = null;
@@ -258,7 +258,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			try {
 				// if has token uri, download and validate schema
 				if (tokenInfo.data.info.token_uri) {
-					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(
+					[uri, type, file_name, media_link_key, source_uri] = Common.getKeyFromUri(
 						tokenInfo.data.info.token_uri,
 					);
 					let schemaIPFS: Buffer = await Common.downloadAttachment(uri);
@@ -279,6 +279,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				if (!imageLink && tokenInfo.data.info.token_uri) {
 					imageLink = tokenInfo.data.info.token_uri;
 				}
+				metadata.image = source_uri;
 			}
 
 			//create a record to save cw721
@@ -300,9 +301,10 @@ export default class CrawlAssetService extends moleculer.Service {
 			// const assetId = resultInsert._id.toString();
 			try {
 				if (animationLink) {
-					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(animationLink);
+					[uri, type, file_name, media_link_key, source_uri] =
+						Common.getKeyFromUri(animationLink);
 					this.broker.emit('CW721-media.get-media-link', {
-						sourceUri: animationLink,
+						sourceUri: source_uri,
 						uri,
 						type,
 						file_name,
@@ -313,9 +315,10 @@ export default class CrawlAssetService extends moleculer.Service {
 					});
 				}
 				if (imageLink) {
-					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(imageLink);
+					[uri, type, file_name, media_link_key, source_uri] =
+						Common.getKeyFromUri(imageLink);
 					this.broker.emit('CW721-media.get-media-link', {
-						sourceUri: imageLink,
+						sourceUri: source_uri,
 						uri,
 						type,
 						file_name,

@@ -123,13 +123,16 @@ export class Common {
 		let file_name = '';
 		let media_link_key = '';
 		let type = '';
+		let source_uri = '';
 		if (parsed.protocol === IPFS_PREFIX) {
 			type = 'IPFS';
 			const cid = parsed.host;
-			const cidBase32 = new CID(cid).toV1().toString('base32');
+			const cidBase32 = cid;
+			// const cidBase32 = new CID(cid).toV1().toString('base32');
 			uri_handled = `${IPFS_GATEWAY}${cidBase32}`;
+			source_uri = `ipfs://${cid}`;
 			if (!cid.startsWith('Qm') && parsed.path) {
-				uri_handled += `${parsed.path}`;
+				// uri_handled += `${parsed.path}`;
 			}
 			file_name = cid;
 			media_link_key = cid;
@@ -139,7 +142,7 @@ export class Common {
 			file_name = uri.replace(/^.*[\\\/]/, '');
 			media_link_key = Common.hash(uri);
 		}
-		return [uri_handled, type, file_name, media_link_key];
+		return [uri_handled, type, file_name, media_link_key, source_uri];
 	}
 
 	public static createCW4973AssetObject = function (
