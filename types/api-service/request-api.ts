@@ -139,7 +139,12 @@ export interface GetFeegrantRequest extends ChainIdParams, PageLimit {
 	granter: string;
 	grantee: string;
 	status: string;
-	expired: boolean
+	expired: boolean;
+	txhash: string
+}
+export interface GetFeegrantInactiveRequest extends ChainIdParams, PageLimit {
+	granter: string;
+	grantee: string;
 }
 export interface QueryDelayJobParams {
 	address: string;
