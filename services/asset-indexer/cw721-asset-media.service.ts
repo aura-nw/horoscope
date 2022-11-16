@@ -4,7 +4,6 @@
 
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
-// import { lockCacherMixin } from '../../mixins/lockCacher/lock.mixin';
 import moleculer, { CallingOptions, Context, ServiceBroker } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { MediaStatus } from '../../model/cw721-asset-media.model';
@@ -12,16 +11,11 @@ import { Config } from '../../common';
 import { Types } from 'mongoose';
 import {
 	CONTRACT_TYPE,
-	CW721_FIELD,
 	CW721_MANAGER_ACTION,
 	CW721_MEDIA_MANAGER_ACTION,
 	LIST_NETWORK,
 } from '../../common/constant';
 import { QueryOptions } from 'moleculer-db';
-import { Common } from './common.service';
-// import { RedisClientType, commandOptions } from '@redis/client';
-var util = require('util');
-import { toBase64, toUtf8 } from '@cosmjs/encoding';
 const callApiMixin = new CallApiMixin().start();
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
@@ -126,9 +120,9 @@ const QueueService = require('moleculer-bull');
 				const chain_id = ctx.params.chain_id;
 				const type = ctx.params.type;
 				const field = ctx.params.field;
-				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${type}_${field}_${media_link_key}`;
 				const cw721_id = ctx.params.cw721_id;
 				const sourceUri = ctx.params.sourceUri;
+				const cacheKey = `${GET_MEDIA_LINK_PREFIX}_${type}_${field}_${media_link_key}_${cw721_id}`;
 				// @ts-ignore
 				// this.logger.info("this.broker.cacher",util.inspect(this.broker.cacher));
 				// @ts-ignore
@@ -238,6 +232,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					{
 						query: queryAssetCW721,
 					},
+					{ meta: { $cache: false } },
 				);
 				if (listFoundCW721 && listFoundCW721.length > 0) {
 					listFoundCW721.map((CW721: CW721AssetEntity) => {

@@ -45,8 +45,8 @@ RUN npm install -g avsc \
 # 	thrift
 
 # install project dependencies
-# RUN npm ci --silent
-RUN npm i
+RUN npm ci --silent
+# RUN npm i
 # RUN yarn install --frozen-lockfile
 
 # Copy source
@@ -65,5 +65,4 @@ RUN npm run build \
 # RUN yarn run build
 
 # Start server
-CMD ["npm", "run", "start"]
-# CMD ["yarn", "run", "start"]
+CMD ["npm", "run", "start:prod"]

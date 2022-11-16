@@ -1,9 +1,9 @@
 import { Config } from '../../common';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
+import { CONST_CHAR, LIST_NETWORK } from '../../common/constant';
 import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
-import { AccountInfoEntity, ITransaction } from '../../entities';
+import { AccountInfoEntity } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 import { QueueConfig } from '../../config/queue';
@@ -71,14 +71,16 @@ export default class HandleAddressService extends Service {
 			listInsert: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listUpdateInfo.push(...[
-			'account-info.upsert-auth',
-			'account-info.upsert-balances',
-			'account-info.upsert-delegates',
-			'account-info.upsert-redelegates',
-			'account-info.upsert-spendable-balances',
-			'account-info.upsert-unbonds',
-		]);
+		listUpdateInfo.push(
+			...[
+				'account-info.upsert-auth',
+				'account-info.upsert-balances',
+				'account-info.upsert-delegates',
+				'account-info.upsert-redelegates',
+				'account-info.upsert-spendable-balances',
+				'account-info.upsert-unbonds',
+			],
+		);
 		if (listTx.length > 0) {
 			this.logger.info(`Handle Txs: ${JSON.stringify(listTx)}`);
 
@@ -86,14 +88,29 @@ export default class HandleAddressService extends Service {
 				if (source == CONST_CHAR.CRAWL) {
 					element.tx_response.logs.map((log: any) => {
 						try {
-							let event = log.events.filter((e: any) =>
-								e.type == CONST_CHAR.COIN_RECEIVED || e.type == CONST_CHAR.COIN_SPENT)
-								.map((e: any) => e.attributes).map((e: any) =>
-									e.filter((x: any) => x.key === CONST_CHAR.RECEIVER || x.key === CONST_CHAR.SPENDER
-									).map((x: any) => x.value)).flat();
-							event = event.filter((e: string) =>
-								e.startsWith('aura') || e.startsWith('cosmos')
-								|| e.startsWith('evmos') || e.startsWith('osmo')
+							let event = log.events
+								.filter(
+									(e: any) =>
+										e.type == CONST_CHAR.COIN_RECEIVED ||
+										e.type == CONST_CHAR.COIN_SPENT,
+								)
+								.map((e: any) => e.attributes)
+								.map((e: any) =>
+									e
+										.filter(
+											(x: any) =>
+												x.key === CONST_CHAR.RECEIVER ||
+												x.key === CONST_CHAR.SPENDER,
+										)
+										.map((x: any) => x.value),
+								)
+								.flat();
+							event = event.filter(
+								(e: string) =>
+									e.startsWith('aura') ||
+									e.startsWith('cosmos') ||
+									e.startsWith('evmos') ||
+									e.startsWith('osmo'),
 							);
 							if (event) listAddresses.push(...event);
 						} catch (error) {

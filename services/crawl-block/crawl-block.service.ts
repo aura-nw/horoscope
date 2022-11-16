@@ -2,10 +2,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Config } from '../../common';
-import { Service, Context, ServiceBroker } from 'moleculer';
+import { Service, ServiceBroker } from 'moleculer';
 
 const QueueService = require('moleculer-bull');
-// import createService from 'moleculer-bull';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from '@redis/client';

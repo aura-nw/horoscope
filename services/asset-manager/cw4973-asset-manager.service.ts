@@ -2,10 +2,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import moleculer, { Context } from 'moleculer';
-import { Action, Method, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW4973AssetMixin } from '../../mixins/dbMixinMongoose';
-import { GetHolderRequest } from 'types';
-import { CursorOptions, FilterOptions, QueryOptions } from 'moleculer-db';
+import { CursorOptions, QueryOptions } from 'moleculer-db';
 import _ from 'lodash';
 import { ObjectID } from 'bson';
 

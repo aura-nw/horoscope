@@ -5,15 +5,16 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
-import { JsonConvert, OperationMode } from 'json2typescript';
+import { JsonConvert } from 'json2typescript';
 import { Config } from '../../common';
-import { MODULE_PARAM, URL_TYPE_CONSTANTS } from '../../common/constant';
-import { IDelegationResponseFromLCD, IValidatorResponseFromLCD } from '../../types';
+import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { IValidatorResponseFromLCD } from '../../types';
 import { Job } from 'bull';
-import { IParam, ISlashingParam, IValidator, SlashingParam, ValidatorEntity } from '../../entities';
+import { IValidator, ValidatorEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { QueueConfig } from '../../config/queue';
-
+import { pubkeyToRawAddress } from '@cosmjs/tendermint-rpc';
+import { fromBase64, toHex, fromBech32, toBech32 } from '@cosmjs/encoding';
 export default class CrawlValidatorService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbValidatorMixin = dbValidatorMixin;
@@ -120,12 +121,15 @@ export default class CrawlValidatorService extends Service {
 	async loadCustomInfo(validator: IValidator): Promise<IValidator> {
 		try {
 			const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
-			validator.consensus_hex_address = Utils.pubkeyBase64ToHexAddress(
-				validator.consensus_pubkey.key.toString(),
+			let consensus_hex_address: any = pubkeyToRawAddress(
+				'ed25519',
+				fromBase64(validator.consensus_pubkey.key.toString()),
 			);
-			let address = Utils.operatorAddressToAddress(
-				validator.operator_address.toString(),
+			consensus_hex_address = toHex(consensus_hex_address).toUpperCase();
+			validator.consensus_hex_address = consensus_hex_address;
+			let address = toBech32(
 				Config.NETWORK_PREFIX_ADDRESS,
+				fromBech32(validator.operator_address.toString()).data,
 			);
 			validator.account_address = address;
 			let pathDelegation = `${

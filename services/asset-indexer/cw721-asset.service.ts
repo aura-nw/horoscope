@@ -3,8 +3,8 @@
 'use strict';
 
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import moleculer, { CallingOptions, Context, ServiceBroker } from 'moleculer';
-import { Action, Get, Post, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import moleculer, { CallingOptions, Context } from 'moleculer';
+import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CodeIDStatus } from '../../model/codeid.model';
 import { Config } from '../../common';
@@ -16,7 +16,6 @@ import {
 	CONTRACT_TYPE,
 	LIST_NETWORK,
 	CW721_FIELD,
-	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
@@ -36,6 +35,7 @@ const callApiMixin = new CallApiMixin().start();
 import { QueueConfig } from '../../config/queue';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
+import { isValidObjectId } from 'mongoose';
 const QueueService = require('moleculer-bull');
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -292,11 +292,14 @@ export default class CrawlAssetService extends moleculer.Service {
 				metadata,
 			);
 
-			const resultInsert: any = await this.broker.call(
+			let resultInsert: any = await this.broker.call(
 				`v1.CW721-asset-manager.act-${type_enrich}`,
 				asset,
 			);
 			this.logger.debug('insert new asset: ', JSON.stringify(resultInsert));
+			if (isValidObjectId(resultInsert._id)) {
+				resultInsert = resultInsert._id;
+			}
 			// const assetId = resultInsert._id.toString();
 			try {
 				if (animationLink) {

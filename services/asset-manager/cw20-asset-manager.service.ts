@@ -5,8 +5,7 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CursorOptions, QueryOptions } from 'moleculer-db';
-import { ICW20Asset } from '@Model';
-import { ObjectID, ObjectId } from 'bson';
+import { ObjectID } from 'bson';
 import { LIST_NETWORK } from '../../common/constant';
 
 @Service({

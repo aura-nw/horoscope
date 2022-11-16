@@ -1,9 +1,7 @@
 'use strict';
 
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import request from 'request-promise';
 import CID from 'cids';
-const fetch = require('node-fetch');
 import parse from 'parse-uri';
 import { Config } from '../../common';
 import { Types } from 'mongoose';
@@ -12,7 +10,6 @@ import moleculer, { Context } from 'moleculer';
 import { S3Service } from '../../utils/s3';
 import { LIST_NETWORK } from '../../common/constant';
 const { createHash } = require('crypto');
-const errors = require('request-promise/errors');
 import { AxiosDefaults } from 'axios';
 import axios from 'axios';
 
@@ -29,7 +26,6 @@ const callApiMixin = new CallApiMixin().start();
 const s3Client = new S3Service().connectS3();
 const IPFS_GATEWAY = Config.IPFS_GATEWAY;
 const IPFS_PREFIX = 'ipfs';
-import { create } from 'ipfs-http-client';
 
 type CW4973AssetInfo = {
 	data: {

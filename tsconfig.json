@@ -95,7 +95,8 @@
 	},
 	"include": [
 		"./**/*",
-		".eslintrc.js"
+		".eslintrc.js",
+		"network.json",
 	],
 	"exclude": [
 		"node_modules/**/*",
