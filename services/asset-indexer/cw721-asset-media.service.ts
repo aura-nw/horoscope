@@ -44,6 +44,8 @@ const QueueService = require('moleculer-bull');
 		'CW721-media.get-media-link': {
 			concurrency: parseInt(Config.CONCURRENCY_GET_MEDIA_LINK, 10),
 			async process(job: Job) {
+				// @ts-ignore
+				this.logger.debug('get-media-link param: ', JSON.stringify(job.data));
 				const uri = job.data.uri;
 				const file_name = job.data.file_name;
 				const media_link_key = job.data.media_link_key;

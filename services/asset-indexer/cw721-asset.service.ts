@@ -16,6 +16,7 @@ import {
 	CONTRACT_TYPE,
 	LIST_NETWORK,
 	CW721_FIELD,
+	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
@@ -304,7 +305,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			try {
 				if (animationLink) {
 					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(animationLink);
-					this.broker.emit('CW721-media.get-media-link', {
+					let paramEmit = {
 						sourceUri: animationLink,
 						uri,
 						type,
@@ -313,7 +314,9 @@ export default class CrawlAssetService extends moleculer.Service {
 						chain_id,
 						field: CW721_FIELD.ANIMATION,
 						cw721_id: resultInsert,
-					});
+					};
+					this.logger.debug('param emit get-media-link: ', JSON.stringify(paramEmit));
+					this.broker.emit('CW721-media.get-media-link', paramEmit);
 				}
 				if (imageLink) {
 					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(imageLink);
@@ -563,7 +566,24 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 		code_id: '259',
 		// 		type_enrich: 'upsert',
 		// 		chain_id: 'aura-testnet',
-		// 		token_id: '╰‿╯',
+		// 		token_id: 'token 23',
+		// 	},
+		// 	{
+		// 		removeOnComplete: true,
+		// 		removeOnFail: {
+		// 			count: 3,
+		// 		},
+		// 	},
+		// );
+		// this.createJob(
+		// 	'CW721.enrich-tokenid',
+		// 	{
+		// 		url: URL,
+		// 		address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
+		// 		code_id: '259',
+		// 		type_enrich: 'upsert',
+		// 		chain_id: 'aura-testnet',
+		// 		token_id: 'token 24',
 		// 	},
 		// 	{
 		// 		removeOnComplete: true,
