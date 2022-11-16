@@ -298,9 +298,6 @@ export default class CrawlAssetService extends moleculer.Service {
 				asset,
 			);
 			this.logger.debug('insert new asset: ', JSON.stringify(resultInsert));
-			if (isValidObjectId(resultInsert._id)) {
-				resultInsert = resultInsert._id;
-			}
 			// const assetId = resultInsert._id.toString();
 			try {
 				if (animationLink) {
@@ -320,7 +317,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				}
 				if (imageLink) {
 					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(imageLink);
-					this.broker.emit('CW721-media.get-media-link', {
+					let paramEmit = {
 						sourceUri: imageLink,
 						uri,
 						type,
@@ -329,7 +326,9 @@ export default class CrawlAssetService extends moleculer.Service {
 						chain_id,
 						field: CW721_FIELD.IMAGE,
 						cw721_id: resultInsert,
-					});
+					};
+					this.logger.debug('param emit get-media-link: ', JSON.stringify(paramEmit));
+					this.broker.emit('CW721-media.get-media-link', paramEmit);
 				}
 			} catch (error) {
 				this.logger.error('Cannot get media link');
