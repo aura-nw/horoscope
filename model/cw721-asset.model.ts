@@ -30,7 +30,7 @@ const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 		index: true,
 	},
 	history: {
-		type: [String],
+		type: [Object],
 	},
 	media_link: String,
 	custom_info: customInfoModel,

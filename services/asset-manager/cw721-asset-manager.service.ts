@@ -177,11 +177,13 @@ export default class CW721AssetManagerService extends moleculer.Service {
 				item.animation != asset.animation
 			) {
 				await this.adapter.updateById(item._id, asset);
+				return asset._id;
 			}
 		} else {
-			await this.adapter.insert(asset);
+			let resultInsert = await this.adapter.insert(asset);
+			return resultInsert._id;
 		}
-		return asset._id;
+		return null;
 	}
 
 	async updateById(asset: any, updateOperator: any) {
