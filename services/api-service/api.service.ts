@@ -135,6 +135,7 @@ const listLCD = LIST_NETWORK.map((e) => {
 					'v1.ibc-denom.addNewDenom',
 					'v1.validator.getAllByChain',
 					'v1.feegrant.getGrants',
+					'v1.feegrant.getGrantsInactive',
 					'v1.account-statistics.getTopAccounts',
 					'v1.daily-tx-statistics.getDailyData',
 					'v1.smart-contracts.getContracts',
