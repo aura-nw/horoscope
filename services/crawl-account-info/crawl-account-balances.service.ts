@@ -7,7 +7,6 @@ import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
-import { Coin } from '../../entities/coin.entity';
 import { AccountInfoEntity, IBCDenomEntity } from '../../entities';
 import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
@@ -68,9 +67,12 @@ export default class CrawlAccountBalancesService extends Service {
 			listUpdateQueries: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter((addr: string) =>
-			addr.startsWith('aura') || addr.startsWith('cosmos')
-			|| addr.startsWith('evmos') || addr.startsWith('osmo')
+		listAddresses = listAddresses.filter(
+			(addr: string) =>
+				addr.startsWith('aura') ||
+				addr.startsWith('cosmos') ||
+				addr.startsWith('evmos') ||
+				addr.startsWith('osmo'),
 		);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
@@ -123,48 +125,50 @@ export default class CrawlAccountBalancesService extends Service {
 
 				if (listBalances) {
 					if (listBalances.length > 1) {
-						await Promise.all(listBalances.map(async (balance) => {
-							if (balance.denom.startsWith('ibc/')) {
-								let hash = balance.denom.split('/')[1];
-								let ibcDenom: IBCDenomEntity;
-								try {
-									ibcDenom = await this.broker.call(
-										'v1.ibc-denom.getByHash',
-										{ hash: balance.denom, denom: '' },
-									);
-								} catch (error) {
-									this.logger.error(error);
-									throw error;
-								}
-								if (ibcDenom) {
-									balance.denom = ibcDenom.denom;
-									balance.minimal_denom = ibcDenom.hash;
-								} else {
-									const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
-									let denomResult;
+						await Promise.all(
+							listBalances.map(async (balance) => {
+								if (balance.denom.startsWith('ibc/')) {
+									let hash = balance.denom.split('/')[1];
+									let ibcDenom: IBCDenomEntity;
 									try {
-										denomResult = await this.callApiFromDomain(
-											url,
-											hashParam,
+										ibcDenom = await this.broker.call(
+											'v1.ibc-denom.getByHash',
+											{ hash: balance.denom, denom: '' },
 										);
 									} catch (error) {
 										this.logger.error(error);
 										throw error;
 									}
-									balance.minimal_denom = balance.denom;
-									balance.denom = denomResult.denom_trace.base_denom;
-									try {
-										this.broker.call('v1.ibc-denom.addNewDenom', {
-											hash: `ibc/${hash}`,
-											denom: balance.denom,
-										});
-									} catch (error) {
-										this.logger.error(error);
-										throw error;
+									if (ibcDenom) {
+										balance.denom = ibcDenom.denom;
+										balance.minimal_denom = ibcDenom.hash;
+									} else {
+										const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
+										let denomResult;
+										try {
+											denomResult = await this.callApiFromDomain(
+												url,
+												hashParam,
+											);
+										} catch (error) {
+											this.logger.error(error);
+											throw error;
+										}
+										balance.minimal_denom = balance.denom;
+										balance.denom = denomResult.denom_trace.base_denom;
+										try {
+											this.broker.call('v1.ibc-denom.addNewDenom', {
+												hash: `ibc/${hash}`,
+												denom: balance.denom,
+											});
+										} catch (error) {
+											this.logger.error(error);
+											throw error;
+										}
 									}
 								}
-							}
-						}));
+							}),
+						);
 					}
 					accountInfo.account_balances = listBalances;
 				}

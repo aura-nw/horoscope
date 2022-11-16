@@ -6,7 +6,6 @@ import moleculer, { Context } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCodeIDMixin } from '../../mixins/dbMixinMongoose';
 import { LIST_NETWORK } from '../../common/constant';
-// import { Ok } from 'ts-results';
 
 @Service({
 	name: 'codeid-manager',

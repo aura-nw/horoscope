@@ -1,8 +1,4 @@
-import { Config } from 'common';
 import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../common/constant';
-// @ts-ignore
-import { tmhash } from 'tendermint/lib/hash';
-import { bech32 } from 'bech32';
 import { fromBech32 } from '@cosmjs/encoding';
 export class Utils {
 	public static getUrlByChainIdAndType(chainId: string, typeUrl: string) {
@@ -18,28 +14,6 @@ export class Utils {
 			}
 		}
 		return null;
-	}
-
-	public static pubkeyBase64ToHexAddress(pubkey: string): string {
-		var bytes = Buffer.from(pubkey, 'base64');
-		return tmhash(bytes).slice(0, 20).toString('hex').toUpperCase();
-	}
-
-	public static hexToBech32(address: string, prefix: string) {
-		let addressBuffer = Buffer.from(address, 'hex');
-		return bech32.encode(prefix, bech32.toWords(addressBuffer));
-	}
-
-	public static bech32ToHex(address: string) {
-		let decodedAddress = bech32.decode(address);
-		return Buffer.from(new Uint8Array(decodedAddress.words)).toString('hex').toUpperCase();
-	}
-
-	public static operatorAddressToAddress(operatorAddress: string, prefix: string) {
-		const operator_address = operatorAddress;
-		const decodeAcc = bech32.decode(operator_address.toString());
-		const wordsByte = bech32.fromWords(decodeAcc.words);
-		return bech32.encode(prefix, bech32.toWords(wordsByte));
 	}
 
 	public static formatSearchQueryInTxSearch(query: string) {

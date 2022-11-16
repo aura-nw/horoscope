@@ -3,8 +3,8 @@
 'use strict';
 
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import moleculer, { CallingOptions, Context, ServiceBroker } from 'moleculer';
-import { Action, Get, Post, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import moleculer, { CallingOptions, Context } from 'moleculer';
+import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CodeIDStatus } from '../../model/codeid.model';
 import { Config } from '../../common';
@@ -16,7 +16,6 @@ import {
 	CONTRACT_TYPE,
 	LIST_NETWORK,
 	CW721_FIELD,
-	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';

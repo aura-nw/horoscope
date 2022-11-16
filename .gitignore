@@ -67,3 +67,5 @@ typings/
 # Don't track transpiled files
 dist/
 .dccache
+
+network.json

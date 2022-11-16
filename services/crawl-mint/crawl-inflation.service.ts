@@ -9,7 +9,7 @@ import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { dbInflationMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
-import { InflationEntity, ParamEntity } from '../../entities';
+import { InflationEntity } from '../../entities';
 import { IMintInflationResponseFromLCD } from 'types';
 import { Utils } from '../../utils/utils';
 import { QueueConfig } from '../../config/queue';

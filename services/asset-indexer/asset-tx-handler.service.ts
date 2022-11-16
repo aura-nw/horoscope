@@ -10,7 +10,6 @@ import * as _ from 'lodash';
 import {
 	URL_TYPE_CONSTANTS,
 	EVENT_TYPE,
-	COMMON_ACTION,
 	ENRICH_TYPE,
 	CODEID_MANAGER_ACTION,
 	BASE_64_ENCODE,
@@ -18,11 +17,8 @@ import {
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
 import { CodeIDStatus } from '../../model/codeid.model';
-import { ICW721Asset } from '../../entities/cw721-asset.entity';
-import { info } from 'console';
 import { IAttribute, IEvent, ITransaction } from 'entities';
-import { toBase64, toUtf8, fromBase64, fromUtf8 } from '@cosmjs/encoding';
-import { Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
 import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;

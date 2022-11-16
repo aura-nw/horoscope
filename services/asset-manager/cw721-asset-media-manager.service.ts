@@ -7,7 +7,6 @@ import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
 import { Common } from '../asset-indexer/common.service';
 import { MediaStatus } from '../../model/cw721-asset-media.model';
 import {
-	CW721_FIELD,
 	CW721_MANAGER_ACTION,
 	CW721_MEDIA_MANAGER_ACTION,
 	LIST_NETWORK,
