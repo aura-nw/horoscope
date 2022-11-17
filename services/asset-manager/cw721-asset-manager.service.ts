@@ -134,7 +134,8 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw721-asset-manager upsert ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				return await this.upsert_handler(ctx.params);
+				const resultUpsert = await this.upsert_handler(ctx.params);
+				return resultUpsert;
 			},
 		},
 		'act-update-by-id': {
@@ -167,6 +168,7 @@ export default class CW721AssetManagerService extends moleculer.Service {
 		this.actions.useDb({ query: { chainId: asset.custom_info.chain_id } });
 		let item = await this.adapter.findOne({ asset_id: asset.asset_id });
 		if (item) {
+			this.logger.debug('this is existed item', JSON.stringify(item));
 			asset._id = item._id;
 			if (
 				item.contract_address != asset.contract_address ||
@@ -178,10 +180,13 @@ export default class CW721AssetManagerService extends moleculer.Service {
 			) {
 				await this.adapter.updateById(item._id, asset);
 			}
+			return asset._id;
 		} else {
-			await this.adapter.insert(asset);
+			this.logger.debug('this is not existed item: ', JSON.stringify(asset));
+			let resultInsert = await this.adapter.insert(asset);
+			this.logger.debug('result insert: ', JSON.stringify(resultInsert));
+			return resultInsert._id;
 		}
-		return asset._id;
 	}
 
 	async updateById(asset: any, updateOperator: any) {

@@ -174,10 +174,10 @@ export class Common {
 		metadata: Object,
 	) {
 		let network = LIST_NETWORK.find((item) => item.chainId === chainId);
-		return {
-			_id: new Types.ObjectId(),
+		let cw721AssetEntity = {
+			_id: Types.ObjectId(),
 			asset_id: `${address}_${id}`,
-			code_id: code_id,
+			code_id: code_id.toString(),
 			asset_info: tokenInfo,
 			contract_address: address,
 			token_id: id,
@@ -191,6 +191,7 @@ export class Common {
 			is_burned: false,
 			metadata: metadata,
 		};
+		return cw721AssetEntity;
 	};
 	public static createCW20AssetObject = function (
 		code_id: Number,
