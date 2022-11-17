@@ -81,7 +81,7 @@ export default class FeegrantTxHandler extends Service {
 				"tx_response.height": 1
 			},
 		}) as ITransaction[]
-		this.currentBlock = oldestBlockTx[0] ? oldestBlockTx[0].tx_response.height.valueOf() : 0
+		this.currentBlock = oldestBlockTx[0] ? oldestBlockTx[0].tx_response.height.valueOf() - 1 : -1
 		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : this.currentBlock;
 	}
 
@@ -96,13 +96,13 @@ export default class FeegrantTxHandler extends Service {
 			},
 		}) as ITransaction[]
 		const latestBlock = latestBlockTx[0] ? latestBlockTx[0].tx_response.height.valueOf() : this.currentBlock
-		this.logger.info(`Feegrant from  ${this.currentBlock} to ${(this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock)}`)
+		this.logger.info(`Feegrant from  ${this.currentBlock + 1} to ${(this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock)}`)
 		// get all transactions in BLOCK_PER_BATCH sequence blocks, start from currentBlock
 		const listTx = await this.adapter.lean({
 			query: {
 				"tx_response.height": {
-					$gte: this.currentBlock,
-					$lt: this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
+					$gt: this.currentBlock,
+					$lte: this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
 				}
 			},
 			projection: {
