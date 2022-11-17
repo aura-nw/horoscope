@@ -42,6 +42,11 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				integer: true,
 				convert: true,
 			},
+			code: {
+				type: 'string',
+				optional: true,
+				default: '0',
+			},
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -88,6 +93,10 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 
 			if (chainId) {
 				query['custom_info.chain_id'] = chainId;
+			}
+
+			if (ctx.params.code) {
+				query['code'] = ctx.params.code;
 			}
 
 			let sort = 'timestamp';
@@ -157,6 +166,11 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				integer: true,
 				convert: true,
 			},
+			code: {
+				type: 'string',
+				optional: true,
+				default: '0',
+			},
 		},
 		cache: {
 			ttl: 10,
@@ -185,6 +199,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				voter_address: { $in: validatorAccountAddress },
 			};
 			if (ctx.params.answer) query.answer = ctx.params.answer;
+			if (ctx.params.code) query.code = ctx.params.code;
 			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
@@ -246,6 +261,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				$match: {
 					'custom_info.chain_id': chain_id,
 					proposal_id,
+					code: '0',
 				},
 			},
 			{
@@ -302,6 +318,13 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *            type: string
 	 *            enum: ['VOTE_OPTION_YES', 'VOTE_OPTION_NO', 'VOTE_OPTION_NO_WITH_VETO', 'VOTE_OPTION_ABSTAIN']
 	 *          description: "Vote option want to query"
+	 *        - in: query
+	 *          name: code
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *            default: '0'
+	 *          description: "vote tx code"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
@@ -449,6 +472,13 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *            type: string
 	 *            enum: ['VOTE_OPTION_YES', 'VOTE_OPTION_NO', 'VOTE_OPTION_NO_WITH_VETO', 'VOTE_OPTION_ABSTAIN', 'DID_NOT_VOTE']
 	 *          description: "Vote option want to query"
+	 *        - in: query
+	 *          name: code
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *            default: '0'
+	 *          description: "vote tx code"
 	 *      responses:
 	 *        '200':
 	 *          description: Validator Vote result

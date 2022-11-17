@@ -13,7 +13,7 @@ export interface IVote {
 	txhash: String;
 	timestamp: Date | null;
 	custom_info: ICustomInfo;
-	code: String
+	code: String;
 }
 
 @JsonObject('Vote')
@@ -40,7 +40,7 @@ export class VoteEntity implements IVote {
 	height: Number = 0;
 
 	@JsonProperty('code', String)
-	code: String = "0";
+	code: String = '0';
 
 	@JsonProperty('custom_info', CustomInfo, true)
 	custom_info: CustomInfo = {} as CustomInfo;
