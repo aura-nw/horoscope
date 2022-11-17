@@ -115,7 +115,6 @@ export default class VoteHandlerService extends Service {
 			this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
 		}
 	}
-
 	async _start() {
 		this.getQueue('proposal.vote').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
