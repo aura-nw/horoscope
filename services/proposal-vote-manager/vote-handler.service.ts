@@ -99,6 +99,9 @@ export default class VoteHandlerService extends Service {
 				chain_id: chain,
 				chain_name: LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
 			};
+			if (code != '0') {
+				continue;
+			}
 			const vote = {
 				voter_address,
 				proposal_id,

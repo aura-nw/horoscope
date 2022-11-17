@@ -95,10 +95,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				query['custom_info.chain_id'] = chainId;
 			}
 
-			if (ctx.params.code) {
-				query['code'] = ctx.params.code;
-			}
-
 			let sort = 'timestamp';
 
 			if (ctx.params.reverse) {
@@ -199,7 +195,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				voter_address: { $in: validatorAccountAddress },
 			};
 			if (ctx.params.answer) query.answer = ctx.params.answer;
-			if (ctx.params.code) query.code = ctx.params.code;
 			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
