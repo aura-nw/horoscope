@@ -17,13 +17,13 @@ RUN npm install -g moleculer-cli
 # RUN yarn global add moleculer-cli
 
 # Add all supported transporters except kafka
-RUN npm install -g amqp \
-	nats \
-	node-nats-streaming \
-	ioredis \
-	mqtt \
-	amqplib \
-	rhea-promise
+RUN npm install -g ioredis 
+	# nats \
+	# node-nats-streaming \
+	# amqp \
+	# mqtt \
+	# amqplib \
+	# rhea-promise
 
 # RUN yarn global add install amqp \
 # 	nats \
