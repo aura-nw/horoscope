@@ -1,6 +1,8 @@
 FROM node:16-alpine3.15
-RUN apk add --update python3 make g++\
-   && rm -rf /var/cache/apk/*
+
+# Install python
+# RUN apk add --update python3 make g++\
+#    && rm -rf /var/cache/apk/*
 # Working directory
 WORKDIR /app
 
@@ -45,7 +47,7 @@ RUN npm install -g avsc \
 # 	thrift
 
 # install project dependencies
-RUN npm ci --silent
+RUN npm ci -production --silent
 # RUN npm i
 # RUN yarn install --frozen-lockfile
 
