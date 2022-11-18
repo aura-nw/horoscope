@@ -47,4 +47,6 @@ export const queues = [
 	'websocket.safe-tx-handle',
 	'CW721-media.get-media-link',
 	'CW721-asset-media-manager.update-media-link',
+	'CW4973-media.get-media-link',
+	'CW4973-asset-media-manager.update-media-link',
 ];

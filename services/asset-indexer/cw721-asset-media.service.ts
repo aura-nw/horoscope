@@ -6,7 +6,6 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
 import moleculer, { CallingOptions, Context, ServiceBroker } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
-import { MediaStatus } from '../../model/cw721-asset-media.model';
 import { Config } from '../../common';
 import { Types } from 'mongoose';
 import {
@@ -14,6 +13,7 @@ import {
 	CW721_MANAGER_ACTION,
 	CW721_MEDIA_MANAGER_ACTION,
 	LIST_NETWORK,
+	MEDIA_STATUS,
 } from '../../common/constant';
 import { QueryOptions } from 'moleculer-db';
 const callApiMixin = new CallApiMixin().start();
@@ -215,7 +215,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				key,
 				source: sourceUri,
 				media_link: '',
-				status: MediaStatus.HANDLING,
+				status: MEDIA_STATUS.HANDLING,
 				chainId: chain_id,
 			});
 			await this.broker.call(
@@ -228,7 +228,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			queryAssetCW721['_id'] = new ObjectId(cw721_id);
 			queryAssetCW721['custom_info.chain_id'] = chain_id;
 
-			if (media[0].status == MediaStatus.COMPLETED) {
+			if (media[0].status == MEDIA_STATUS.COMPLETED) {
 				let listFoundCW721: CW721AssetEntity[] = await this.broker.call(
 					CW721_MANAGER_ACTION.FIND,
 					{
@@ -280,42 +280,6 @@ export default class CrawlAssetService extends moleculer.Service {
 				}
 			}
 		}
-
-		// if (media.length === 0) {
-		// 	await this.broker.call(CW721_MEDIA_MANAGER_ACTION.INSERT, {
-		// 		_id: new Types.ObjectId(),
-		// 		key,
-		// 		source: sourceUri,
-		// 		media_link: '',
-		// 		status: MediaStatus.HANDLING,
-		// 		chainId: chain_id,
-		// 	});
-		// 	await this.broker.call(
-		// 		CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK,
-		// 		{ uri, file_name, type, key, chainId: chain_id, field, sourceUri },
-		// 		OPTs,
-		// 	);
-		// } else {
-		// 	switch (media[0].status) {
-		// 		case MediaStatus.PENDING: {
-		// 			await this.broker.call(
-		// 				CW721_MEDIA_MANAGER_ACTION.UPDATE_MEDIA_LINK,
-		// 				{ uri, file_name, type, key, chainId: chain_id, field, sourceUri },
-		// 				OPTs,
-		// 			);
-		// 			break;
-		// 		}
-		// 		case MediaStatus.COMPLETED:
-		// 			// do nothing
-		// 			break;
-		// 		case MediaStatus.HANDLING:
-		// 			// do nothing
-		// 			break;
-		// 		case MediaStatus.ERROR:
-		// 			// do nothing
-		// 			break;
-		// 	}
-		// }
 	}
 
 	async handleMigrateOldData(chainId: string) {

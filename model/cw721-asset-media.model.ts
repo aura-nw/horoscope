@@ -2,13 +2,7 @@ import { ICW721Media } from '../entities/cw721-media-link.entity';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
-
-export enum MediaStatus {
-	PENDING = 'PENDING',
-	COMPLETED = 'COMPLETED',
-	ERROR = 'ERROR',
-	HANDLING = 'HANDLING',
-}
+import { MEDIA_STATUS } from '../common/constant';
 
 const definition: definitionType<ICW721Media> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -24,7 +18,7 @@ const definition: definitionType<ICW721Media> = (collection?: string) => ({
 	media_link: String,
 	status: {
 		type: String,
-		enum: MediaStatus,
+		enum: MEDIA_STATUS,
 	},
 	content_type: String,
 	custom_info: customInfoModel,

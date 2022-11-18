@@ -5,7 +5,7 @@ import CID from 'cids';
 import parse from 'parse-uri';
 import { Config } from '../../common';
 import { Types } from 'mongoose';
-import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { Action, Method, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import moleculer, { Context } from 'moleculer';
 import { S3Service } from '../../utils/s3';
 import { LIST_NETWORK } from '../../common/constant';
@@ -145,6 +145,7 @@ export class Common {
 		media_link_key: String,
 		tokenInfo: CW721AssetInfo,
 		chainId: String,
+		metadata: Object,
 	) {
 		let network = LIST_NETWORK.find((item) => item.chainId === chainId);
 		return {
@@ -162,6 +163,7 @@ export class Common {
 				chain_name: network?.chainName,
 			},
 			is_burned: false,
+			metadata: metadata,
 		};
 	};
 	public static createCW721AssetObject = function (

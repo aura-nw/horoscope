@@ -353,3 +353,10 @@ export const CW721_FIELD = {
 export const EVMOS_TYPE_ACCOUNT = {
 	ETH_ACCOUNT: '/ethermint.types.v1.EthAccount',
 };
+
+export enum MEDIA_STATUS {
+	PENDING = 'PENDING',
+	COMPLETED = 'COMPLETED',
+	ERROR = 'ERROR',
+	HANDLING = 'HANDLING',
+}

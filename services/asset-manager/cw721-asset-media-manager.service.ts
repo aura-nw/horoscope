@@ -5,11 +5,11 @@ import moleculer, { CallingOptions, Context } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
 import { Common } from '../asset-indexer/common.service';
-import { MediaStatus } from '../../model/cw721-asset-media.model';
 import {
 	CW721_MANAGER_ACTION,
 	CW721_MEDIA_MANAGER_ACTION,
 	LIST_NETWORK,
+	MEDIA_STATUS,
 } from '../../common/constant';
 import { Config } from '../../common';
 
@@ -191,7 +191,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 					key,
 					media_link: result.linkS3,
 					content_type: result.contentType,
-					status: MediaStatus.COMPLETED,
+					status: MEDIA_STATUS.COMPLETED,
 					custom_info: {
 						chain_id: chainId,
 					},
@@ -280,7 +280,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 			this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
 				key,
 				media_link: '',
-				status: MediaStatus.ERROR,
+				status: MEDIA_STATUS.ERROR,
 				custom_info: {
 					chain_id: chainId,
 				},
