@@ -12,6 +12,7 @@ const definition: definitionType<IVote> = (collection?: string) => ({
 	txhash: String,
 	timestamp: Date,
 	height: Number,
+	code: String,
 	custom_info: customInfoModel,
 });
 

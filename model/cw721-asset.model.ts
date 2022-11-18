@@ -1,19 +1,7 @@
+import { ICW721Asset } from '../entities/cw721-asset.entity';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
-
-export interface ICW721Asset {
-	_id: ObjectIdNull;
-	asset_id: String;
-	code_id: String;
-	asset_info: Object;
-	contract_address: String;
-	token_id: String;
-	owner: String;
-	media_link: String;
-	history: String[];
-	is_burned: Boolean;
-}
 
 const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -42,11 +30,26 @@ const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 		index: true,
 	},
 	history: {
-		type: [String],
+		type: [Object],
 	},
 	media_link: String,
 	custom_info: customInfoModel,
 	is_burned: Boolean,
+	metadata: Object,
+	image: {
+		link_s3: {
+			type: String,
+			index: true,
+		},
+		content_type: String,
+	},
+	animation: {
+		link_s3: {
+			type: String,
+			index: true,
+		},
+		content_type: String,
+	},
 });
 
 export const cw721AssetMongoModel = (collection: string): unknown => {

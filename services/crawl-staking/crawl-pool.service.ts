@@ -59,8 +59,8 @@ export default class CrawlPoolService extends Service {
 				if (foundPool) {
 					item._id = foundPool._id;
 					// await this.adapter.clearCache();
-					// await this.adapter.updateById(foundPool._id, item);
-					await this.actions.update(item);
+					await this.adapter.updateById(foundPool._id, item);
+					// await this.actions.update(item);
 				} else {
 					await this.adapter.insert(item);
 				}

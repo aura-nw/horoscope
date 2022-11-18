@@ -1,4 +1,4 @@
-import { DELAY_JOB_TYPE } from "common/constant";
+import { DELAY_JOB_TYPE } from 'common/constant';
 
 export interface PageLimit {
 	pageOffset: number;
@@ -35,6 +35,7 @@ export interface GetBlockRequest
 export interface GetVoteRequest extends ChainIdParams, PageLimit {
 	answer: string;
 	proposalid: number;
+	code: string;
 }
 
 export interface GetAssetByAddressRequest extends ChainIdParams, PageLimit {
@@ -72,6 +73,8 @@ export interface GetTxRequest
 	query: string;
 	addressInContract: string;
 	sequenceIBC: string;
+	fromHeight: number;
+	needFullLog: boolean;
 }
 export interface GetPowerEventTxRequest extends ChainIdParams, PageLimit, AddressParams {}
 
@@ -133,7 +136,17 @@ export interface QueryIBCDenomParams {
 	hash: string;
 	denom: string;
 }
-
+export interface GetFeegrantRequest extends ChainIdParams, PageLimit {
+	granter: string;
+	grantee: string;
+	status: string;
+	expired: boolean;
+	txhash: string;
+}
+export interface GetFeegrantInactiveRequest extends ChainIdParams, PageLimit {
+	granter: string;
+	grantee: string;
+}
 export interface QueryDelayJobParams {
 	address: string;
 	type: DELAY_JOB_TYPE | DELAY_JOB_TYPE[];

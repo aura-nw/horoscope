@@ -6,13 +6,8 @@ import { Service, Context, ServiceBroker } from 'moleculer';
 
 const QueueService = require('moleculer-bull');
 import { Job } from 'bull';
-import { IAttribute, IEvent, ITransaction } from '../../entities';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
-import { ObjectID, ObjectId } from 'bson';
-import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
 import RedisMixin from '../../mixins/redis/redis.mixin';
-import { bech32 } from 'bech32';
-const hash = require('tendermint/lib/hash');
 export default class IndexTxService extends Service {
 	private redisMixin = new RedisMixin().start();
 	public constructor(public broker: ServiceBroker) {
@@ -117,12 +112,6 @@ export default class IndexTxService extends Service {
 				removeOnComplete: true,
 			},
 		);
-
-		let operatorHexAddress = 'B00D6A3D473A303E8058810754074F8106804767';
-
-		const bytes = Buffer.from('nDxL1WxLTMVpt8sm2x4E8RxFKEtAXBL+rFcVr1fewVc=', 'base64');
-		const operatorAddress = hash.tmhash(bytes).slice(0, 20).toString('hex').toUpperCase();
-		this.logger.info('operatorAddress:', operatorAddress);
 
 		this.getQueue('index.tx').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);

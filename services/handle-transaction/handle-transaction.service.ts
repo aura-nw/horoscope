@@ -9,15 +9,16 @@ import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../entities';
-import { CONST_CHAR } from '../../common/constant';
+import { CONST_CHAR, MSG_TYPE } from '../../common/constant';
 import {
 	IRedisStreamData,
 	IRedisStreamResponse,
 	ListTxCreatedParams,
 	TransactionHashParam,
 } from '../../types';
-import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
+import { fromBase64, fromUtf8, fromBech32 } from '@cosmjs/encoding';
 import { QueueConfig } from '../../config/queue';
+import { Utils } from '../../utils/utils';
 
 export default class HandleTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -40,7 +41,7 @@ export default class HandleTransactionService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.param);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -75,7 +76,7 @@ export default class HandleTransactionService extends Service {
 			Config.REDIS_STREAM_TRANSACTION_NAME,
 			Config.REDIS_STREAM_TRANSACTION_GROUP,
 			this.consumer,
-			1000,
+			Config.REDIS_MIN_IDLE_TIME_HANDLE_TRANSACTION,
 			'0-0',
 			{ COUNT: Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_TRANSACTION },
 		);
@@ -169,11 +170,36 @@ export default class HandleTransactionService extends Service {
 				},
 			});
 			let listTransactionNeedSaveToDb: ITransaction[] = [];
+
+			// add indexes to transaction
 			listTransactionEntity.forEach((tx: ITransaction) => {
 				let indexes: any = {};
+
+				let listContractInMessages: string[] = [];
+				// check if tx is execute smart contract
+				const listMsg = tx.tx.body.messages;
+				try {
+					listMsg.map((msg: any) => {
+						if (
+							msg['@type'] &&
+							msg.contract &&
+							msg['@type'] == MSG_TYPE.MSG_EXECUTE_CONTRACT
+						) {
+							listContractInMessages.push(msg.contract);
+						}
+					});
+				} catch (error) {
+					this.logger.error('This message execute contract is error');
+				}
+				//remove duplicate
+				listContractInMessages = [...new Set(listContractInMessages)];
+
 				//@ts-ignore
 				indexes['timestamp'] = new Date(tx.tx_response.timestamp);
 				indexes['height'] = Number(tx.tx_response.height);
+
+				let listAddress: string[] = [];
+
 				tx.tx_response.events.map((event: IEvent) => {
 					let type = event.type.toString();
 					type = type.replace(/\./g, '_');
@@ -195,6 +221,12 @@ export default class HandleTransactionService extends Service {
 								indexes[`${type}_${key}`] = [value];
 							}
 
+							//add to listAddress if value is valid address
+							const isValidAddress = Utils.isValidAddress(value);
+							if (isValidAddress) {
+								listAddress.push(value);
+							}
+
 							let hashValue = this.redisClient
 								.hGet(`att-${type}`, key)
 								.then((value: any) => {
@@ -214,6 +246,16 @@ export default class HandleTransactionService extends Service {
 						}
 					});
 				});
+				listAddress = [...new Set(listAddress)];
+				if (listAddress && listAddress.length > 0) {
+					indexes['addresses'] = listAddress;
+				}
+				if (listContractInMessages.length > 0 && tx.tx_response.code != '0') {
+					let indexExecute = indexes['execute__contract_address'];
+					if (!indexExecute) {
+						indexes['execute__contract_address'] = listContractInMessages;
+					}
+				}
 
 				tx.indexes = indexes;
 
@@ -235,11 +277,10 @@ export default class HandleTransactionService extends Service {
 
 	async _start() {
 		this.redisClient = await this.getRedisClient();
+		await this.initEnv();
 		this.createJob(
 			'handle.transaction',
-			{
-				param: `param`,
-			},
+			{},
 			{
 				removeOnComplete: true,
 				removeOnFail: {
@@ -250,17 +291,14 @@ export default class HandleTransactionService extends Service {
 				},
 			},
 		);
-
-		await this.initEnv();
-
 		this.getQueue('handle.transaction').on('completed', (job: Job) => {
-			// this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
 		this.getQueue('handle.transaction').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
 		this.getQueue('handle.transaction').on('progress', (job: Job) => {
-			// this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
 	}

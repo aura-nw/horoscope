@@ -1,18 +1,15 @@
 'use strict';
 
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import request from 'request-promise';
 import CID from 'cids';
-const fetch = require('node-fetch');
 import parse from 'parse-uri';
 import { Config } from '../../common';
 import { Types } from 'mongoose';
-import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { Action, Method, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import moleculer, { Context } from 'moleculer';
 import { S3Service } from '../../utils/s3';
 import { LIST_NETWORK } from '../../common/constant';
 const { createHash } = require('crypto');
-const errors = require('request-promise/errors');
 import { AxiosDefaults } from 'axios';
 import axios from 'axios';
 
@@ -29,7 +26,6 @@ const callApiMixin = new CallApiMixin().start();
 const s3Client = new S3Service().connectS3();
 const IPFS_GATEWAY = Config.IPFS_GATEWAY;
 const IPFS_PREFIX = 'ipfs';
-import { create } from 'ipfs-http-client';
 
 type CW4973AssetInfo = {
 	data: {
@@ -149,6 +145,7 @@ export class Common {
 		media_link_key: String,
 		tokenInfo: CW721AssetInfo,
 		chainId: String,
+		metadata: Object,
 	) {
 		let network = LIST_NETWORK.find((item) => item.chainId === chainId);
 		return {
@@ -166,6 +163,7 @@ export class Common {
 				chain_name: network?.chainName,
 			},
 			is_burned: false,
+			metadata: metadata,
 		};
 	};
 	public static createCW721AssetObject = function (
@@ -175,12 +173,13 @@ export class Common {
 		media_link_key: String,
 		tokenInfo: CW721AssetInfo,
 		chainId: String,
+		metadata: Object,
 	) {
 		let network = LIST_NETWORK.find((item) => item.chainId === chainId);
-		return {
-			_id: new Types.ObjectId(),
+		let cw721AssetEntity = {
+			_id: Types.ObjectId(),
 			asset_id: `${address}_${id}`,
-			code_id: code_id,
+			code_id: code_id.toString(),
 			asset_info: tokenInfo,
 			contract_address: address,
 			token_id: id,
@@ -192,7 +191,9 @@ export class Common {
 				chain_name: network?.chainName,
 			},
 			is_burned: false,
+			metadata: metadata,
 		};
+		return cw721AssetEntity;
 	};
 	public static createCW20AssetObject = function (
 		code_id: Number,
@@ -318,7 +319,10 @@ export class Common {
 			// 	});
 			// }
 			return this.downloadAttachment(uri).then(async (buffer) => {
-				let type = (await FileType.fromBuffer(buffer))?.mime;
+				let type: any = (await FileType.fromBuffer(buffer))?.mime;
+				if (type === 'application/xml') {
+					type = 'image/svg+xml';
+				}
 				return uploadAttachmentToS3(type, buffer);
 			});
 		} else {
@@ -358,5 +362,9 @@ export class Common {
 			text += possible.charAt(Math.floor(Math.random() * possible.length));
 
 		return text;
+	}
+
+	public static updateBase64InUrl(base64: string) {
+		return base64.replace(/\+/g, '-').replace(/\//g, '_');
 	}
 }

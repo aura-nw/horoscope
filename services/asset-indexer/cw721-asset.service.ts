@@ -3,8 +3,8 @@
 'use strict';
 
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import moleculer, { CallingOptions, Context, ServiceBroker } from 'moleculer';
-import { Action, Get, Post, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import moleculer, { CallingOptions, Context } from 'moleculer';
+import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CodeIDStatus } from '../../model/codeid.model';
 import { Config } from '../../common';
@@ -15,6 +15,8 @@ import {
 	ENRICH_TYPE,
 	CONTRACT_TYPE,
 	LIST_NETWORK,
+	CW721_FIELD,
+	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
@@ -33,6 +35,8 @@ const HANDLE_CODEID_PREFIX = 'handle_codeid';
 const callApiMixin = new CallApiMixin().start();
 import { QueueConfig } from '../../config/queue';
 import { Job } from 'bull';
+import { Utils } from '../../utils/utils';
+import { isValidObjectId } from 'mongoose';
 const QueueService = require('moleculer-bull');
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -62,6 +66,14 @@ const QueueService = require('moleculer-bull');
 					typeEnrich,
 				);
 				job.progress(100);
+			},
+		},
+		'CW721.migrate-old-data': {
+			concurrency: 1,
+			async process(job: Job) {
+				const chain_id = job.data.chain_id;
+				//@ts-ignore
+				this.handleMigrateOldData(chain_id);
 			},
 		},
 	},
@@ -233,15 +245,19 @@ export default class CrawlAssetService extends moleculer.Service {
 
 			let imageLink = null;
 			let metadata = null;
+			let animationLink = null;
 			if (tokenInfo.data.info.extension) {
 				metadata = tokenInfo.data.info.extension;
 				if (tokenInfo.data.info.extension.image) {
 					imageLink = tokenInfo.data.info.extension.image;
 				}
+				if (tokenInfo.data.info.extension.animation_url) {
+					animationLink = tokenInfo.data.info.extension.animation_url;
+				}
 			}
 
 			try {
-				// if has token uri
+				// if has token uri, download and validate schema
 				if (tokenInfo.data.info.token_uri) {
 					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(
 						tokenInfo.data.info.token_uri,
@@ -252,35 +268,21 @@ export default class CrawlAssetService extends moleculer.Service {
 					if (schemaIPFS) {
 						metadata = JSON.parse(schemaIPFS.toString());
 					}
-					if (!imageLink) {
+					if (!imageLink && metadata.image) {
 						imageLink = metadata.image;
 					}
-				}
-				if (!imageLink && tokenInfo.data.info.token_uri) {
-					imageLink = tokenInfo.data.info.token_uri;
+					if (!animationLink && metadata.animation_url) {
+						animationLink = metadata.animation_url;
+					}
 				}
 			} catch (error) {
 				this.logger.error('Cannot get schema');
-				// this.logger.error(error);
-			}
-
-			try {
-				if (imageLink) {
-					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(imageLink);
-					this.broker.emit('CW721-media.get-media-link', {
-						uri,
-						type,
-						file_name,
-						media_link_key,
-						chain_id,
-						metadata,
-					});
+				if (!imageLink && tokenInfo.data.info.token_uri) {
+					imageLink = tokenInfo.data.info.token_uri;
 				}
-			} catch (error) {
-				this.logger.error('Cannot get media link');
-				this.logger.error(error);
 			}
 
+			//create a record to save cw721
 			const asset = Common.createCW721AssetObject(
 				code_id,
 				address,
@@ -288,9 +290,50 @@ export default class CrawlAssetService extends moleculer.Service {
 				media_link_key,
 				tokenInfo,
 				chain_id,
+				metadata,
 			);
-			this.logger.debug('insert new asset: ', JSON.stringify(asset));
-			this.broker.call(`v1.CW721-asset-manager.act-${type_enrich}`, asset, OPTs);
+
+			let resultInsert: any = await this.broker.call(
+				`v1.CW721-asset-manager.act-${type_enrich}`,
+				asset,
+			);
+			this.logger.debug('insert new asset: ', JSON.stringify(resultInsert));
+			// const assetId = resultInsert._id.toString();
+			try {
+				if (animationLink) {
+					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(animationLink);
+					let paramEmit = {
+						sourceUri: animationLink,
+						uri,
+						type,
+						file_name,
+						media_link_key,
+						chain_id,
+						field: CW721_FIELD.ANIMATION,
+						cw721_id: resultInsert,
+					};
+					this.logger.debug('param emit get-media-link: ', JSON.stringify(paramEmit));
+					this.broker.emit('CW721-media.get-media-link', paramEmit);
+				}
+				if (imageLink) {
+					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(imageLink);
+					let paramEmit = {
+						sourceUri: imageLink,
+						uri,
+						type,
+						file_name,
+						media_link_key,
+						chain_id,
+						field: CW721_FIELD.IMAGE,
+						cw721_id: resultInsert,
+					};
+					this.logger.debug('param emit get-media-link: ', JSON.stringify(paramEmit));
+					this.broker.emit('CW721-media.get-media-link', paramEmit);
+				}
+			} catch (error) {
+				this.logger.error('Cannot get media link');
+				this.logger.error(error);
+			}
 		}
 	}
 
@@ -394,8 +437,10 @@ export default class CrawlAssetService extends moleculer.Service {
 		const URL = ctx.params.URL;
 		try {
 			const str = `{"all_nft_info":{"token_id":"${ctx.params.token_id}"}}`;
-			const stringEncode64bytes = Buffer.from(str).toString('base64');
-			let urlGetOwner = `${CONTRACT_URI}${ctx.params.address}/smart/${stringEncode64bytes}`;
+			const stringEncode64bytes = Common.updateBase64InUrl(toBase64(toUtf8(str)));
+			let urlGetOwner = `${CONTRACT_URI}${ctx.params.address}/smart/${encodeURIComponent(
+				stringEncode64bytes,
+			)}`;
 			let tokenInfo = await this.callApiFromDomain(URL, urlGetOwner);
 			if (tokenInfo?.data?.access?.owner !== undefined) {
 				return tokenInfo;
@@ -428,8 +473,133 @@ export default class CrawlAssetService extends moleculer.Service {
 	private async updateById(id: any, update: any) {
 		return await this.adapter.updateById(id, update);
 	}
+	async handleMigrateOldData(chainId: string) {
+		let listAggregate: any[] = [];
+		const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+		if (network && network.databaseName) {
+			// @ts-ignore
+			this.adapter.useDb(network.databaseName);
+		}
 
-	_start(): Promise<void> {
+		listAggregate.push(
+			{
+				$match: {
+					media_link: { $ne: '' },
+				},
+			},
+			{
+				$lookup: {
+					from: 'cw721_media_link',
+					localField: 'media_link',
+					foreignField: 'key',
+					as: 'media_info',
+				},
+			},
+			{
+				$limit: 10,
+			},
+		);
+
+		// @ts-ignore
+		this.logger.debug(JSON.stringify(listAggregate));
+		// @ts-ignore
+		let listResult = await this.adapter.aggregate(listAggregate);
+		let listBulk: any[] = [];
+		listResult.forEach(async (result: any) => {
+			if (result.media_info && result.media_info.length > 0) {
+				let link = result.media_info[0].media_link;
+				let contentType = result.media_info[0].content_type;
+
+				let image: any = {};
+				if (link) {
+					image['link_s3'] = link;
+				}
+				if (contentType) {
+					image['content_type'] = contentType;
+				}
+
+				listBulk.push({
+					updateOne: {
+						filter: {
+							_id: result._id,
+						},
+						update: {
+							$set: {
+								image: image,
+							},
+						},
+					},
+				});
+			}
+		});
+
+		if (listBulk.length > 0) {
+			//@ts-ignore
+			let resultBulk = await this.adapter.bulkWrite(listBulk);
+			this.logger.info(resultBulk);
+			listBulk = [];
+		}
+	}
+	async _start(): Promise<void> {
+		//@ts-ignore
+		// this.createJob(
+		// 	'CW721.migrate-old-data',
+		// 	{
+		// 		chain_id: 'euphoria-1',
+		// 	},
+		// 	{
+		// 		removeOnComplete: true,
+		// 		removeOnFail: {
+		// 			count: 3,
+		// 		},
+		// 		// attempts: 5,
+		// 		// backoff: 5000,
+		// 	},
+		// );
+		// const URL = Utils.getUrlByChainIdAndType('aura-testnet', URL_TYPE_CONSTANTS.LCD);
+		// this.createJob(
+		// 	'CW721.enrich-tokenid',
+		// 	{
+		// 		url: URL,
+		// 		address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
+		// 		code_id: '259',
+		// 		type_enrich: 'upsert',
+		// 		chain_id: 'aura-testnet',
+		// 		token_id: 'token 23',
+		// 	},
+		// 	{
+		// 		removeOnComplete: true,
+		// 		removeOnFail: {
+		// 			count: 3,
+		// 		},
+		// 	},
+		// );
+		// this.createJob(
+		// 	'CW721.enrich-tokenid',
+		// 	{
+		// 		url: URL,
+		// 		address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
+		// 		code_id: '259',
+		// 		type_enrich: 'upsert',
+		// 		chain_id: 'aura-testnet',
+		// 		token_id: 'token 24',
+		// 	},
+		// 	{
+		// 		removeOnComplete: true,
+		// 		removeOnFail: {
+		// 			count: 3,
+		// 		},
+		// 	},
+		// );
+		// let listUri = [
+		// 	'',
+		// ];
+		// listUri.map(async (uri) => {
+		// 	let schemaIPFS: Buffer = await Common.downloadAttachment(uri);
+		// 	let schemaType = await Common.getFileTypeFromBuffer(schemaIPFS);
+		// 	this.logger.info(uri, ' ', schemaType);
+		// });
+
 		this.getQueue('CW721.enrich-tokenid').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

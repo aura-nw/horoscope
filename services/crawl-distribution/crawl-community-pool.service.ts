@@ -5,14 +5,10 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { dbCommunityPoolMixin } from '../../mixins/dbMixinMongoose';
-import { JsonConvert, OperationMode } from 'json2typescript';
+import { JsonConvert } from 'json2typescript';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import {
-	ICommunityPoolResponseFromLCD,
-	IPoolResponseFromLCD,
-	IValidatorResponseFromLCD,
-} from '../../types';
+import { ICommunityPoolResponseFromLCD } from '../../types';
 import { Job } from 'bull';
 import { CommunityPoolEntity } from '../../entities';
 import { Utils } from '../../utils/utils';

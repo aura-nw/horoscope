@@ -5,16 +5,21 @@ import moleculer, { CallingOptions, Context } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
 import { Common } from '../asset-indexer/common.service';
-import { MediaStatus } from '../../model/cw721-asset-media.model';
-import { CW721_MEDIA_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
+import {
+	CW721_MANAGER_ACTION,
+	CW721_MEDIA_MANAGER_ACTION,
+	LIST_NETWORK,
+	MEDIA_STATUS,
+} from '../../common/constant';
 import { Config } from '../../common';
 
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
-const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
+const ACTION_TIMEOUT = 0;
 // const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
 const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 import { QueueConfig } from '../../config/queue';
 import { Job } from 'bull';
+import { CW721AssetEntity } from '../../entities/cw721-asset.entity';
 const QueueService = require('moleculer-bull');
 @Service({
 	name: 'CW721-asset-media-manager',
@@ -28,11 +33,13 @@ const QueueService = require('moleculer-bull');
 				job.progress(10);
 				// @ts-ignore
 				await this.updateMediaLink(
+					job.data.sourceUri,
 					job.data.uri,
 					job.data.type,
 					job.data.file_name,
 					job.data.key,
 					job.data.chainId,
+					job.data.field,
 				);
 				job.progress(100);
 
@@ -104,6 +111,9 @@ const QueueService = require('moleculer-bull');
 				const key = ctx.params.key;
 				const chain_id = ctx.params.chainId;
 				const type = ctx.params.type;
+				const assetId = ctx.params.assetId;
+				const field = ctx.params.field;
+				const sourceUri = ctx.params.sourceUri;
 				// @ts-ignore
 				this.logger.debug('update-media-link ctx.params', uri, file_name, key, chain_id);
 				// @ts-ignore
@@ -111,11 +121,13 @@ const QueueService = require('moleculer-bull');
 				this.createJob(
 					'CW721-asset-media-manager.update-media-link',
 					{
-						uri: uri,
-						type: type,
+						sourceUri,
+						uri,
+						type,
 						file_name: file_name,
-						key: key,
+						key,
 						chainId: chain_id,
+						field: field,
 					},
 					{
 						removeOnComplete: true,
@@ -161,11 +173,13 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 	}
 
 	async updateMediaLink(
+		sourceUri: string,
 		uri: string,
 		type: string,
 		file_name: string,
 		key: string,
 		chainId: string,
+		field: string,
 	) {
 		try {
 			// this.logger.info("updateMediaLink", uri, key);
@@ -177,11 +191,88 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 					key,
 					media_link: result.linkS3,
 					content_type: result.contentType,
-					status: MediaStatus.COMPLETED,
+					status: MEDIA_STATUS.COMPLETED,
 					custom_info: {
 						chain_id: chainId,
 					},
 				});
+				let query: any = {
+					'custom_info.chain_id': chainId,
+					$or: [
+						{ 'metadata.image': sourceUri },
+						{ 'metadata.animation_url': sourceUri },
+						{
+							'asset_info.data.info.token_uri': sourceUri,
+						},
+					],
+				};
+				// if (field == CW721_FIELD.IMAGE) {
+				// 	query['metadata.image'] = sourceUri;
+				// } else if (field == CW721_FIELD.ANIMATION) {
+				// 	query['metadata.animation_url'] = sourceUri;
+				// }
+
+				let listFoundCW721: CW721AssetEntity[] = await this.broker.call(
+					CW721_MANAGER_ACTION.FIND,
+					{
+						query,
+					},
+				);
+				if (listFoundCW721 && listFoundCW721.length > 0) {
+					listFoundCW721.map((CW721: CW721AssetEntity) => {
+						this.logger.debug('CW721 update: ', JSON.stringify(CW721));
+						if (CW721?.metadata?.image == sourceUri) {
+							CW721.image = {
+								link_s3: result.linkS3,
+								content_type: result.contentType,
+							};
+							this.broker.call('v1.CW721-asset-manager.act-update-by-id', {
+								obj: CW721,
+								updateOperator: {
+									$set: {
+										image: {
+											link_s3: result.linkS3,
+											content_type: result.contentType,
+										},
+									},
+								},
+							});
+							// this.broker.call('v1.CW721-asset-manager.update', {
+							// 	_id: CW721._id,
+							// 	image: {
+							// 		link_s3: result.linkS3,
+							// 		content_type: result.contentType,
+							// 	},
+							// });
+						}
+						if (CW721?.metadata?.animation_url == sourceUri) {
+							CW721.animation = {
+								link_s3: result.linkS3,
+								content_type: result.contentType,
+							};
+							this.broker.call('v1.CW721-asset-manager.act-update-by-id', {
+								obj: CW721,
+								updateOperator: {
+									$set: {
+										animation: {
+											link_s3: result.linkS3,
+											content_type: result.contentType,
+										},
+									},
+								},
+							});
+							// this.broker.call('v1.CW721-asset-manager.update', {
+							// 	_id: CW721._id,
+							// 	animation: {
+							// 		link_s3: result.linkS3,
+							// 		content_type: result.contentType,
+							// 	},
+							// });
+						}
+						this.broker.call(CW721_MANAGER_ACTION.UPSERT, CW721);
+						this.logger.info(CW721);
+					});
+				}
 			} else {
 				throw new Error('URI is invalid');
 			}
@@ -189,7 +280,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 			this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
 				key,
 				media_link: '',
-				status: MediaStatus.ERROR,
+				status: MEDIA_STATUS.ERROR,
 				custom_info: {
 					chain_id: chainId,
 				},

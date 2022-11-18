@@ -94,10 +94,14 @@ export default class VoteHandlerService extends Service {
 			const txhash = tx.tx_response.txhash;
 			const timestamp = tx.tx_response.timestamp;
 			const height = Number(tx.tx_response.height);
+			const code = tx.tx_response.code.toString();
 			const chainInfo: CustomInfo = {
 				chain_id: chain,
 				chain_name: LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
 			};
+			if (code != '0') {
+				continue;
+			}
 			const vote = {
 				voter_address,
 				proposal_id,
@@ -106,6 +110,7 @@ export default class VoteHandlerService extends Service {
 				timestamp,
 				height,
 				custom_info: chainInfo,
+				code,
 			};
 			const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
 			this.logger.info('voteEntity', JSON.stringify(voteEntity));
@@ -113,7 +118,6 @@ export default class VoteHandlerService extends Service {
 			this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
 		}
 	}
-
 	async _start() {
 		this.getQueue('proposal.vote').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);

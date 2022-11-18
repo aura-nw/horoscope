@@ -6,14 +6,12 @@ import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../co
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
-import RedisMixin from '../../mixins/redis/redis.mixin';
 import { QueueConfig } from '../../config/queue';
 import { Utils } from '../../utils/utils';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
 	private callApiMixin = new CallApiMixin().start();
-	private redisMixin = new RedisMixin().start();
 	private dbAccountInfoMixin = dbAccountInfoMixin;
 	private listMessageAction = [
 		MSG_TYPE.MSG_DELEGATE,
@@ -32,7 +30,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.dbAccountInfoMixin,
 				this.callApiMixin,
-				this.redisMixin,
 			],
 			queues: {
 				'crawl.account-claimed-rewards': {
@@ -100,76 +97,83 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 	}
 
 	async handleJob(listTx: any[], chainId: string) {
-		let listAccounts: AccountInfoEntity[] = [],
-			listUpdateQueries: any[] = [];
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		for (let tx of listTx) {
-			if (tx.tx_response.code !== 0) continue;
+		this.logger.info(`Handle Txs: ${JSON.stringify(listTx)}`);
+		if (listTx.length > 0) {
+			let listAccounts: AccountInfoEntity[] = [],
+				listUpdateQueries: any[] = [];
+			chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
+			const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
+			for (let tx of listTx) {
+				if (tx.tx_response.code !== 0) continue;
 
-			await Promise.all(
-				tx.tx.body.messages
-					.filter((msg: any) => this.listMessageAction.includes(msg['@type']))
-					.map(async (msg: any, index: any) => {
-						const userAddress = msg.delegator_address;
+				await Promise.all(
+					tx.tx.body.messages
+						.filter(
+							(msg: any) =>
+								this.listMessageAction.includes(msg['@type']) &&
+								tx.tx_response.code === 0,
+						)
+						.map(async (msg: any, index: any) => {
+							const userAddress = msg.delegator_address;
 
-						try {
-							if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
-								await Promise.all(
-									msg.msgs.map(async (m: any) => {
-										let insertAcc = await this.handleStakeRewards(
-											m,
-											index,
-											tx.tx_response.logs,
-											userAddress,
-											chainId,
-										);
-										if (insertAcc) listAccounts.push(insertAcc);
-									}),
-								);
-							} else {
-								let insertAcc = await this.handleStakeRewards(
-									msg,
-									index,
-									tx.tx_response.logs,
-									userAddress,
-									chainId,
-								);
-								if (insertAcc) listAccounts.push(insertAcc);
+							try {
+								if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
+									await Promise.all(
+										msg.msgs.map(async (m: any) => {
+											let insertAcc = await this.handleStakeRewards(
+												m,
+												index,
+												tx.tx_response.logs,
+												userAddress,
+												chainId,
+											);
+											if (insertAcc) listAccounts.push(insertAcc);
+										}),
+									);
+								} else {
+									let insertAcc = await this.handleStakeRewards(
+										msg,
+										index,
+										tx.tx_response.logs,
+										userAddress,
+										chainId,
+									);
+									if (insertAcc) listAccounts.push(insertAcc);
+								}
+							} catch (error) {
+								this.logger.error(error);
+								throw error;
 							}
-						} catch (error) {
-							this.logger.error(error);
-							throw error;
-						}
-					}),
-			);
-		}
-
-		try {
-			listAccounts.map((element) => {
-				if (element._id)
-					listUpdateQueries.push(
-						this.adapter.updateById(element._id, {
-							$set: { account_claimed_rewards: element.account_claimed_rewards },
 						}),
-					);
-				else {
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-						element,
-						AccountInfoEntity,
-					);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: chain ? chain.chainName : '',
-					};
-					listUpdateQueries.push(this.adapter.insert(item));
-				}
-			});
-		} catch (error) {
-			this.logger.error(error);
-			throw error;
+				);
+			}
+
+			try {
+				listAccounts.map((element) => {
+					if (element._id)
+						listUpdateQueries.push(
+							this.adapter.updateById(element._id, {
+								$set: { account_claimed_rewards: element.account_claimed_rewards },
+							}),
+						);
+					else {
+						const item: AccountInfoEntity = new JsonConvert().deserializeObject(
+							element,
+							AccountInfoEntity,
+						);
+						item.custom_info = {
+							chain_id: chainId,
+							chain_name: chain ? chain.chainName : '',
+						};
+						listUpdateQueries.push(this.adapter.insert(item));
+					}
+				});
+				await Promise.all(listUpdateQueries);
+			} catch (error) {
+				this.logger.error(error);
+				throw error;
+			}
 		}
-		await Promise.all(listUpdateQueries);
 	}
 
 	async handleStakeRewards(
@@ -182,10 +186,16 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		if (!userAddress) {
 			userAddress = msg.delegator_address;
 		}
-		let account: AccountInfoEntity = await this.adapter.findOne({
-			address: userAddress,
-			'custom_info.chain_id': chainId,
-		});
+		let account: AccountInfoEntity;
+		try {
+			account = await this.adapter.findOne({
+				address: userAddress,
+				'custom_info.chain_id': chainId,
+			});
+		} catch (error) {
+			this.logger.error(error);
+			throw error;
+		}
 		if (!account) {
 			account = {} as AccountInfoEntity;
 			account.address = userAddress;
@@ -234,7 +244,13 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 
 				const paramValidator = Config.GET_VALIDATOR + valSrcAddress;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-				let resultCallApi = await this.callApiFromDomain(url, paramValidator);
+				let resultCallApi;
+				try {
+					resultCallApi = await this.callApiFromDomain(url, paramValidator);
+				} catch (error) {
+					this.logger.error(error);
+					throw error;
+				}
 				const redelegateClaimedReward = coinReceived.find(
 					(x: any) => x.key === CONST_CHAR.AMOUNT,
 				).value;
@@ -316,7 +332,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				break;
 			case MSG_TYPE.MSG_UNDELEGATE:
 				const undelegateValAddress = msg.validator_address;
-				const undelegateIndexReward = msg.events
+				const undelegateIndexReward = logs[index].events
 					.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED)
 					.attributes.findIndex((x: any) => x.value === userAddress);
 				const undelegateClaimedReward = logs[index].events.find(
@@ -378,14 +394,11 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 					} as Rewards);
 				}
 				break;
-			default:
-				return null;
 		}
 		return account;
 	}
 
 	async _start() {
-		this.redisClient = await this.getRedisClient();
 		this.getQueue('crawl.account-claimed-rewards').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});

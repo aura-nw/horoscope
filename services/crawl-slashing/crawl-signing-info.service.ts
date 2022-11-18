@@ -9,13 +9,12 @@ import { Config } from '../../common';
 import { LIST_NETWORK, MODULE_PARAM, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { ISigningInfoEntityResponseFromLCD, ListValidatorAddress } from '../../types';
-import { IParam, IValidator, ParamEntity, SlashingParam, ValidatorEntity } from '../../entities';
-const tmhash = require('tendermint/lib/hash');
-import { bech32 } from 'bech32';
+import { IValidator, ParamEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
-import { JsonConvert } from 'json2typescript';
+// import { JsonConvert } from 'json2typescript';
 import { QueueConfig } from '../../config/queue';
-
+import { fromBase64, toBech32 } from '@cosmjs/encoding';
+import { pubkeyToRawAddress } from '@cosmjs/tendermint-rpc';
 export default class CrawlSigningInfoService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbValidatorMixin = dbValidatorMixin;
@@ -80,10 +79,14 @@ export default class CrawlSigningInfoService extends Service {
 					);
 					this.logger.debug(`Found validator with consensusPubkey ${consensusPubkey}`);
 
-					const pubkey = this.getAddressHexFromPubkey(consensusPubkey.key.toString());
-					const consensusAddress = this.hexToBech32(
-						pubkey,
+					let address = pubkeyToRawAddress(
+						'ed25519',
+						fromBase64(consensusPubkey.key.toString()),
+					);
+
+					const consensusAddress = toBech32(
 						`${prefixAddress}${Config.CONSENSUS_PREFIX_ADDRESS}`,
+						address,
 					);
 					let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
 
@@ -136,15 +139,7 @@ export default class CrawlSigningInfoService extends Service {
 		let result = await this.adapter.bulkWrite(listBulk);
 		this.logger.info(`result : ${listBulk.length}`, result);
 	}
-	getAddressHexFromPubkey(pubkey: string) {
-		var bytes = Buffer.from(pubkey, 'base64');
-		return tmhash.tmhash(bytes).slice(0, 20).toString('hex').toUpperCase();
-	}
 
-	hexToBech32(address: string, prefix: string) {
-		let addressBuffer = Buffer.from(address, 'hex');
-		return bech32.encode(prefix, bech32.toWords(addressBuffer));
-	}
 	async _start() {
 		this.getQueue('crawl.signinginfo').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);

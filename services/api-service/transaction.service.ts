@@ -54,6 +54,8 @@ export default class BlockService extends MoleculerDBService<
 				}),
 			},
 			blockHeight: { type: 'number', optional: true, convert: true },
+			fromHeight: { type: 'number', optional: true, convert: true },
+			needFullLog: { type: 'boolean', optional: true, convert: true, default: false },
 			txHash: { type: 'string', optional: true },
 			address: { type: 'string', optional: true },
 			addressInContract: { type: 'string', optional: true },
@@ -139,6 +141,7 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		const blockHeight = ctx.params.blockHeight;
+		const fromHeight = ctx.params.fromHeight;
 		const txHash = ctx.params.txHash;
 		const address = ctx.params.address;
 		const searchType = ctx.params.searchType;
@@ -147,14 +150,16 @@ export default class BlockService extends MoleculerDBService<
 		const queryParam = ctx.params.query;
 		const addressInContract = ctx.params.addressInContract;
 		const sequenceIBC = ctx.params.sequenceIBC;
+		const needFullLog = ctx.params.needFullLog;
 		let findOne = false;
 		let projection: any = { indexes: 0, custom_info: 0 };
+
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
 		// ctx.params.countTotal = false;
-		// const sort = ctx.params.reverse ? '_id' : '-_id';
+		const sort = ctx.params.reverse ? 'indexes.height' : '-indexes.height';
 
-		const sort = '-indexes.height';
+		// const sort = '-indexes.height';
 		let query: QueryOptions = {};
 		if (ctx.params.txHash) {
 			ctx.params.nextKey = undefined;
@@ -163,22 +168,31 @@ export default class BlockService extends MoleculerDBService<
 			findOne = true;
 		}
 		if (ctx.params.nextKey) {
-			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+			if (ctx.params.reverse) {
+				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
+			} else {
+				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+			}
 		}
 		query['custom_info.chain_id'] = ctx.params.chainid;
 		if (blockHeight) {
 			query['tx_response.height'] = blockHeight;
 		}
+		if (fromHeight) {
+			query['tx_response.height'] = { $gte: fromHeight };
+		}
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
 		} else {
 			// project field when get list tx
-			projection['tx'] = 0;
-			projection['tx_response.tx.body.messages'] = { $slice: 3 };
-			projection['tx_response.events'] = { $slice: 3 };
-			projection['tx_response.logs'] = 0;
-			projection['tx_response.data'] = 0;
-			projection['tx_response.raw_log'] = 0;
+			if (!needFullLog) {
+				projection['tx'] = 0;
+				projection['tx_response.tx.body.messages'] = { $slice: 3 };
+				projection['tx_response.events'] = { $slice: 3 };
+				projection['tx_response.logs'] = 0;
+				projection['tx_response.data'] = 0;
+				projection['tx_response.raw_log'] = 0;
+			}
 
 			//only show ibc token denom when search IBC tx
 			if (sequenceIBC) {
@@ -201,7 +215,10 @@ export default class BlockService extends MoleculerDBService<
 			let queryAnd: any[] = [];
 			queryParamFormat.forEach((e: any) => {
 				let tempQuery = {
-					[`indexes.${e.type}_${e.key}`]: { $exists: true, $eq: e.value },
+					[`indexes.${e.type}_${e.key}`]: {
+						$exists: true,
+						$eq: e.value,
+					},
 				};
 				queryAnd.push(tempQuery);
 			});
@@ -211,6 +228,7 @@ export default class BlockService extends MoleculerDBService<
 			listQueryOr.push(
 				{ 'indexes.message_sender': { $exists: true, $eq: address } },
 				{ 'indexes.transfer_recipient': { $exists: true, $eq: address } },
+				{ 'indexes.addresses': { $exists: true, $eq: address } },
 			);
 		}
 		if (addressInContract) {
@@ -218,6 +236,7 @@ export default class BlockService extends MoleculerDBService<
 				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
 				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
 				{ 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
+				{ 'indexes.addresses': { $exists: true, $eq: address } },
 			);
 		}
 
@@ -667,6 +686,19 @@ export default class BlockService extends MoleculerDBService<
 	 *          schema:
 	 *            type: string
 	 *          description: "Block height of transaction"
+	 *        - in: query
+	 *          name: fromHeight
+	 *          required: false
+	 *          schema:
+	 *            type: string
+	 *          description: "Tx from block height"
+	 *        - in: query
+	 *          name: needFullLog
+	 *          required: false
+	 *          schema:
+	 *            type: boolean
+	 *            default: "false"
+	 *          description: "Get full log tx"
 	 *        - in: query
 	 *          name: txHash
 	 *          required: false

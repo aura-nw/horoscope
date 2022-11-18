@@ -1,43 +1,24 @@
+import { Config } from 'common';
 import { Kind } from 'graphql';
 import { gql } from 'moleculer-apollo-server';
-import { prisma } from '../../utils/context';
+import { CHAIN_ID_DEV, CHAIN_ID_PROD, prismaAuraTestnet, prismaCosmoshubProd, prismaEuphoriaProd, prismaEuphoriaTestnet, prismaEvmosTestnet, prismaOsmosisProd, prismaSerenityTestnet, prismaThetaTestnet } from '../../utils/context';
 const { GraphQLScalarType } = require('graphql');
 const GraphQLJSON = require('graphql-type-json');
 
 export const TypeDefs = gql`
 	type Query {
-		hello: String
-		accountAuth(address: String, chain_id: String, skip: Int, take: Int): AccountAuthResponse
-		accountBalances(
-			address: String
-			chain_id: String
-			skip: Int
+		accountInfo(
+			address: String,
+			chain_id: String,
+			skip: Int,
 			take: Int
-		): AccountBalancesResponse
-		accountSpendableBalances(
-			address: String
-			chain_id: String
-			skip: Int
+		): [AccountInfo]
+		accountStatistics(
+			address: String,
+			chain_id: String,
+			skip: Int,
 			take: Int
-		): AccountSpendableBalancesResponse
-		accountDelegations(
-			address: String
-			chain_id: String
-			skip: Int
-			take: Int
-		): AccountDelegationsResponse
-		accountRedelegations(
-			address: String
-			chain_id: String
-			skip: Int
-			take: Int
-		): AccountRedelegationsResponse
-		accountUnbonds(
-			address: String
-			chain_id: String
-			skip: Int
-			take: Int
-		): AccountUnbondsResponse
+		): [AccountStatistics]
 		block(hash: String, chain_id: String, skip: Int, take: Int): [Block]
 		codeId(
 			code_id: String
@@ -64,6 +45,20 @@ export const TypeDefs = gql`
 			skip: Int
 			take: Int
 		): [CW721Asset]
+		dailyTxStatistics(
+			date: DateTime,
+			chain_id: String,
+			skip: Int,
+			take: Int
+		): [DailyTxStatistics]
+		delayJob(
+			address: String,
+			type: String,
+			chain_id: String,
+			skip: Int,
+			take: Int
+		): [DelayJob]
+		ibcDenom(hash: String, chain_id: String): [IBCDenom]
 		inflation(chain_id: String): [Inflation]
 		param(module: String, chain_id: String, skip: Int, take: Int): [Param]
 		pool(chain_id: String): [Pool]
@@ -74,6 +69,17 @@ export const TypeDefs = gql`
 			skip: Int
 			take: Int
 		): [Proposal]
+		smartContracts(
+			code_id: Int,
+			contract_hash: String,
+			creator_address: String,
+			tx_hash: String,
+			height: Int,
+			contract_name: String,
+			chain_id: String,
+			skip: Int,
+			take: Int
+		): [SmartContracts]
 		supply(chain_id: String): [Supply]
 		transaction(
 			type: String
@@ -90,6 +96,15 @@ export const TypeDefs = gql`
 			skip: Int
 			take: Int
 		): [Validator]
+		vote(
+			voter_address: String,
+			proposal_id: Int,
+			answer: String,
+			tx_hash: String,
+			chain_id: String,
+			skip: Int,
+			take: Int
+		): [Vote]
 	}
 
 	# Common type
@@ -104,61 +119,11 @@ export const TypeDefs = gql`
 	scalar DateTime
 	scalar Json
 
-	# AccountAuth type
-	type AccountPubKey {
-		type: String
-		value: String
-	}
-	type AccountValue {
-		address: String
-		public_key: AccountPubKey
-		account_number: String
-		sequence: String
-	}
-	type AccountResult {
-		type: String
-		value: AccountValue
-	}
+	# AccountInfo type
 	type Account {
 		height: String
-		result: AccountResult
+		result: Json
 	}
-	type AccountAuth {
-		id: String
-		address: String
-		account: Account
-		custom_info: CustomInfo
-	}
-	type AccountAuthResponse {
-		accounts: [AccountAuth]
-		total: Int
-	}
-
-	# AccountBalances type
-	type AccountBalances {
-		id: String
-		address: String
-		balances: [Coin]
-		custom_info: CustomInfo
-	}
-	type AccountBalancesResponse {
-		accounts: [AccountBalances]
-		total: Int
-	}
-
-	# AccountSpendableBalances type
-	type AccountSpendableBalances {
-		id: String
-		address: String
-		spendable_balances: [Coin]
-		custom_info: CustomInfo
-	}
-	type AccountSpendableBalancesResponse {
-		accounts: [AccountSpendableBalances]
-		total: Int
-	}
-
-	# AccountDelegations type
 	type Delegation {
 		delegator_address: String
 		validator_address: String
@@ -166,25 +131,7 @@ export const TypeDefs = gql`
 	}
 	type DelegationResponse {
 		delegation: Delegation
-		balance: Coin
-	}
-	type AccountDelegations {
-		id: String
-		address: String
-		delegation_responses: [DelegationResponse]
-		custom_info: CustomInfo
-	}
-	type AccountDelegationsResponse {
-		accounts: [AccountDelegations]
-		total: Int
-	}
-
-	# AccountRedelegations type
-	type RedelegationEntry {
-		creation_height: String
-		completion_time: String
-		initial_balance: String
-		shares_dst: String
+		balance: [Coin]
 	}
 	type RedelegateEntry {
 		redelegation_entry: RedelegationEntry
@@ -196,102 +143,124 @@ export const TypeDefs = gql`
 		validator_dst_address: String
 		entries: [RedelegateEntry]
 	}
+	type RedelegationEntry {
+		creation_height: String
+		completion_time: DateTime
+		initial_balance: String
+		shares_dst: String
+	}
 	type RedelegationResponse {
 		redelegation: Redelegation
 		entries: [RedelegateEntry]
-	}
-	type AccountRedelegations {
-		id: String
-		address: String
-		redelegation_responses: [RedelegationResponse]
-		custom_info: CustomInfo
-	}
-	type AccountRedelegationsResponse {
-		accounts: [AccountRedelegations]
-		total: Int
-	}
-
-	# AccountUnbonds type
-	type UndelegateEntry {
-		creation_height: String
-		completion_time: String
-		initial_balance: String
-		balance: String
 	}
 	type UnbondingResponse {
 		delegator_address: String
 		validator_address: String
 		entries: [UndelegateEntry]
 	}
-	type AccountUnbonds {
+	type UndelegateEntry {
+		creation_height: String
+		completion_time: DateTime
+		initial_balance: String
+		balance: String
+	}
+	type Reward {
+		validator_address: String
+		amount: String
+		denom: String
+	}
+	type AccountInfo {
 		id: String
 		address: String
-		unbonding_responses: [UnbondingResponse]
+		account_auth: Account
+		account_balances: [Coin]
+		account_delegations: [DelegationResponse]
+		account_redelegations: [RedelegationResponse]
+		account_spendable_balances: [Coin]
+		account_unbonding: [UnbondingResponse]
+		account_claimed_rewards: [Reward]
 		custom_info: CustomInfo
 	}
-	type AccountUnbondsResponse {
-		accounts: [AccountUnbonds]
-		total: Int
+
+	# AccountStatistics type
+	type DailyStats {
+		total_sent_tx: Stats
+		total_received_tx: Stats
+		total_sent_amount: Stats
+		total_received_amount: Stats
+	}
+	type Stats {
+		amount: Int
+		percentage: Float
+	}
+	type AccountStatistics {
+		id: String
+		address: String
+		per_day: [DailyStats]
+		one_day: DailyStats
+		three_days: DailyStats
+		seven_days: DailyStats
+		custom_info: CustomInfo!
 	}
 
-# Block type
-type BlockIdPart {
-    total: Int
-    hash:  String
-}
-type BlockId {
-    hash:  String
-    parts: BlockIdPart
-}
-type BlockHeaderVersion {
-    block: Int
-}
-type BlockHeader {
-    version:              BlockHeaderVersion
-    chain_id:             String
-    height:               Int
-    time:                 DateTime
-    last_block_id:        BlockId
-    last_commit_hash:     String
-    data_hash:            String
-    validators_hash:      String
-    next_validators_hash: String
-    consensus_hash:       String
-    app_hash:             String
-    last_results_hash:    String
-    evidence_hash:        String
-    proposer_address:     String
-}
-type BlockData {
-    txs: [String]
-}
-type BlockDataEvidence {
-    evidence: [Json]
-}
-type Signature {
-    block_id_flag:     Int
-    validator_address: String
-    timestamp:         String
-    signature:         String
-}
-type BlockLastCommit {
-    height:     Int
-    round:      Int
-    block_id:   BlockId
-    signatures: [Signature]
-}
-type BlockDetail {
-    header:      BlockHeader
-    data:        BlockData
-    evidence:    BlockDataEvidence
-    last_commit: BlockLastCommit
-}
-type Block {
-    id:          String
-    block_id:    BlockId
-    block:       BlockDetail
-    custom_info: CustomInfo
-}
+	# Block type
+	type BlockIdPart {
+		total: Int
+		hash:  String
+	}
+	type BlockId {
+		hash:  String
+		parts: BlockIdPart
+	}
+	type BlockHeaderVersion {
+		block: Int
+	}
+	type BlockHeader {
+		version:              BlockHeaderVersion
+		chain_id:             String
+		height:               Int
+		time:                 DateTime
+		last_block_id:        BlockId
+		last_commit_hash:     String
+		data_hash:            String
+		validators_hash:      String
+		next_validators_hash: String
+		consensus_hash:       String
+		app_hash:             String
+		last_results_hash:    String
+		evidence_hash:        String
+		proposer_address:     String
+	}
+	type BlockData {
+		txs: [String]
+	}
+	type BlockDataEvidence {
+		evidence: [Json]
+	}
+	type Signature {
+		block_id_flag:     Int
+		validator_address: String
+		timestamp:         String
+		signature:         String
+	}
+	type BlockLastCommit {
+		height:     Int
+		round:      Int
+		block_id:   BlockId
+		signatures: [Signature]
+	}
+	type BlockDetail {
+		header:      BlockHeader
+		data:        BlockData
+		evidence:    BlockDataEvidence
+		last_commit: BlockLastCommit
+	}
+	type Block {
+		id:          String
+		block_id:    BlockId
+		block:       BlockDetail
+		custom_info: CustomInfo
+	}
 
 	# CodeId type
 	type CodeId {
@@ -338,6 +307,33 @@ type Block {
 		createdAt: DateTime
 		updatedAt: DateTime
 		custom_info: CustomInfo
+	}
+
+	# DailyTxStatistics type
+	type DailyTxStatistics {
+		id: String
+		daily_txs: Int
+		daily_active_addresses: Int
+		unique_addresses: Int
+		date: DateTime
+		custom_info: CustomInfo
+	}
+
+	# DelayJob type
+	type DelayJob {
+		id: String
+		content: Json
+		type: String
+		expire_time: DateTime
+		indexes: String
+		custom_info: CustomInfo
+	}
+
+	# IBCDenom type
+	type IBCDenom {
+		id: String
+		hash: String
+		denom: String
 	}
 
 	# Inflation type
@@ -404,6 +400,19 @@ type Block {
 		custom_info: CustomInfo
 	}
 
+	# SmartContracts type
+	type SmartContracts {
+		id: String
+		height: Int
+		code_id: Int
+		contract_name: String
+		contract_address: String
+		creator_address: String
+		contract_hash: String
+		tx_hash: String
+		custom_info: CustomInfo
+	}
+
 	# Supply type
 	type Supply {
 		id: String
@@ -447,7 +456,7 @@ type Block {
 	type TxInput {
 		body: Body
 		auth_info: AuthInfo
-		signatures: String # TODO: change to String[]? (currently error due to findMany)
+		signatures: [String]
 	}
 	type Attribute {
 		key: String
@@ -464,7 +473,7 @@ type Block {
 		events: [Event]
 	}
 	type TxResponse {
-		height: String # TODO: change to Int? (currently error due to findMany)
+		height: Int
 		txhash: String
 		codespace: String
 		code: String
@@ -475,7 +484,7 @@ type Block {
 		gas_wanted: String
 		gas_used: String
 		tx: Json
-		timestamp: String # TODO: change to DateTime? (currently error due to findMany)
+		timestamp: DateTime
 		events: [Event]
 	}
 	type TxResult {
@@ -532,6 +541,18 @@ type Block {
 		consensus_hex_address: String
 		custom_info: CustomInfo
 	}
+
+	# Vote type
+	type Vote {
+		id: String
+		voter_address: String
+		proposal_id: Int
+		answer: String
+		txhash: String
+		timestamp: DateTime
+		height: Int
+		custom_info: CustomInfo
+	}
 `;
 
 export const Resolvers = {
@@ -554,253 +575,676 @@ export const Resolvers = {
 	}),
 	Json: GraphQLJSON,
 	Query: {
-		hello() {
-			return 'Hello world!';
-		},
-		accountAuth: (_parent: any, args: any, context: any, info: any) => {
+		accountInfo: (_parent: any, args: any, context: any, info: any) => {
+			console.log(`Query accountInfo with args ${JSON.stringify(args)}`);
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.address !== '') where.address = args.address;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.address !== '' && args.address !== undefined) where.address = args.address;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
-			const result = prisma.account_auth.findMany({
-				// where,
+			const skip = args.skip !== undefined ? args.skip * take : 0;
+			return prisma.account_info.findMany({
+				where,
 				skip,
 				take,
 			});
-			const total = prisma.account_auth.count({
-				// where,
-			});
-			return {
-				accounts: result,
-				total,
-			};
 		},
-		accountBalances: (_parent: any, args: any, context: any, info: any) => {
+		accountStatistics: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.address !== '') where.address = args.address;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.address !== '' && args.address !== undefined) where.address = args.address;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
-			const result = prisma.account_balances.findMany({
-				// where,
+			const skip = args.skip !== undefined ? args.skip * take : 0;
+			return prisma.account_statistics.findMany({
+				where,
 				skip,
 				take,
 			});
-			const total = prisma.account_balances.count({
-				// where,
-			});
-			return {
-				accounts: result,
-				total,
-			};
-		},
-		accountSpendableBalances: (_parent: any, args: any, context: any, info: any) => {
-			const where: any = {};
-			if (args.address !== '') where.address = args.address;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
-			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
-			const result = prisma.account_spendable_balances.findMany({
-				// where,
-				skip,
-				take,
-			});
-			const total = prisma.account_spendable_balances.count({
-				// where,
-			});
-			return {
-				accounts: result,
-				total,
-			};
-		},
-		accountDelegations: (_parent: any, args: any, context: any, info: any) => {
-			const where: any = {};
-			if (args.address !== '') where.address = args.address;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
-			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
-			const result = prisma.account_delegations.findMany({
-				// where,
-				skip,
-				take,
-			});
-			const total = prisma.account_delegations.count({
-				// where,
-			});
-			return {
-				accounts: result,
-				total,
-			};
-		},
-		accountRedelegations: (_parent: any, args: any, context: any, info: any) => {
-			const where: any = {};
-			if (args.address !== '') where.address = args.address;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
-			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
-			const result = prisma.account_redelegations.findMany({
-				// where,
-				skip,
-				take,
-			});
-			const total = prisma.account_redelegations.count({
-				// where,
-			});
-			return {
-				accounts: result,
-				total,
-			};
-		},
-		accountUnbonds: (_parent: any, args: any, context: any, info: any) => {
-			const where: any = {};
-			if (args.address !== '') where.address = args.address;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
-			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
-			const result = prisma.account_unbonds.findMany({
-				// where,
-				skip,
-				take,
-			});
-			const total = prisma.account_unbonds.count({
-				// where,
-			});
-			return {
-				accounts: result,
-				total,
-			};
 		},
 		block: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.hash !== '') where.block_id = { hash: args.hash };
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.hash !== '' && args.hash !== undefined) where.block_id = { hash: args.hash };
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.block.findMany({
-				// where,
+				where,
 				skip,
 				take,
 			});
 		},
 		codeId: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.code_id !== '') where.code_id = args.code_id;
-			if (args.contract_type !== '') where.contract_type = args.contract_type;
-			if (args.status !== '') where.status = args.status;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
+			if (args.contract_type !== '' && args.contract_type !== undefined)
+				where.contract_type = args.contract_type;
+			if (args.status !== '' && args.status !== undefined) where.status = args.status;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.code_id.findMany({
-				// where,
+				where,
 				skip,
 				take,
 			});
 		},
 		communityPool: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			return prisma.community_pool.findMany({
-				// where,
+				where,
 			});
 		},
 		cw20Asset: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.code_id !== '') where.code_id = args.code_id;
-			if (args.contract_address !== '') where.contract_address = args.contract_address;
-			if (args.owner !== '') where.owner = args.owner;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
+			if (args.contract_address !== '' && args.contract_address !== undefined)
+				where.contract_address = args.contract_address;
+			if (args.owner !== '' && args.owner !== undefined) where.owner = args.owner;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.cw20_asset.findMany({
-				// where,
+				where,
 				skip,
 				take,
 			});
 		},
 		cw721Asset: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.code_id !== '') where.code_id = args.code_id;
-			if (args.contract_address !== '') where.contract_address = args.contract_address;
-			if (args.owner !== '') where.owner = args.owner;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
+			if (args.contract_address !== '' && args.contract_address !== undefined)
+				where.contract_address = args.contract_address;
+			if (args.owner !== '' && args.owner !== undefined) where.owner = args.owner;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.cw721_asset.findMany({
-				// where,
+				where,
 				skip,
 				take,
 			});
 		},
-		inflation: (_parent: any, args: any, context: any, info: any) => {
+		dailyTxStatistics: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.date !== '' && args.date !== undefined) where.date = args.date;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
+			const take = args.take || 20;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
+			return prisma.daily_tx_statistics.findMany({
+				where,
+				skip,
+				take,
+			});
+		},
+		delayJob: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
+			const where: any = {};
+			if (args.address !== '' && args.address !== undefined) where.address = args.address;
+			if (args.type !== '' && args.type !== undefined) where.address = args.address;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
+			const take = args.take || 20;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
+			return prisma.delay_job.findMany({
+				where,
+				skip,
+				take,
+			});
+		},
+		ibcDenom: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
+			const where: any = {};
+			if (args.hash !== '' && args.hash !== undefined) where.hash = args.hash;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
+			return prisma.ibc_denom.findMany({
+				where,
+			});
+		},
+		inflation: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
+			const where: any = {};
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			return prisma.inflation.findMany({
-				// where,
+				where,
 			});
 		},
 		param: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.module !== '') where.module = args.module;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.module !== '' && args.module !== undefined) where.module = args.module;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.param.findMany({
-				// where,
+				where,
 				skip,
 				take,
 			});
 		},
 		pool: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			return prisma.pool.findMany({
-				// where,
+				where,
 			});
 		},
 		proposal: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.proposal_id !== '') where.proposal_id = args.proposal_id;
-			if (args.status !== '') where.status = args.status;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.proposal_id !== '' && args.proposal_id !== undefined)
+				where.proposal_id = args.proposal_id;
+			if (args.status !== '' && args.status !== undefined) where.status = args.status;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.proposal.findMany({
-				// where,
+				where,
+				skip,
+				take,
+			});
+		},
+		smartContracts: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
+			const where: any = {};
+			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
+			if (args.contract_hash !== '' && args.contract_hash !== undefined)
+				where.contract_hash = args.contract_hash;
+			if (args.creator_address !== '' && args.creator_address !== undefined)
+				where.creator_address = args.creator_address;
+			if (args.tx_hash !== '' && args.tx_hash !== undefined) where.tx_hash = args.tx_hash;
+			if (args.height !== '' && args.height !== undefined) where.height = args.height;
+			if (args.contract_name !== '' && args.contract_name !== undefined)
+				where.contract_name = args.contract_name;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
+			const take = args.take || 20;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
+			return prisma.smart_contracts.findMany({
+				where,
 				skip,
 				take,
 			});
 		},
 		supply: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			return prisma.supply.findMany({
-				// where,
+				where,
 			});
 		},
 		transaction: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.type !== '') where.tx = { body: { messages: { '@type': args.type } } };
-			if (args.hash !== '') where.tx_response = { txhash: args.hash };
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.type !== '' && args.type !== undefined)
+				where.tx = { body: { messages: { '@type': args.type } } };
+			if (args.hash !== '' && args.hash !== undefined) where.tx_response = { txhash: args.hash };
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.transaction.findMany({
-				// where,
+				where,
 				skip,
 				take,
 			});
 		},
 		validator: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
+			if (Config.NODE_ENV === 'prod') prisma = prismaEuphoriaProd;
 			const where: any = {};
-			if (args.operator_address !== '') where.operator_address = args.operator_address;
-			if (args.status !== '') where.status = args.status;
-			if (args.jailed !== '') where.jailed = args.jailed;
-			if (args.chain_id !== '') where.custom_info = { chain_id: args.chain_id };
+			if (args.operator_address !== '' && args.operator_address !== undefined)
+				where.operator_address = args.operator_address;
+			if (args.status !== '' && args.status !== undefined) where.status = args.status;
+			if (args.jailed !== '' && args.jailed !== undefined) where.jailed = args.jailed;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (Config.NODE_ENV) {
+					case 'development':
+						switch (args.chain_id) {
+							case CHAIN_ID_DEV.AURA_TESTNET:
+								prisma = prismaAuraTestnet;
+								break;
+							case CHAIN_ID_DEV.SERENITY_TESTNET:
+								prisma = prismaSerenityTestnet;
+								break;
+							case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+								prisma = prismaEuphoriaTestnet;
+								break;
+							case CHAIN_ID_DEV.THETA_TESTNET:
+								prisma = prismaThetaTestnet;
+								break;
+							case CHAIN_ID_DEV.EVMOS_TESTNET:
+								prisma = prismaEvmosTestnet;
+								break;
+							default:
+								prisma = prismaAuraTestnet;
+								break;
+						}
+						break;
+					case 'prod':
+						switch (args.chain_id) {
+							case CHAIN_ID_PROD.EUPHORIA:
+								prisma = prismaEuphoriaProd;
+								break;
+							case CHAIN_ID_PROD.COSMOSHUB:
+								prisma = prismaCosmoshubProd;
+								break;
+							case CHAIN_ID_PROD.OSMOSIS:
+								prisma = prismaOsmosisProd;
+								break;
+							default:
+								prisma = prismaEuphoriaProd;
+								break;
+						}
+						break;
+				}
+			}
 			const take = args.take || 20;
-			const skip = args.skip !== 0 ? args.skip * take : 0;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.validator.findMany({
-				// where,
+				where,
+				skip,
+				take,
+			});
+		},
+		vote: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
+			const where: any = {};
+			if (args.voter_address !== '' && args.voter_address !== undefined)
+				where.voter_address = args.voter_address;
+			if (args.proposal_id !== '' && args.proposal_id !== undefined)
+				where.proposal_id = args.proposal_id;
+			if (args.answer !== '' && args.answer !== undefined) where.answer = args.answer;
+			if (args.tx_hash !== '' && args.tx_hash !== undefined) where.tx_hash = args.tx_hash;
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				switch (args.chain_id) {
+					case CHAIN_ID_DEV.AURA_TESTNET:
+						prisma = prismaAuraTestnet;
+						break;
+					case CHAIN_ID_DEV.SERENITY_TESTNET:
+						prisma = prismaSerenityTestnet;
+						break;
+					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+						prisma = prismaEuphoriaTestnet;
+						break;
+					case CHAIN_ID_DEV.THETA_TESTNET:
+						prisma = prismaThetaTestnet;
+						break;
+					case CHAIN_ID_DEV.EVMOS_TESTNET:
+						prisma = prismaEvmosTestnet;
+						break;
+					default:
+						prisma = prismaAuraTestnet;
+						break;
+				}
+			}
+			const take = args.take || 20;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
+			return prisma.vote.findMany({
+				where,
 				skip,
 				take,
 			});

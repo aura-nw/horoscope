@@ -1,21 +1,8 @@
+import { ICW721Media } from '../entities/cw721-media-link.entity';
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
-
-export interface ICW721Media {
-	_id: ObjectIdNull;
-	key: String;
-	media_link: String;
-	status: String;
-	content_type: String;
-}
-
-export enum MediaStatus {
-	PENDING = 'PENDING',
-	COMPLETED = 'COMPLETED',
-	ERROR = 'ERROR',
-	HANDLING = 'HANDLING',
-}
+import { MEDIA_STATUS } from '../common/constant';
 
 const definition: definitionType<ICW721Media> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -24,10 +11,14 @@ const definition: definitionType<ICW721Media> = (collection?: string) => ({
 		unique: true,
 		index: true,
 	},
+	source: {
+		type: String,
+		index: true,
+	},
 	media_link: String,
 	status: {
 		type: String,
-		enum: MediaStatus,
+		enum: MEDIA_STATUS,
 	},
 	content_type: String,
 	custom_info: customInfoModel,
@@ -47,5 +38,9 @@ export const cw721MediaMongoModel = (collection: string): unknown => {
 		// strict: true
 	});
 	schema.index({ updatedAt: -1 });
+	//@ts-ignore
+	schema.index({ 'metadata.image': 1 }, { name: 'metadata_image_asc', sparse: true });
+	//@ts-ignore
+	schema.index({ 'metadata.animation_url': 1 }, { name: 'metadata_image_asc', sparse: true });
 	return models[collection] || model(collection, schema);
 };

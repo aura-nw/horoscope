@@ -2,15 +2,13 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import { Service, Context, ServiceBroker } from 'moleculer';
+import { Service, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
-import { ListTxCreatedParams } from 'types';
-import { IProposal, ITransaction, IVoteTx } from 'entities';
 import { QueueConfig } from '../../config/queue';
 
 export default class CrawlProposalService extends Service {

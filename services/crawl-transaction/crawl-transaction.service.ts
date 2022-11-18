@@ -12,6 +12,7 @@ import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { ListTxInBlockParams, TransactionHashParam } from 'types';
 import { QueueConfig } from '../../config/queue';
+// var heapdump = require('heapdump');
 
 export default class CrawlTransactionService extends Service {
 	private redisMixin = new RedisMixin().start();
@@ -95,9 +96,31 @@ export default class CrawlTransactionService extends Service {
 					},
 				},
 			},
+			// actions: {
+			// 	writeHeapDump: {
+			// 		async handler(ctx: Context) {
+			// 			this.writeHeapDump();
+			// 		},
+			// 	},
+			// },
 		});
 	}
 
+	// async writeHeapDump() {
+	// 	try {
+	// 		if (Config.PATH_HEAP_DUMP) {
+	// 			let path =
+	// 				Config.PATH_HEAP_DUMP +
+	// 				new Date().toISOString().split('T')[0] +
+	// 				'.heapsnapshot';
+	// 			this.logger.info('write to heap log: ', path);
+
+	// 			heapdump.writeSnapshot(path);
+	// 		}
+	// 	} catch (error) {
+	// 		this.logger.error(error);
+	// 	}
+	// }
 	async handleJob(listTx: string[]) {
 		listTx.map((tx: string) => {
 			const txHash = sha256(Buffer.from(tx, 'base64')).toUpperCase();
@@ -109,6 +132,7 @@ export default class CrawlTransactionService extends Service {
 		this.logger.info(`txhash: ${txHash}`);
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 		let result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
+
 		if (result) {
 			this.redisClient.sendCommand([
 				'XADD',

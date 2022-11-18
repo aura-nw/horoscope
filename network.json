@@ -1,6 +1,6 @@
 [
 	{
-		"chainName":"Aura devnet",
+		"chainName":"Aura Devnet",
 		"chainId":"aura-testnet",
 		"RPC":[
 		   "https://rpc.dev.aura.network"
@@ -9,7 +9,8 @@
 		   "https://lcd.dev.aura.network"
 		],
 		"prefixAddress":"aura",
-		"databaseName":"horoscope_dev_auratestnet"
+		"databaseName":"local_auratestnet",
+		"redisDbNumber":5
 	},
 	{
 		"chainName":"Aura Serenity",
@@ -21,7 +22,8 @@
 		   "https://lcd.serenity.aura.network"
 		],
 		"prefixAddress":"aura",
-		"databaseName":"horoscope_dev_serenitytestnet001"
+		"databaseName":"local_serenitytestnet001",
+		"redisDbNumber":2
 	},
 	{
 		"chainName":"Theta Testnet",
@@ -33,7 +35,8 @@
 			"https://lcd.theta.aura.network"
 		],
 		"prefixAddress":"cosmos",
-		"databaseName":"horoscope_dev_thetatestnet001"
+		"databaseName":"local_thetatestnet001",
+		"redisDbNumber":4
 	},
 	{
 		"chainName":"Osmosis Testnet",
@@ -45,7 +48,8 @@
 			"https://osmosistest-lcd.quickapi.com"
 		],
 		"prefixAddress":"osmo",
-		"databaseName":"horoscope_dev_osmotest4"
+		"databaseName":"local_osmotest4",
+		"redisDbNumber":10
 
 	},
 	{
@@ -58,7 +62,8 @@
 			"https://lcd.osmosis.zone"
 		],
 		"prefixAddress":"osmo",
-		"databaseName":"horoscope_dev_osmosis1"
+		"databaseName":"local_osmosis1",
+		"redisDbNumber":11
 	},
 	{
 		"chainName":"Evmos Testnet",
@@ -70,30 +75,35 @@
 			"https://lcd.evmos.aura.network"
 		],
 		"prefixAddress":"evmos",
-		"databaseName":"horoscope_dev_evmos90004"
+		"databaseName":"local_evmos90004",
+		"redisDbNumber":6
 	},
 	{
 		"chainName":"Aura Euphoria",
 		"chainId":"euphoria-1",
 		"RPC":[
 		   "https://rpc.euphoria.aura.network"
-		],
+		],	
 		"LCD":[
 		   "https://lcd.euphoria.aura.network"
 		],
 		"prefixAddress":"aura",
-		"databaseName":"horoscope_dev_euphoria1"
+		"databaseName":"local_euphoria1",
+		"redisDbNumber":12
 	},
 	{
 		"chainName":"Cosmos Mainnet",
 		"chainId":"cosmoshub-4",
 		"RPC":[
-		   "https://cosmos-lcd.quickapi.com"
+			"https://rpc.cosmos.network"
 		],
 		"LCD":[
-		   "https://cosmos-lcd.quickapi.com"
+			"https://cosmos-api.polkachu.com",
+			"https://cosmos-api.cyphercore.io",
+			"https://cosmoshub-api.lavenderfive.com:443"
 		],
 		"prefixAddress":"cosmos",
-		"databaseName":"horoscope_dev_cosmoshub4"
+		"databaseName":"local_cosmoshub4",
+		"redisDbNumber":13
 	}
 ]

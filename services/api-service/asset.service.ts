@@ -41,7 +41,6 @@ import { Utils } from '../../utils/utils';
 @Service({
 	name: 'asset',
 	version: 1,
-	// Mixins: [dbCW721AssetMixin],
 })
 export default class BlockService extends MoleculerDBService<
 	{
@@ -241,16 +240,13 @@ export default class BlockService extends MoleculerDBService<
 			let contract_type = ctx.params.contractType;
 			let asset: any[];
 			if (contract_type == CONTRACT_TYPE.CW721 || contract_type == CONTRACT_TYPE.CW4973) {
-				asset = await this.broker.call(
-					`v1.${contract_type}-asset-manager.act-join-media-link`,
-					{
-						query,
-						sort: { updatedAt: -1 },
-						limit: ctx.params.pageLimit + 1,
-						offset: ctx.params.pageOffset,
-						nextKey: ctx.params.nextKey,
-					},
-				);
+				asset = await this.broker.call(`v1.${contract_type}-asset-manager.act-find`, {
+					query,
+					sort: '-updatedAt',
+					limit: ctx.params.pageLimit + 1,
+					offset: ctx.params.pageOffset,
+					nextKey: ctx.params.nextKey,
+				});
 			} else {
 				asset = await this.broker.call(`v1.${contract_type}-asset-manager.act-find`, {
 					query,
@@ -405,12 +401,12 @@ export default class BlockService extends MoleculerDBService<
 				);
 			} else {
 				assets = await this.broker.call(
-					`v1.${ctx.params.contractType}-asset-manager.act-join-media-link`,
+					`v1.${ctx.params.contractType}-asset-manager.act-find`,
 					{
 						query,
 						limit: ctx.params.pageLimit,
 						offset: ctx.params.pageOffset,
-						sort: { updatedAt: -1 },
+						sort: '-updatedAt',
 						nextKey: ctx.params.nextKey,
 					},
 				);
@@ -817,7 +813,26 @@ export default class BlockService extends MoleculerDBService<
 	 *                                                token_uri:
 	 *                                                  type: string
 	 *                                                extension:
-	 *                                                  type: string
+	 *                                                  type: object
+	 *                                                  properties:
+	 *                                                    image:
+	 *                                                      type: string
+	 *                                                    image_data:
+	 *                                                      type: string
+	 *                                                    external_url:
+	 *                                                      type: string
+	 *                                                    description:
+	 *                                                      type: string
+	 *                                                    name:
+	 *                                                      type: string
+	 *                                                    attributes:
+	 *                                                      type: string
+	 *                                                    background_color:
+	 *                                                      type: string
+	 *                                                    animation_url:
+	 *                                                      type: string
+	 *                                                    youtube_url:
+	 *                                                      type: string
 	 *                                    custom_info:
 	 *                                      type: object
 	 *                                      properties:
@@ -849,25 +864,45 @@ export default class BlockService extends MoleculerDBService<
 	 *                                    updatedAt:
 	 *                                      type: string
 	 *                                      example: "2022-08-17T06:20:19.342Z"
-	 *                                    media_info:
-	 *                                      type: array
-	 *                                      items:
-	 *                                        type: object
-	 *                                        properties:
-	 *                                          key:
-	 *                                            type: string
-	 *                                          media_link:
-	 *                                            type: string
-	 *                                            example: "s3://aws.aura.network"
-	 *                                          status:
-	 *                                            type: string
-	 *                                            example: "COMPLETED"
-	 *                                          createdAt:
-	 *                                            type: string
-	 *                                            example: "2022-08-17T06:20:19.342Z"
-	 *                                          updatedAt:
-	 *                                            type: string
-	 *                                            example: "2022-08-17T06:20:19.342Z"
+	 *                                    metadata:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        image:
+	 *                                          type: string
+	 *                                        image_data:
+	 *                                          type: string
+	 *                                        external_url:
+	 *                                          type: string
+	 *                                        description:
+	 *                                          type: string
+	 *                                        name:
+	 *                                          type: string
+	 *                                        attributes:
+	 *                                          type: string
+	 *                                        background_color:
+	 *                                          type: string
+	 *                                        animation_url:
+	 *                                          type: string
+	 *                                        youtube_url:
+	 *                                          type: string
+	 *                                    image:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        link_s3:
+	 *                                          type: string
+	 *                                          example: "https://s3-horoscope/a"
+	 *                                        content_type:
+	 *                                          type: string
+	 *                                          example: "image/jpg"
+	 *                                    animation:
+	 *                                      type: object
+	 *                                      properties:
+	 *                                        link_s3:
+	 *                                          type: string
+	 *                                          example: "https://s3-horoscope/b"
+	 *                                        content_type:
+	 *                                          type: string
+	 *                                          example: "video/mp4"
 	 *                              count:
 	 *                                type: number
 	 *                                example: 0
@@ -1151,7 +1186,26 @@ export default class BlockService extends MoleculerDBService<
 	 *                                        token_uri:
 	 *                                          type: string
 	 *                                        extension:
-	 *                                          type: string
+	 *                                          type: object
+	 *                                          properties:
+	 *                                            image:
+	 *                                              type: string
+	 *                                            image_data:
+	 *                                              type: string
+	 *                                            external_url:
+	 *                                              type: string
+	 *                                            description:
+	 *                                              type: string
+	 *                                            name:
+	 *                                              type: string
+	 *                                            attributes:
+	 *                                              type: string
+	 *                                            background_color:
+	 *                                              type: string
+	 *                                            animation_url:
+	 *                                              type: string
+	 *                                            youtube_url:
+	 *                                              type: string
 	 *                            custom_info:
 	 *                              type: object
 	 *                              properties:
@@ -1183,25 +1237,45 @@ export default class BlockService extends MoleculerDBService<
 	 *                            updatedAt:
 	 *                              type: string
 	 *                              example: "2022-08-17T06:20:19.342Z"
-	 *                            media_info:
-	 *                              type: array
-	 *                              items:
-	 *                                type: object
-	 *                                properties:
-	 *                                  key:
-	 *                                    type: string
-	 *                                  media_link:
-	 *                                    type: string
-	 *                                    example: "s3://aws.aura.network"
-	 *                                  status:
-	 *                                    type: string
-	 *                                    example: "COMPLETED"
-	 *                                  createdAt:
-	 *                                    type: string
-	 *                                    example: "2022-08-17T06:20:19.342Z"
-	 *                                  updatedAt:
-	 *                                    type: string
-	 *                                    example: "2022-08-17T06:20:19.342Z"
+	 *                            metadata:
+	 *                              type: object
+	 *                              properties:
+	 *                                image:
+	 *                                  type: string
+	 *                                image_data:
+	 *                                  type: string
+	 *                                external_url:
+	 *                                  type: string
+	 *                                description:
+	 *                                  type: string
+	 *                                name:
+	 *                                  type: string
+	 *                                attributes:
+	 *                                  type: string
+	 *                                background_color:
+	 *                                  type: string
+	 *                                animation_url:
+	 *                                  type: string
+	 *                                youtube_url:
+	 *                                  type: string
+	 *                            image:
+	 *                              type: object
+	 *                              properties:
+	 *                                link_s3:
+	 *                                  type: string
+	 *                                  example: "https://s3-horoscope/a"
+	 *                                content_type:
+	 *                                  type: string
+	 *                                  example: "image/jpg"
+	 *                            animation:
+	 *                              type: object
+	 *                              properties:
+	 *                                link_s3:
+	 *                                  type: string
+	 *                                  example: "https://s3-horoscope/b"
+	 *                                content_type:
+	 *                                  type: string
+	 *                                  example: "video/mp4"
 	 *
 	 *                      count:
 	 *                        type: number

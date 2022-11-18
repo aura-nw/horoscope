@@ -67,8 +67,14 @@ export default class CrawlAccountDelegatesService extends Service {
 			listUpdateQueries: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
+		listAddresses = listAddresses.filter((addr: string) =>
+			addr.startsWith('aura') || addr.startsWith('cosmos')
+			|| addr.startsWith('evmos') || addr.startsWith('osmo')
+		);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
+				this.logger.info(`Handle address: ${address}`);
+
 				let listDelegates: DelegationResponse[] = [];
 
 				const param = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
@@ -77,10 +83,16 @@ export default class CrawlAccountDelegatesService extends Service {
 				if (network && network.databaseName) {
 					this.adapter.useDb(network.databaseName);
 				}
-				let accountInfo: AccountInfoEntity = await this.adapter.findOne({
-					address,
-					'custom_info.chain_id': chainId,
-				});
+				let accountInfo: AccountInfoEntity;
+				try {
+					accountInfo = await this.adapter.findOne({
+						address,
+						'custom_info.chain_id': chainId,
+					});
+				} catch (error) {
+					this.logger.error(error);
+					throw error;
+				}
 				if (!accountInfo) {
 					accountInfo = {} as AccountInfoEntity;
 					accountInfo.address = address;
@@ -90,8 +102,12 @@ export default class CrawlAccountDelegatesService extends Service {
 				let done = false;
 				let resultCallApi;
 				while (!done) {
-					resultCallApi = await this.callApiFromDomain(url, urlToCall);
-					if (!resultCallApi) throw new Error('Error when call LCD API');
+					try {
+						resultCallApi = await this.callApiFromDomain(url, urlToCall);
+					} catch (error) {
+						this.logger.error(error);
+						throw error;
+					}
 
 					if (resultCallApi.delegation_responses.length > 0)
 						listDelegates.push(...resultCallApi.delegation_responses);

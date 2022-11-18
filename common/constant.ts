@@ -67,6 +67,8 @@ export const MSG_TYPE = {
 	MSG_IBC_UPDATE_CLIENT: '/ibc.core.client.v1.MsgUpdateClient',
 	MSG_IBC_CONNECTION_OPEN_ACK: '/ibc.core.connection.v1.MsgConnectionOpenAck',
 	MSG_IBC_CONNECTION_OPEN_INIT: '/ibc.core.connection.v1.MsgConnectionOpenInit',
+	MSG_FEEGRANT_GRANT: '/cosmos.feegrant.v1beta1.MsgGrantAllowance',
+	MSG_FEEGRANT_REVOKE: '/cosmos.feegrant.v1beta1.MsgRevokeAllowance',
 	MSG_EXEC: '/cosmos.authz.v1beta1.MsgExec',
 };
 
@@ -119,19 +121,19 @@ export const VOTE_MANAGER_ACTION = {
 };
 
 export const CW20_MANAGER_ACTION = {
-	FIND: 'v1.cw20-asset-manager.act-find',
-	COUNT: 'v1.cw20-asset-manager.act-count',
-	INSERT: 'v1.cw20-asset-manager.act-insert',
-	LIST: 'v1.cw20-asset-manager.act-list',
-	UPSERT: 'v1.cw20-asset-manager.act-upsert',
+	FIND: 'v1.CW20-asset-manager.act-find',
+	COUNT: 'v1.CW20-asset-manager.act-count',
+	INSERT: 'v1.CW20-asset-manager.act-insert',
+	LIST: 'v1.CW20-asset-manager.act-list',
+	UPSERT: 'v1.CW20-asset-manager.act-upsert',
 };
 
 export const CW721_MANAGER_ACTION = {
-	FIND: 'v1.cw721-asset-manager.act-find',
-	COUNT: 'v1.cw721-asset-manager.act-count',
-	INSERT: 'v1.cw721-asset-manager.act-insert',
-	LIST: 'v1.cw721-asset-manager.act-list',
-	UPSERT: 'v1.cw721-asset-manager.act-upsert',
+	FIND: 'v1.CW721-asset-manager.act-find',
+	COUNT: 'v1.CW721-asset-manager.act-count',
+	INSERT: 'v1.CW721-asset-manager.act-insert',
+	LIST: 'v1.CW721-asset-manager.act-list',
+	UPSERT: 'v1.CW721-asset-manager.act-upsert',
 };
 
 export const CW721_MEDIA_MANAGER_ACTION = {
@@ -265,9 +267,25 @@ export const SEARCH_TX_QUERY = {
 };
 
 export enum VESTING_ACCOUNT_TYPE {
-	CONTINUOUS = 'cosmos-sdk/ContinuousVestingAccount',
-	PERIODIC = 'cosmos-sdk/PeriodicVestingAccount',
-	DELAYED = 'cosmos-sdk/DelayedVestingAccount',
+	CONTINUOUS = '/cosmos.vesting.v1beta1.ContinuousVestingAccount',
+	PERIODIC = '/cosmos.vesting.v1beta1.PeriodicVestingAccount',
+	DELAYED = '/cosmos.vesting.v1beta1.DelayedVestingAccount',
+}
+
+export enum FEEGRANT_STATUS {
+	AVAILABLE = 'Available',
+	USE_UP = 'Use up',
+	REVOKED = 'Revoked',
+	FAIL = 'Fail',
+}
+
+export enum FEEGRANT_ACTION {
+	CREATE = 'create',
+	REVOKE = 'revoke',
+	USE = 'use',
+	USE_UP = 'useup',
+	CREATE_WITH_FEEGRANT = '_create',
+	REVOKE_WITH_FEEGRANT = '_revoke',
 }
 
 export enum DELAY_JOB_TYPE {
@@ -304,9 +322,10 @@ export const PATH_COSMOS_SDK = {
 	GET_PARAMS_BALANCE: 'cosmos/bank/v1beta1/balances',
 	GET_PARAMS_DELEGATE: 'cosmos/staking/v1beta1/delegations',
 	GET_PARAMS_DELEGATOR: 'cosmos/staking/v1beta1/delegators',
-	GET_PARAMS_AUTH_INFO: 'auth/accounts',
-	GET_PARAMS_SPENDABLE_BALANCE: '/osmos/bank/v1beta1/spendable_balances',
+	GET_PARAMS_AUTH_INFO: 'cosmos/auth/v1beta1/accounts',
+	GET_PARAMS_SPENDABLE_BALANCE: 'cosmos/bank/v1beta1/spendable_balances',
 	GET_PARAMS_IBC_DENOM: 'ibc/apps/transfer/v1/denom_traces',
+	GET_VALIDATOR: 'cosmos/staking/v1beta1/validators/',
 	GET_SUPPLY: 'cosmos/bank/v1beta1/supply',
 	VERIFY_API_GET_HASH: 'api/v1/smart-contract/get-hash/',
 	COSMWASM_CONTRACT_PARAM: 'cosmwasm/wasm/v1/contract/',
@@ -318,3 +337,26 @@ export const TOP_ACCOUNT_STATS_FIELD = {
 	AMOUNT_SENT: 'AMOUNT_SENT',
 	AMOUNT_RECEIVED: 'AMOUNT_RECEIVED',
 };
+
+export const ALLOWANCE_TYPE = {
+	BASIC_ALLOWANCE: '/cosmos.feegrant.v1beta1.BasicAllowance',
+	PERIODIC_ALLOWANCE: '/cosmos.feegrant.v1beta1.PeriodicAllowance',
+	ALLOWED_MSGS_ALLOWANCE: '/cosmos.feegrant.v1beta1.AllowedMsgAllowance',
+	ALLOWED_CONTRACT_ALLOWANCE: '/cosmos.feegrant.v1beta1.AllowedContractAllowance',
+};
+
+export const CW721_FIELD = {
+	IMAGE: 'IMAGE',
+	ANIMATION: 'ANIMATION',
+};
+
+export const EVMOS_TYPE_ACCOUNT = {
+	ETH_ACCOUNT: '/ethermint.types.v1.EthAccount',
+};
+
+export enum MEDIA_STATUS {
+	PENDING = 'PENDING',
+	COMPLETED = 'COMPLETED',
+	ERROR = 'ERROR',
+	HANDLING = 'HANDLING',
+}

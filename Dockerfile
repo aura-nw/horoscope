@@ -1,5 +1,8 @@
 FROM node:16-alpine3.15
 
+# Install python
+# RUN apk add --update python3 make g++\
+#    && rm -rf /var/cache/apk/*
 # Working directory
 WORKDIR /app
 
@@ -14,13 +17,13 @@ RUN npm install -g moleculer-cli
 # RUN yarn global add moleculer-cli
 
 # Add all supported transporters except kafka
-RUN npm install -g amqp \
-	nats \
-	node-nats-streaming \
-	ioredis \
-	mqtt \
-	amqplib \
-	rhea-promise
+RUN npm install -g ioredis 
+	# nats \
+	# node-nats-streaming \
+	# amqp \
+	# mqtt \
+	# amqplib \
+	# rhea-promise
 
 # RUN yarn global add install amqp \
 # 	nats \
@@ -44,7 +47,8 @@ RUN npm install -g avsc \
 # 	thrift
 
 # install project dependencies
-RUN npm ci --silent
+RUN npm ci -production --silent
+# RUN npm i
 # RUN yarn install --frozen-lockfile
 
 # Copy source
@@ -63,5 +67,4 @@ RUN npm run build \
 # RUN yarn run build
 
 # Start server
-CMD ["npm", "run", "start"]
-# CMD ["yarn", "run", "start"]
+CMD ["npm", "run", "start:prod"]
