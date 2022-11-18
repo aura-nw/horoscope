@@ -116,7 +116,7 @@ export default class CrawlAccountInfoService extends Service {
 														URL,
 														chain_id: chainId,
 														code_id: contractInfo.code_id,
-														contractAddress,
+														address: contractAddress,
 													},
 													ENRICH_TYPE.UPSERT,
 												],
