@@ -9,7 +9,7 @@ import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { JsonConvert, OperationMode } from 'json2typescript';
 import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../entities';
-import { CONST_CHAR } from '../../common/constant';
+import { CONST_CHAR, MSG_TYPE } from '../../common/constant';
 import {
 	IRedisStreamData,
 	IRedisStreamResponse,
@@ -174,6 +174,26 @@ export default class HandleTransactionService extends Service {
 			// add indexes to transaction
 			listTransactionEntity.forEach((tx: ITransaction) => {
 				let indexes: any = {};
+
+				let listContractInMessages: string[] = [];
+				// check if tx is execute smart contract
+				const listMsg = tx.tx.body.messages;
+				try {
+					listMsg.map((msg: any) => {
+						if (
+							msg['@type'] &&
+							msg.contract &&
+							msg['@type'] == MSG_TYPE.MSG_EXECUTE_CONTRACT
+						) {
+							listContractInMessages.push(msg.contract);
+						}
+					});
+				} catch (error) {
+					this.logger.error('This message execute contract is error');
+				}
+				//remove duplicate
+				listContractInMessages = [...new Set(listContractInMessages)];
+
 				//@ts-ignore
 				indexes['timestamp'] = new Date(tx.tx_response.timestamp);
 				indexes['height'] = Number(tx.tx_response.height);
@@ -230,6 +250,13 @@ export default class HandleTransactionService extends Service {
 				if (listAddress && listAddress.length > 0) {
 					indexes['addresses'] = listAddress;
 				}
+				if (listContractInMessages.length > 0 && tx.tx_response.code != '0') {
+					let indexExecute = indexes['execute__contract_address'];
+					if (!indexExecute) {
+						indexes['execute__contract_address'] = listContractInMessages;
+					}
+				}
+
 				tx.indexes = indexes;
 
 				let hash = tx.tx_response.txhash;
