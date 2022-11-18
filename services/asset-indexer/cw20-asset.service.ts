@@ -13,9 +13,12 @@ import {
 	CONTRACT_TYPE,
 	CW20_ACTION,
 	ENRICH_TYPE,
+	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
 import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
+import { Utils } from '../../utils/utils';
+import { debug } from 'console';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
@@ -167,14 +170,14 @@ export default class CrawlAssetService extends moleculer.Service {
 		}
 	}
 
-	async handleJob(URL: string, chain_id: string, code_id: Number) {
+	async handleJob(URL: any, chain_id: string, code_id: Number) {
 		try {
 			const contractList: any = await this.broker.call(
 				COMMON_ACTION.GET_CONTRACT_LIST,
 				{ URL, code_id },
 				OPTs,
 			);
-			const insertInforPromises = await Promise.all(
+			await Promise.all(
 				contractList.map(async (address: String) => {
 					await this.broker.call(
 						CW20_ACTION.ENRICH_DATA,
@@ -183,7 +186,6 @@ export default class CrawlAssetService extends moleculer.Service {
 					);
 				}),
 			);
-			await insertInforPromises;
 			this.logger.debug('Asset handler DONE!', contractList.length);
 		} catch (err) {
 			this.logger.error(err);
@@ -247,9 +249,11 @@ export default class CrawlAssetService extends moleculer.Service {
 			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
 				toUtf8(`{"all_accounts": {"limit":100}}`),
 			)}`;
+
 			while (!doneLoop) {
+				this.logger.debug('param call lcd: ', JSON.stringify(urlGetListToken));
 				let resultCallApi = await this.callApiFromDomain(URL, urlGetListToken);
-				if (resultCallApi.data.accounts && resultCallApi.data.accounts.length > 0) {
+				if (resultCallApi?.data?.accounts?.length > 0) {
 					listOwnerAddress.push(...resultCallApi.data.accounts);
 					const lastAddress =
 						resultCallApi.data.accounts[resultCallApi.data.accounts.length - 1];
@@ -261,6 +265,9 @@ export default class CrawlAssetService extends moleculer.Service {
 					doneLoop = true;
 				}
 			}
+			this.logger.debug('URL: ', JSON.stringify(URL));
+			this.logger.debug('address: ', address);
+			this.logger.debug('listOwner: ', JSON.stringify(listOwnerAddress));
 			if (listOwnerAddress.length > 0) {
 				return listOwnerAddress;
 			} else return null;
