@@ -176,29 +176,28 @@ export default class HandleTransactionService extends Service {
 				let indexes: any = {};
 
 				let listContractInMessages: string[] = [];
+				let listAddress: string[] = [];
 				// check if tx is execute smart contract
 				const listMsg = tx.tx.body.messages;
 				try {
 					listMsg.map((msg: any) => {
 						if (
 							msg['@type'] &&
+							msg.sender &&
 							msg.contract &&
 							msg['@type'] == MSG_TYPE.MSG_EXECUTE_CONTRACT
 						) {
+							listAddress.push(msg.sender);
 							listContractInMessages.push(msg.contract);
 						}
 					});
 				} catch (error) {
 					this.logger.error('This message execute contract is error');
 				}
-				//remove duplicate
-				listContractInMessages = [...new Set(listContractInMessages)];
 
 				//@ts-ignore
 				indexes['timestamp'] = new Date(tx.tx_response.timestamp);
 				indexes['height'] = Number(tx.tx_response.height);
-
-				let listAddress: string[] = [];
 
 				tx.tx_response.events.map((event: IEvent) => {
 					let type = event.type.toString();
@@ -246,10 +245,15 @@ export default class HandleTransactionService extends Service {
 						}
 					});
 				});
+
+				//remove duplicate and set index
 				listAddress = [...new Set(listAddress)];
 				if (listAddress && listAddress.length > 0) {
 					indexes['addresses'] = listAddress;
 				}
+
+				listContractInMessages = [...new Set(listContractInMessages)];
+
 				if (listContractInMessages.length > 0 && tx.tx_response.code != '0') {
 					let indexExecute = indexes['execute__contract_address'];
 					if (!indexExecute) {
