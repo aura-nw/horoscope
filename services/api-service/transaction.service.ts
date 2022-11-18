@@ -228,6 +228,7 @@ export default class BlockService extends MoleculerDBService<
 			listQueryOr.push(
 				{ 'indexes.message_sender': { $exists: true, $eq: address } },
 				{ 'indexes.transfer_recipient': { $exists: true, $eq: address } },
+				{ 'indexes.addresses': { $exists: true, $eq: address } },
 			);
 		}
 		if (addressInContract) {
@@ -235,6 +236,7 @@ export default class BlockService extends MoleculerDBService<
 				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
 				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
 				{ 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
+				{ 'indexes.addresses': { $exists: true, $eq: address } },
 			);
 		}
 
