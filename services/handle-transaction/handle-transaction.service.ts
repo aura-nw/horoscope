@@ -207,28 +207,19 @@ export default class HandleTransactionService extends Service {
 								Object.keys(msgInput).map(function (key) {
 									self.addToIndexes(indexes, 'wasm', 'action', key);
 									console.log('Key : ' + key + ', Value : ' + msgInput[key]);
-									if (
-										msgInput[key]['recipient'] &&
-										msgInput[key]['recipient'].length <= 200
-									) {
-										self.addToIndexes(
-											indexes,
-											'wasm',
-											'recipient',
-											msgInput[key]['recipient'],
-										);
-									}
-									if (
-										msgInput[key]['token_id'] &&
-										msgInput[key]['token_id'].length <= 200
-									) {
-										self.addToIndexes(
-											indexes,
-											'wasm',
-											'token_id',
-											msgInput[key]['token_id'],
-										);
-									}
+									['recipient', 'owner', 'token_id'].map((att: string) => {
+										if (
+											msgInput[key][att] &&
+											msgInput[key][att].length <= 200
+										) {
+											self.addToIndexes(
+												indexes,
+												'wasm',
+												att,
+												msgInput[key][att],
+											);
+										}
+									});
 								});
 							}
 						}
