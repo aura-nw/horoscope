@@ -174,25 +174,68 @@ export default class HandleTransactionService extends Service {
 			// add indexes to transaction
 			listTransactionEntity.forEach((tx: ITransaction) => {
 				let indexes: any = {};
-
 				let listContractInMessages: string[] = [];
 				let listAddress: string[] = [];
-				// check if tx is execute smart contract
+
+				// add index in case smart contract
 				const listMsg = tx.tx.body.messages;
 				try {
 					listMsg.map((msg: any) => {
-						if (
-							msg['@type'] &&
-							msg.sender &&
-							msg.contract &&
-							msg['@type'] == MSG_TYPE.MSG_EXECUTE_CONTRACT
-						) {
-							listAddress.push(msg.sender);
-							listContractInMessages.push(msg.contract);
+						if (msg['@type'] && msg['@type'] == MSG_TYPE.MSG_EXECUTE_CONTRACT) {
+							this.addToIndexes(indexes, 'message', 'action', msg['@type']);
+							if (msg.sender && msg.sender.length <= 100) {
+								// found attribute in index, if yes then add new
+								this.addToIndexes(indexes, 'wasm', 'sender', msg.sender);
+							}
+							if (msg.contract && msg.contract.length <= 200) {
+								this.addToIndexes(
+									indexes,
+									'wasm',
+									'_contract_address',
+									msg.contract,
+								);
+								this.addToIndexes(
+									indexes,
+									'execute',
+									'_contract_address',
+									msg.contract,
+								);
+							}
+							if (msg.msg) {
+								let msgInput = msg.msg;
+								let self = this;
+								Object.keys(msgInput).map(function (key) {
+									self.addToIndexes(indexes, 'wasm', 'action', key);
+									console.log('Key : ' + key + ', Value : ' + msgInput[key]);
+									if (
+										msgInput[key]['recipient'] &&
+										msgInput[key]['recipient'].length <= 200
+									) {
+										self.addToIndexes(
+											indexes,
+											'wasm',
+											'recipient',
+											msgInput[key]['recipient'],
+										);
+									}
+									if (
+										msgInput[key]['token_id'] &&
+										msgInput[key]['token_id'].length <= 200
+									) {
+										self.addToIndexes(
+											indexes,
+											'wasm',
+											'token_id',
+											msgInput[key]['token_id'],
+										);
+									}
+								});
+							}
 						}
 					});
 				} catch (error) {
 					this.logger.error('This message execute contract is error');
+					this.logger.error(error);
 				}
 
 				//@ts-ignore
@@ -210,15 +253,7 @@ export default class HandleTransactionService extends Service {
 								? fromUtf8(fromBase64(attribute.value.toString()))
 								: '';
 							key = key.replace(/\./g, '_');
-							let array = indexes[`${type}_${key}`];
-							if (array && array.length > 0) {
-								let position = indexes[`${type}_${key}`].indexOf(value);
-								if (position == -1) {
-									indexes[`${type}_${key}`].push(value);
-								}
-							} else {
-								indexes[`${type}_${key}`] = [value];
-							}
+							this.addToIndexes(indexes, type, key, value);
 
 							//add to listAddress if value is valid address
 							const isValidAddress = Utils.isValidAddress(value);
@@ -252,15 +287,6 @@ export default class HandleTransactionService extends Service {
 					indexes['addresses'] = listAddress;
 				}
 
-				listContractInMessages = [...new Set(listContractInMessages)];
-
-				if (listContractInMessages.length > 0 && tx.tx_response.code != '0') {
-					let indexExecute = indexes['execute__contract_address'];
-					if (!indexExecute) {
-						indexes['execute__contract_address'] = listContractInMessages;
-					}
-				}
-
 				tx.indexes = indexes;
 
 				let hash = tx.tx_response.txhash;
@@ -276,6 +302,18 @@ export default class HandleTransactionService extends Service {
 			return listId;
 		} catch (error) {
 			throw error;
+		}
+	}
+
+	private addToIndexes(indexes: any, type: string, key: string, value: string) {
+		let array = indexes[`${type}_${key}`];
+		if (array && array.length > 0) {
+			let position = indexes[`${type}_${key}`].indexOf(value);
+			if (position == -1) {
+				indexes[`${type}_${key}`].push(value);
+			}
+		} else {
+			indexes[`${type}_${key}`] = [value];
 		}
 	}
 
