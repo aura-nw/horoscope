@@ -128,7 +128,7 @@ export default class CrawlAccountInfoService extends Service {
 											// 	OPTs,
 											// );
 											this.createJob(
-												'CW20.enrich-data',
+												'CW20.enrich',
 												{
 													url: URL,
 													address: contractAddress,
