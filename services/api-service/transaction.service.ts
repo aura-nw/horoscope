@@ -95,6 +95,11 @@ export default class BlockService extends MoleculerDBService<
 				optional: true,
 				default: null,
 			},
+			queryAnd: {
+				type: 'array',
+				item: 'string',
+				optional: true,
+			},
 			pageOffset: {
 				type: 'number',
 				optional: true,
@@ -148,6 +153,7 @@ export default class BlockService extends MoleculerDBService<
 		const searchKey = ctx.params.searchKey;
 		const searchValue = ctx.params.searchValue;
 		const queryParam = ctx.params.query;
+		const queryAnd = ctx.params.queryAnd;
 		const addressInContract = ctx.params.addressInContract;
 		const sequenceIBC = ctx.params.sequenceIBC;
 		const needFullLog = ctx.params.needFullLog;
@@ -212,7 +218,7 @@ export default class BlockService extends MoleculerDBService<
 
 		if (queryParam) {
 			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
-			let queryAnd: any[] = [];
+			let queryAndOperator: any[] = [];
 			queryParamFormat.forEach((e: any) => {
 				let tempQuery = {
 					[`indexes.${e.type}_${e.key}`]: {
@@ -220,24 +226,40 @@ export default class BlockService extends MoleculerDBService<
 						$eq: e.value,
 					},
 				};
-				queryAnd.push(tempQuery);
+				queryAndOperator.push(tempQuery);
 			});
-			listQueryAnd.push(...queryAnd);
+			listQueryAnd.push(...queryAndOperator);
+		}
+		if (queryAnd) {
+			let queryAndOperator: any[] = [];
+			queryAnd.forEach((operator: string) => {
+				let keyValueList = operator.split('=');
+				if (keyValueList.length === 2) {
+					let value = keyValueList[1];
+					let key;
+					let typeKeyList = keyValueList[0].split('.');
+					if (typeKeyList.length === 2) {
+						key = `indexes.${typeKeyList[0]}_${typeKeyList[1]}`;
+					} else if (typeKeyList.length === 1) {
+						key = `indexes.${typeKeyList[0]}`;
+					}
+
+					let tempQuery = {
+						[`${key}`]: {
+							$exists: true,
+							$eq: value,
+						},
+					};
+					queryAndOperator.push(tempQuery);
+				}
+			});
+			listQueryAnd.push(...queryAndOperator);
 		}
 		if (address) {
-			listQueryOr.push(
-				{ 'indexes.message_sender': { $exists: true, $eq: address } },
-				{ 'indexes.transfer_recipient': { $exists: true, $eq: address } },
-				{ 'indexes.addresses': { $exists: true, $eq: address } },
-			);
+			listQueryOr.push({ 'indexes.addresses': { $exists: true, $eq: address } });
 		}
 		if (addressInContract) {
-			listQueryOr.push(
-				{ 'indexes.wasm_sender': { $exists: true, $eq: addressInContract } },
-				{ 'indexes.wasm_recipient': { $exists: true, $eq: addressInContract } },
-				{ 'indexes.wasm_owner': { $exists: true, $eq: addressInContract } },
-				{ 'indexes.addresses': { $exists: true, $eq: addressInContract } },
-			);
+			listQueryOr.push({ 'indexes.addresses': { $exists: true, $eq: addressInContract } });
 		}
 
 		if (sequenceIBC) {
@@ -710,13 +732,14 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: false
 	 *          schema:
 	 *            type: string
-	 *          description: "Address in transaction with native coin"
+	 *          description: "Address in transaction"
 	 *        - in: query
 	 *          name: addressInContract
 	 *          required: false
 	 *          schema:
 	 *            type: string
 	 *          description: "Address in transaction with token from smart contract"
+	 *          deprecated: true
 	 *        - in: query
 	 *          name: sequenceIBC
 	 *          required: false
@@ -749,6 +772,15 @@ export default class BlockService extends MoleculerDBService<
 	 *          schema:
 	 *            type: string
 	 *          description: "Search query with format A.B=C,D.E=F"
+	 *          deprecated: true
+	 *        - in: query
+	 *          name: queryAnd[]
+	 *          required: false
+	 *          schema:
+	 *            type: array
+	 *            items:
+	 *              type: string
+	 *          description: "Search query with format A.B=C"
 	 *        - in: query
 	 *          name: pageOffset
 	 *          required: false
