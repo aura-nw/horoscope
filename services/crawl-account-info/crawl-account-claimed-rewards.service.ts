@@ -2,12 +2,11 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
 import { QueueConfig } from '../../config/queue';
-import { Utils } from '../../utils/utils';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
@@ -205,19 +204,15 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		switch (msg['@type']) {
 			case MSG_TYPE.MSG_DELEGATE:
 				const validatorAddress = msg.validator_address;
-				const indexReward = logs[index].events
-					.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED)
-					.attributes.findIndex((x: any) => x.value === userAddress);
-				const claimedReward = logs[index].events.find(
-					(x: any) => x.type === CONST_CHAR.COIN_RECEIVED,
-				).attributes[indexReward + 1].value;
 				let amount = '0';
-				try {
-					amount = claimedReward.match(/\d+/g)[0];
-					if (amount === '' || indexReward < 0) amount = '0';
-				} catch (error) {
-					amount = '0';
-				}
+				let delegateReward = logs[index].events.find((x: any) => x.type === CONST_CHAR.WITHDRAW_REWARDS);
+				if (delegateReward)
+					try {
+						amount = delegateReward.attributes.find((x: any) => x.key === CONST_CHAR.AMOUNT)
+							.value.match(/\d+/g)[0];
+					} catch (error) {
+						amount = '0';
+					}
 				let reward = account.account_claimed_rewards.find(
 					(x: any) => x.validator_address === validatorAddress,
 				);
@@ -236,125 +231,74 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				}
 				break;
 			case MSG_TYPE.MSG_REDELEGATE:
-				const valSrcAddress = msg.validator_src_address;
-				const valDstAddress = msg.validator_dst_address;
-				const coinReceived = logs[index].events.find(
-					(x: any) => x.type === CONST_CHAR.COIN_RECEIVED,
-				).attributes;
-
-				const paramValidator = Config.GET_VALIDATOR + valSrcAddress;
-				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-				let resultCallApi;
-				try {
-					resultCallApi = await this.callApiFromDomain(url, paramValidator);
-				} catch (error) {
-					this.logger.error(error);
-					throw error;
-				}
-				const redelegateClaimedReward = coinReceived.find(
-					(x: any) => x.key === CONST_CHAR.AMOUNT,
-				).value;
-				if (Number(resultCallApi.validator.commission.commission_rates.rate) !== 1) {
-					let srcAmount = '0';
+				let redelegateReward = logs[index].events.find((x: any) => x.type === CONST_CHAR.WITHDRAW_REWARDS);
+				if (redelegateReward) {
+					let redelegateAmount = '0';
 					try {
-						srcAmount = redelegateClaimedReward.match(/\d+/g)[0];
-						if (srcAmount === '') srcAmount = '0';
+						redelegateAmount = redelegateReward.attributes.find((x: any) => x.key === CONST_CHAR.AMOUNT)
+							.value.match(/\d+/g)[0];
 					} catch (error) {
-						srcAmount = '0';
+						redelegateAmount = '0';
 					}
+					let redelegateVal = redelegateReward.attributes.find((x: any) => x.key === CONST_CHAR.VALIDATOR).value;
 					let srcReward = account.account_claimed_rewards.find(
-						(x: any) => x.validator_address === valSrcAddress,
+						(x: any) => x.validator_address === redelegateVal,
 					);
 					if (srcReward) {
 						account.account_claimed_rewards.find(
-							(x: any) => x.validator_address === valSrcAddress,
+							(x: any) => x.validator_address === redelegateVal,
 						)!.amount = (
-							parseInt(srcReward.amount.toString(), 10) + parseInt(srcAmount, 10)
+							parseInt(srcReward.amount.toString(), 10) + parseInt(redelegateAmount, 10)
 						).toString();
 					} else {
 						account.account_claimed_rewards.push({
-							validator_address: valSrcAddress,
+							validator_address: redelegateVal,
 							denom: Config.NETWORK_DENOM,
-							amount: srcAmount,
+							amount: redelegateAmount,
 						} as Rewards);
 					}
-				} else {
-					let dstAmount = '0';
-					try {
-						dstAmount = redelegateClaimedReward.match(/\d+/g)[0];
-						if (dstAmount === '') dstAmount = '0';
-					} catch (error) {
-						dstAmount = '0';
-					}
-					let dstReward = account.account_claimed_rewards.find(
-						(x: any) => x.validator_address === valDstAddress,
-					);
-					if (dstReward) {
-						account.account_claimed_rewards.find(
-							(x: any) => x.validator_address === valDstAddress,
-						)!.amount = (
-							parseInt(dstReward.amount.toString(), 10) + parseInt(dstAmount, 10)
-						).toString();
-					} else {
-						account.account_claimed_rewards.push({
-							validator_address: valDstAddress,
-							denom: Config.NETWORK_DENOM,
-							amount: dstAmount,
-						} as Rewards);
-					}
-				}
-				if (coinReceived.length > 2) {
-					const dstClaimedReward = coinReceived[3].value;
-					let dstAmount = '0';
-					try {
-						dstAmount = dstClaimedReward.match(/\d+/g)[0];
-						if (dstAmount === '') dstAmount = '0';
-					} catch (error) {
-						dstAmount = '0';
-					}
-					let dstReward = account.account_claimed_rewards.find(
-						(x: any) => x.validator_address === valDstAddress,
-					);
-					if (dstReward) {
-						account.account_claimed_rewards.find(
-							(x: any) => x.validator_address === valDstAddress,
-						)!.amount = (
-							parseInt(dstReward.amount.toString(), 10) + parseInt(dstAmount, 10)
-						).toString();
-					} else {
-						account.account_claimed_rewards.push({
-							validator_address: valDstAddress,
-							denom: Config.NETWORK_DENOM,
-							amount: dstAmount,
-						} as Rewards);
+
+					if (redelegateReward.attributes.length > 2) {
+						let redelegateAmount = redelegateReward.attributes[2].value.match(/\d+/g)[0];
+						let redelegateVal = redelegateReward.attributes[3].value;
+						let srcReward = account.account_claimed_rewards.find(
+							(x: any) => x.validator_address === redelegateVal,
+						);
+						if (srcReward) {
+							account.account_claimed_rewards.find(
+								(x: any) => x.validator_address === redelegateVal,
+							)!.amount = (
+								parseInt(srcReward.amount.toString(), 10) + parseInt(redelegateAmount, 10)
+							).toString();
+						} else {
+							account.account_claimed_rewards.push({
+								validator_address: redelegateVal,
+								denom: Config.NETWORK_DENOM,
+								amount: redelegateAmount,
+							} as Rewards);
+						}
 					}
 				}
 				break;
 			case MSG_TYPE.MSG_UNDELEGATE:
 				const undelegateValAddress = msg.validator_address;
-				const undelegateIndexReward = logs[index].events
-					.find((x: any) => x.type === CONST_CHAR.COIN_RECEIVED)
-					.attributes.findIndex((x: any) => x.value === userAddress);
-				const undelegateClaimedReward = logs[index].events.find(
-					(x: any) => x.type === CONST_CHAR.COIN_RECEIVED,
-				).attributes[undelegateIndexReward + 1].value;
 				let undelegateAmount = '0';
-				try {
-					undelegateAmount = undelegateClaimedReward.match(/\d+/g)[0];
-					if (undelegateAmount === '' || undelegateIndexReward < 0)
-						undelegateAmount = '0';
-				} catch (error) {
-					undelegateAmount = '0';
-				}
-				let undelegateReward = account.account_claimed_rewards.find(
+				let undelegateReward = logs[index].events.find((x: any) => x.type === CONST_CHAR.WITHDRAW_REWARDS);
+				if (undelegateReward)
+					try {
+						undelegateAmount = delegateReward.attributes.find((x: any) => x.key === CONST_CHAR.AMOUNT)
+							.value.match(/\d+/g)[0];
+					} catch (error) {
+						undelegateAmount = '0'
+					}
+				let undeleReward = account.account_claimed_rewards.find(
 					(x: any) => x.validator_address === undelegateValAddress,
 				);
-				if (undelegateReward) {
+				if (undeleReward) {
 					account.account_claimed_rewards.find(
 						(x: any) => x.validator_address === undelegateValAddress,
 					)!.amount = (
-						parseInt(undelegateReward.amount.toString(), 10) +
-						parseInt(undelegateAmount, 10)
+						parseInt(undeleReward.amount.toString(), 10) + parseInt(undelegateAmount, 10)
 					).toString();
 				} else {
 					account.account_claimed_rewards.push({
@@ -366,16 +310,15 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				break;
 			case MSG_TYPE.MSG_WITHDRAW_REWARDS:
 				const log = logs[index];
-				const claimedRewardWithdraw = log.events
-					.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS)
-					.attributes.find((attr: any) => attr.key === CONST_CHAR.AMOUNT).value;
 				let amountWithdraw = '0';
-				try {
-					amountWithdraw = claimedRewardWithdraw.match(/\d+/g)[0];
-					if (amountWithdraw === '') amountWithdraw = '0';
-				} catch (error) {
-					amountWithdraw = '0';
-				}
+				let claimedRewardWithdraw = log.events.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS);
+				if (claimedRewardWithdraw)
+					try {
+						amountWithdraw = claimedRewardWithdraw.attributes.find((x: any) => x.key === CONST_CHAR.AMOUNT)
+							.value.match(/\d+/g)[0];
+					} catch (error) {
+						amountWithdraw = '0'
+					}
 				let rewardWithdraw = account.account_claimed_rewards.find(
 					(x: any) => x.validator_address === msg.validator_address,
 				);
