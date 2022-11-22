@@ -206,7 +206,6 @@ export default class HandleTransactionService extends Service {
 								let self = this;
 								Object.keys(msgInput).map(function (key) {
 									self.addToIndexes(indexes, 'wasm', 'action', key);
-									console.log('Key : ' + key + ', Value : ' + msgInput[key]);
 									['recipient', 'owner', 'token_id'].map((att: string) => {
 										if (
 											msgInput[key][att] &&
@@ -218,6 +217,17 @@ export default class HandleTransactionService extends Service {
 												att,
 												msgInput[key][att],
 											);
+											const isValidAddress = Utils.isValidAddress(
+												msgInput[key][att],
+											);
+											if (isValidAddress) {
+												self.addToIndexes(
+													indexes,
+													'addresses',
+													'',
+													msgInput[key][att],
+												);
+											}
 										}
 									});
 								});
@@ -249,7 +259,8 @@ export default class HandleTransactionService extends Service {
 							//add to listAddress if value is valid address
 							const isValidAddress = Utils.isValidAddress(value);
 							if (isValidAddress) {
-								listAddress.push(value);
+								// listAddress.push(value);
+								this.addToIndexes(indexes, 'addresses', '', value);
 							}
 
 							let hashValue = this.redisClient
@@ -273,10 +284,10 @@ export default class HandleTransactionService extends Service {
 				});
 
 				//remove duplicate and set index
-				listAddress = [...new Set(listAddress)];
-				if (listAddress && listAddress.length > 0) {
-					indexes['addresses'] = listAddress;
-				}
+				// listAddress = [...new Set(listAddress)];
+				// if (listAddress && listAddress.length > 0) {
+				// 	indexes['addresses'] = listAddress;
+				// }
 
 				tx.indexes = indexes;
 
@@ -297,14 +308,18 @@ export default class HandleTransactionService extends Service {
 	}
 
 	private addToIndexes(indexes: any, type: string, key: string, value: string) {
-		let array = indexes[`${type}_${key}`];
+		let index = `${type}`;
+		if (key) {
+			index = `${type}_${key}`;
+		}
+		let array = indexes[index];
 		if (array && array.length > 0) {
-			let position = indexes[`${type}_${key}`].indexOf(value);
+			let position = indexes[index].indexOf(value);
 			if (position == -1) {
-				indexes[`${type}_${key}`].push(value);
+				indexes[index].push(value);
 			}
 		} else {
-			indexes[`${type}_${key}`] = [value];
+			indexes[index] = [value];
 		}
 	}
 
