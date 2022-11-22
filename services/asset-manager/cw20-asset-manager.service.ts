@@ -85,8 +85,6 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw20-asset-manager upsert ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				this.actions.useDb({ query: { chainId: ctx.params.chain_id } });
-				// @ts-ignore
 				return await this.upsert_handler(ctx.params);
 			},
 		},
@@ -106,6 +104,8 @@ import { LIST_NETWORK } from '../../common/constant';
 export default class CW20AssetManagerService extends moleculer.Service {
 	async upsert_handler(asset: any) {
 		this.logger.debug(`asset `, asset);
+		// @ts-ignore
+		this.actions.useDb({ query: { chainId: asset.custom_info.chain_id } });
 		let item = await this.adapter.findOne({ asset_id: asset.asset_id });
 		if (item) {
 			// this.logger.debug(`rs `, item._id);
