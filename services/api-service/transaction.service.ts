@@ -24,11 +24,10 @@ import {
 	SEARCH_TX_QUERY,
 	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
-import { toBase64, toUtf8 } from '@cosmjs/encoding';
 import { Utils } from '../../utils/utils';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Config } from '../../common';
-import { add, flatten } from 'lodash';
+import { fromBase64, fromUtf8, toBase64, toUtf8 } from '@cosmjs/encoding';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -133,18 +132,32 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<GetTxRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
+		let nextKey: any = null;
 		if (ctx.params.nextKey) {
-			if (!ObjectId.isValid(ctx.params.nextKey)) {
+			// if (!ObjectId.isValid(ctx.params.nextKey)) {
+			// 	return (response = {
+			// 		code: ErrorCode.WRONG,
+			// 		message: ErrorMessage.VALIDATION_ERROR,
+			// 		data: {
+			// 			message: 'The nextKey is not a valid ObjectId',
+			// 		},
+			// 	});
+			// }
+			try {
+				nextKey = JSON.parse(fromUtf8(fromBase64(ctx.params.nextKey)));
+				if (!(nextKey._id && nextKey.height)) {
+					throw new Error('The nextKey is not a valid next key');
+				}
+			} catch (error) {
 				return (response = {
 					code: ErrorCode.WRONG,
 					message: ErrorMessage.VALIDATION_ERROR,
 					data: {
-						message: 'The nextKey is not a valid ObjectId',
+						message: 'The nextKey is not a valid next key',
 					},
 				});
 			}
 		}
-
 		const blockHeight = ctx.params.blockHeight;
 		const fromHeight = ctx.params.fromHeight;
 		const txHash = ctx.params.txHash;
@@ -173,11 +186,13 @@ export default class BlockService extends MoleculerDBService<
 			ctx.params.pageOffset = 0;
 			findOne = true;
 		}
-		if (ctx.params.nextKey) {
+		if (nextKey) {
 			if (ctx.params.reverse) {
-				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
+				query._id = { $gt: new ObjectId(nextKey._id) };
+				query['tx_response.height'] = { $gte: nextKey.height };
 			} else {
-				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				query._id = { $lt: new ObjectId(nextKey._id) };
+				query['tx_response.height'] = { $lte: nextKey.height };
 			}
 		}
 		query['custom_info.chain_id'] = ctx.params.chainid;
@@ -331,11 +346,20 @@ export default class BlockService extends MoleculerDBService<
 			]);
 
 			let nextKey = null;
+
 			if (result.length > 0) {
 				if (result.length == 1) {
-					nextKey = result[result.length - 1]?._id;
+					nextKey = {
+						_id: result[result.length - 1]?._id,
+						height: result[result.length - 1]?.tx_response.height,
+					};
 				} else {
-					nextKey = ctx.params.txHash ? null : result[result.length - 2]?._id;
+					nextKey = ctx.params.txHash
+						? null
+						: {
+								_id: result[result.length - 2]?._id,
+								height: result[result.length - 2]?.tx_response.height,
+						  };
 				}
 				if (result.length <= ctx.params.pageLimit) {
 					nextKey = null;
@@ -352,7 +376,7 @@ export default class BlockService extends MoleculerDBService<
 				data: {
 					transactions: result,
 					count: count,
-					nextKey: nextKey,
+					nextKey: nextKey ? toBase64(toUtf8(JSON.stringify(nextKey))) : null,
 				},
 			};
 		} catch (error) {
@@ -416,9 +440,7 @@ export default class BlockService extends MoleculerDBService<
 	async getPowerEvent(ctx: Context<GetPowerEventTxRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		if (ctx.params.nextKey) {
-			try {
-				new ObjectId(ctx.params.nextKey);
-			} catch (error) {
+			if (!ObjectId.isValid(ctx.params.nextKey)) {
 				return (response = {
 					code: ErrorCode.WRONG,
 					message: ErrorMessage.VALIDATION_ERROR,
