@@ -31,30 +31,27 @@ export default class DailyCw20HolderService extends MoleculerDBService<
     /**
      *  @swagger
      *  /v1/daily-cw20-holder:
-     *    post:
+     *    get:
      *      tags:
      *        - AuraScan Statistics
      *      summary: Get CW20's holder changing percentage daily
      *      description: Get CW20's holder changing percentage daily
-     *      requestBody:
-	 *        content:
-	 *          application/json:
-	 *            schema:
-	 *              type: object
-	 *              required:
-     *              - chainId
-     *              - addresses
-     *              properties:
-     *                chainId:
-     *                  type: string
-     *                  description: "Chain Id of network need to query"
-     *                  enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
-     *                  default: "aura-testnet"
-	 *                addresses:
-	 *                  type: array
-	 *                  items:
-	 *                    type: string
-	 *                  description: "List of CW20 addresses need to query"
+     *      parameters:
+	 *        - name: chainId
+     *          in: query
+     *          required: true
+     *          schema:
+     *            type: string
+     *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+     *            default: "aura-testnet"
+     *          description: "Chain Id of network need to query"
+	 *        - name: addresses[]
+     *          in: query
+	 *          schema:
+     *            type: array
+	 *            items:
+	 *              type: string
+	 *          description: "List of CW20 addresses need to query"
      *      responses:
      *        '200':
      *          description: Daily CW20's holder changing percentage
@@ -127,7 +124,7 @@ export default class DailyCw20HolderService extends MoleculerDBService<
      *                           type: string
      *                           example: "v1.block.chain"
      */
-    @Post('/', {
+    @Get('/', {
         name: 'getCw20HolderChangePercent',
         /**
          * Service guard services allowed to connect
@@ -135,7 +132,7 @@ export default class DailyCw20HolderService extends MoleculerDBService<
         restricted: ['api'],
         params: {
             chainId: 'string',
-            addresses: 'string[]'
+            addresses: { type: 'array', items: 'string', optional: true },
         }
     })
     async getCw20HolderChangePercent(ctx: Context<any>) {
