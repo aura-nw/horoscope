@@ -84,6 +84,8 @@ export default class FeegrantDB extends Service {
     async handleJob(listUpdateFeegrantDb: FeegrantEntity[]): Promise<any[]> {
         // process unprocess actions: use, revoke, use up
         const mapUpdate = new Map<String | null, UpdateContent>()
+        // list Revoke
+        const listRevoke = [] as FeegrantEntity[]
         // initialize map
         for (const e of listUpdateFeegrantDb) {
             if (e.action === FEEGRANT_ACTION.USE || e.action === FEEGRANT_ACTION.REVOKE) {
@@ -119,7 +121,7 @@ export default class FeegrantDB extends Service {
                     // for each new revoked record received, update status to revoked
                     const tmp_amount = mapUpdate.get(e.origin_feegrant_txhash)?.amount
                     const tmp_status = FEEGRANT_STATUS.REVOKED
-
+                    listRevoke.push(e)
                     mapUpdate.set(e.origin_feegrant_txhash, {
                         //@ts-ignore
                         amount: tmp_amount,
@@ -154,7 +156,21 @@ export default class FeegrantDB extends Service {
                 },
             })
         ])
-        this.adapter.bulkWrite(bulkUpdate)
+        await this.adapter.bulkWrite(bulkUpdate)
+        const bulkUpdateOriginRevoke = [] as any[]
+        listRevoke.forEach(e => {
+            bulkUpdateOriginRevoke.push({
+                updateOne: {
+                    filter: { tx_hash: e.origin_feegrant_txhash },
+                    update: {
+                        $set: {
+                            "origin_revoke_txhash": e.tx_hash
+                        },
+                    },
+                },
+            })
+        })
+        await this.adapter.bulkWrite(bulkUpdateOriginRevoke)
         return []
     }
 

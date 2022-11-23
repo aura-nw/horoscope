@@ -149,6 +149,7 @@ export default class CrawlAccountInfoService extends Service {
                         record_payfee.type = ""
                         record_payfee.grantee = element.granter
                         record_payfee.granter = element.payer
+                        record_payfee.result = true
                         records.push(record_payfee)
                         break;
                     }
