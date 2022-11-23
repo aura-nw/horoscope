@@ -180,9 +180,9 @@ export default class ProposalService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: proposalId
 	 *          required: false

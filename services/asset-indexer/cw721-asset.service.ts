@@ -556,7 +556,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 		// backoff: 5000,
 		// 	},
 		// );
-		// const URL = Utils.getUrlByChainIdAndType('aura-testnet', URL_TYPE_CONSTANTS.LCD);
+		// const URL = Utils.getUrlByChainIdAndType('aura-testnet-2', URL_TYPE_CONSTANTS.LCD);
 		// this.createJob(
 		// 	'CW721.enrich-tokenid',
 		// 	{
@@ -564,7 +564,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 		address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
 		// 		code_id: '259',
 		// 		type_enrich: 'upsert',
-		// 		chain_id: 'aura-testnet',
+		// 		chain_id: 'aura-testnet-2',
 		// 		token_id: 'token 23',
 		// 	},
 		// 	{
@@ -581,7 +581,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		// 		address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
 		// 		code_id: '259',
 		// 		type_enrich: 'upsert',
-		// 		chain_id: 'aura-testnet',
+		// 		chain_id: 'aura-testnet-2',
 		// 		token_id: 'token 24',
 		// 	},
 		// 	{

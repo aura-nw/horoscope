@@ -176,7 +176,7 @@ export default class BlockService extends MoleculerDBService<
 		//TODO: fix slow when count in query
 		// const countTotal = ctx.params.countTotal;
 		// ctx.params.countTotal = false;
-		const sort = ctx.params.reverse ? 'indexes.height' : '-indexes.height';
+		const sort = ctx.params.reverse ? 'tx_response.height' : '-tx_response.height';
 
 		// const sort = '-indexes.height';
 		let query: QueryOptions = {};
@@ -195,7 +195,7 @@ export default class BlockService extends MoleculerDBService<
 				query['tx_response.height'] = { $lte: nextKey.height };
 			}
 		}
-		query['custom_info.chain_id'] = ctx.params.chainid;
+		// query['custom_info.chain_id'] = ctx.params.chainid;
 		if (blockHeight) {
 			query['tx_response.height'] = blockHeight;
 		}
@@ -721,9 +721,9 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: blockHeight
 	 *          required: false
@@ -1180,9 +1180,9 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: address
 	 *          required: true
