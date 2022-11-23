@@ -40,7 +40,8 @@ export default class CronjobUpdateOriginalGrant extends Service {
         // find all records which were unprocessed
         const listUnprocess = await this.adapter.lean({
             query: {
-                "origin_feegrant_txhash": null
+                "origin_feegrant_txhash": null,
+                "result": true
             },
             projection: {
                 granter: 1,
@@ -50,7 +51,8 @@ export default class CronjobUpdateOriginalGrant extends Service {
                 timestamp: 1,
                 action: 1,
                 amount: 1,
-                status: 1
+                status: 1,
+                tx_hash: 1
             },
             limit: 2000
         }) as FeegrantEntity[]

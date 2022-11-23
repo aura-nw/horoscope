@@ -24,7 +24,8 @@ const definition: definitionType<IFeegrant> = (collection?: string) => ({
     },
     status: String,
     custom_info: customInfoModel,
-    action: String
+    action: String,
+    origin_revoke_txhash: String
 });
 
 export const feegrantMongoModel = (collection: string): unknown => {
@@ -36,6 +37,6 @@ export const feegrantMongoModel = (collection: string): unknown => {
         collection: collection,
     });
     // @ts-ignore
-    schema.index({ 'tx_hash': 1, 'action': 1 }, { unique: true });
+    schema.index({ 'tx_hash': 1, 'action': 1, 'status': 1 }, { unique: true });
     return models[collection] || model(collection, schema);
 };

@@ -135,7 +135,7 @@ export default class FeegrantService extends MoleculerDBService<
 			let [result, count]: [any[], number] = await Promise.all([
 				this.adapter.lean({
 					query: query,
-					limit: ctx.params.pageLimit,
+					limit: ctx.params.pageLimit + 1,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
 					sort: '-timestamp',
@@ -144,13 +144,27 @@ export default class FeegrantService extends MoleculerDBService<
 					query: query,
 				}),
 			]);
+			let nextKey = null;
+			if (result.length > 0) {
+				if (result.length == 1) {
+					nextKey = result[result.length - 1]?._id;
+				} else {
+					nextKey = result[result.length - 2]?._id;
+				}
+				if (result.length <= ctx.params.pageLimit) {
+					nextKey = null;
+				}
+				if (nextKey) {
+					result.pop();
+				}
+			}
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					grants: result,
 					count: count,
-					nextKey: result.length ? result[result.length - 1]._id : null,
+					nextKey,
 				},
 			};
 		} catch (error) {
