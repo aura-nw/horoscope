@@ -19,7 +19,7 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 				block: Number,
 			},
 			chain_id: String,
-			height: Number,
+			height: { type: Number, index: true },
 			time: Date,
 			last_block_id: {
 				hash: String,
@@ -77,6 +77,6 @@ export const blockMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection: collection,
 	});
-	schema.index({ 'block.header.height': -1, 'custom_info.chain_id': 1 });
+	// schema.index({ 'block.header.height': -1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };
