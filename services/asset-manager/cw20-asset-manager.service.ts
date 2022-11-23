@@ -40,6 +40,8 @@ import { LIST_NETWORK } from '../../common/constant';
 					query: { chainId: ctx.params.query['custom_info.chain_id'] },
 				});
 				// @ts-ignore
+				delete ctx.params.query['custom_info.chain_id'];
+				// @ts-ignore
 				return await this.adapter.count(ctx.params);
 			},
 		},
@@ -60,6 +62,8 @@ import { LIST_NETWORK } from '../../common/constant';
 					query: { chainId: ctx.params.query['custom_info.chain_id'] },
 				});
 				// @ts-ignore
+				delete ctx.params.query['custom_info.chain_id'];
+				// @ts-ignore
 				return await this.adapter.find(ctx.params);
 			},
 		},
@@ -74,6 +78,8 @@ import { LIST_NETWORK } from '../../common/constant';
 				);
 				// @ts-ignore
 				this.actions.useDb({ query: { chainId: ctx.params.chain_id } });
+				// @ts-ignore
+				delete ctx.params.chain_id;
 				// @ts-ignore
 				return await this.adapter.list(ctx.params);
 			},
@@ -132,6 +138,8 @@ export default class CW20AssetManagerService extends moleculer.Service {
 	async getHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
 		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
+		//@ts-ignore
+		delete ctx.params.query['custom_info.chain_id'];
 		return await this.adapter.find(ctx.params);
 	}
 
@@ -139,6 +147,8 @@ export default class CW20AssetManagerService extends moleculer.Service {
 	async countHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
 		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
+		//@ts-ignore
+		delete ctx.params.query['custom_info.chain_id'];
 		return await this.adapter.count(ctx.params);
 	}
 }

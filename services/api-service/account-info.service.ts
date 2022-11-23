@@ -317,7 +317,6 @@ export default class AccountInfoService extends MoleculerDBService<
 		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
 			this.adapter.findOne({
 				address: ctx.params.address,
-				'custom_info.chain_id': ctx.params.chainId,
 			}),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
@@ -538,7 +537,6 @@ export default class AccountInfoService extends MoleculerDBService<
 			this.adapter.lean({
 				query: {
 					address: ctx.params.address,
-					'custom_info.chain_id': ctx.params.chainId,
 				},
 				projection: {
 					address: 1,
@@ -763,7 +761,6 @@ export default class AccountInfoService extends MoleculerDBService<
 			{
 				$match: {
 					address: ctx.params.address,
-					'custom_info.chain_id': ctx.params.chainId,
 				},
 			},
 		];
@@ -809,9 +806,7 @@ export default class AccountInfoService extends MoleculerDBService<
 		let data = await this.adapter.aggregate(projection);
 		if (ctx.params.type === 'Unbondings') {
 			let validators: any = await this.broker.call('v1.validator.getByCondition', {
-				query: {
-					'custom_info.chain_id': ctx.params.chainId,
-				},
+				query: {},
 			});
 			data.map((unbond: any) => {
 				let validator = validators.find(

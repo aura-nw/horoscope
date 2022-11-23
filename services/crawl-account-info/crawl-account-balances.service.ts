@@ -90,7 +90,6 @@ export default class CrawlAccountBalancesService extends Service {
 				try {
 					accountInfo = await this.adapter.findOne({
 						address,
-						'custom_info.chain_id': chainId,
 					});
 				} catch (error) {
 					this.logger.error(error);

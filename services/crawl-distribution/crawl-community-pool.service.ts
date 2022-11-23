@@ -53,9 +53,7 @@ export default class CrawlCommunityPoolService extends Service {
 			resultCallApi,
 			CommunityPoolEntity,
 		);
-		let foundPool: CommunityPoolEntity = await this.adapter.findOne({
-			'custom_info.chain_id': Config.CHAIN_ID,
-		});
+		let foundPool: CommunityPoolEntity = await this.adapter.findOne({});
 		try {
 			if (foundPool) {
 				item._id = foundPool._id;

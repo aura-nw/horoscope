@@ -56,7 +56,6 @@ export default class CrawlDailyTxService extends Service {
 		const endTime = syncDate.setUTCHours(time + 1, 59, 59, 999);
 
 		let query: any = {
-			'custom_info.chain_id': Config.CHAIN_ID,
 			'indexes.timestamp': {
 				$gte: new Date(startTime),
 				$lte: new Date(endTime),

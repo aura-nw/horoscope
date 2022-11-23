@@ -85,7 +85,7 @@ export default class ProposalService extends MoleculerDBService<
 		try {
 			const proposalId = ctx.params.proposalId;
 			const sort = ctx.params.reverse ? 'proposal_id' : '-proposal_id';
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			let query: QueryOptions = {};
 			let needNextKey = true;
 			if (proposalId) {
 				query['proposal_id'] = { $eq: Number(proposalId) };

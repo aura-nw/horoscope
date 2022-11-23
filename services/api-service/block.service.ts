@@ -122,9 +122,9 @@ export default class BlockService extends MoleculerDBService<
 			if (blockHeight) {
 				query['block.header.height'] = blockHeight;
 			}
-			if (chainId) {
-				query['custom_info.chain_id'] = ctx.params.chainid;
-			}
+			// if (chainId) {
+			// 	query['custom_info.chain_id'] = ctx.params.chainid;
+			// }
 			if (operatorAddress) {
 				let operatorList: IValidator[] = await this.broker.call(
 					'v1.validator.getByCondition',

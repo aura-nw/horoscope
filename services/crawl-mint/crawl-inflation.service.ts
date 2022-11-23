@@ -51,9 +51,7 @@ export default class CrawlInflationService extends Service {
 		);
 
 		this.logger.debug(`result: ${JSON.stringify(resultCallApi)}`);
-		let foundInflation: InflationEntity = await this.adapter.findOne({
-			'custom_info.chain_id': Config.CHAIN_ID,
-		});
+		let foundInflation: InflationEntity = await this.adapter.findOne({});
 		if (foundInflation) {
 			foundInflation.inflation = resultCallApi.inflation;
 			await this.adapter.updateById(foundInflation._id, foundInflation);

@@ -91,10 +91,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			const chainId = ctx.params.chainid;
 			if (ctx.params.answer) query.answer = ctx.params.answer;
 
-			if (chainId) {
-				query['custom_info.chain_id'] = chainId;
-			}
-
 			let sort = 'timestamp';
 
 			if (ctx.params.reverse) {
@@ -190,7 +186,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				return e.account_address;
 			});
 			let query: QueryOptions = {
-				'custom_info.chain_id': chainId,
 				proposal_id: ctx.params.proposalid,
 				voter_address: { $in: validatorAccountAddress },
 			};
@@ -254,7 +249,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 		const data = await this.adapter.aggregate([
 			{
 				$match: {
-					'custom_info.chain_id': chain_id,
 					proposal_id,
 					code: '0',
 				},

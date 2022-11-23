@@ -206,7 +206,7 @@ export default class BlockService extends MoleculerDBService<
 		}
 		try {
 			let query: QueryOptions = {};
-			let needNextKey = true;
+
 			if (ctx.params.owner) {
 				query['owner'] = ctx.params.owner;
 			}

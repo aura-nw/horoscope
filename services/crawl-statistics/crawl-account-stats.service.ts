@@ -48,7 +48,6 @@ export default class CrawlAccountStatsService extends Service {
 		const endTime = syncDate.setUTCHours(23, 59, 59, 999);
 
 		let query: any = {
-			'custom_info.chain_id': Config.CHAIN_ID,
 			'indexes.message_action': {
 				$in: [MSG_TYPE.MSG_SEND, MSG_TYPE.MSG_MULTI_SEND],
 			},
@@ -373,7 +372,7 @@ export default class CrawlAccountStatsService extends Service {
 			});
 			listAccountStats.map((account: any) => {
 				if (!listData.find((item) => item.address == account.address)) {
-					if (account.per_day.length === 7) account.per_day.shift()
+					if (account.per_day.length === 7) account.per_day.shift();
 					account.per_day.push({
 						total_sent_tx: {
 							amount: 0,

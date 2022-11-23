@@ -35,15 +35,9 @@ import { LIST_NETWORK } from '../../common/constant';
 				this.actions.useDb({
 					query: { chainId: ctx.params.query['custom_info.chain_id'] },
 				});
-
+				// @ts-ignore
+				delete ctx.params.query['custom_info.chain_id'];
 				this.logger.debug(`ctx.params find ${JSON.stringify(ctx.params)}`);
-
-				const chainId = ctx.params.query['custom_info.chain_id'];
-				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
-				if (network && network.databaseName) {
-					this.adapter.useDb(network.databaseName);
-				}
-
 				return await this.adapter.find(ctx.params);
 			},
 		},
@@ -53,8 +47,6 @@ import { LIST_NETWORK } from '../../common/constant';
 
 				let foundCodeID = await this.adapter.findOne({
 					code_id: ctx.params.code_id,
-
-					'custom_info.chain_id': ctx.params.chain_id,
 				});
 
 				this.logger.debug(`found ${JSON.stringify(foundCodeID)}`);
@@ -74,7 +66,7 @@ import { LIST_NETWORK } from '../../common/constant';
 				this.logger.debug(
 					`ctx.params ${JSON.stringify(ctx.params.condition, ctx.params.update)}`,
 				);
-
+				delete ctx.params.condition['custom_info.chain_id'];
 				return await this.adapter.updateMany(ctx.params.condition, ctx.params.update);
 			},
 		},

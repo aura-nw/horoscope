@@ -70,12 +70,9 @@ export default class CrawlProposalService extends Service {
 		let [foundProposal, foundStakingPool]: [any, any] = await Promise.all([
 			this.adapter.findOne({
 				proposal_id: `${proposalId}`,
-				'custom_info.chain_id': Config.CHAIN_ID,
 			}),
 			this.broker.call('v1.crawlPool.find', {
-				query: {
-					'custom_info.chain_id': Config.CHAIN_ID,
-				},
+				query: {},
 			}),
 		]);
 		if (foundProposal) {

@@ -68,9 +68,7 @@ export default class CrawlProposalService extends Service {
 		this.logger.debug(`result: ${JSON.stringify(listProposal)}`);
 
 		let listProposalInDB: ProposalEntity[] = await this.adapter.lean({
-			query: {
-				'custom_info.chain_id': Config.CHAIN_ID,
-			},
+			query: {},
 		});
 		let listPromise: Promise<any>[] = [];
 		let listIndexDelete: number[] = [];

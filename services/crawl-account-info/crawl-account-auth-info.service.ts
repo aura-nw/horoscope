@@ -96,7 +96,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 					}
 					accountInfo = await this.adapter.findOne({
 						address,
-						'custom_info.chain_id': chainId,
 					});
 				} catch (error) {
 					this.logger.error(error);

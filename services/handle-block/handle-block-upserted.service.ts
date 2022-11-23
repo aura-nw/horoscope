@@ -76,7 +76,6 @@ export default class HandleBlockUpsertedService extends Service {
 				let hexAddress = block.block?.header?.proposer_address;
 				let result: any = await this.broker.call('v1.crawlValidator.find', {
 					query: {
-						'custom_info.chain_id': Config.CHAIN_ID,
 						consensus_hex_address: hexAddress,
 					},
 				});

@@ -97,7 +97,7 @@ export default class ValidatorService extends MoleculerDBService<
 			const operatorAddress = ctx.params.operatorAddress;
 			const status = ctx.params.status;
 			let needNextKey = true;
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			let query: QueryOptions = {};
 			if (operatorAddress) {
 				query['operator_address'] = operatorAddress;
 			}

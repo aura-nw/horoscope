@@ -68,9 +68,7 @@ export default class CrawlSupplyService extends Service {
 		let crawlSupply = {} as SupplyEntity;
 		crawlSupply.supply = listSupplies;
 
-		let foundSupply: SupplyEntity = await this.adapter.findOne({
-			'custom_info.chain_id': Config.CHAIN_ID,
-		});
+		let foundSupply: SupplyEntity = await this.adapter.findOne({});
 		try {
 			if (foundSupply) {
 				crawlSupply._id = foundSupply._id;

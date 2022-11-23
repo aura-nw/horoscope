@@ -41,6 +41,8 @@ import { LIST_NETWORK } from '../../common/constant';
 					query: { chainId: ctx.params.query['custom_info.chain_id'] },
 				});
 				// @ts-ignore
+				delete ctx.params.query['custom_info.chain_id'];
+				// @ts-ignore
 				return await this.adapter.count(ctx.params);
 			},
 		},
@@ -59,59 +61,9 @@ import { LIST_NETWORK } from '../../common/constant';
 					query: { chainId: ctx.params.query['custom_info.chain_id'] },
 				});
 				// @ts-ignore
+				delete ctx.params.query['custom_info.chain_id'];
+				// @ts-ignore
 				return await this.adapter.find(ctx.params);
-			},
-		},
-		'act-join-media-link': {
-			cache: {
-				ttl: 10,
-			},
-			async handler(ctx: Context<QueryOptions, Record<string, unknown>>): Promise<any> {
-				// @ts-ignore
-				this.logger.debug(
-					`ctx.params cw4973-asset-manager aggregate media ${JSON.stringify(ctx.params)}`,
-				);
-				let listAggregate: any[] = [];
-				// @ts-ignore
-				this.actions.useDb({
-					query: { chainId: ctx.params.query['custom_info.chain_id'] },
-				});
-				if (ctx.params.sort) {
-					listAggregate.push({
-						$sort: ctx.params.sort,
-					});
-				}
-				if (ctx.params.nextKey) {
-					ctx.params.query['_id'] = { $lt: new ObjectID(ctx.params.nextKey) };
-				}
-				listAggregate.push(
-					{
-						$match: ctx.params.query,
-					},
-					{
-						$lookup: {
-							from: 'cw4973_media_link',
-							localField: 'media_link',
-							foreignField: 'key',
-							as: 'media_info',
-						},
-					},
-				);
-				if (ctx.params.offset) {
-					listAggregate.push({
-						$skip: ctx.params.offset,
-					});
-				}
-				if (ctx.params.limit) {
-					listAggregate.push({
-						$limit: ctx.params.limit,
-					});
-				}
-				// @ts-ignore
-				this.logger.debug(JSON.stringify(listAggregate));
-				// @ts-ignore
-				let result = await this.adapter.aggregate(listAggregate);
-				return result;
 			},
 		},
 		'act-list': {
@@ -202,6 +154,8 @@ export default class CW4973AssetManagerService extends moleculer.Service {
 	async getHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
 		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
+		// @ts-ignore
+		delete ctx.params.query['custom_info.chain_id'];
 		let result = await this.adapter.aggregate([
 			{
 				$match: ctx.params.query,
@@ -209,7 +163,6 @@ export default class CW4973AssetManagerService extends moleculer.Service {
 			{
 				$group: {
 					_id: {
-						chain_id: '$custom_info.chain_id',
 						contract_address: '$contract_address',
 						owner: '$owner',
 					},
@@ -228,7 +181,6 @@ export default class CW4973AssetManagerService extends moleculer.Service {
 			},
 			{
 				$addFields: {
-					chain_id: '$_id.chain_id',
 					contract_address: '$_id.contract_address',
 					owner: '$_id.owner',
 				},
@@ -236,7 +188,6 @@ export default class CW4973AssetManagerService extends moleculer.Service {
 			{
 				$project: {
 					'_id.contract_address': 0,
-					'_id.chain_id': 0,
 					'_id.owner': 0,
 				},
 			},
@@ -248,6 +199,8 @@ export default class CW4973AssetManagerService extends moleculer.Service {
 	async countHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
 		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
+		// @ts-ignore
+		delete ctx.params.query['custom_info.chain_id'];
 		let result = await this.adapter.aggregate([
 			{
 				$match: ctx.params.query,
@@ -255,7 +208,6 @@ export default class CW4973AssetManagerService extends moleculer.Service {
 			{
 				$group: {
 					_id: {
-						chain_id: '$custom_info.chain_id',
 						contract_address: '$contract_address',
 						owner: '$owner',
 					},

@@ -66,7 +66,6 @@ export default class CrawlSigningInfoService extends Service {
 		)?.prefixAddress;
 		let paramSlashing: ParamEntity[] = await this.broker.call('v1.crawlparam.find', {
 			query: {
-				'custom_info.chain_id': Config.CHAIN_ID,
 				module: MODULE_PARAM.SLASHING,
 			},
 		});

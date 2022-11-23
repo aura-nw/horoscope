@@ -92,7 +92,7 @@ export default class ParamService extends MoleculerDBService<
 		try {
 			const module = ctx.params.module;
 			let needNextKey = true;
-			let query: QueryOptions = { 'custom_info.chain_id': ctx.params.chainid };
+			let query: QueryOptions = {};
 			if (module) {
 				query['module'] = module;
 				needNextKey = false;

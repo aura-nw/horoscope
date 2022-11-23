@@ -54,18 +54,12 @@ export default class CrawlPoolService extends Service {
 		);
 
 		try {
-			let foundPool = await this.adapter.findOne({ 'custom_info.chain_id': Config.CHAIN_ID });
-			try {
-				if (foundPool) {
-					item._id = foundPool._id;
-					// await this.adapter.clearCache();
-					await this.adapter.updateById(foundPool._id, item);
-					// await this.actions.update(item);
-				} else {
-					await this.adapter.insert(item);
-				}
-			} catch (error) {
-				this.logger.error(error);
+			let foundPool = await this.adapter.findOne({});
+			if (foundPool) {
+				item._id = foundPool._id;
+				await this.adapter.updateById(foundPool._id, item);
+			} else {
+				await this.adapter.insert(item);
 			}
 		} catch (error) {
 			this.logger.error(error);
