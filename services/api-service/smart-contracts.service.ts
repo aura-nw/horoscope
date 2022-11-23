@@ -4,12 +4,7 @@
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { Config } from '../../common';
-import {
-	ErrorCode,
-	ErrorMessage,
-	GetContractsRequest,
-	MoleculerDBService,
-} from '../../types';
+import { ErrorCode, ErrorMessage, GetContractsRequest, MoleculerDBService } from '../../types';
 import { LIST_NETWORK } from '../../common/constant';
 import { dbSmartContractsMixin } from '../../mixins/dbMixinMongoose';
 import { ValidatorEntity } from '../../entities';
@@ -49,28 +44,28 @@ export default class SmartContractsService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: height
 	 *          required: true
 	 *          schema:
 	 *            type: number
 	 *          description: "Smart contract's creation block height"
-     *        - in: query
-     *          name: limit
-     *          required: true
-     *          schema:
-     *            type: number
-     *          description: "Number of records returned"
+	 *        - in: query
+	 *          name: limit
+	 *          required: true
+	 *          schema:
+	 *            type: number
+	 *          description: "Number of records returned"
 	 *          example: 10
-     *        - in: query
-     *          name: offset
-     *          required: true
-     *          schema:
-     *            type: number
-     *          description: "Number of records skipped"
+	 *        - in: query
+	 *          name: offset
+	 *          required: true
+	 *          schema:
+	 *            type: number
+	 *          description: "Number of records skipped"
 	 *          example: 0
 	 *      responses:
 	 *        '200':
@@ -96,25 +91,25 @@ export default class SmartContractsService extends MoleculerDBService<
 	 *                          properties:
 	 *                            height:
 	 *                              type: number
-     *                              example: 3243718
+	 *                              example: 3243718
 	 *                            code_id:
-     *                              type: number
-     *                              example: 19
-     *                            contract_name:
-     *                              type: string
-     *                              example: 'Flex'
-     *                            contract_address:
-     *                              type: string
-     *                              example: 'auracdxq3eq341wfew3rwg45rgevst5e452grw3rg3'
-     *                            creator_address:
-     *                              type: string
-     *                              example: 'auracdxq3eq341wfew3rwg45rgevst5e452grw3rg3'
-     *                            contract_hash:
-     *                              type: string
-     *                              example: 'DNFSIL323J298JW01JHFUH9Q8JA39W9J92H32FJF04EJF3084JRG30HE820J'
-     *                            tx_hash:
-     *                              type: string
-     *                              example: 'CSERNFVIQLN24E78DSHEU7I6QGSUHUG176G2W71T349YWS2HDB827YG3WF8Y'
+	 *                              type: number
+	 *                              example: 19
+	 *                            contract_name:
+	 *                              type: string
+	 *                              example: 'Flex'
+	 *                            contract_address:
+	 *                              type: string
+	 *                              example: 'auracdxq3eq341wfew3rwg45rgevst5e452grw3rg3'
+	 *                            creator_address:
+	 *                              type: string
+	 *                              example: 'auracdxq3eq341wfew3rwg45rgevst5e452grw3rg3'
+	 *                            contract_hash:
+	 *                              type: string
+	 *                              example: 'DNFSIL323J298JW01JHFUH9Q8JA39W9J92H32FJF04EJF3084JRG30HE820J'
+	 *                            tx_hash:
+	 *                              type: string
+	 *                              example: 'CSERNFVIQLN24E78DSHEU7I6QGSUHUG176G2W71T349YWS2HDB827YG3WF8Y'
 	 *        '422':
 	 *          description: Bad request
 	 *          content:
@@ -162,7 +157,7 @@ export default class SmartContractsService extends MoleculerDBService<
 			height: {
 				type: 'number',
 				interger: true,
-				convert: true
+				convert: true,
 			},
 			limit: {
 				type: 'number',
@@ -180,7 +175,7 @@ export default class SmartContractsService extends MoleculerDBService<
 				min: 0,
 				max: 100,
 			},
-		}
+		},
 	})
 	async getContracts(ctx: Context<GetContractsRequest>) {
 		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
@@ -188,16 +183,16 @@ export default class SmartContractsService extends MoleculerDBService<
 			this.adapter.useDb(network.databaseName);
 		}
 		let data = await this.adapter.find({
-            query: {
-                height: {
-                    $gte: ctx.params.height
-                }
-            },
+			query: {
+				height: {
+					$gte: ctx.params.height,
+				},
+			},
 			// @ts-ignore
 			sort: 'height',
-            limit: ctx.params.limit,
-            offset: ctx.params.offset * ctx.params.limit
-        })
+			limit: ctx.params.limit,
+			offset: ctx.params.offset * ctx.params.limit,
+		});
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,

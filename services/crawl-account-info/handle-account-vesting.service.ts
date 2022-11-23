@@ -45,7 +45,6 @@ export default class HandleAccountVestingService extends Service {
 			continuousVestingAccounts = await this.adapter.find({
 				query: {
 					'account_auth.account.@type': VESTING_ACCOUNT_TYPE.CONTINUOUS,
-					'custom_info.chain_id': Config.CHAIN_ID,
 				},
 			});
 		} catch (error) {

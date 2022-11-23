@@ -34,7 +34,6 @@ export default class VoteHandlerService extends Service {
 						// @ts-ignore
 						const existVote = await this.adapter.find({
 							query: {
-								'custom_info.chain_id': newVote.custom_info.chain_id,
 								proposal_id: newVote.proposal_id,
 								voter_address: newVote.voter_address,
 							},
@@ -85,7 +84,6 @@ export default class VoteHandlerService extends Service {
 						const data = await this.adapter.aggregate([
 							{
 								$match: {
-									'custom_info.chain_id': chain_id,
 									proposal_id,
 								},
 							},

@@ -206,7 +206,7 @@ export default class BlockService extends MoleculerDBService<
 		}
 		try {
 			let query: QueryOptions = {};
-			let needNextKey = true;
+
 			if (ctx.params.owner) {
 				query['owner'] = ctx.params.owner;
 			}
@@ -619,7 +619,7 @@ export default class BlockService extends MoleculerDBService<
 	 *                  description: "Type of contract want to register"
 	 *                chainId:
 	 *                  type: string
-	 *                  example: aura-testnet
+	 *                  example: aura-testnet-2
 	 *                  description: "Chain Id of network"
 	 *      responses:
 	 *        200:
@@ -701,7 +701,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          name: chainid
 	 *          required: false
 	 *          schema:
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *            type: string
 	 *          description: "Chain Id of network need to query(if null it will return asset on all chainid)"
 	 *        - in: query
@@ -1112,9 +1112,9 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: false
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
@@ -1337,9 +1337,9 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: contractType
 	 *          required: true

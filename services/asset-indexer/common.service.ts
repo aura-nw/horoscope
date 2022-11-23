@@ -149,7 +149,7 @@ export class Common {
 	) {
 		let network = LIST_NETWORK.find((item) => item.chainId === chainId);
 		return {
-			_id: new Types.ObjectId(),
+			_id: Types.ObjectId(),
 			asset_id: `${address}_${id}`,
 			code_id: code_id,
 			asset_info: tokenInfo,
@@ -205,7 +205,7 @@ export class Common {
 	) {
 		let network = LIST_NETWORK.find((item) => item.chainId === chainId);
 		return {
-			_id: new Types.ObjectId(),
+			_id: Types.ObjectId(),
 			asset_id: `${address}_${owner}`,
 			code_id: code_id,
 			asset_info: tokenInfo,

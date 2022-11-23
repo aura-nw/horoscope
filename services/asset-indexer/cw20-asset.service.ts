@@ -19,6 +19,8 @@ import { Common, TokenInfo } from './common.service';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
 import { Utils } from '../../utils/utils';
 import { debug } from 'console';
+import { Job } from 'bull';
+import { QueueConfig } from '../../config/queue';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
@@ -30,6 +32,7 @@ const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ }
 const VALIDATE_CODEID_PREFIX = 'validate_codeid';
 const HANDLE_CODEID_PREFIX = 'handle_codeid';
 
+const QueueService = require('moleculer-bull');
 const callApiMixin = new CallApiMixin().start();
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -37,7 +40,7 @@ const callApiMixin = new CallApiMixin().start();
 @Service({
 	name: 'CW20',
 	version: 1,
-	mixins: [callApiMixin],
+	mixins: [callApiMixin, QueueService(QueueConfig.redis, QueueConfig.opts)],
 	events: {
 		'CW20.validate': {
 			async handler(ctx: Context<any>) {
@@ -81,6 +84,23 @@ const callApiMixin = new CallApiMixin().start();
 				//TODO emit event index history of the NFT.
 			},
 			//TODO subcribe the event index the history of the NFT
+		},
+	},
+	queues: {
+		'CW20.enrich': {
+			concurrency: parseInt(Config.CONCURRENCY_ENRICH_CW20, 10),
+			async process(job: Job) {
+				job.progress(10);
+				const url = job.data.url;
+				const address = job.data.address;
+				const codeId = job.data.code_id;
+				const chainId = job.data.chain_id;
+				const typeEnrich = job.data.type_enrich;
+
+				// @ts-ignore
+				await this.handleJobEnrichData(url, address, codeId, typeEnrich, chainId);
+				job.progress(100);
+			},
 		},
 	},
 })
@@ -210,7 +230,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		);
 		this.logger.debug(`Cw20 listOwnerAddress ${JSON.stringify(listOwnerAddress)}`);
 		if (listOwnerAddress != null) {
-			const getInforPromises = await Promise.all(
+			await Promise.all(
 				listOwnerAddress.map(async (owner: String) => {
 					let balanceInfo: any = await this.broker.call(
 						CW20_ACTION.GET_BALANCE,
@@ -235,7 +255,6 @@ export default class CrawlAssetService extends moleculer.Service {
 					}
 				}),
 			);
-			// await getInforPromises;
 		}
 	}
 
@@ -291,5 +310,63 @@ export default class CrawlAssetService extends moleculer.Service {
 		} catch (error) {
 			this.logger.error('getBalance error', error);
 		}
+	}
+
+	private async handleJobEnrichData(
+		url: any,
+		address: string,
+		code_id: string,
+		typeEnrich: string,
+		chainId: string,
+	) {
+		const urlGetTokenInfo = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_TOKEN_INFO}`;
+		const tokenInfo = await this.callApiFromDomain(url, urlGetTokenInfo);
+
+		const listOwnerAddress: any = await this.broker.call(
+			CW20_ACTION.GET_OWNER_LIST,
+			{ URL: url, code_id, address },
+			OPTs,
+		);
+		this.logger.debug(`Cw20 listOwnerAddress ${JSON.stringify(listOwnerAddress)}`);
+		if (listOwnerAddress != null) {
+			await Promise.all(
+				listOwnerAddress.map(async (owner: String) => {
+					let balanceInfo: any = await this.broker.call(
+						CW20_ACTION.GET_BALANCE,
+						{ URL: url, code_id, address, owner },
+						OPTs,
+					);
+					if (balanceInfo != null) {
+						const asset = await Common.createCW20AssetObject(
+							Number(code_id),
+							address,
+							owner,
+							tokenInfo,
+							balanceInfo,
+							chainId,
+						);
+						await this.broker.call(
+							`v1.CW20-asset-manager.act-${typeEnrich}`,
+							asset,
+							OPTs,
+						);
+						this.logger.debug(`Asset ${JSON.stringify(asset)} created`);
+					}
+				}),
+			);
+		}
+	}
+
+	async _start(): Promise<void> {
+		this.getQueue('CW20.enrich').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
+		});
+		this.getQueue('CW20.enrich').on('failed', (job: Job) => {
+			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
+		});
+		this.getQueue('CW20.enrich').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
+		});
+		return super._start();
 	}
 }

@@ -13,6 +13,7 @@ import {
 	ENRICH_TYPE,
 	CODEID_MANAGER_ACTION,
 	BASE_64_ENCODE,
+	CONTRACT_TYPE,
 } from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
@@ -108,24 +109,71 @@ export default class CrawlAccountInfoService extends Service {
 							if (contractInfo != null) {
 								switch (contractInfo.status) {
 									case CodeIDStatus.COMPLETED:
-										if (!tokenId && contractAddress) {
-											await this.broker.call(
-												`v1.${contractInfo.contract_type}.enrichData`,
-												[
-													{
-														URL,
-														chain_id: chainId,
-														code_id: contractInfo.code_id,
-														address: contractAddress,
+										if (
+											contractInfo.contract_type == CONTRACT_TYPE.CW20 &&
+											!tokenId &&
+											contractAddress
+										) {
+											// await this.broker.call(
+											// 	`v1.CW20.enrichData`,
+											// 	[
+											// 		{
+											// 			URL,
+											// 			chain_id: chainId,
+											// 			code_id: contractInfo.code_id,
+											// 			address: contractAddress,
+											// 		},
+											// 		ENRICH_TYPE.UPSERT,
+											// 	],
+											// 	OPTs,
+											// );
+											this.createJob(
+												'CW20.enrich',
+												{
+													url: URL,
+													address: contractAddress,
+													code_id: contractInfo.code_id,
+													type_enrich: ENRICH_TYPE.UPSERT,
+													chain_id: chainId,
+												},
+												{
+													removeOnComplete: true,
+													removeOnFail: {
+														count: 3,
 													},
-													ENRICH_TYPE.UPSERT,
-												],
-												OPTs,
+												},
 											);
 										}
-										if (tokenId && contractAddress) {
+										if (
+											contractInfo.contract_type == CONTRACT_TYPE.CW721 &&
+											tokenId &&
+											contractAddress
+										) {
 											this.createJob(
 												'CW721.enrich-tokenid',
+												{
+													url: URL,
+													address: contractAddress,
+													code_id: contractInfo.code_id,
+													type_enrich: ENRICH_TYPE.UPSERT,
+													chain_id: chainId,
+													token_id: tokenId,
+												},
+												{
+													removeOnComplete: true,
+													removeOnFail: {
+														count: 3,
+													},
+												},
+											);
+										}
+										if (
+											contractInfo.contract_type == CONTRACT_TYPE.CW4973 &&
+											tokenId &&
+											contractAddress
+										) {
+											this.createJob(
+												'CW4973.enrich-tokenid',
 												{
 													url: URL,
 													address: contractAddress,

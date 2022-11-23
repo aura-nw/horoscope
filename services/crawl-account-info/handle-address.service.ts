@@ -139,6 +139,9 @@ export default class HandleAddressService extends Service {
 						};
 						listInsert.push({ insertOne: { document: item } });
 					});
+					if (chain && chain.databaseName) {
+						this.adapter.useDb(chain.databaseName);
+					}
 					const result = await this.adapter.bulkWrite(listInsert);
 					this.logger.info(`${JSON.stringify(result)}`);
 				} catch (error) {

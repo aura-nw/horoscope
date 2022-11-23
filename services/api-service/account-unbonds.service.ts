@@ -51,9 +51,9 @@ export default class AccountUnbondsService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: address
 	 *          required: true
@@ -165,23 +165,17 @@ export default class AccountUnbondsService extends MoleculerDBService<
 			this.adapter.lean({
 				query: {
 					address: ctx.params.address,
-					'custom_info.chain_id': ctx.params.chainid,
 				},
 				projection: { address: 1, account_unbonding: 1, custom_info: 1 },
 			}),
-			this.broker.call(
-				'v1.validator.getByCondition',
-				{
-					query: {
-						'custom_info.chain_id': ctx.params.chainid,
-					},
-				},
-			)
+			this.broker.call('v1.validator.getByCondition', {
+				query: {},
+			}),
 		]);
 		let data = Object.assign({}, result[0]);
 		data.account_unbonding.map((unbond: any) => {
-			let validator = validators.find((val: ValidatorEntity) =>
-				val.operator_address === unbond.validator_address
+			let validator = validators.find(
+				(val: ValidatorEntity) => val.operator_address === unbond.validator_address,
 			);
 			unbond.validator_description = {
 				description: validator.description,

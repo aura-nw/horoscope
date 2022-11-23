@@ -60,9 +60,9 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *      responses:
 	 *        '200':
 	 *          description: Account information
@@ -317,19 +317,20 @@ export default class AccountInfoService extends MoleculerDBService<
 		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
 			this.adapter.findOne({
 				address: ctx.params.address,
-				'custom_info.chain_id': ctx.params.chainId,
 			}),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
 
 		if (accountInfo) {
-			this.broker.call('v1.handleAddress.accountinfoupsert', {
-				listTx: [{ address: ctx.params.address, message: '' }],
-				source: CONST_CHAR.API,
-				chainId: ctx.params.chainId,
-			}).catch((error) => {
-				this.logger.error(error);
-			});
+			this.broker
+				.call('v1.handleAddress.accountinfoupsert', {
+					listTx: [{ address: ctx.params.address, message: '' }],
+					source: CONST_CHAR.API,
+					chainId: ctx.params.chainId,
+				})
+				.catch((error) => {
+					this.logger.error(error);
+				});
 			accountInfo = accountInfo.toObject();
 			accountInfo.account_delegate_rewards = accountRewards;
 			const data = accountInfo;
@@ -341,13 +342,15 @@ export default class AccountInfoService extends MoleculerDBService<
 			this.logger.info(JSON.stringify(result));
 			return result;
 		} else {
-			this.broker.call('v1.handleAddress.accountinfoupsert', {
-				listTx: [{ address: ctx.params.address, message: '' }],
-				source: CONST_CHAR.API,
-				chainId: ctx.params.chainId,
-			}).catch((error) => {
-				this.logger.error(error);
-			});
+			this.broker
+				.call('v1.handleAddress.accountinfoupsert', {
+					listTx: [{ address: ctx.params.address, message: '' }],
+					source: CONST_CHAR.API,
+					chainId: ctx.params.chainId,
+				})
+				.catch((error) => {
+					this.logger.error(error);
+				});
 			if (!accountRewards.code) {
 				const result: ResponseDto = {
 					code: ErrorCode.SUCCESSFUL,
@@ -385,10 +388,10 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *          name: chainId
 	 *          required: true
 	 *          schema:
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *            type: string
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *      responses:
 	 *        '200':
 	 *          description: Account information
@@ -534,7 +537,6 @@ export default class AccountInfoService extends MoleculerDBService<
 			this.adapter.lean({
 				query: {
 					address: ctx.params.address,
-					'custom_info.chain_id': ctx.params.chainId,
 				},
 				projection: {
 					address: 1,
@@ -547,13 +549,15 @@ export default class AccountInfoService extends MoleculerDBService<
 		]);
 		let result: ResponseDto;
 		if (accountInfo.length > 0) {
-			this.broker.call('v1.handleAddress.accountinfoupsert', {
-				listTx: [{ address: ctx.params.address, message: '' }],
-				source: CONST_CHAR.API,
-				chainId: ctx.params.chainId,
-			}).catch((error) => {
-				this.logger.error(error);
-			});
+			this.broker
+				.call('v1.handleAddress.accountinfoupsert', {
+					listTx: [{ address: ctx.params.address, message: '' }],
+					source: CONST_CHAR.API,
+					chainId: ctx.params.chainId,
+				})
+				.catch((error) => {
+					this.logger.error(error);
+				});
 			let data = Object.assign({}, accountInfo[0]);
 			data.account_delegate_rewards = accountRewards;
 			result = {
@@ -562,13 +566,15 @@ export default class AccountInfoService extends MoleculerDBService<
 				data,
 			};
 		} else {
-			this.broker.call('v1.handleAddress.accountinfoupsert', {
-				listTx: [{ address: ctx.params.address, message: '' }],
-				source: CONST_CHAR.API,
-				chainId: ctx.params.chainId,
-			}).catch((error) => {
-				this.logger.error(error);
-			});
+			this.broker
+				.call('v1.handleAddress.accountinfoupsert', {
+					listTx: [{ address: ctx.params.address, message: '' }],
+					source: CONST_CHAR.API,
+					chainId: ctx.params.chainId,
+				})
+				.catch((error) => {
+					this.logger.error(error);
+				});
 			if (!accountRewards.code) {
 				const result: ResponseDto = {
 					code: ErrorCode.SUCCESSFUL,
@@ -601,9 +607,9 @@ export default class AccountInfoService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: address
 	 *          required: true
@@ -755,56 +761,57 @@ export default class AccountInfoService extends MoleculerDBService<
 			{
 				$match: {
 					address: ctx.params.address,
-					'custom_info.chain_id': ctx.params.chainId,
 				},
 			},
 		];
 		switch (ctx.params.type) {
 			case 'Delegations':
-				projection.push(...[
-					{ $project: { account_delegations: 1 } },
-					{ $unwind: '$account_delegations' },
-					{ $skip: ctx.params.offset },
-					{ $limit: ctx.params.limit },
-				]);
+				projection.push(
+					...[
+						{ $project: { account_delegations: 1 } },
+						{ $unwind: '$account_delegations' },
+						{ $skip: ctx.params.offset },
+						{ $limit: ctx.params.limit },
+					],
+				);
 				break;
 			case 'Unbondings':
-				projection.push(...[
-					{ $project: { account_unbonding: 1 } },
-					{ $unwind: '$account_unbonding' },
-					{ $skip: ctx.params.offset },
-					{ $limit: ctx.params.limit },
-				]);
+				projection.push(
+					...[
+						{ $project: { account_unbonding: 1 } },
+						{ $unwind: '$account_unbonding' },
+						{ $skip: ctx.params.offset },
+						{ $limit: ctx.params.limit },
+					],
+				);
 				break;
 			case 'Redelegations':
-				projection.push(...[
-					{ $project: { account_redelegations: 1 } },
-					{ $unwind: '$account_redelegations' },
-					{ $skip: ctx.params.offset },
-					{ $limit: ctx.params.limit },
-				]);
+				projection.push(
+					...[
+						{ $project: { account_redelegations: 1 } },
+						{ $unwind: '$account_redelegations' },
+						{ $skip: ctx.params.offset },
+						{ $limit: ctx.params.limit },
+					],
+				);
 				break;
 			case 'Vestings':
-				projection.push(...[
-					{ $project: { account_auth: 1 } }, { $unwind: '$account_auth' }
-				]);
+				projection.push(
+					...[{ $project: { account_auth: 1 } }, { $unwind: '$account_auth' }],
+				);
 				projection['$project'] = { account_auth: 1 };
 				break;
 		}
 
 		let data = await this.adapter.aggregate(projection);
 		if (ctx.params.type === 'Unbondings') {
-			let validators: any = await this.broker.call(
-				'v1.validator.getByCondition',
-				{
-					query: {
-						'custom_info.chain_id': ctx.params.chainId,
-					},
-				},
-			);
+			let validators: any = await this.broker.call('v1.validator.getByCondition', {
+				query: {},
+			});
 			data.map((unbond: any) => {
-				let validator = validators.find((val: ValidatorEntity) =>
-					val.operator_address === unbond.account_unbonding.validator_address
+				let validator = validators.find(
+					(val: ValidatorEntity) =>
+						val.operator_address === unbond.account_unbonding.validator_address,
 				);
 				unbond.account_unbonding.validator_description = {
 					description: validator.description,

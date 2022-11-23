@@ -91,10 +91,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			const chainId = ctx.params.chainid;
 			if (ctx.params.answer) query.answer = ctx.params.answer;
 
-			if (chainId) {
-				query['custom_info.chain_id'] = chainId;
-			}
-
 			let sort = 'timestamp';
 
 			if (ctx.params.reverse) {
@@ -190,7 +186,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				return e.account_address;
 			});
 			let query: QueryOptions = {
-				'custom_info.chain_id': chainId,
 				proposal_id: ctx.params.proposalid,
 				voter_address: { $in: validatorAccountAddress },
 			};
@@ -254,7 +249,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 		const data = await this.adapter.aggregate([
 			{
 				$match: {
-					'custom_info.chain_id': chain_id,
 					proposal_id,
 					code: '0',
 				},
@@ -297,7 +291,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: proposalid
@@ -390,7 +384,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *                              properties:
 	 *                                chain_id:
 	 *                                  type: string
-	 *                                  example: 'aura-testnet'
+	 *                                  example: 'aura-testnet-2'
 	 *                                chain_name:
 	 *                                  type: string
 	 *                                  example: 'Aura Testnet'
@@ -451,7 +445,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: proposalid
@@ -516,7 +510,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *                              properties:
 	 *                                chain_id:
 	 *                                  type: string
-	 *                                  example: 'aura-testnet'
+	 *                                  example: 'aura-testnet-2'
 	 *                                chain_name:
 	 *                                  type: string
 	 *                                  example: 'Aura Testnet'

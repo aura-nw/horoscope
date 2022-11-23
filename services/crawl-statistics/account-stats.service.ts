@@ -11,34 +11,32 @@ import { Context } from 'moleculer';
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
-    name: 'account-stats',
-    version: 1,
-    /**
-     * Mixins
-     */
-    mixins: [dbAccountInfoMixin],
-    /**
-     * Settings
-     */
+	name: 'account-stats',
+	version: 1,
+	/**
+	 * Mixins
+	 */
+	mixins: [dbAccountInfoMixin],
+	/**
+	 * Settings
+	 */
 })
 export default class AccountStatsService extends MoleculerDBService<
-    {
-        rest: 'v1/account-stats';
-    },
-    IAccountInfo
+	{
+		rest: 'v1/account-stats';
+	},
+	IAccountInfo
 > {
-    @Action({
-        name: 'countTotal',
-        cache: {
-            ttl: 10,
-        },
-    })
-    async countTotal(ctx: Context<any>) {
-        let result = await this.adapter.count({
-            query: {
-                'custom_info.chain_id': ctx.params.chain_id
-            }
-        });
-        return result;
-    }
+	@Action({
+		name: 'countTotal',
+		cache: {
+			ttl: 10,
+		},
+	})
+	async countTotal(ctx: Context<any>) {
+		let result = await this.adapter.count({
+			query: {},
+		});
+		return result;
+	}
 }

@@ -37,7 +37,7 @@ export default class InflationService extends MoleculerDBService<
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		let result = await this.adapter.findOne({ 'custom_info.chain_id': params.chainid });
+		let result = await this.adapter.findOne({});
 		return result;
 	}
 }

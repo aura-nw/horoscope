@@ -69,9 +69,12 @@ export default class CrawlAccountUnbondsService extends Service {
 			listDelayJobs: DelayJobEntity[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter((addr: string) =>
-			addr.startsWith('aura') || addr.startsWith('cosmos')
-			|| addr.startsWith('evmos') || addr.startsWith('osmo')
+		listAddresses = listAddresses.filter(
+			(addr: string) =>
+				addr.startsWith('aura') ||
+				addr.startsWith('cosmos') ||
+				addr.startsWith('evmos') ||
+				addr.startsWith('osmo'),
 		);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
@@ -91,7 +94,6 @@ export default class CrawlAccountUnbondsService extends Service {
 				try {
 					accountInfo = await this.adapter.findOne({
 						address,
-						'custom_info.chain_id': chainId,
 					});
 				} catch (error) {
 					this.logger.error(error);

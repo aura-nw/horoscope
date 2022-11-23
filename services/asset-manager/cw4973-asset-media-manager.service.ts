@@ -58,17 +58,11 @@ const QueueService = require('moleculer-bull');
 				// @ts-ignore
 				this.actions.useDb({ query: { chainId: ctx.params.chainId } });
 				// @ts-ignore
+				delete ctx.params.chainId;
+				// @ts-ignore
 				return await this.adapter.insert(ctx.params);
 			},
 		},
-		// 'act-count': {
-		// 	async handler(ctx: Context): Promise<any> {
-		// 		// @ts-ignore
-		// 		this.logger.debug(`ctx.params CW4973-asset-media-manager count ${JSON.stringify(ctx.params)}`);
-		// 		// @ts-ignore
-		// 		return await this.adapter.count(ctx.params);
-		// 	}
-		// },
 		'act-find': {
 			// cache: { ttl: 10 },
 			async handler(ctx: Context): Promise<any> {
@@ -77,6 +71,8 @@ const QueueService = require('moleculer-bull');
 					// @ts-ignore
 					query: { chainId: ctx.params.query['custom_info.chain_id'] },
 				});
+				// @ts-ignore
+				delete ctx.params.query['custom_info.chain_id'];
 				// @ts-ignore
 				this.logger.info(
 					`ctx.params CW4973-asset-media-manager find ${JSON.stringify(ctx.params)}`,
@@ -198,7 +194,6 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 					},
 				});
 				let query: any = {
-					'custom_info.chain_id': chainId,
 					$or: [
 						{ 'metadata.image': sourceUri },
 						{ 'metadata.animation_url': sourceUri },
@@ -238,13 +233,6 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 									},
 								},
 							});
-							// this.broker.call('v1.CW4973-asset-manager.update', {
-							// 	_id: CW4973._id,
-							// 	image: {
-							// 		link_s3: result.linkS3,
-							// 		content_type: result.contentType,
-							// 	},
-							// });
 						}
 						if (CW4973?.metadata?.animation_url == sourceUri) {
 							CW4973.animation = {
@@ -262,13 +250,6 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 									},
 								},
 							});
-							// this.broker.call('v1.CW4973-asset-manager.update', {
-							// 	_id: CW4973._id,
-							// 	animation: {
-							// 		link_s3: result.linkS3,
-							// 		content_type: result.contentType,
-							// 	},
-							// });
 						}
 						this.broker.call(CW4973_MANAGER_ACTION.UPSERT, CW4973);
 						this.logger.info(CW4973);

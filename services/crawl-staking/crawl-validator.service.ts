@@ -68,7 +68,7 @@ export default class CrawlValidatorService extends Service {
 
 		this.logger.debug(`result: ${JSON.stringify(listValidator)}`);
 		let listValidatorInDB: IValidator[] = await this.adapter.find({
-			query: { 'custom_info.chain_id': Config.CHAIN_ID },
+			query: {},
 		});
 		let listBulk: any[] = [];
 		listValidator = await Promise.all(

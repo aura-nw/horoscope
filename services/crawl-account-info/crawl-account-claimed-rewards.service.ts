@@ -189,7 +189,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		try {
 			account = await this.adapter.findOne({
 				address: userAddress,
-				'custom_info.chain_id': chainId,
 			});
 		} catch (error) {
 			this.logger.error(error);

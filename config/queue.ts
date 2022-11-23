@@ -46,6 +46,7 @@ export const queues = [
 	'proposal.vote',
 	'websocket.tx-handle',
 	'websocket.safe-tx-handle',
+	'CW20.enrich',
 	'CW721-media.get-media-link',
 	'CW721-asset-media-manager.update-media-link',
 	'CW4973-media.get-media-link',

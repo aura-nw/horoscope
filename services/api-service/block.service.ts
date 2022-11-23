@@ -122,9 +122,9 @@ export default class BlockService extends MoleculerDBService<
 			if (blockHeight) {
 				query['block.header.height'] = blockHeight;
 			}
-			if (chainId) {
-				query['custom_info.chain_id'] = ctx.params.chainid;
-			}
+			// if (chainId) {
+			// 	query['custom_info.chain_id'] = ctx.params.chainid;
+			// }
 			if (operatorAddress) {
 				let operatorList: IValidator[] = await this.broker.call(
 					'v1.validator.getByCondition',
@@ -234,9 +234,9 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet"
+	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: blockHeight
 	 *          required: false

@@ -95,7 +95,6 @@ export default class CrawlParamService extends Service {
 						'mint',
 					],
 				},
-				'custom_info.chain_id': Config.CHAIN_ID,
 			},
 		});
 

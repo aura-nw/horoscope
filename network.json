@@ -1,7 +1,7 @@
 [
 	{
 		"chainName":"Aura Devnet",
-		"chainId":"aura-testnet",
+		"chainId":"aura-testnet-2",
 		"RPC":[
 		   "https://rpc.dev.aura.network"
 		],

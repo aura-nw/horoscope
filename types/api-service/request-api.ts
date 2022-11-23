@@ -71,6 +71,7 @@ export interface GetTxRequest
 	searchKey: string;
 	searchValue: string;
 	query: string;
+	queryAnd: string[];
 	addressInContract: string;
 	sequenceIBC: string;
 	fromHeight: number;

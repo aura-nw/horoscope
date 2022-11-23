@@ -136,23 +136,29 @@ export class DbBaseMixin {
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private getDBUri() {
-		let listParamUri = [`${this.dbInfo.dialect}://`];
-		if (this.dbInfo.user && this.dbInfo.password) {
-			listParamUri.push(`${this.dbInfo.user}:${encodeURIComponent(this.dbInfo.password)}@`);
-		}
-		listParamUri.push(
-			`${this.dbInfo.host}:${this.dbInfo.port}/?maxPoolSize=${this.dbInfo.maxPoolSize}`,
-		);
-		if (this.dbInfo.retryWrites != '') {
-			listParamUri.push(`&retryWrites=${this.dbInfo.retryWrites}`);
-		}
-		if (this.dbInfo.replicaSet != '') {
+		if (this.dbInfo.uri) {
+			return this.dbInfo.uri;
+		} else {
+			let listParamUri = [`${this.dbInfo.dialect}://`];
+			if (this.dbInfo.user && this.dbInfo.password) {
+				listParamUri.push(
+					`${this.dbInfo.user}:${encodeURIComponent(this.dbInfo.password)}@`,
+				);
+			}
 			listParamUri.push(
-				`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`,
+				`${this.dbInfo.host}:${this.dbInfo.port}/?maxPoolSize=${this.dbInfo.maxPoolSize}`,
 			);
+			if (this.dbInfo.retryWrites != '') {
+				listParamUri.push(`&retryWrites=${this.dbInfo.retryWrites}`);
+			}
+			if (this.dbInfo.replicaSet != '') {
+				listParamUri.push(
+					`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`,
+				);
+			}
+			let uri = listParamUri.join('');
+			return uri;
 		}
-		let uri = listParamUri.join('');
-		return uri;
 	}
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention

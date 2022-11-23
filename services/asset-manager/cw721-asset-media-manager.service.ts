@@ -77,6 +77,8 @@ const QueueService = require('moleculer-bull');
 					query: { chainId: ctx.params.query['custom_info.chain_id'] },
 				});
 				// @ts-ignore
+				delete ctx.params.query['custom_info.chain_id'];
+				// @ts-ignore
 				this.logger.info(
 					`ctx.params CW721-asset-media-manager find ${JSON.stringify(ctx.params)}`,
 				);
@@ -197,7 +199,6 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 					},
 				});
 				let query: any = {
-					'custom_info.chain_id': chainId,
 					$or: [
 						{ 'metadata.image': sourceUri },
 						{ 'metadata.animation_url': sourceUri },
@@ -206,11 +207,6 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 						},
 					],
 				};
-				// if (field == CW721_FIELD.IMAGE) {
-				// 	query['metadata.image'] = sourceUri;
-				// } else if (field == CW721_FIELD.ANIMATION) {
-				// 	query['metadata.animation_url'] = sourceUri;
-				// }
 
 				let listFoundCW721: CW721AssetEntity[] = await this.broker.call(
 					CW721_MANAGER_ACTION.FIND,
@@ -281,9 +277,6 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 				key,
 				media_link: '',
 				status: MEDIA_STATUS.ERROR,
-				custom_info: {
-					chain_id: chainId,
-				},
 			});
 			this.logger.error(err);
 			throw err;

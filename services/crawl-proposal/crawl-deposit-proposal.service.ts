@@ -103,7 +103,6 @@ export default class CrawlProposalService extends Service {
 
 		let foundProposal = await this.adapter.findOne({
 			proposal_id: `${proposalId}`,
-			'custom_info.chain_id': Config.CHAIN_ID,
 		});
 		if (foundProposal) {
 			try {
