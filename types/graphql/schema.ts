@@ -1,7 +1,19 @@
 import { Config } from 'common';
 import { Kind } from 'graphql';
 import { gql } from 'moleculer-apollo-server';
-import { CHAIN_ID_DEV, CHAIN_ID_PROD, prismaAuraTestnet, prismaCosmoshubProd, prismaEuphoriaProd, prismaEuphoriaTestnet, prismaEvmosTestnet, prismaOsmosisProd, prismaSerenityTestnet, prismaThetaTestnet } from '../../utils/context';
+import {
+	CHAIN_ID_DEV,
+	CHAIN_ID_PROD,
+	ENV_NAMESPACE,
+	prismaAuraTestnet,
+	prismaCosmoshubProd,
+	prismaEuphoriaProd,
+	prismaEuphoriaTestnet,
+	prismaEvmosTestnet,
+	prismaOsmosisProd,
+	prismaSerenityTestnet,
+	prismaThetaTestnet
+} from '../../utils/context';
 const { GraphQLScalarType } = require('graphql');
 const GraphQLJSON = require('graphql-type-json');
 
@@ -45,6 +57,13 @@ export const TypeDefs = gql`
 			skip: Int
 			take: Int
 		): [CW721Asset]
+		dailyCW20Holder(
+			code_id: Int,
+			contract_address: String,
+			chain_id: String,
+			skip: Int,
+			take: Int
+		): [DailyCW20Holder]
 		dailyTxStatistics(
 			date: DateTime,
 			chain_id: String,
@@ -121,8 +140,7 @@ export const TypeDefs = gql`
 
 	# AccountInfo type
 	type Account {
-		height: String
-		result: Json
+		account: Json
 	}
 	type Delegation {
 		delegator_address: String
@@ -306,6 +324,17 @@ export const TypeDefs = gql`
 		history: [String]
 		createdAt: DateTime
 		updatedAt: DateTime
+		custom_info: CustomInfo
+	}
+
+	# DailyCW20Holder type
+	type DailyCW20Holder {
+		id: String
+		code_id: Int
+		contract_address: String
+		old_holders: Int
+		new_holders: Int
+		change_percent: Float
 		custom_info: CustomInfo
 	}
 
@@ -580,28 +609,7 @@ export const Resolvers = {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
 			if (args.address !== '' && args.address !== undefined) where.address = args.address;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.account_info.findMany({
@@ -614,28 +622,7 @@ export const Resolvers = {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
 			if (args.address !== '' && args.address !== undefined) where.address = args.address;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.account_statistics.findMany({
@@ -648,28 +635,7 @@ export const Resolvers = {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
 			if (args.hash !== '' && args.hash !== undefined) where.block_id = { hash: args.hash };
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.block.findMany({
@@ -685,28 +651,7 @@ export const Resolvers = {
 			if (args.contract_type !== '' && args.contract_type !== undefined)
 				where.contract_type = args.contract_type;
 			if (args.status !== '' && args.status !== undefined) where.status = args.status;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.code_id.findMany({
@@ -718,28 +663,7 @@ export const Resolvers = {
 		communityPool: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			return prisma.community_pool.findMany({
 				where,
 			});
@@ -751,28 +675,7 @@ export const Resolvers = {
 			if (args.contract_address !== '' && args.contract_address !== undefined)
 				where.contract_address = args.contract_address;
 			if (args.owner !== '' && args.owner !== undefined) where.owner = args.owner;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.cw20_asset.findMany({
@@ -788,31 +691,24 @@ export const Resolvers = {
 			if (args.contract_address !== '' && args.contract_address !== undefined)
 				where.contract_address = args.contract_address;
 			if (args.owner !== '' && args.owner !== undefined) where.owner = args.owner;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.cw721_asset.findMany({
+				where,
+				skip,
+				take,
+			});
+		},
+		dailyCW20Holder: (_parent: any, args: any, context: any, info: any) => {
+			let prisma = prismaAuraTestnet;
+			const where: any = {};
+			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
+			if (args.contract_address !== '' && args.contract_address !== undefined) where.contract_address = args.contract_address;
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			const take = args.take || 20;
+			const skip = args.skip !== undefined ? args.skip * take : 0;
+			return prisma.daily_cw20_holder.findMany({
 				where,
 				skip,
 				take,
@@ -822,28 +718,7 @@ export const Resolvers = {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
 			if (args.date !== '' && args.date !== undefined) where.date = args.date;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.daily_tx_statistics.findMany({
@@ -857,28 +732,7 @@ export const Resolvers = {
 			const where: any = {};
 			if (args.address !== '' && args.address !== undefined) where.address = args.address;
 			if (args.type !== '' && args.type !== undefined) where.address = args.address;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.delay_job.findMany({
@@ -891,28 +745,7 @@ export const Resolvers = {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
 			if (args.hash !== '' && args.hash !== undefined) where.hash = args.hash;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			return prisma.ibc_denom.findMany({
 				where,
 			});
@@ -920,28 +753,7 @@ export const Resolvers = {
 		inflation: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			return prisma.inflation.findMany({
 				where,
 			});
@@ -950,28 +762,7 @@ export const Resolvers = {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
 			if (args.module !== '' && args.module !== undefined) where.module = args.module;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.param.findMany({
@@ -983,28 +774,7 @@ export const Resolvers = {
 		pool: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			return prisma.pool.findMany({
 				where,
 			});
@@ -1015,28 +785,7 @@ export const Resolvers = {
 			if (args.proposal_id !== '' && args.proposal_id !== undefined)
 				where.proposal_id = args.proposal_id;
 			if (args.status !== '' && args.status !== undefined) where.status = args.status;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.proposal.findMany({
@@ -1057,28 +806,7 @@ export const Resolvers = {
 			if (args.height !== '' && args.height !== undefined) where.height = args.height;
 			if (args.contract_name !== '' && args.contract_name !== undefined)
 				where.contract_name = args.contract_name;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.smart_contracts.findMany({
@@ -1090,28 +818,7 @@ export const Resolvers = {
 		supply: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = prismaAuraTestnet;
 			const where: any = {};
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			return prisma.supply.findMany({
 				where,
 			});
@@ -1122,28 +829,7 @@ export const Resolvers = {
 			if (args.type !== '' && args.type !== undefined)
 				where.tx = { body: { messages: { '@type': args.type } } };
 			if (args.hash !== '' && args.hash !== undefined) where.tx_response = { txhash: args.hash };
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.transaction.findMany({
@@ -1154,54 +840,12 @@ export const Resolvers = {
 		},
 		validator: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = prismaAuraTestnet;
-			if (Config.NODE_ENV === 'prod') prisma = prismaEuphoriaProd;
 			const where: any = {};
 			if (args.operator_address !== '' && args.operator_address !== undefined)
 				where.operator_address = args.operator_address;
 			if (args.status !== '' && args.status !== undefined) where.status = args.status;
 			if (args.jailed !== '' && args.jailed !== undefined) where.jailed = args.jailed;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (Config.NODE_ENV) {
-					case 'development':
-						switch (args.chain_id) {
-							case CHAIN_ID_DEV.AURA_TESTNET:
-								prisma = prismaAuraTestnet;
-								break;
-							case CHAIN_ID_DEV.SERENITY_TESTNET:
-								prisma = prismaSerenityTestnet;
-								break;
-							case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-								prisma = prismaEuphoriaTestnet;
-								break;
-							case CHAIN_ID_DEV.THETA_TESTNET:
-								prisma = prismaThetaTestnet;
-								break;
-							case CHAIN_ID_DEV.EVMOS_TESTNET:
-								prisma = prismaEvmosTestnet;
-								break;
-							default:
-								prisma = prismaAuraTestnet;
-								break;
-						}
-						break;
-					case 'prod':
-						switch (args.chain_id) {
-							case CHAIN_ID_PROD.EUPHORIA:
-								prisma = prismaEuphoriaProd;
-								break;
-							case CHAIN_ID_PROD.COSMOSHUB:
-								prisma = prismaCosmoshubProd;
-								break;
-							case CHAIN_ID_PROD.OSMOSIS:
-								prisma = prismaOsmosisProd;
-								break;
-							default:
-								prisma = prismaEuphoriaProd;
-								break;
-						}
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.validator.findMany({
@@ -1219,28 +863,7 @@ export const Resolvers = {
 				where.proposal_id = args.proposal_id;
 			if (args.answer !== '' && args.answer !== undefined) where.answer = args.answer;
 			if (args.tx_hash !== '' && args.tx_hash !== undefined) where.tx_hash = args.tx_hash;
-			if (args.chain_id !== '' && args.chain_id !== undefined) {
-				switch (args.chain_id) {
-					case CHAIN_ID_DEV.AURA_TESTNET:
-						prisma = prismaAuraTestnet;
-						break;
-					case CHAIN_ID_DEV.SERENITY_TESTNET:
-						prisma = prismaSerenityTestnet;
-						break;
-					case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-						prisma = prismaEuphoriaTestnet;
-						break;
-					case CHAIN_ID_DEV.THETA_TESTNET:
-						prisma = prismaThetaTestnet;
-						break;
-					case CHAIN_ID_DEV.EVMOS_TESTNET:
-						prisma = prismaEvmosTestnet;
-						break;
-					default:
-						prisma = prismaAuraTestnet;
-						break;
-				}
-			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.vote.findMany({
@@ -1250,4 +873,48 @@ export const Resolvers = {
 			});
 		},
 	},
+};
+
+const handleChainId = (chain_id: string) => {
+	switch (Config.NAMESPACE) {
+		case ENV_NAMESPACE.DEV:
+			switch (chain_id) {
+				case CHAIN_ID_DEV.AURA_TESTNET:
+					return prismaAuraTestnet;
+				case CHAIN_ID_DEV.SERENITY_TESTNET:
+					return prismaSerenityTestnet;
+				case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+					return prismaEuphoriaTestnet;
+				case CHAIN_ID_DEV.THETA_TESTNET:
+					return prismaThetaTestnet;
+				case CHAIN_ID_DEV.EVMOS_TESTNET:
+					return prismaEvmosTestnet;
+				default:
+					return prismaAuraTestnet;
+			}
+		case ENV_NAMESPACE.STAGING:
+			switch (chain_id) {
+				case CHAIN_ID_DEV.AURA_TESTNET:
+					return prismaAuraTestnet;
+				case CHAIN_ID_DEV.SERENITY_TESTNET:
+					return prismaSerenityTestnet;
+				case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+					return prismaEuphoriaTestnet;
+				default:
+					return prismaAuraTestnet;
+			}
+		case ENV_NAMESPACE.PROD:
+			switch (chain_id) {
+				case CHAIN_ID_PROD.EUPHORIA:
+					return prismaEuphoriaProd;
+				case CHAIN_ID_PROD.COSMOSHUB:
+					return prismaCosmoshubProd;
+				case CHAIN_ID_PROD.OSMOSIS:
+					return prismaOsmosisProd;
+				default:
+					return prismaEuphoriaProd;
+			}
+		default:
+			return prismaAuraTestnet;
+	}
 };

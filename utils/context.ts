@@ -97,7 +97,13 @@ export enum CHAIN_ID_DEV {
 }
 
 export enum CHAIN_ID_PROD {
-	EUPHORIA = 'euphoria-1',
-	COSMOSHUB = 'cosmoshub-4',
-	OSMOSIS = 'osmosis-1',
+    EUPHORIA = 'euphoria-1',
+    COSMOSHUB = 'cosmoshub-4',
+    OSMOSIS = 'osmosis-1',
+};
+
+export enum ENV_NAMESPACE {
+    DEV = 'horoscope_dev_api_gateway',
+    STAGING = 'crawl-staging-api-gateway',
+    PROD = 'crawl-system-euphoria'
 }
