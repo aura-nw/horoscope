@@ -4,7 +4,6 @@ import { Types } from 'mongoose';
 import { CustomInfo, ICustomInfo } from './custom-info.entity';
 import { Coin, ICoin } from './coin.entity';
 import { DateConverter } from './converters/date.converter';
-import { Description, IDescription } from './validator.entity';
 
 export interface IAccountInfo {
 	_id: Types.ObjectId | string | null;
@@ -19,26 +18,7 @@ export interface IAccountInfo {
 	custom_info: ICustomInfo;
 }
 
-export interface IAccountPubKey {
-	type: String;
-	value: String;
-}
-
-export interface IAccountValue {
-	address: String;
-	public_key: IAccountPubKey;
-	account_number: String;
-	sequence: String;
-}
-
-export interface IAccountResult {
-	type: String;
-	value: Object;
-}
-
 export interface IAccount {
-	height: String;
-	result: Object;
 	account: Object;
 }
 
@@ -96,36 +76,7 @@ export interface IReward {
 	denom: String;
 }
 
-export class AccountPubKey implements IAccountPubKey {
-	@JsonProperty('type', String)
-	type: String = '';
-	@JsonProperty('value', String)
-	value: String = '';
-}
-
-export class AccountValue implements IAccountValue {
-	@JsonProperty('address', String)
-	address: String = '';
-	@JsonProperty('public_key', AccountPubKey, true)
-	public_key = {} as AccountPubKey;
-	@JsonProperty('account_number', String)
-	account_number: String = '';
-	@JsonProperty('sequence', String, true)
-	sequence: String = '';
-}
-
-export class AccountResult implements IAccountResult {
-	@JsonProperty('type', String)
-	type: String = '';
-	@JsonProperty('value', Object, true)
-	value = {} as Object;
-}
-
 export class Account implements IAccount {
-	@JsonProperty('height', String)
-	height: String = '';
-	@JsonProperty('result', Object, true)
-	result = {} as Object;
 	@JsonProperty('account', Object, true)
 	account = {} as Object;
 }

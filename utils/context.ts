@@ -101,3 +101,9 @@ export enum CHAIN_ID_PROD {
     COSMOSHUB = 'cosmoshub-4',
     OSMOSIS = 'osmosis-1',
 };
+
+export enum ENV_NAMESPACE {
+    DEV = 'horoscope_dev_api_gateway',
+    STAGING = 'crawl-staging-api-gateway',
+    PROD = 'crawl-system-euphoria'
+}

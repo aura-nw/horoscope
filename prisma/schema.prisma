@@ -14,7 +14,7 @@ datasource db {
 model account_info {
   id                         String                 @id @default(auto()) @map("_id") @db.ObjectId
   address                    String
-  account_auth               Account
+  account_auth               Account?
   account_balances           Coin[]
   account_delegations        DelegationResponse[]
   account_redelegations      RedelegationResponse[]
@@ -83,6 +83,16 @@ model cw721_asset {
   history          String[]
   createdAt        DateTime?  @db.Timestamp
   updatedAt        DateTime?  @db.Timestamp
+  custom_info      CustomInfo
+}
+
+model daily_cw20_holder {
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  code_id          Int?       @db.Int
+  contract_address String?    @db.String
+  old_holders      Int?       @db.Int
+  new_holders      Int?       @db.Int
+  change_percent   Float?     @db.Double
   custom_info      CustomInfo
 }
 
@@ -201,8 +211,7 @@ model vote {
 
 // AccountInfo type
 type Account {
-  height String? @db.String
-  result Json?   @db.Json
+  account Json? @db.Json
 }
 
 type Delegation {
