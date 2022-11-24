@@ -38,6 +38,64 @@ export default class AccountStatisticsService extends MoleculerDBService<
 	},
 	IAccountStatistics
 > {
+	@Get('/', {
+		name: 'getTopAccounts',
+		/**
+		 * Service guard services allowed to connect
+		 */
+		restricted: ['api'],
+		params: {
+			chainId: 'string',
+			field: 'string',
+			dayRange: 'string',
+			limit: { type: 'number', convert: true },
+		},
+	})
+	async getTopAccounts(ctx: Context<TopAccountsRequest>) {
+		const params = await this.sanitizeParams(ctx, ctx.params);
+		const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
+		if (network && network.databaseName) {
+		    this.adapter.useDb(network.databaseName);
+		}
+
+		let sort, day_range;
+		switch (params.dayRange) {
+			case '1':
+				day_range = 'one_day';
+				break;
+			case '3':
+				day_range = 'three_days';
+				break;
+			case '7':
+				day_range = 'seven_days';
+				break;
+		}
+		switch (params.field) {
+			case TOP_ACCOUNT_STATS_FIELD.TXS_SENT:
+				sort = `-${day_range}.total_sent_tx.percentage -${day_range}.total_sent_amount.percentage`;
+				break;
+			case TOP_ACCOUNT_STATS_FIELD.TXS_RECEIVED:
+				sort = `-${day_range}.total_received_tx.percentage -${day_range}.total_received_amount.percentage`;
+				break;
+			case TOP_ACCOUNT_STATS_FIELD.AMOUNT_SENT:
+				sort = `-${day_range}.total_sent_amount.percentage -${day_range}.total_sent_tx.percentage`;
+				break;
+			case TOP_ACCOUNT_STATS_FIELD.AMOUNT_RECEIVED:
+				sort = `-${day_range}.total_received_amount.percentage -${day_range}.total_received_tx.percentage`;
+				break;
+		}
+
+		let data = await this.adapter.lean({
+			sort,
+			limit: params.limit,
+		});
+		return {
+			code: ErrorCode.SUCCESSFUL,
+			message: ErrorMessage.SUCCESSFUL,
+			data,
+		};
+	}
+
 	/**
 	 *  @swagger
 	 *  /v1/account-statistics:
@@ -295,61 +353,4 @@ export default class AccountStatisticsService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1.block.chain"
 	 */
-	@Get('/', {
-		name: 'getTopAccounts',
-		/**
-		 * Service guard services allowed to connect
-		 */
-		restricted: ['api'],
-		params: {
-			chainId: 'string',
-			field: 'string',
-			dayRange: 'string',
-			limit: { type: 'number', convert: true },
-		},
-	})
-	async getTopAccounts(ctx: Context<TopAccountsRequest>) {
-		const params = await this.sanitizeParams(ctx, ctx.params);
-		// const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
-		// if (network && network.databaseName) {
-		//     this.adapter.useDb(network.databaseName);
-		// }
-
-		let sort, day_range;
-		switch (params.dayRange) {
-			case 1:
-				day_range = 'one_day';
-				break;
-			case 3:
-				day_range = 'three_days';
-				break;
-			case 7:
-				day_range = 'seven_days';
-				break;
-		}
-		switch (params.field) {
-			case TOP_ACCOUNT_STATS_FIELD.TXS_SENT:
-				sort = `-${day_range}.total_sent_tx.percentage -${day_range}.total_sent_amount.percentage`;
-				break;
-			case TOP_ACCOUNT_STATS_FIELD.TXS_RECEIVED:
-				sort = `-${day_range}.total_received_tx.percentage -${day_range}.total_received_amount.percentage`;
-				break;
-			case TOP_ACCOUNT_STATS_FIELD.AMOUNT_SENT:
-				sort = `-${day_range}.total_sent_amount.percentage -${day_range}.total_sent_tx.percentage`;
-				break;
-			case TOP_ACCOUNT_STATS_FIELD.AMOUNT_RECEIVED:
-				sort = `-${day_range}.total_received_amount.percentage -${day_range}.total_received_tx.percentage`;
-				break;
-		}
-
-		let data = await this.adapter.lean({
-			sort,
-			limit: params.limit,
-		});
-		return {
-			code: ErrorCode.SUCCESSFUL,
-			message: ErrorMessage.SUCCESSFUL,
-			data,
-		};
-	}
 }

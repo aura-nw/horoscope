@@ -1,4 +1,4 @@
-import { Config } from 'common';
+import { Config } from '../../common';
 import { Kind } from 'graphql';
 import { gql } from 'moleculer-apollo-server';
 import {
