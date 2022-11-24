@@ -106,9 +106,54 @@ export default class HandleTransactionService extends Service {
 							`Handling message ID: ${item.id}, txhash: ${item.message.source}`,
 						);
 						try {
+							let txItem = JSON.parse(item.message.element.toString());
+
+							let parsedTxItem = {
+								tx: {
+									body: {
+										messages: txItem.tx.value.msg,
+									},
+									auth_info: {
+										signer_infos: [
+											...txItem.tx.value.signatures.map((i: any) => {
+												return {
+													public_key: {
+														'@type': i.pub_key.type,
+														key: i.pub_key.value,
+													},
+												};
+											}),
+										],
+										fee: {
+											amount: txItem.tx.value.fee.amount,
+											gas_limit: txItem.tx.value.fee.gas,
+										},
+									},
+									signatures: [
+										...txItem.tx.value.signatures.map((i: any) => {
+											return i.signature;
+										}),
+									],
+								},
+								tx_response: {
+									height: txItem.height,
+									txhash: txItem.txhash,
+									raw_log: txItem.raw_log,
+									gas_used: txItem.gas_used,
+									gas_wanted: txItem.gas_wanted,
+									logs: txItem.logs,
+									tx: {
+										body: {
+											messages: txItem.tx.value.msg,
+										},
+									},
+									timestamp: txItem.timestamp,
+									events: txItem.events,
+								},
+							};
 							const transaction: TransactionEntity =
 								new JsonConvert().deserializeObject(
-									JSON.parse(item.message.element.toString()),
+									parsedTxItem,
 									TransactionEntity,
 								);
 							listTransactionNeedSaveToDb.push(transaction);
@@ -243,16 +288,14 @@ export default class HandleTransactionService extends Service {
 				indexes['timestamp'] = new Date(tx.tx_response.timestamp);
 				indexes['height'] = Number(tx.tx_response.height);
 
-				tx.tx_response.events.map((event: IEvent) => {
+				tx?.tx_response?.events?.map((event: IEvent) => {
 					let type = event.type.toString();
 					type = type.replace(/\./g, '_');
 					let attributes = event.attributes;
 					attributes.map((attribute: IAttribute) => {
 						try {
-							let key = fromUtf8(fromBase64(attribute.key.toString()));
-							let value = attribute.value
-								? fromUtf8(fromBase64(attribute.value.toString()))
-								: '';
+							let key = attribute.key.toString();
+							let value = attribute.value ? attribute.value.toString() : '';
 							key = key.replace(/\./g, '_');
 							this.addToIndexes(indexes, type, key, value);
 

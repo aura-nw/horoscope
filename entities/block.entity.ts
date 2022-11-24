@@ -6,7 +6,7 @@ import { NumericConverter } from './converters/numeric.converter';
 import { DateConverter } from './converters/date.converter';
 
 export interface IBlockIdPart {
-	total: Number;
+	total: Number | null;
 	hash: String;
 }
 export interface IBlockId {
@@ -51,7 +51,7 @@ export interface ISignature {
 }
 export interface ILastCommit {
 	height: Number;
-	round: Number;
+	round: Number | null;
 	block_id: IBlockId | null;
 	signatures: ISignature[];
 }
@@ -72,8 +72,8 @@ export interface IBlock {
 
 @JsonObject('BlockIdPart')
 export class BlockIdPart implements IBlockIdPart {
-	@JsonProperty('total', Number)
-	total: Number = 0;
+	@JsonProperty('total', NumericConverter)
+	total = null;
 	@JsonProperty('hash', String)
 	hash: String = '';
 }
@@ -150,11 +150,11 @@ export class Signature implements ISignature {
 export class BlockLastCommit implements ILastCommit {
 	@JsonProperty('height', NumericConverter)
 	height: Number = 0;
-	@JsonProperty('round', Number)
-	round: number = 0;
+	@JsonProperty('round', Number, true)
+	round = null;
 	@JsonProperty('block_id', BlockId)
 	block_id: BlockId | null = null;
-	@JsonProperty('signatures', [Signature])
+	@JsonProperty('signatures', [Signature], true)
 	signatures: Signature[] = [];
 }
 

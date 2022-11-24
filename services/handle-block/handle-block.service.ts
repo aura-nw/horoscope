@@ -97,8 +97,14 @@ export default class HandleBlockService extends Service {
 				let listTx: String[] = [];
 				try {
 					element.messages.forEach((item: IRedisStreamData) => {
+						let itemBlock = JSON.parse(item.message.element.toString());
+						itemBlock.block_id = itemBlock.block_meta.block_id;
+						itemBlock.block.last_commit.height = Math.max(
+							Number(itemBlock.block.header.height) - 1,
+							0,
+						);
 						const block: BlockEntity = new JsonConvert().deserializeObject(
-							JSON.parse(item.message.element.toString()),
+							itemBlock,
 							BlockEntity,
 						);
 						this.logger.info(
@@ -148,9 +154,10 @@ export default class HandleBlockService extends Service {
 			});
 	}
 
-	async handleListBlock(listBlock: IBlock[]) {
+	async handleListBlock(listBlock: any[]) {
 		let jsonConvert: JsonConvert = new JsonConvert();
 		// jsonConvert.operationMode = OperationMode.LOGGING;
+		listBlock.map((block: any) => {});
 		const listBlockEntity: BlockEntity[] = jsonConvert.deserializeArray(listBlock, BlockEntity);
 		let listBlockNeedSaveToDb: BlockEntity[] = [];
 		let listHash = listBlockEntity.map((item: BlockEntity) => {
