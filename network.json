@@ -105,5 +105,18 @@
 		"prefixAddress":"cosmos",
 		"databaseName":"local_cosmoshub4",
 		"redisDbNumber":13
+	},
+	{
+		"chainName":"Cosmoshub 3",
+		"chainId":"cosmoshub-3",
+		"RPC":[
+			"http://52.71.201.117:26657"
+		],
+		"LCD":[
+			"http://52.71.201.117:1317"
+		],
+		"prefixAddress":"cosmos",
+		"databaseName":"local_cosmoshub3",
+		"redisDbNumber":13
 	}
 ]
