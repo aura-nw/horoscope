@@ -46,11 +46,11 @@ export default class CrawlCommunityPoolService extends Service {
 	async handleJob(path: String) {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let resultCallApi: ICommunityPoolResponseFromLCD = await this.callApiFromDomain(url, path);
+		let resultCallApi: any = await this.callApiFromDomain(url, path);
 		let jsonConvert = new JsonConvert();
 		// jsonConvert.operationMode = OperationMode.LOGGING;
 		const item: CommunityPoolEntity = jsonConvert.deserializeObject(
-			resultCallApi,
+			resultCallApi.result,
 			CommunityPoolEntity,
 		);
 		let foundPool: CommunityPoolEntity = await this.adapter.findOne({});
