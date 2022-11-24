@@ -44,10 +44,10 @@ export default class CrawlProposalService extends Service {
 	}
 
 	async handleJob(path: String) {
-		let listProposal: IProposal[] = [];
+		let listProposal: any[] = [];
 
 		let param = path;
-		let resultCallApi: IProposalResponseFromLCD;
+		let resultCallApi: any;
 
 		let done = false;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
@@ -55,14 +55,9 @@ export default class CrawlProposalService extends Service {
 		while (!done) {
 			resultCallApi = await this.callApiFromDomain(url, param);
 
-			listProposal.push(...resultCallApi.proposals);
-			if (resultCallApi.pagination.next_key === null) {
-				done = true;
-			} else {
-				param = `${path}&pagination.key=${encodeURIComponent(
-					resultCallApi.pagination.next_key.toString(),
-				)}`;
-			}
+			listProposal.push(...resultCallApi.result);
+
+			done = true;
 		}
 
 		this.logger.debug(`result: ${JSON.stringify(listProposal)}`);
@@ -74,6 +69,17 @@ export default class CrawlProposalService extends Service {
 		let listIndexDelete: number[] = [];
 		await Promise.all(
 			listProposal.map(async (proposal) => {
+				proposal.proposal_id = proposal.id;
+				proposal.content['@type'] = proposal.content.type;
+				proposal.content.title = proposal.content.value.title;
+				proposal.content.description = proposal.content.value.description;
+				proposal.status = `${proposal.proposal_status}`;
+				if (proposal.content.value.recipient) {
+					proposal.content.recipient = proposal.content.value.recipient;
+				}
+				if (proposal.content.value.amount) {
+					proposal.content.amount = proposal.content.value.amount;
+				}
 				if (proposal.proposal_id == undefined) {
 					this.logger.error(`proposal_id is undefined`);
 				}

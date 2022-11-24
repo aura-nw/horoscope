@@ -52,7 +52,7 @@ export default class CrawlParamService extends Service {
 			paramSlashing,
 			paramStaking,
 			paramIBCTransfer,
-			paramMint,
+			// paramMint,
 		] = await Promise.all([
 			this.callApiFromDomain(url, Config.GET_PARAMS_BANK),
 			this.callApiFromDomain(url, Config.GET_PARAMS_DISTRIBUTION),
@@ -62,7 +62,7 @@ export default class CrawlParamService extends Service {
 			this.callApiFromDomain(url, Config.GET_PARAMS_SLASHING),
 			this.callApiFromDomain(url, Config.GET_PARAMS_STAKING),
 			this.callApiFromDomain(url, Config.GET_PARAMS_IBC_TRANSFER),
-			this.callApiFromDomain(url, Config.GET_PARAMS_MINT),
+			// this.callApiFromDomain(url, Config.GET_PARAMS_MINT),
 		]);
 
 		this.logger.debug(`paramBank: ${JSON.stringify(paramBank)}`);
@@ -70,7 +70,7 @@ export default class CrawlParamService extends Service {
 		this.logger.debug(`paramSlashing: ${JSON.stringify(paramSlashing)}`);
 		this.logger.debug(`paramStaking: ${JSON.stringify(paramStaking)}`);
 		this.logger.debug(`paramApiTransfer: ${JSON.stringify(paramIBCTransfer)}`);
-		this.logger.debug(`paramMint: ${JSON.stringify(paramMint)}`);
+		// this.logger.debug(`paramMint: ${JSON.stringify(paramMint)}`);
 
 		let paramGov = {
 			type: 'gov',
@@ -106,7 +106,7 @@ export default class CrawlParamService extends Service {
 			this.findAndUpdate(listParamInDb, 'slashing', paramSlashing.params),
 			this.findAndUpdate(listParamInDb, 'staking', paramStaking.params),
 			this.findAndUpdate(listParamInDb, 'ibc-transfer', paramIBCTransfer.params),
-			this.findAndUpdate(listParamInDb, 'mint', paramMint.params),
+			// this.findAndUpdate(listParamInDb, 'mint', paramMint.params),
 		]);
 		this.logger.debug(`id: ${JSON.stringify(id)}`);
 	}

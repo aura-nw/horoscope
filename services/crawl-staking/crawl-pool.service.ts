@@ -47,9 +47,9 @@ export default class CrawlPoolService extends Service {
 		let urlToCall = path;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let resultCallApi: IPoolResponseFromLCD = await this.callApiFromDomain(url, urlToCall);
+		let resultCallApi: any = await this.callApiFromDomain(url, urlToCall);
 		const item: PoolEntity = new JsonConvert().deserializeObject(
-			resultCallApi.pool,
+			resultCallApi.result,
 			PoolEntity,
 		);
 

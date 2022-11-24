@@ -70,7 +70,7 @@ export class Description implements IDescription {
 	website: String = '';
 	@JsonProperty('details', String)
 	details: String = '';
-	@JsonProperty('security_contact', String)
+	@JsonProperty('security_contact', String, true)
 	security_contact: String = '';
 }
 

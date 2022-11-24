@@ -15,6 +15,7 @@ import { Utils } from '../../utils/utils';
 import { QueueConfig } from '../../config/queue';
 import { pubkeyToRawAddress } from '@cosmjs/tendermint-rpc';
 import { fromBase64, toHex, fromBech32, toBech32 } from '@cosmjs/encoding';
+import { decodeBech32Pubkey } from '@cosmjs/amino';
 export default class CrawlValidatorService extends Service {
 	private callApiMixin = new CallApiMixin().start();
 	private dbValidatorMixin = dbValidatorMixin;
@@ -45,10 +46,10 @@ export default class CrawlValidatorService extends Service {
 	}
 
 	async handleJob(path: String) {
-		let listValidator: IValidator[] = [];
+		let listValidator: any[] = [];
 
 		let param = path;
-		let resultCallApi: IValidatorResponseFromLCD;
+		let resultCallApi: any;
 
 		let done = false;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
@@ -56,14 +57,8 @@ export default class CrawlValidatorService extends Service {
 		while (!done) {
 			resultCallApi = await this.callApiFromDomain(url, param);
 
-			listValidator.push(...resultCallApi.validators);
-			if (resultCallApi.pagination.next_key === null) {
-				done = true;
-			} else {
-				param = `${path}&pagination.key=${encodeURIComponent(
-					resultCallApi.pagination.next_key.toString(),
-				)}`;
-			}
+			listValidator.push(...resultCallApi.result);
+			done = true;
 		}
 
 		this.logger.debug(`result: ${JSON.stringify(listValidator)}`);
@@ -73,6 +68,11 @@ export default class CrawlValidatorService extends Service {
 		let listBulk: any[] = [];
 		listValidator = await Promise.all(
 			listValidator.map((validator) => {
+				const decodedPubkey = decodeBech32Pubkey(validator.consensus_pubkey);
+				validator.consensus_pubkey = {
+					'@type': decodedPubkey.type,
+					key: decodedPubkey.value,
+				};
 				return this.loadCustomInfo(validator);
 			}),
 		);
@@ -94,6 +94,7 @@ export default class CrawlValidatorService extends Service {
 						},
 					});
 				} else {
+					validator.status = `${validator.status}`;
 					const item: ValidatorEntity = new JsonConvert().deserializeObject(
 						validator,
 						ValidatorEntity,
