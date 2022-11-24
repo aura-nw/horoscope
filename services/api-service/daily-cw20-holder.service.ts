@@ -49,7 +49,7 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","euphoria-2","cosmoshub-4"]
+	 *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
 	 *            default: "aura-testnet-2"
 	 *          description: "Chain Id of network need to query"
 	 *        - name: addresses[]
