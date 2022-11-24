@@ -1,4 +1,3 @@
-import { Types } from "mongoose"
 
 export const tx_use = {
     "_id": 11,

@@ -772,6 +772,7 @@ describe('Test feegrant-db service', () => {
                 "type": "/cosmos.feegrant.v1beta1.AllowedContractAllowance",
                 "status": "Revoked",
                 "origin_feegrant_txhash": "C46AC8D198D030F41C19DB4BE465E942CC5BD276F6BCDB3A2DDB7EFB2F6EC5C0",
+                "origin_revoke_txhash": "4CE66C589443419C4057326902C51DCC04B027A6AD52A1C1075E5555A15992BE",
                 "__v": 0,
                 "spend_limit": {
                     "denom": "ueaura",
@@ -798,6 +799,7 @@ describe('Test feegrant-db service', () => {
                 "type": "/cosmos.feegrant.v1beta1.BasicAllowance",
                 "status": "Revoked",
                 "origin_feegrant_txhash": "243EF2A1E124CFE103DA39270C5AC4B7C3E33C8741A04394B398BF91B8DAfake",
+                "origin_revoke_txhash": "4CE66C589443419C4057326902C51DCC04B027A6AD52A1C1075E5555A15992BE",
                 "__v": 0,
                 "spend_limit": {
                     "denom": "ueaura",
@@ -1026,6 +1028,7 @@ describe('Test feegrant-db service', () => {
                 "type": "/cosmos.feegrant.v1beta1.BasicAllowance",
                 "status": "Revoked",
                 "origin_feegrant_txhash": "243EF2A1E124CFE103DA39270C5AC4B7C3E33C8741A04394B398BF91B8DAfake",
+                "origin_revoke_txhash": "4CE66C589443419C4057326902C51DCC04B027A6AD52A1C1075E5555A15992BE",
                 "__v": 0,
                 "spend_limit": {
                     "denom": "ueaura",

@@ -142,20 +142,34 @@ export default class FeegrantDB extends Service {
                 amount: 1,
             }
         }) as FeegrantEntity[]
-        listOriginalRecords.forEach(e => [
-            bulkUpdate.push({
-                updateOne: {
-                    filter: { tx_hash: e.tx_hash },
-                    update: {
-                        $set: {
-                            //@ts-ignore
-                            'amount.amount': e.amount.amount ? parseInt(e.amount.amount.toString()) - mapUpdate.get(e.tx_hash)?.amount : null,
-                            'status': mapUpdate.get(e.tx_hash)?.status,
+        listOriginalRecords.forEach(e => {
+            if (!_.isEmpty(e.amount)) {
+                this.logger.info(JSON.stringify(e.amount))
+                bulkUpdate.push({
+                    updateOne: {
+                        filter: { tx_hash: e.tx_hash },
+                        update: {
+                            $set: {
+                                //@ts-ignore
+                                'amount.amount': e.amount.amount ? parseInt(e.amount.amount.toString()) - mapUpdate.get(e.tx_hash)?.amount : null,
+                                'status': mapUpdate.get(e.tx_hash)?.status,
+                            },
                         },
                     },
-                },
-            })
-        ])
+                })
+            } else {
+                bulkUpdate.push({
+                    updateOne: {
+                        filter: { tx_hash: e.tx_hash },
+                        update: {
+                            $set: {
+                                'status': mapUpdate.get(e.tx_hash)?.status,
+                            },
+                        },
+                    },
+                })
+            }
+        })
         await this.adapter.bulkWrite(bulkUpdate)
         const bulkUpdateOriginRevoke = [] as any[]
         listRevoke.forEach(e => {

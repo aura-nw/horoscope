@@ -441,7 +441,7 @@ describe('Test feegrant-tx-handler service', () => {
                 },
                 tx_hash: "C46AC8D198D030F41C19DB4BE465E942CC5BD276F6BCDB3A2DDB7EFB2F6EC5C0",
                 expiration: null,
-                type: "/cosmos.feegrant.v1beta1.AllowedContractAllowance",
+                type: "/cosmos.feegrant.v1beta1.PeriodicAllowance",
                 spend_limit: {
                     "denom": "ueaura",
                     "amount": "2000"
