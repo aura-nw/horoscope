@@ -213,7 +213,10 @@ describe('Test feegrant api', () => {
             grantee: "aura1awy6asqvum0u7jf954u049sn6zap6x7t0znkpr",
             chainid: "euphoria-1",
             expired: false,
-            status: FEEGRANT_STATUS.AVAILABLE
+            status: FEEGRANT_STATUS.AVAILABLE,
+            pageLimit: 10,
+            pageOffset: 0,
+            nextKey: null
         }
         const result = JSON.parse(JSON.stringify(await feegrantApiService.getGrants({ params })))
         result.data.grants = result.data.grants.sort(compare)
@@ -290,7 +293,10 @@ describe('Test feegrant api', () => {
         const params = {
             chainid: "euphoria-1",
             expired: true,
-            status: FEEGRANT_STATUS.FAIL + "," + FEEGRANT_STATUS.REVOKED
+            status: FEEGRANT_STATUS.FAIL + "," + FEEGRANT_STATUS.REVOKED,
+            pageLimit: 10,
+            pageOffset: 0,
+            nextKey: null
         }
         const result = JSON.parse(JSON.stringify(await feegrantApiService.getGrants({ params })))
         result.data.grants = result.data.grants.sort(compare)
@@ -368,6 +374,9 @@ describe('Test feegrant api', () => {
             chainid: "euphoria-1",
             txhash: "243EF2A1E124CFE103DA39270C5AC4B7C3E33C8741A04394B398BF91B8Dfake1",
             expired: true,
+            pageLimit: 10,
+            pageOffset: 0,
+            nextKey: null
         }
         const result = JSON.parse(JSON.stringify(await feegrantApiService.getGrants({ params })))
         result.data.grants = result.data.grants.sort(compare)

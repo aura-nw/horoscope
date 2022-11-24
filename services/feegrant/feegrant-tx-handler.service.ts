@@ -130,6 +130,7 @@ export default class FeegrantTxHandler extends Service {
 							while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE && basic_allowance["@type"] != ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
 								basic_allowance = basic_allowance["allowance"]
 							}
+							const type = basic_allowance["@type"]
 							if (basic_allowance["@type"] == ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
 								basic_allowance = basic_allowance["basic"]
 							}
@@ -146,7 +147,7 @@ export default class FeegrantTxHandler extends Service {
 								amount: tx.tx.auth_info.fee.amount[0],
 								tx_hash: tx.tx_response.txhash,
 								expiration: basic_allowance["expiration"],
-								type: message["allowance"]["@type"],
+								type: type,
 								spend_limit,
 								custom_info: tx.custom_info,
 								expired: false
@@ -316,6 +317,7 @@ export default class FeegrantTxHandler extends Service {
 						while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE && basic_allowance["@type"] != ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
 							basic_allowance = basic_allowance["allowance"]
 						}
+						const type = basic_allowance["@type"]
 						if (basic_allowance["@type"] == ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
 							basic_allowance = basic_allowance["basic"]
 						}
@@ -332,7 +334,7 @@ export default class FeegrantTxHandler extends Service {
 							payer,
 							tx_hash: tx.tx_response.txhash,
 							expiration: basic_allowance["expiration"],
-							type: message["allowance"]["@type"],
+							type: type,
 							spend_limit: spend_limit,
 							custom_info: tx.custom_info,
 							expired: false
