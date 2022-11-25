@@ -166,6 +166,7 @@ export default class ValidatorService extends MoleculerDBService<
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
+		delete params.query['custom_info.chain_id'];
 		// @ts-ignore
 		let result = await this.adapter.find({ query: params.query, sort: params.sort });
 		return result;

@@ -169,7 +169,7 @@ export default class AccountUnbondsService extends MoleculerDBService<
 				projection: { address: 1, account_unbonding: 1, custom_info: 1 },
 			}),
 			this.broker.call('v1.validator.getByCondition', {
-				query: {},
+				query: { 'custom_info.chain_id': ctx.params.chainid },
 			}),
 		]);
 		let data = Object.assign({}, result[0]);
