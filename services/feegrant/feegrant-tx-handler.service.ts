@@ -57,7 +57,8 @@ export default class FeegrantTxHandler extends Service {
 					concurrency: 1,
 					async process(job: Job) {
 						job.progress(10);
-
+						// @ts-ignore
+						await this.initEnv()
 						// @ts-ignore
 						const list: any[] = await this.handleJob(job.data.chainId);
 
@@ -405,7 +406,6 @@ export default class FeegrantTxHandler extends Service {
 				},
 			);
 		}
-		await this.initEnv()
 		this.getQueue('feegrant.tx-handle').on('completed', (job: Job) => {
 			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});

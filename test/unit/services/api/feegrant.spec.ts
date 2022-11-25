@@ -428,6 +428,9 @@ describe('Test feegrant api', () => {
         const params = {
             chainid: "euphoria-1",
             granter: "aura13w7c5u0vwqh350jq8qp75ffx4u0utnc7qcy5el",
+            pageLimit: 10,
+            pageOffset: 0,
+            nextKey: null
         }
         const result = JSON.parse(JSON.stringify(await feegrantApiService.getGrantsInactive({ params })))
         result.data.grants = result.data.grants.sort(compare)
