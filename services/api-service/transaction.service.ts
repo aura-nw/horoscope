@@ -459,7 +459,7 @@ export default class BlockService extends MoleculerDBService<
 		if (ctx.params.nextKey) {
 			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 		}
-		query['custom_info.chain_id'] = ctx.params.chainid;
+		// query['custom_info.chain_id'] = ctx.params.chainid;
 
 		let listQueryAnd: any[] = [];
 		let listQueryOr: any[] = [];
