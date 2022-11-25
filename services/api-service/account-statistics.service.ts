@@ -55,7 +55,7 @@ export default class AccountStatisticsService extends MoleculerDBService<
 		const params = await this.sanitizeParams(ctx, ctx.params);
 		const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
 		if (network && network.databaseName) {
-		    this.adapter.useDb(network.databaseName);
+			this.adapter.useDb(network.databaseName);
 		}
 
 		let sort, day_range;
@@ -110,7 +110,7 @@ export default class AccountStatisticsService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","cosmoshub-4"]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","euphoria-2","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *          example: "aura-testnet-2"
 	 *        - in: query
