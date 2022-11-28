@@ -1,7 +1,6 @@
 /* eslint-disable capitalized-comments */
 import os from 'os';
 import { LogLevels } from 'moleculer';
-import dotenvFlow from 'dotenv-flow';
 import _ from 'lodash';
 import { DBDialog, DBInfo } from '../types';
 import { PATH_COSMOS_SDK } from './constant';
