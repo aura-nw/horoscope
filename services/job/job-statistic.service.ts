@@ -329,7 +329,7 @@ export default class CrawlTxService extends Service {
 		let listResult: any[] = [];
 		// let query1 = {
 		//     "tx_response.height": {$lte: toBlock, $gte: fromBlock},
-		//     "custom_info.chain_id":"euphoria-1",
+		//     "custom_info.chain_id":
 		//     'tx_response.events': {
 		//         $elemMatch: {
 		//             type: 'transfer',
