@@ -166,6 +166,7 @@ export default class ValidatorService extends MoleculerDBService<
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
+		delete params.query['custom_info.chain_id'];
 		// @ts-ignore
 		let result = await this.adapter.find({ query: params.query, sort: params.sort });
 		return result;
@@ -185,7 +186,11 @@ export default class ValidatorService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
+<<<<<<< HEAD
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-2","cosmoshub-4"]
+=======
 	 *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
+>>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
 	 *          description: "Chain Id of network need to query"
 	 *          example: "aura-testnet-2"
 	 *        - in: query

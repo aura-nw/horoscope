@@ -368,6 +368,8 @@ export default class CrawlAssetService extends moleculer.Service {
 						removeOnFail: {
 							count: 3,
 						},
+						attempts: 5,
+						backoff: 5000,
 					},
 				);
 			});

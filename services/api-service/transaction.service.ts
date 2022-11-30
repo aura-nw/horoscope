@@ -21,6 +21,7 @@ import { ObjectId } from 'mongodb';
 import {
 	BASE_64_ENCODE,
 	LIST_NETWORK,
+	MSG_TYPE,
 	SEARCH_TX_QUERY,
 	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
@@ -459,7 +460,7 @@ export default class BlockService extends MoleculerDBService<
 		if (ctx.params.nextKey) {
 			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 		}
-		query['custom_info.chain_id'] = ctx.params.chainid;
+		// query['custom_info.chain_id'] = { $exists: true };
 
 		let listQueryAnd: any[] = [];
 		let listQueryOr: any[] = [];
@@ -475,11 +476,23 @@ export default class BlockService extends MoleculerDBService<
 		};
 
 		if (address) {
-			listQueryOr.push(
-				{ 'indexes.delegate_validator': { $exists: true, $eq: address } },
-				{ 'indexes.redelegate_source_validator': { $exists: true, $eq: address } },
-				{ 'indexes.redelegate_destination_validator': { $exists: true, $eq: address } },
-				{ 'indexes.unbond_validator': { $exists: true, $eq: address } },
+			// listQueryOr.push(
+			// 	{ 'indexes.delegate_validator': { $exists: true, $eq: address } },
+			// 	{ 'indexes.redelegate_source_validator': { $exists: true, $eq: address } },
+			// 	{ 'indexes.redelegate_destination_validator': { $exists: true, $eq: address } },
+			// 	{ 'indexes.unbond_validator': { $exists: true, $eq: address } },
+			// );
+			listQueryAnd.push(
+				{ 'indexes.addresses': { $exists: true, $eq: address } },
+				{
+					'indexes.message_action': {
+						$in: [
+							MSG_TYPE.MSG_DELEGATE,
+							MSG_TYPE.MSG_REDELEGATE,
+							MSG_TYPE.MSG_UNDELEGATE,
+						],
+					},
+				},
 			);
 		}
 
@@ -721,7 +734,11 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
+<<<<<<< HEAD
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-2","cosmoshub-4"]
+=======
 	 *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
+>>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
 	 *          description: "Chain Id of network need to query"
 	 *          example: "aura-testnet-2"
 	 *        - in: query
@@ -1180,7 +1197,11 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
+<<<<<<< HEAD
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-2","cosmoshub-4"]
+=======
 	 *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
+>>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
 	 *          description: "Chain Id of network need to query"
 	 *          example: "aura-testnet-2"
 	 *        - in: query

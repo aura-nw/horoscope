@@ -29,9 +29,19 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
 		return this.createCustomCursor(filters).lean();
 	}
 
+	mapModelByDbName = {};
 	useDb(dbname){
 		let conn = mongoose.connection.useDb(dbname);
-		this.model = conn.model(this.model.modelName, this.model.schema);
+		if (!this.mapModelByDbName[dbname]){
+			this.mapModelByDbName[dbname] = {};
+		}
+		let modelInMap = this.mapModelByDbName[dbname];
+		if (modelInMap[this.model.modelName]){
+			this.model = modelInMap[this.model.modelName]
+		}else{
+			this.model = conn.model(this.model.modelName, this.model.schema);
+			modelInMap[this.model.modelName] = this.model;
+		}
 	}
 
     /**

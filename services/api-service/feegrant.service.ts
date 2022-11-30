@@ -267,7 +267,7 @@ export default class FeegrantService extends MoleculerDBService<
 			let [result, count]: [any[], number] = await Promise.all([
 				this.adapter.lean({
 					query: query,
-					limit: ctx.params.pageLimit,
+					limit: ctx.params.pageLimit + 1,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
 					sort: '-timestamp',
@@ -276,13 +276,27 @@ export default class FeegrantService extends MoleculerDBService<
 					query: query,
 				}),
 			]);
+			let nextKey = null;
+			if (result.length > 0) {
+				if (result.length == 1) {
+					nextKey = result[result.length - 1]?._id;
+				} else {
+					nextKey = result[result.length - 2]?._id;
+				}
+				if (result.length <= ctx.params.pageLimit) {
+					nextKey = null;
+				}
+				if (nextKey) {
+					result.pop();
+				}
+			}
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					grants: result,
 					count: count,
-					nextKey: result.length ? result[result.length - 1]._id : null,
+					nextKey,
 				},
 			};
 		} catch (error) {
@@ -312,7 +326,11 @@ export default class FeegrantService extends MoleculerDBService<
  *          required: true
  *          schema:
  *            type: string
+<<<<<<< HEAD
+ *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-2","cosmoshub-4"]
+=======
  *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
+>>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
  *          description: "Chain Id of network need to query"
  *          example: "aura-testnet-2"
  *        - in: query
@@ -492,7 +510,11 @@ export default class FeegrantService extends MoleculerDBService<
  *          required: true
  *          schema:
  *            type: string
+<<<<<<< HEAD
+ *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-2","cosmoshub-4"]
+=======
  *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
+>>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
  *          description: "Chain Id of network need to query"
  *          example: "aura-testnet-2"
  *        - in: query
