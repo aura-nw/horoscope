@@ -3326,6 +3326,147 @@
                 }
             }
         },
+        "/v1/daily-cw20-holder": {
+            "get": {
+                "tags": [
+                    "AuraScan Statistics"
+                ],
+                "summary": "Get CW20's holder changing percentage daily",
+                "description": "Get CW20's holder changing percentage daily",
+                "parameters": [
+                    {
+                        "name": "chainId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "euphoria-1",
+                                "euphoria-2",
+                                "cosmoshub-4",
+                                "osmosis-1"
+                            ],
+                            "default": "aura-testnet-2"
+                        },
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "name": "addresses[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "description": "List of CW20 addresses need to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daily CW20's holder changing percentage",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "code_id": {
+                                                    "type": "number",
+                                                    "example": 19
+                                                },
+                                                "contract_address": {
+                                                    "type": "string",
+                                                    "example": "aura1qppau370zs6xnduuv3jju4xw0kp2xww20wy75ye2hvy9cc99ehtqxlqnza"
+                                                },
+                                                "old_holders": {
+                                                    "type": "number",
+                                                    "example": 50
+                                                },
+                                                "new_holders": {
+                                                    "type": "number",
+                                                    "example": 60
+                                                },
+                                                "change_percent": {
+                                                    "type": "number",
+                                                    "example": 20
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1.block.chain"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/daily-tx-statistics": {
             "get": {
                 "tags": [
@@ -6482,6 +6623,16 @@
                     },
                     {
                         "in": "query",
+                        "name": "code",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "0"
+                        },
+                        "description": "vote tx code"
+                    },
+                    {
+                        "in": "query",
                         "name": "pageLimit",
                         "required": false,
                         "schema": {
@@ -6706,6 +6857,16 @@
                             ]
                         },
                         "description": "Vote option want to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "code",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "0"
+                        },
+                        "description": "vote tx code"
                     }
                 ],
                 "responses": {
