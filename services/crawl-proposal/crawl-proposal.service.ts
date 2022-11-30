@@ -55,7 +55,7 @@ export default class CrawlProposalService extends Service {
 		while (!done) {
 			resultCallApi = await this.callApiFromDomain(url, param);
 
-			listProposal.push(...resultCallApi.result);
+			listProposal.push(...resultCallApi);
 
 			done = true;
 		}
@@ -69,16 +69,17 @@ export default class CrawlProposalService extends Service {
 		let listIndexDelete: number[] = [];
 		await Promise.all(
 			listProposal.map(async (proposal) => {
-				proposal.proposal_id = proposal.id;
-				proposal.content['@type'] = proposal.content.type;
-				proposal.content.title = proposal.content.value.title;
-				proposal.content.description = proposal.content.value.description;
+				// proposal.proposal_id = proposal.id;
+				proposal.content = {};
+				proposal.content['@type'] = proposal.proposal_content.type;
+				proposal.content.title = proposal.proposal_content.value.title;
+				proposal.content.description = proposal.proposal_content.value.description;
 				proposal.status = `${proposal.proposal_status}`;
-				if (proposal.content.value.recipient) {
-					proposal.content.recipient = proposal.content.value.recipient;
+				if (proposal.proposal_content.value.recipient) {
+					proposal.content.recipient = proposal.proposal_content.value.recipient;
 				}
-				if (proposal.content.value.amount) {
-					proposal.content.amount = proposal.content.value.amount;
+				if (proposal.proposal_content.value.amount) {
+					proposal.content.amount = proposal.proposal_content.value.amount;
 				}
 				if (proposal.proposal_id == undefined) {
 					this.logger.error(`proposal_id is undefined`);

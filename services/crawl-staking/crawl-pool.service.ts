@@ -48,10 +48,7 @@ export default class CrawlPoolService extends Service {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		let resultCallApi: any = await this.callApiFromDomain(url, urlToCall);
-		const item: PoolEntity = new JsonConvert().deserializeObject(
-			resultCallApi.result,
-			PoolEntity,
-		);
+		const item: PoolEntity = new JsonConvert().deserializeObject(resultCallApi, PoolEntity);
 
 		try {
 			let foundPool = await this.adapter.findOne({});

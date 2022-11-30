@@ -57,7 +57,7 @@ export default class CrawlValidatorService extends Service {
 		while (!done) {
 			resultCallApi = await this.callApiFromDomain(url, param);
 
-			listValidator.push(...resultCallApi.result);
+			listValidator.push(...resultCallApi);
 			done = true;
 		}
 
@@ -95,6 +95,11 @@ export default class CrawlValidatorService extends Service {
 					});
 				} else {
 					validator.status = `${validator.status}`;
+					validator.commission.commission_rates = {
+						rate: validator.commission.rate,
+						max_rate: validator.commission.max_rate,
+						max_change_rate: validator.commission.max_change_rate,
+					};
 					const item: ValidatorEntity = new JsonConvert().deserializeObject(
 						validator,
 						ValidatorEntity,

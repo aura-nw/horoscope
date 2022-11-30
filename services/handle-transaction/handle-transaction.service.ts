@@ -107,7 +107,19 @@ export default class HandleTransactionService extends Service {
 						);
 						try {
 							let txItem = JSON.parse(item.message.element.toString());
-
+							let tags = txItem.tags;
+							let events = [];
+							if (tags && tags.length) {
+								events.push({
+									type: 'message',
+									attributes: tags.map((tag: any) => {
+										return {
+											key: tag.key,
+											value: tag.value,
+										};
+									}),
+								});
+							}
 							let parsedTxItem = {
 								tx: {
 									body: {
@@ -148,7 +160,7 @@ export default class HandleTransactionService extends Service {
 										},
 									},
 									timestamp: txItem.timestamp,
-									events: txItem.events,
+									events: events,
 								},
 							};
 							const transaction: TransactionEntity =
