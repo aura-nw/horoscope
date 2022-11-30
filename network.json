@@ -1,100 +1,37 @@
 [
 	{
-		"chainName":"Aura Devnet",
-		"chainId":"aura-testnet-2",
+		"chainName":"Aura Euphoria",
+		"chainId":"euphoria-2",
 		"RPC":[
-		   "https://rpc.dev.aura.network"
+		   "https://rpc.euphoria.aura.network"
 		],
 		"LCD":[
-		   "https://lcd.dev.aura.network"
+		   "https://lcd.euphoria.aura.network"
 		],
 		"prefixAddress":"aura",
-		"databaseName":"local_auratestnet",
-		"redisDbNumber":5
-	},
-	{
-		"chainName":"Aura Serenity",
-		"chainId":"serenity-testnet-001",
-		"RPC":[
-		   "https://rpc.serenity.aura.network"
-		],
-		"LCD":[
-		   "https://lcd.serenity.aura.network"
-		],
-		"prefixAddress":"aura",
-		"databaseName":"local_serenitytestnet001",
+		"databaseName":"horoscope_prod_euphoria1",
 		"redisDbNumber":2
-	},
-	{
-		"chainName":"Theta Testnet",
-		"chainId":"theta-testnet-001",
-		"RPC":[
-			"https://rpc.theta.aura.network"
-		],
-		"LCD":[
-			"https://lcd.theta.aura.network"
-		],
-		"prefixAddress":"cosmos",
-		"databaseName":"local_thetatestnet001",
-		"redisDbNumber":4
-	},
-	{
-		"chainName":"Osmosis Testnet",
-		"chainId":"osmo-test-4",
-		"RPC":[
-			"https://testnet-rpc.osmosis.zone"
-		],
-		"LCD":[
-			"https://osmosistest-lcd.quickapi.com"
-		],
-		"prefixAddress":"osmo",
-		"databaseName":"local_osmotest4",
-		"redisDbNumber":10
-
 	},
 	{
 		"chainName":"Osmosis Mainnet",
 		"chainId":"osmosis-1",
 		"RPC":[
-			"https://rpc.osmosis.zone"
+			"https://rpc-osmosis.blockapsis.com",
+			"https://osmosis-rpc.quickapi.com"
 		],
 		"LCD":[
-			"https://lcd.osmosis.zone"
+			"https://lcd-osmosis.whispernode.com",
+			"https://lcd-osmosis.blockapsis.com"
 		],
 		"prefixAddress":"osmo",
-		"databaseName":"local_osmosis1",
-		"redisDbNumber":11
-	},
-	{
-		"chainName":"Evmos Testnet",
-		"chainId":"evmos_9000-4",
-		"RPC":[
-			"https://rpc.evmos.aura.network"
-		],
-		"LCD":[
-			"https://lcd.evmos.aura.network"
-		],
-		"prefixAddress":"evmos",
-		"databaseName":"local_evmos90004",
-		"redisDbNumber":6
-	},
-	{
-		"chainName":"Aura Euphoria",
-		"chainId":"euphoria-1",
-		"RPC":[
-		   "https://rpc.euphoria.aura.network"
-		],	
-		"LCD":[
-		   "https://lcd.euphoria.aura.network"
-		],
-		"prefixAddress":"aura",
-		"databaseName":"local_euphoria1",
-		"redisDbNumber":12
+		"databaseName":"horoscope_prod_osmosis1",
+		"redisDbNumber":4
 	},
 	{
 		"chainName":"Cosmos Mainnet",
 		"chainId":"cosmoshub-4",
 		"RPC":[
+			"https://rpc-cosmoshub-ia.cosmosia.notional.ventures",
 			"https://rpc.cosmos.network"
 		],
 		"LCD":[
@@ -103,7 +40,7 @@
 			"https://cosmoshub-api.lavenderfive.com:443"
 		],
 		"prefixAddress":"cosmos",
-		"databaseName":"local_cosmoshub4",
-		"redisDbNumber":13
+		"databaseName":"horoscope_prod_cosmoshub4",
+		"redisDbNumber":3
 	}
 ]

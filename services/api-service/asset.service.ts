@@ -702,7 +702,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          required: false
 	 *          schema:
 <<<<<<< HEAD
-	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-2","cosmoshub-4"]
+	 *            enum: ["euphoria-2","cosmoshub-4","osmosis-1"]
 =======
 	 *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
 >>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
@@ -1117,7 +1117,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          schema:
 	 *            type: string
 <<<<<<< HEAD
-	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-2","cosmoshub-4"]
+	 *            enum: ["euphoria-2","cosmoshub-4","osmosis-1"]
 =======
 	 *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
 >>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
@@ -1346,7 +1346,7 @@ export default class BlockService extends MoleculerDBService<
 	 *          schema:
 	 *            type: string
 <<<<<<< HEAD
-	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-2","cosmoshub-4"]
+	 *            enum: ["euphoria-2","cosmoshub-4","osmosis-1"]
 =======
 	 *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
 >>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
