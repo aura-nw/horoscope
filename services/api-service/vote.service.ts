@@ -302,11 +302,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *          required: true
 	 *          schema:
 	 *            type: string
-<<<<<<< HEAD
 	 *            enum: ["euphoria-2","cosmoshub-4","osmosis-1"]
-=======
-	 *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
->>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: proposalid
@@ -453,11 +449,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *          required: true
 	 *          schema:
 	 *            type: string
-<<<<<<< HEAD
 	 *            enum: ["euphoria-2","cosmoshub-4","osmosis-1"]
-=======
-	 *            enum: ["euphoria-1","euphoria-2","cosmoshub-4","osmosis-1"]
->>>>>>> 29e9d9857164934e725a335dc501e8d2faf2da28
 	 *          description: "Chain Id of network need to query"
 	 *        - in: query
 	 *          name: proposalid

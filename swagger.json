@@ -4667,6 +4667,406 @@
                 }
             }
         },
+        "/v1/votes": {
+            "get": {
+                "tags": [
+                    "Vote"
+                ],
+                "summary": "Get votes",
+                "description": "Get votes",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "euphoria-2",
+                                "cosmoshub-4",
+                                "osmosis-1"
+                            ]
+                        },
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "proposalid",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "default": 1
+                        },
+                        "description": "Proposal Id"
+                    },
+                    {
+                        "in": "query",
+                        "name": "answer",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "VOTE_OPTION_YES",
+                                "VOTE_OPTION_NO",
+                                "VOTE_OPTION_NO_WITH_VETO",
+                                "VOTE_OPTION_ABSTAIN"
+                            ]
+                        },
+                        "description": "Vote option want to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageLimit",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "default": 10
+                        },
+                        "description": "number record return in a page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageOffset",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "default": 0
+                        },
+                        "description": "Page number, start at 0"
+                    },
+                    {
+                        "in": "query",
+                        "name": "nextKey",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "key for next page"
+                    },
+                    {
+                        "in": "query",
+                        "name": "reverse",
+                        "required": false,
+                        "schema": {
+                            "enum": [
+                                "true",
+                                "false"
+                            ],
+                            "default": "false",
+                            "type": "string"
+                        },
+                        "description": "reverse is true if you want to get the oldest record first, default is false"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Vote result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "votes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "voter_address": {
+                                                                "type": "string",
+                                                                "example": "aura1hctj3tpmucmuv02umf9252enjedkce7mml69k8"
+                                                            },
+                                                            "proposal_id": {
+                                                                "type": "number",
+                                                                "example": 1
+                                                            },
+                                                            "answer": {
+                                                                "type": "string",
+                                                                "example": "Yes"
+                                                            },
+                                                            "txhash": {
+                                                                "type": "string",
+                                                                "example": "698185B1800A077B30A61ADBC42958CFCCFE5C3DA0D32E0AF314C0098684CCC6"
+                                                            },
+                                                            "timestamp": {
+                                                                "type": "string",
+                                                                "example": "2021-05-20T09:00:00.000Z"
+                                                            },
+                                                            "custom_info": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "chain_id": {
+                                                                        "type": "string",
+                                                                        "example": "aura-testnet-2"
+                                                                    },
+                                                                    "chain_name": {
+                                                                        "type": "string",
+                                                                        "example": "Aura Testnet"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "nextKey": {
+                                                    "type": "string",
+                                                    "example": "63218f7c8c9c740a4dcefaf2"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/votes/validators": {
+            "get": {
+                "tags": [
+                    "Vote"
+                ],
+                "summary": "Get validator votes",
+                "description": "Get validator votes",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "chainid",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "euphoria-2",
+                                "cosmoshub-4",
+                                "osmosis-1"
+                            ]
+                        },
+                        "description": "Chain Id of network need to query"
+                    },
+                    {
+                        "in": "query",
+                        "name": "proposalid",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "default": 1
+                        },
+                        "description": "Proposal Id"
+                    },
+                    {
+                        "in": "query",
+                        "name": "answer",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "VOTE_OPTION_YES",
+                                "VOTE_OPTION_NO",
+                                "VOTE_OPTION_NO_WITH_VETO",
+                                "VOTE_OPTION_ABSTAIN",
+                                "DID_NOT_VOTE"
+                            ]
+                        },
+                        "description": "Vote option want to query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Validator Vote result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "number",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "votes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "voter_address": {
+                                                                "type": "string",
+                                                                "example": "aura1hctj3tpmucmuv02umf9252enjedkce7mml69k8"
+                                                            },
+                                                            "proposal_id": {
+                                                                "type": "number",
+                                                                "example": 1
+                                                            },
+                                                            "answer": {
+                                                                "type": "string",
+                                                                "example": "Yes"
+                                                            },
+                                                            "txhash": {
+                                                                "type": "string",
+                                                                "example": "698185B1800A077B30A61ADBC42958CFCCFE5C3DA0D32E0AF314C0098684CCC6"
+                                                            },
+                                                            "timestamp": {
+                                                                "type": "string",
+                                                                "example": "2021-05-20T09:00:00.000Z"
+                                                            },
+                                                            "custom_info": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "chain_id": {
+                                                                        "type": "string",
+                                                                        "example": "aura-testnet-2"
+                                                                    },
+                                                                    "chain_name": {
+                                                                        "type": "string",
+                                                                        "example": "Aura Testnet"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "nextKey": {
+                                                    "type": "string",
+                                                    "example": "63218f7c8c9c740a4dcefaf2"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "ValidationError"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Parameters validation error!"
+                                        },
+                                        "code": {
+                                            "type": "number",
+                                            "example": 422
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "VALIDATION_ERROR"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "required"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "The 'chainid' field is required."
+                                                    },
+                                                    "field": {
+                                                        "type": "string",
+                                                        "example": "chainid"
+                                                    },
+                                                    "nodeID": {
+                                                        "type": "string",
+                                                        "example": "node1"
+                                                    },
+                                                    "action": {
+                                                        "type": "string",
+                                                        "example": "v1"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/cosmos/auth/v1beta1/accounts": {
             "get": {
                 "tags": [
