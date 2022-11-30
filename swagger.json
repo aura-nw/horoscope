@@ -11,32 +11,16 @@
             "description": "Horoscope "
         },
         {
-            "url": "https://lcd.dev.aura.network",
-            "description": "Aura Devnet LCD"
+            "url": "https://lcd.euphoria.aura.network",
+            "description": "Aura Euphoria LCD"
         },
         {
-            "url": "https://lcd.serenity.aura.network",
-            "description": "Aura Serenity LCD"
-        },
-        {
-            "url": "https://lcd.theta.aura.network",
-            "description": "Theta Testnet LCD"
-        },
-        {
-            "url": "https://osmosistest-lcd.quickapi.com",
-            "description": "Osmosis Testnet LCD"
-        },
-        {
-            "url": "https://lcd.osmosis.zone",
+            "url": "https://lcd-osmosis.whispernode.com",
             "description": "Osmosis Mainnet LCD"
         },
         {
-            "url": "https://lcd.evmos.aura.network",
-            "description": "Evmos Testnet LCD"
-        },
-        {
-            "url": "https://lcd.euphoria.aura.network",
-            "description": "Aura Euphoria LCD"
+            "url": "https://lcd-osmosis.blockapsis.com",
+            "description": "Osmosis Mainnet LCD"
         },
         {
             "url": "https://cosmos-api.polkachu.com",
@@ -6498,16 +6482,6 @@
                     },
                     {
                         "in": "query",
-                        "name": "code",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "0"
-                        },
-                        "description": "vote tx code"
-                    },
-                    {
-                        "in": "query",
                         "name": "pageLimit",
                         "required": false,
                         "schema": {
@@ -6732,16 +6706,6 @@
                             ]
                         },
                         "description": "Vote option want to query"
-                    },
-                    {
-                        "in": "query",
-                        "name": "code",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "0"
-                        },
-                        "description": "vote tx code"
                     }
                 ],
                 "responses": {
