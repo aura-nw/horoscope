@@ -76,6 +76,9 @@ export default class BlockService extends MoleculerDBService<
 	 *                      status:
 	 *                        type: string
 	 *                        example: "REJECTED"
+	 *                      contractType:
+	 *                        type: string
+	 *                        example: "CW20"
 	 *        '422':
 	 *          description: Bad request
 	 *          content:
@@ -132,17 +135,17 @@ export default class BlockService extends MoleculerDBService<
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		try {
-			let status = await this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
+			let result: any = await this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
 				chain_id: ctx.params.chainId,
 				code_id: ctx.params.codeId,
 			});
 
-			this.logger.debug('codeid-manager.checkStatus res', status);
+			this.logger.debug('codeid-manager.checkStatus res', result);
 
 			return (response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
-				data: { status },
+				data: { status: result.status, contractType: result.contractType },
 			});
 		} catch (error) {
 			this.logger.error('call codeid-manager.checkStatus error', error);

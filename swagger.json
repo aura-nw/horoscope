@@ -3126,6 +3126,10 @@
                                                 "status": {
                                                     "type": "string",
                                                     "example": "REJECTED"
+                                                },
+                                                "contractType": {
+                                                    "type": "string",
+                                                    "example": "CW20"
                                                 }
                                             }
                                         }
