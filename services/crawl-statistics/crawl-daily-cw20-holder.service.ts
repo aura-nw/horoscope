@@ -102,10 +102,10 @@ export default class CrawlDailyCw20HolderService extends Service {
 		);
 
 		this.getQueue('crawl.daily-cw20-holder').on('completed', (job: Job) => {
-			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
+			this.logger.info(`Job #${job.id} completed! result: ${job.returnvalue}`);
 		});
 		this.getQueue('crawl.daily-cw20-holder').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
+			this.logger.error(`Job #${job.id} failed! error: ${job.failedReason}`);
 		});
 		this.getQueue('crawl.daily-cw20-holder').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
