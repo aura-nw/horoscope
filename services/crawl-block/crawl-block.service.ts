@@ -129,7 +129,7 @@ export default class CrawlBlockService extends Service {
 				throw new Error('cannot crawl block');
 			}
 			this.handleListBlock(data);
-			if (this.currentBlock <= endBlock) {
+			if (this.currentBlock < endBlock) {
 				this.currentBlock = endBlock;
 				redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
 			}
