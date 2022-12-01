@@ -51,9 +51,12 @@ import { LIST_NETWORK } from '../../common/constant';
 
 				this.logger.debug(`found ${JSON.stringify(foundCodeID)}`);
 				if (foundCodeID) {
-					return foundCodeID?.status;
+					return {
+						status: foundCodeID?.status,
+						contractType: foundCodeID?.contract_type,
+					};
 				} else {
-					return 'NotFound';
+					return { status: 'NotFound', contractType: '' };
 				}
 			},
 		},

@@ -15,7 +15,7 @@ import {
 	MoleculerDBService,
 	ValidatorVoteResponse,
 } from '../../types';
-
+import { fromBase64, fromUtf8, toBase64, toUtf8 } from '@cosmjs/encoding';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -42,11 +42,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				integer: true,
 				convert: true,
 			},
-			code: {
-				type: 'string',
-				optional: true,
-				default: '0',
-			},
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -70,20 +65,34 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				optional: true,
 				default: null,
 			},
+			reverse: {
+				type: 'boolean',
+				optional: true,
+				default: false,
+				convert: true,
+			},
 		},
 		cache: {
 			ttl: 10,
 		},
 	})
 	async getVotes(ctx: Context<GetVoteRequest, Record<string, unknown>>) {
-		if (ctx.params.nextKey && !ObjectId.isValid(ctx.params.nextKey)) {
-			return {
-				code: ErrorCode.WRONG,
-				message: ErrorMessage.VALIDATION_ERROR,
-				data: {
-					message: 'The nextKey is not a valid ObjectId',
-				},
-			};
+		let nextKey: any = null;
+		if (ctx.params.nextKey) {
+			try {
+				nextKey = JSON.parse(fromUtf8(fromBase64(ctx.params.nextKey)));
+				if (!(nextKey._id && nextKey.height)) {
+					throw new Error('The nextKey is not a valid next key');
+				}
+			} catch (error) {
+				return {
+					code: ErrorCode.WRONG,
+					message: ErrorMessage.VALIDATION_ERROR,
+					data: {
+						message: 'The nextKey is not a valid next key',
+					},
+				};
+			}
 		}
 		try {
 			let query: QueryOptions = {};
@@ -91,14 +100,22 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			const chainId = ctx.params.chainid;
 			if (ctx.params.answer) query.answer = ctx.params.answer;
 
-			let sort = 'timestamp';
+			let sort = '-height';
 
 			if (ctx.params.reverse) {
-				sort = '-timestamp';
-				if (ctx.params.nextKey) query._id = { $lt: new ObjectId(ctx.params.nextKey) };
-			} else {
-				if (ctx.params.nextKey) query._id = { $gt: new ObjectId(ctx.params.nextKey) };
+				sort = 'height';
 			}
+
+			if (nextKey) {
+				if (ctx.params.reverse) {
+					query._id = { $gt: new ObjectId(nextKey._id) };
+					query['height'] = { $gte: nextKey.height };
+				} else {
+					query._id = { $lt: new ObjectId(nextKey._id) };
+					query['height'] = { $lte: nextKey.height };
+				}
+			}
+
 			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
@@ -113,10 +130,10 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			});
 
 			// check if there is a next page
-			const nextKey =
+			const newNextKey =
 				votes.length < 1 || votes.length <= ctx.params.pageLimit
 					? null
-					: votes[votes.length - 2]._id.toString();
+					: { _id: votes[votes.length - 2]._id, height: votes[votes.length - 2].height };
 
 			// remove the last item if there is a next page
 			if (nextKey) {
@@ -127,7 +144,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					votes,
-					nextKey,
+					nextKey: newNextKey ? toBase64(toUtf8(JSON.stringify(newNextKey))) : null,
 				},
 			};
 		} catch (err) {
@@ -157,11 +174,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				default: 1,
 				integer: true,
 				convert: true,
-			},
-			code: {
-				type: 'string',
-				optional: true,
-				default: '0',
 			},
 		},
 		cache: {
@@ -250,7 +262,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			{
 				$match: {
 					proposal_id,
-					code: '0',
 				},
 			},
 			{
@@ -307,13 +318,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *            type: string
 	 *            enum: ['VOTE_OPTION_YES', 'VOTE_OPTION_NO', 'VOTE_OPTION_NO_WITH_VETO', 'VOTE_OPTION_ABSTAIN']
 	 *          description: "Vote option want to query"
-	 *        - in: query
-	 *          name: code
-	 *          required: false
-	 *          schema:
-	 *            type: string
-	 *            default: '0'
-	 *          description: "vote tx code"
 	 *        - in: query
 	 *          name: pageLimit
 	 *          required: false
@@ -461,13 +465,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 	 *            type: string
 	 *            enum: ['VOTE_OPTION_YES', 'VOTE_OPTION_NO', 'VOTE_OPTION_NO_WITH_VETO', 'VOTE_OPTION_ABSTAIN', 'DID_NOT_VOTE']
 	 *          description: "Vote option want to query"
-	 *        - in: query
-	 *          name: code
-	 *          required: false
-	 *          schema:
-	 *            type: string
-	 *            default: '0'
-	 *          description: "vote tx code"
 	 *      responses:
 	 *        '200':
 	 *          description: Validator Vote result
