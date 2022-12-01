@@ -30,7 +30,6 @@ export default class CrawlDailyTxService extends Service {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(
-							job.data.date,
 							job.data.offset,
 							job.data.txCount,
 							job.data.activeAddrs,
@@ -43,11 +42,12 @@ export default class CrawlDailyTxService extends Service {
 		});
 	}
 
-	async handleJob(date: Date, offset: number, txCount: number, activeAddrs: string[]) {
+	async handleJob(offset: number, txCount: number, activeAddrs: string[]) {
 
 		let listAddresses: string[] = [];
 
-		const syncDate = new Date(date);
+		const syncDate = new Date();
+		syncDate.setDate(syncDate.getDate() - 1);
 		const startTime = syncDate.setUTCHours(0, 0, 0, 0);
 		const endTime = syncDate.setUTCHours(23, 59, 59, 999);
 		this.logger.info(`Get txs at paging ${offset + 1} for day ${syncDate}`);
@@ -150,7 +150,6 @@ export default class CrawlDailyTxService extends Service {
 			this.createJob(
 				'crawl.daily-tx',
 				{
-					date,
 					offset: newOffset,
 					txCount,
 					activeAddrs,
@@ -202,12 +201,9 @@ export default class CrawlDailyTxService extends Service {
 	}
 
 	async _start() {
-		const date = new Date();
-		date.setDate(date.getDate() - 1);
 		this.createJob(
 			'crawl.daily-tx',
 			{
-				date,
 				offset: 0,
 				txCount: 0,
 				activeAddrs: [],
