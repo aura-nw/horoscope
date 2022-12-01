@@ -50,7 +50,8 @@ export default class CrawlDailyTxService extends Service {
 		syncDate.setDate(syncDate.getDate() - 1);
 		const startTime = syncDate.setUTCHours(0, 0, 0, 0);
 		const endTime = syncDate.setUTCHours(23, 59, 59, 999);
-		this.logger.info(`Get txs at paging ${offset + 1} for day ${syncDate}`);
+		let date = new Date(startTime);
+		this.logger.info(`Get txs at paging ${offset + 1} for day ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`);
 
 		let query: any = {
 			'indexes.timestamp': {
@@ -187,7 +188,8 @@ export default class CrawlDailyTxService extends Service {
 					DailyTxStatistics,
 				);
 				await this.adapter.insert(item);
-				this.logger.info(`Daily Blockchain Statistics for day ${new Date(startTime)}: ${JSON.stringify(item)}`);
+				this.logger.info(`Daily Blockchain Statistics for day ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`);
+				this.logger.info(JSON.stringify(item));
 			} catch (error) {
 				this.logger.error(
 					`Error insert duplicate record of daily txs for day ${new Date(startTime)}`,
