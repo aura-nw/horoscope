@@ -327,6 +327,7 @@ export const PATH_COSMOS_SDK = {
 	GET_PARAMS_IBC_DENOM: 'ibc/apps/transfer/v1/denom_traces',
 	GET_VALIDATOR: 'cosmos/staking/v1beta1/validators/',
 	GET_SUPPLY: 'cosmos/bank/v1beta1/supply',
+	GET_DATA_HASH: 'cosmwasm/wasm/v1/code/',
 	VERIFY_API_GET_HASH: 'api/v1/smart-contract/get-hash/',
 	COSMWASM_CONTRACT_PARAM: 'cosmwasm/wasm/v1/contract/',
 };
@@ -336,6 +337,7 @@ export const TOP_ACCOUNT_STATS_FIELD = {
 	TXS_RECEIVED: 'TXS_RECEIVED',
 	AMOUNT_SENT: 'AMOUNT_SENT',
 	AMOUNT_RECEIVED: 'AMOUNT_RECEIVED',
+	ALL: 'ALL',
 };
 
 export const ALLOWANCE_TYPE = {

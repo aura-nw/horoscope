@@ -3,19 +3,14 @@
 'use strict';
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbAccountStatisticsMixin, dbDailyTxStatisticsMixin } from '../../mixins/dbMixinMongoose';
-import { Config } from '../../common';
+import { dbAccountStatisticsMixin } from '../../mixins/dbMixinMongoose';
 import {
-	BlockchainDataRequest,
 	ErrorCode,
 	ErrorMessage,
-	getActionConfig,
 	MoleculerDBService,
-	RestOptions,
 	TopAccountsRequest,
 } from '../../types';
-import { IAccountStatistics, IDailyTxStatistics, IInflation } from '../../entities';
-import { DbContextParameters } from 'moleculer-db';
+import { IAccountStatistics } from '../../entities';
 import { LIST_NETWORK, TOP_ACCOUNT_STATS_FIELD } from '../../common/constant';
 
 /**
@@ -46,8 +41,7 @@ export default class AccountStatisticsService extends MoleculerDBService<
 		restricted: ['api'],
 		params: {
 			chainId: 'string',
-			field: 'string',
-			dayRange: 'string',
+			dayRange: { type: 'number', convert: true },
 			limit: { type: 'number', convert: true },
 		},
 	})
@@ -58,41 +52,60 @@ export default class AccountStatisticsService extends MoleculerDBService<
 			this.adapter.useDb(network.databaseName);
 		}
 
-		let sort, day_range;
+		let day_range: string = '';
 		switch (params.dayRange) {
-			case '1':
+			case 1:
 				day_range = 'one_day';
 				break;
-			case '3':
+			case 3:
 				day_range = 'three_days';
 				break;
-			case '7':
+			case 7:
 				day_range = 'seven_days';
 				break;
 		}
-		switch (params.field) {
-			case TOP_ACCOUNT_STATS_FIELD.TXS_SENT:
-				sort = `-${day_range}.total_sent_tx.percentage -${day_range}.total_sent_amount.percentage`;
-				break;
-			case TOP_ACCOUNT_STATS_FIELD.TXS_RECEIVED:
-				sort = `-${day_range}.total_received_tx.percentage -${day_range}.total_received_amount.percentage`;
-				break;
-			case TOP_ACCOUNT_STATS_FIELD.AMOUNT_SENT:
-				sort = `-${day_range}.total_sent_amount.percentage -${day_range}.total_sent_tx.percentage`;
-				break;
-			case TOP_ACCOUNT_STATS_FIELD.AMOUNT_RECEIVED:
-				sort = `-${day_range}.total_received_amount.percentage -${day_range}.total_received_tx.percentage`;
-				break;
-		}
 
-		let data = await this.adapter.lean({
-			sort,
-			limit: params.limit,
-		});
+		let projectionTxSent: any = {}, projectionTxReceived: any = {},
+			projectionAmountSent: any = {}, projectionAmountReceived: any = {};
+		projectionTxSent.address = 1;
+		projectionTxSent[`${day_range}.total_sent_tx`] = 1;
+		projectionTxReceived.address = 1;
+		projectionTxReceived[`${day_range}.total_received_tx`] = 1;
+		projectionAmountSent.address = 1;
+		projectionAmountSent[`${day_range}.total_sent_amount`] = 1;
+		projectionAmountReceived.address = 1;
+		projectionAmountReceived[`${day_range}.total_received_amount`] = 1;
+		let [dataTxSent, dataTxReceived, dataAmountSent, dataAmountReceived] = await Promise.all([
+			this.adapter.lean({
+				projection: projectionTxSent,
+				sort: `-${day_range}.total_sent_tx.percentage -${day_range}.total_sent_amount.percentage`,
+				limit: params.limit,
+			}),
+			this.adapter.lean({
+				projection: projectionTxReceived,
+				sort: `-${day_range}.total_received_tx.percentage -${day_range}.total_received_amount.percentage`,
+				limit: params.limit,
+			}),
+			this.adapter.lean({
+				projection: projectionAmountSent,
+				sort: `-${day_range}.total_sent_amount.percentage -${day_range}.total_sent_tx.percentage`,
+				limit: params.limit,
+			}),
+			this.adapter.lean({
+				projection: projectionAmountReceived,
+				sort: `-${day_range}.total_received_amount.percentage -${day_range}.total_received_tx.percentage`,
+				limit: params.limit,
+			}),
+		]);
 		return {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
-			data,
+			data: {
+				top_aura_senders: dataTxSent,
+				top_aura_receivers: dataTxReceived,
+				top_txn_count_sent: dataAmountSent,
+				top_txn_count_received: dataAmountReceived,
+			},
 		};
 	}
 
@@ -114,13 +127,6 @@ export default class AccountStatisticsService extends MoleculerDBService<
 	 *          description: "Chain Id of network need to query"
 	 *          example: "aura-testnet-2"
 	 *        - in: query
-	 *          name: field
-	 *          required: true
-	 *          schema:
-	 *            type: string
-	 *            enum: ["TXS_SENT","TXS_RECEIVED","AMOUNT_SENT","AMOUNT_RECEIVED"]
-	 *          description: "Account's field to query"
-	 *        - in: query
 	 *          name: dayRange
 	 *          required: true
 	 *          schema:
@@ -132,6 +138,7 @@ export default class AccountStatisticsService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: number
+	 *            enum: ["1","5","10","15","20"]
 	 *          description: "Number of records returned"
 	 *      responses:
 	 *        '200':
