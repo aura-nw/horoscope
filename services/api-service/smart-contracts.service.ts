@@ -3,13 +3,12 @@
 'use strict';
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { Config } from '../../common';
 import { ErrorCode, ErrorMessage, GetContractsRequest, MoleculerDBService } from '../../types';
 import { LIST_NETWORK } from '../../common/constant';
 import { dbSmartContractsMixin } from '../../mixins/dbMixinMongoose';
-import { ValidatorEntity } from '../../entities';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { ISmartContracts } from '../../model/smart-contracts.model';
+import { ObjectId } from 'mongodb';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -30,6 +29,54 @@ export default class SmartContractsService extends MoleculerDBService<
 	},
 	ISmartContracts
 > {
+	@Get('/', {
+		name: 'getContracts',
+		params: {
+			chainId: 'string',
+			height: {
+				type: 'number',
+				interger: true,
+				convert: true,
+			},
+			limit: {
+				type: 'number',
+				default: 10,
+				integer: true,
+				convert: true,
+				min: 1,
+				max: 100,
+			},
+			nextKey: {
+				type: 'string',
+				optional: true,
+			},
+		},
+	})
+	async getContracts(ctx: Context<GetContractsRequest>) {
+		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+		let query: any = { height: ctx.params.height };
+		if (ctx.params.nextKey && ctx.params.nextKey !== '') query._id = { $gte: new ObjectId(ctx.params.nextKey) };
+		this.logger.info('query', query);
+		let data: any = await this.adapter.find({
+			query,
+			// @ts-ignore
+			sort: '_id',
+			limit: ctx.params.limit + 1,
+		});
+		let next_key = data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;
+		let response = {
+			code: ErrorCode.SUCCESSFUL,
+			message: ErrorMessage.SUCCESSFUL,
+			data: {
+				smart_contracts: data.slice(0, ctx.params.limit - 1),
+				next_key
+			},
+		};
+		return response;
+	}
 	/**
 	 *  @swagger
 	 *  /v1/smart-contracts:
@@ -52,7 +99,7 @@ export default class SmartContractsService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: number
-	 *          description: "Smart contract's creation block height"
+	 *          description: "Smart contract creation block height"
 	 *        - in: query
 	 *          name: limit
 	 *          required: true
@@ -61,12 +108,10 @@ export default class SmartContractsService extends MoleculerDBService<
 	 *          description: "Number of records returned"
 	 *          example: 10
 	 *        - in: query
-	 *          name: offset
-	 *          required: true
+	 *          name: nextKey
 	 *          schema:
-	 *            type: number
-	 *          description: "Number of records skipped"
-	 *          example: 0
+	 *            type: string
+	 *          description: "Next key to query"
 	 *      responses:
 	 *        '200':
 	 *          description: Smart contracts
@@ -110,6 +155,9 @@ export default class SmartContractsService extends MoleculerDBService<
 	 *                            tx_hash:
 	 *                              type: string
 	 *                              example: 'CSERNFVIQLN24E78DSHEU7I6QGSUHUG176G2W71T349YWS2HDB827YG3WF8Y'
+	 *                      next_key:
+	 *                        type: string
+	 *                        example: '6332a5b8b0257f00177afebb'
 	 *        '422':
 	 *          description: Bad request
 	 *          content:
@@ -150,54 +198,4 @@ export default class SmartContractsService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1.account-info"
 	 */
-	@Get('/', {
-		name: 'getContracts',
-		params: {
-			chainId: 'string',
-			height: {
-				type: 'number',
-				interger: true,
-				convert: true,
-			},
-			limit: {
-				type: 'number',
-				default: 10,
-				integer: true,
-				convert: true,
-				min: 1,
-				max: 100,
-			},
-			offset: {
-				type: 'number',
-				default: 0,
-				integer: true,
-				convert: true,
-				min: 0,
-				max: 100,
-			},
-		},
-	})
-	async getContracts(ctx: Context<GetContractsRequest>) {
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
-		if (network && network.databaseName) {
-			this.adapter.useDb(network.databaseName);
-		}
-		let data = await this.adapter.find({
-			query: {
-				height: {
-					$gte: ctx.params.height,
-				},
-			},
-			// @ts-ignore
-			sort: 'height',
-			limit: ctx.params.limit,
-			offset: ctx.params.offset * ctx.params.limit,
-		});
-		let response = {
-			code: ErrorCode.SUCCESSFUL,
-			message: ErrorMessage.SUCCESSFUL,
-			data,
-		};
-		return response;
-	}
 }
