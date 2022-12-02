@@ -58,7 +58,6 @@ export default class FeegrantService extends MoleculerDBService<
 			expired: {
 				type: 'boolean',
 				optional: true,
-				default: false,
 				convert: true,
 			},
 			pageLimit: {
@@ -130,7 +129,9 @@ export default class FeegrantService extends MoleculerDBService<
 				ctx.params.status.split(',').forEach((e) => queryIn.push(e));
 				query['status'] = { $in: queryIn };
 			}
-			query['expired'] = ctx.params.expired;
+			if (ctx.params.expired !== undefined) {
+				query['expired'] = ctx.params.expired;
+			}
 			this.logger.info(query);
 			let [result, count]: [any[], number] = await Promise.all([
 				this.adapter.lean({
