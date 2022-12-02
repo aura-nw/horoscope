@@ -8,6 +8,7 @@ import { Job } from 'bull';
 import { CONST_CHAR, MSG_TYPE } from '../../common/constant';
 import { DailyTxStatistics } from '../../entities';
 import { JsonConvert } from 'json2typescript';
+import { ObjectId } from 'mongodb';
 import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
@@ -30,7 +31,7 @@ export default class CrawlDailyTxService extends Service {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(
-							job.data.offset,
+							job.data.id,
 							job.data.txCount,
 							job.data.activeAddrs,
 						);
@@ -42,31 +43,31 @@ export default class CrawlDailyTxService extends Service {
 		});
 	}
 
-	async handleJob(offset: number, txCount: number, activeAddrs: string[]) {
+	async handleJob(id: any, txCount: number, activeAddrs: string[]) {
 
 		let listAddresses: string[] = [];
 
 		const syncDate = new Date();
+		const endTime = syncDate.setUTCHours(0, 0, 0, 0);
 		syncDate.setDate(syncDate.getDate() - 1);
 		const startTime = syncDate.setUTCHours(0, 0, 0, 0);
-		const endTime = syncDate.setUTCHours(23, 59, 59, 999);
-		let date = new Date(startTime);
-		this.logger.info(`Get txs at paging ${offset + 1} for day ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`);
+		this.logger.info(`Get txs from _id ${id} for day ${new Date(startTime)}`);
 
 		let query: any = {
 			'indexes.timestamp': {
 				$gte: new Date(startTime),
-				$lte: new Date(endTime),
+				$lt: new Date(endTime),
 			},
 		};
+		if (id) query._id = { $gt: new ObjectId(id) };
+		this.logger.info(`Query ${JSON.stringify(query)}`);
 
 		const dailyTxs: any = await this.broker.call('v1.transaction-stats.act-find', {
 			query,
 			sort: '_id',
 			limit: 100,
-			offset: offset * 100,
 		});
-		this.logger.info(`Number of Txs retrieved at page ${offset + 1}: ${dailyTxs.length}`);
+		this.logger.info(`Number of Txs retrieved from _id ${id}: ${dailyTxs.length}`);
 
 		if (dailyTxs.length > 0) {
 			try {
@@ -146,12 +147,12 @@ export default class CrawlDailyTxService extends Service {
 
 			activeAddrs = activeAddrs.concat(listAddresses).filter(this.onlyUnique);
 
-			const newOffset = offset + 1;
+			const newId = dailyTxs[dailyTxs.length - 1]._id;
 			txCount += dailyTxs.length;
 			this.createJob(
 				'crawl.daily-tx',
 				{
-					offset: newOffset,
+					id: newId,
 					txCount,
 					activeAddrs,
 				},
@@ -188,7 +189,7 @@ export default class CrawlDailyTxService extends Service {
 					DailyTxStatistics,
 				);
 				await this.adapter.insert(item);
-				this.logger.info(`Daily Blockchain Statistics for day ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`);
+				this.logger.info(`Daily Blockchain Statistics for day ${startTime}`);
 				this.logger.info(JSON.stringify(item));
 			} catch (error) {
 				this.logger.error(
@@ -206,7 +207,7 @@ export default class CrawlDailyTxService extends Service {
 		this.createJob(
 			'crawl.daily-tx',
 			{
-				offset: 0,
+				id: null,
 				txCount: 0,
 				activeAddrs: [],
 			},
