@@ -182,5 +182,5 @@ export interface GetContractsRequest {
 	chainId: string;
 	height: number;
 	limit: number;
-	offset: number;
+	nextKey: string;
 }
