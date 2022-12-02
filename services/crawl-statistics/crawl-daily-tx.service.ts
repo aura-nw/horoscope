@@ -5,9 +5,11 @@ import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
 import { dbDailyTxStatisticsMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
-import { CONST_CHAR, MSG_TYPE } from '../../common/constant';
+import { CONST_CHAR } from '../../common/constant';
 import { DailyTxStatistics } from '../../entities';
 import { JsonConvert } from 'json2typescript';
+import { ObjectId } from 'mongodb';
+import { fromBech32 } from '@cosmjs/encoding';
 import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
@@ -30,7 +32,7 @@ export default class CrawlDailyTxService extends Service {
 						job.progress(10);
 						// @ts-ignore
 						await this.handleJob(
-							job.data.offset,
+							job.data.id,
 							job.data.txCount,
 							job.data.activeAddrs,
 						);
@@ -42,101 +44,64 @@ export default class CrawlDailyTxService extends Service {
 		});
 	}
 
-	async handleJob(offset: number, txCount: number, activeAddrs: string[]) {
-
+	async handleJob(id: any, txCount: number, activeAddrs: string[]) {
 		let listAddresses: string[] = [];
 
 		const syncDate = new Date();
+		const endTime = syncDate.setUTCHours(0, 0, 0, 0);
 		syncDate.setDate(syncDate.getDate() - 1);
 		const startTime = syncDate.setUTCHours(0, 0, 0, 0);
-		const endTime = syncDate.setUTCHours(23, 59, 59, 999);
-		let date = new Date(startTime);
-		this.logger.info(`Get txs at paging ${offset + 1} for day ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`);
+		this.logger.info(`Get txs from _id ${id} for day ${new Date(startTime)}`);
 
 		let query: any = {
 			'indexes.timestamp': {
 				$gte: new Date(startTime),
-				$lte: new Date(endTime),
+				$lt: new Date(endTime),
 			},
 		};
+		if (id) query._id = { $gt: new ObjectId(id) };
+		this.logger.info(`Query ${JSON.stringify(query)}`);
 
-		const dailyTxs: any = await this.broker.call('v1.transaction-stats.act-find', {
-			query,
-			sort: '_id',
-			limit: 100,
-			offset: offset * 100,
-		});
-		this.logger.info(`Number of Txs retrieved at page ${offset + 1}: ${dailyTxs.length}`);
+		const dailyTxs: any = await this.broker.call(
+			'v1.transaction-stats.act-find',
+			{
+				query,
+				sort: '_id',
+				limit: 100,
+			},
+			{ meta: { $cache: false }, timeout: 0 },
+		);
+		this.logger.info(`Number of Txs retrieved from _id ${id}: ${dailyTxs.length}`);
 
 		if (dailyTxs.length > 0) {
 			try {
 				dailyTxs.map((txs: any) => {
-					txs.tx.body.messages.map((message: any) => {
-						switch (message['@type']) {
-							case MSG_TYPE.MSG_SEND:
-								listAddresses.push(message.from_address, message.to_address);
-								break;
-							case MSG_TYPE.MSG_DELEGATE:
-								listAddresses.push(message.delegator_address);
-								break;
-							case MSG_TYPE.MSG_REDELEGATE:
-								listAddresses.push(message.delegator_address);
-								break;
-							case MSG_TYPE.MSG_UNDELEGATE:
-								listAddresses.push(message.delegator_address);
-								break;
-							case MSG_TYPE.MSG_EXECUTE_CONTRACT:
-								listAddresses.push(message.sender);
-								break;
-							case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
-								listAddresses.push(message.sender);
-								break;
-							case MSG_TYPE.MSG_STORE_CODE:
-								listAddresses.push(message.sender);
-								break;
-							case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
-								listAddresses.push(message.from_address, message.to_address);
-								break;
-							case MSG_TYPE.MSG_DEPOSIT:
-								listAddresses.push(message.depositor);
-								break;
-							case MSG_TYPE.MSG_WITHDRAW_REWARDS:
-								listAddresses.push(message.delegator_address);
-								break;
-							case MSG_TYPE.MSG_SUBMIT_PROPOSAL:
-								listAddresses.push(message.proposer);
-								break;
-							case MSG_TYPE.MSG_VOTE:
-								listAddresses.push(message.voter);
-								break;
-							case MSG_TYPE.MSG_IBC_TRANSFER:
-								listAddresses.push(message.sender);
-								break;
-							case MSG_TYPE.MSG_IBC_RECEIVE:
-								let data = JSON.parse(
-									txs.tx_response.logs
-										.find((log: any) =>
-											log.events.find(
-												(event: any) =>
-													event.type === CONST_CHAR.RECV_PACKET,
-											),
+					txs.tx_response.logs.map((log: any) => {
+						try {
+							let event = log.events
+								.filter(
+									(e: any) =>
+										e.type == CONST_CHAR.COIN_RECEIVED ||
+										e.type == CONST_CHAR.COIN_SPENT,
+								)
+								.map((e: any) => e.attributes)
+								.map((e: any) =>
+									e
+										.filter(
+											(x: any) =>
+												x.key === CONST_CHAR.RECEIVER ||
+												x.key === CONST_CHAR.SPENDER,
 										)
-										.events.find(
-											(event: any) => event.type === CONST_CHAR.RECV_PACKET,
-										)
-										.attributes.find(
-											(attribute: any) =>
-												attribute.key === CONST_CHAR.PACKET_DATA,
-										).value,
-								);
-								listAddresses.push(data.receiver);
-								break;
-							case MSG_TYPE.MSG_MULTI_SEND:
-								listAddresses.push(message.inputs[0].address);
-								message.outputs.map((output: any) => {
-									listAddresses.push(output.address);
-								});
-								break;
+										.map((x: any) => x.value),
+								)
+								.flat();
+							event = event.filter(
+								(e: string) => fromBech32(e).data.length === 20,
+							);
+							if (event) listAddresses.push(...event);
+						} catch (error) {
+							this.logger.error(error);
+							throw error;
 						}
 					});
 				});
@@ -146,12 +111,12 @@ export default class CrawlDailyTxService extends Service {
 
 			activeAddrs = activeAddrs.concat(listAddresses).filter(this.onlyUnique);
 
-			const newOffset = offset + 1;
+			const newId = dailyTxs[dailyTxs.length - 1]._id;
 			txCount += dailyTxs.length;
 			this.createJob(
 				'crawl.daily-tx',
 				{
-					offset: newOffset,
+					id: newId,
 					txCount,
 					activeAddrs,
 				},
@@ -167,7 +132,7 @@ export default class CrawlDailyTxService extends Service {
 				syncDate.setDate(syncDate.getDate() - 1);
 				const previousDay = syncDate.setUTCHours(0, 0, 0, 0);
 				const [resultTotalAccs, previousDailyTx]: [any, DailyTxStatistics] = await Promise.all([
-					this.broker.call('v1.account-stats.countTotal', {}),
+					this.broker.call('v1.account-stats.countTotal', {}, { meta: { $cache: false }, timeout: 0 }),
 					this.adapter.findOne({
 						date: new Date(previousDay),
 					}),
@@ -188,7 +153,7 @@ export default class CrawlDailyTxService extends Service {
 					DailyTxStatistics,
 				);
 				await this.adapter.insert(item);
-				this.logger.info(`Daily Blockchain Statistics for day ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`);
+				this.logger.info(`Daily Blockchain Statistics for day ${startTime}`);
 				this.logger.info(JSON.stringify(item));
 			} catch (error) {
 				this.logger.error(
@@ -206,7 +171,7 @@ export default class CrawlDailyTxService extends Service {
 		this.createJob(
 			'crawl.daily-tx',
 			{
-				offset: 0,
+				id: null,
 				txCount: 0,
 				activeAddrs: [],
 			},

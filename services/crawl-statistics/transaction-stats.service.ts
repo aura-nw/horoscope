@@ -29,17 +29,13 @@ export default class TransactionStatsService extends MoleculerDBService<
     ITransaction
 > {
     @Action({
-        name: 'act-find',
-        cache: {
-            ttl: 10,
-        },
+        name: 'act-find'
     })
     async find(ctx: Context<QueryTransactionStatsParams>) {
         let result = await this.adapter.lean({
             query: ctx.params.query,
             sort: ctx.params.sort,
             limit: ctx.params.limit,
-            offset: ctx.params.offset,
         });
         return result;
     }
