@@ -8,6 +8,7 @@ import { Context, Service, ServiceBroker } from 'moleculer';
 import { RedelegationResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
+import { fromBech32 } from '@cosmjs/encoding';
 const QueueService = require('moleculer-bull');
 const Bull = require('bull');
 import { QueueConfig } from '../../config/queue';
@@ -70,11 +71,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		listAddresses = listAddresses.filter(
-			(addr: string) =>
-				addr.startsWith('aura') ||
-				addr.startsWith('cosmos') ||
-				addr.startsWith('evmos') ||
-				addr.startsWith('osmo'),
+			(addr: string) => fromBech32(addr).data.length === 20
 		);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {

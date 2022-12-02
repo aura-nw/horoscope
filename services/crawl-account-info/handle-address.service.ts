@@ -6,6 +6,7 @@ import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
 import { AccountInfoEntity } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
+import { fromBech32 } from '@cosmjs/encoding';
 import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
@@ -106,11 +107,7 @@ export default class HandleAddressService extends Service {
 								)
 								.flat();
 							event = event.filter(
-								(e: string) =>
-									e.startsWith('aura') ||
-									e.startsWith('cosmos') ||
-									e.startsWith('evmos') ||
-									e.startsWith('osmo'),
+								(e: string) => fromBech32(e).data.length === 20,
 							);
 							if (event) listAddresses.push(...event);
 						} catch (error) {

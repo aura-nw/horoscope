@@ -7,7 +7,8 @@ import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
-import { AccountInfoEntity, DelegationResponse, ValidatorEntity } from '../../entities';
+import { AccountInfoEntity, DelegationResponse } from '../../entities';
+import { fromBech32 } from '@cosmjs/encoding';
 import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
@@ -68,11 +69,7 @@ export default class CrawlAccountDelegatesService extends Service {
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		listAddresses = listAddresses.filter(
-			(addr: string) =>
-				addr.startsWith('aura') ||
-				addr.startsWith('cosmos') ||
-				addr.startsWith('evmos') ||
-				addr.startsWith('osmo'),
+			(addr: string) => fromBech32(addr).data.length === 20
 		);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {

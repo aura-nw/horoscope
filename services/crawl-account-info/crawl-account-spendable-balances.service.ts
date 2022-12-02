@@ -9,6 +9,7 @@ import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
 import { Coin } from '../../entities/coin.entity';
 import { AccountInfoEntity, IBCDenomEntity } from '../../entities';
+import { fromBech32 } from '@cosmjs/encoding';
 import { QueueConfig } from '../../config/queue';
 const QueueService = require('moleculer-bull');
 
@@ -69,11 +70,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		listAddresses = listAddresses.filter(
-			(addr: string) =>
-				addr.startsWith('aura') ||
-				addr.startsWith('cosmos') ||
-				addr.startsWith('evmos') ||
-				addr.startsWith('osmo'),
+			(addr: string) => fromBech32(addr).data.length === 20
 		);
 		if (listAddresses.length > 0) {
 			for (let address of listAddresses) {
