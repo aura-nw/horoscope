@@ -14,6 +14,7 @@ import { AxiosDefaults } from 'axios';
 import axios from 'axios';
 
 import * as FileType from 'file-type';
+import BigNumber from 'bignumber.js';
 
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
@@ -217,11 +218,14 @@ export class Common {
 				chain_id: network?.chainId,
 				chain_name: network?.chainName,
 			},
-			percent_hold:
-				Number(
-					(BigInt(balanceInfo?.data?.balance) * BigInt(100000000)) /
-						BigInt(tokenInfo?.data?.total_supply),
-				) / 1000000,
+			// percent_hold:
+			// 	Number(
+			// 		(BigInt(balanceInfo?.data?.balance) * BigInt(100000000)) /
+			// 			BigInt(tokenInfo?.data?.total_supply),
+			// 	) / 1000000,
+			percent_hold: new BigNumber(balanceInfo?.data?.balance)
+				.dividedBy(tokenInfo?.data?.total_supply)
+				.multipliedBy(100),
 		};
 	};
 	public static checkFileTypeInvalid = function (type: string) {

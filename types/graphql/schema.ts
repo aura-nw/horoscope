@@ -8,9 +8,11 @@ import {
 	prismaAuraTestnet,
 	prismaCosmoshubProd,
 	prismaEuphoriaProd,
+	prismaEuphoriaStaging,
 	prismaEuphoriaTestnet,
 	prismaEvmosTestnet,
 	prismaOsmosisProd,
+	prismaSerenityStaging,
 	prismaSerenityTestnet,
 	prismaThetaTestnet
 } from '../../utils/context';
@@ -606,7 +608,7 @@ export const Resolvers = {
 	Query: {
 		accountInfo: (_parent: any, args: any, context: any, info: any) => {
 			console.log(`Query accountInfo with args ${JSON.stringify(args)}`);
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.address !== '' && args.address !== undefined) where.address = args.address;
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
@@ -619,7 +621,7 @@ export const Resolvers = {
 			});
 		},
 		accountStatistics: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.address !== '' && args.address !== undefined) where.address = args.address;
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
@@ -632,7 +634,7 @@ export const Resolvers = {
 			});
 		},
 		block: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.hash !== '' && args.hash !== undefined) where.block_id = { hash: args.hash };
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
@@ -645,7 +647,7 @@ export const Resolvers = {
 			});
 		},
 		codeId: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
 			if (args.contract_type !== '' && args.contract_type !== undefined)
@@ -661,7 +663,7 @@ export const Resolvers = {
 			});
 		},
 		communityPool: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			return prisma.community_pool.findMany({
@@ -669,7 +671,7 @@ export const Resolvers = {
 			});
 		},
 		cw20Asset: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
 			if (args.contract_address !== '' && args.contract_address !== undefined)
@@ -685,7 +687,7 @@ export const Resolvers = {
 			});
 		},
 		cw721Asset: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
 			if (args.contract_address !== '' && args.contract_address !== undefined)
@@ -701,7 +703,7 @@ export const Resolvers = {
 			});
 		},
 		dailyCW20Holder: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
 			if (args.contract_address !== '' && args.contract_address !== undefined) where.contract_address = args.contract_address;
@@ -715,7 +717,7 @@ export const Resolvers = {
 			});
 		},
 		dailyTxStatistics: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.date !== '' && args.date !== undefined) where.date = args.date;
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
@@ -728,7 +730,7 @@ export const Resolvers = {
 			});
 		},
 		delayJob: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.address !== '' && args.address !== undefined) where.address = args.address;
 			if (args.type !== '' && args.type !== undefined) where.address = args.address;
@@ -742,7 +744,7 @@ export const Resolvers = {
 			});
 		},
 		ibcDenom: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.hash !== '' && args.hash !== undefined) where.hash = args.hash;
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
@@ -751,7 +753,7 @@ export const Resolvers = {
 			});
 		},
 		inflation: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			return prisma.inflation.findMany({
@@ -759,7 +761,7 @@ export const Resolvers = {
 			});
 		},
 		param: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.module !== '' && args.module !== undefined) where.module = args.module;
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
@@ -772,7 +774,7 @@ export const Resolvers = {
 			});
 		},
 		pool: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			return prisma.pool.findMany({
@@ -780,7 +782,7 @@ export const Resolvers = {
 			});
 		},
 		proposal: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.proposal_id !== '' && args.proposal_id !== undefined)
 				where.proposal_id = args.proposal_id;
@@ -795,7 +797,7 @@ export const Resolvers = {
 			});
 		},
 		smartContracts: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
 			if (args.contract_hash !== '' && args.contract_hash !== undefined)
@@ -816,7 +818,7 @@ export const Resolvers = {
 			});
 		},
 		supply: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
 			return prisma.supply.findMany({
@@ -824,7 +826,7 @@ export const Resolvers = {
 			});
 		},
 		transaction: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.type !== '' && args.type !== undefined)
 				where.tx = { body: { messages: { '@type': args.type } } };
@@ -839,7 +841,7 @@ export const Resolvers = {
 			});
 		},
 		validator: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.operator_address !== '' && args.operator_address !== undefined)
 				where.operator_address = args.operator_address;
@@ -855,7 +857,7 @@ export const Resolvers = {
 			});
 		},
 		vote: (_parent: any, args: any, context: any, info: any) => {
-			let prisma = prismaAuraTestnet;
+			let prisma = defaultPrisma();
 			const where: any = {};
 			if (args.voter_address !== '' && args.voter_address !== undefined)
 				where.voter_address = args.voter_address;
@@ -875,6 +877,19 @@ export const Resolvers = {
 	},
 };
 
+const defaultPrisma = () => {
+	switch (Config.NAMESPACE) {
+		case ENV_NAMESPACE.DEV:
+			return prismaAuraTestnet;
+		case ENV_NAMESPACE.STAGING:
+			return prismaSerenityStaging;
+		case ENV_NAMESPACE.PROD:
+			return prismaEuphoriaProd;
+		default:
+			return prismaAuraTestnet;
+	}
+}
+
 const handleChainId = (chain_id: string) => {
 	switch (Config.NAMESPACE) {
 		case ENV_NAMESPACE.DEV:
@@ -883,7 +898,8 @@ const handleChainId = (chain_id: string) => {
 					return prismaAuraTestnet;
 				case CHAIN_ID_DEV.SERENITY_TESTNET:
 					return prismaSerenityTestnet;
-				case CHAIN_ID_DEV.EUPHORIA_TESTNET:
+				case CHAIN_ID_DEV.EUPHORIA_TESTNET_1:
+				case CHAIN_ID_DEV.EUPHORIA_TESTNET_2:
 					return prismaEuphoriaTestnet;
 				case CHAIN_ID_DEV.THETA_TESTNET:
 					return prismaThetaTestnet;
@@ -894,18 +910,18 @@ const handleChainId = (chain_id: string) => {
 			}
 		case ENV_NAMESPACE.STAGING:
 			switch (chain_id) {
-				case CHAIN_ID_DEV.AURA_TESTNET:
-					return prismaAuraTestnet;
 				case CHAIN_ID_DEV.SERENITY_TESTNET:
-					return prismaSerenityTestnet;
-				case CHAIN_ID_DEV.EUPHORIA_TESTNET:
-					return prismaEuphoriaTestnet;
+					return prismaSerenityStaging;
+				case CHAIN_ID_DEV.EUPHORIA_TESTNET_1:
+				case CHAIN_ID_DEV.EUPHORIA_TESTNET_2:
+					return prismaEuphoriaStaging;
 				default:
-					return prismaAuraTestnet;
+					return prismaSerenityStaging;
 			}
 		case ENV_NAMESPACE.PROD:
 			switch (chain_id) {
-				case CHAIN_ID_PROD.EUPHORIA:
+				case CHAIN_ID_PROD.EUPHORIA_1:
+				case CHAIN_ID_PROD.EUPHORIA_2:
 					return prismaEuphoriaProd;
 				case CHAIN_ID_PROD.COSMOSHUB:
 					return prismaCosmoshubProd;

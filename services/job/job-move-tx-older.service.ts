@@ -34,55 +34,45 @@ export default class MoveTxService extends Service {
 	}
 
 	async handleJob(listBlockHeight: string[]) {
-		listBlockHeight.map(async (height) => {
-			let listTransactionInHeight: ITransaction[] = await this.adapter.lean({
-				query: {
-					'tx_response.height': height,
-				},
-			});
-			//insert transaction to transaction-aggregate table
-			this.createJob(
-				'listtx.insert',
-				{
-					listTx: listTransactionInHeight,
-				},
-				{
-					removeOnComplete: true,
-					removeOnFail: {
-						count: 10,
+		if (listBlockHeight && listBlockHeight.length) {
+			listBlockHeight.map(async (height) => {
+				let listTransactionInHeight: ITransaction[] = await this.adapter.lean({
+					query: {
+						'tx_response.height': height,
 					},
-				},
-			);
-			//delete transaction in transaction table
-			let listBulk: any[] = [];
-			listBulk = listTransactionInHeight.map((transaction) => {
-				return {
-					deleteOne: {
-						filter: {
-							//@ts-ignore
-							_id: new ObjectId(transaction._id.toString()),
+				});
+				//insert transaction to transaction-aggregate table
+				this.createJob(
+					'listtx.insert',
+					{
+						listTx: listTransactionInHeight,
+					},
+					{
+						removeOnComplete: true,
+						removeOnFail: {
+							count: 10,
 						},
 					},
-				};
+				);
+				//delete transaction in transaction table
+				let listBulk: any[] = [];
+				listBulk = listTransactionInHeight.map((transaction) => {
+					return {
+						deleteOne: {
+							filter: {
+								//@ts-ignore
+								_id: new ObjectId(transaction._id.toString()),
+							},
+						},
+					};
+				});
+				let resultDeleteBlock = await this.adapter.bulkWrite(listBulk);
+				this.logger.info('Result delete transaction: ', resultDeleteBlock);
 			});
-			let resultDeleteBlock = await this.adapter.bulkWrite(listBulk);
-			this.logger.info('Result delete transaction: ', resultDeleteBlock);
-		});
+		}
 	}
 
 	async _start() {
-		this.createJob(
-			'move.tx',
-			{
-				lastId: '0',
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 3,
-				},
-			},
-		);
 		this.getQueue('move.tx').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

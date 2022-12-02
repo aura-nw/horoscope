@@ -4,18 +4,8 @@
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbDailyTxStatisticsMixin } from '../../mixins/dbMixinMongoose';
-import { Config } from '../../common';
-import {
-	BlockchainDataRequest,
-	ErrorCode,
-	ErrorMessage,
-	getActionConfig,
-	MoleculerDBService,
-	RestOptions,
-	TopAccountsRequest,
-} from '../../types';
-import { IDailyTxStatistics, IInflation } from '../../entities';
-import { DbContextParameters } from 'moleculer-db';
+import { BlockchainDataRequest, ErrorCode, ErrorMessage, MoleculerDBService } from '../../types';
+import { IDailyTxStatistics } from '../../entities';
 import { LIST_NETWORK } from '../../common/constant';
 
 /**
@@ -38,6 +28,77 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 	},
 	IDailyTxStatistics
 > {
+	@Get('/', {
+		name: 'getDailyData',
+		/**
+		 * Service guard services allowed to connect
+		 */
+		restricted: ['api'],
+		params: {
+			chainId: 'string',
+			limit: { type: 'number', convert: true },
+		},
+	})
+	async getDailyData(ctx: Context<BlockchainDataRequest>) {
+		const params = await this.sanitizeParams(ctx, ctx.params);
+		const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+		let limit = 365;
+		let result: IDailyTxStatistics[] = await this.adapter.lean({
+			sort: '-date',
+			limit,
+		});
+		let extremeData = {
+			daily_txs: {
+				max: {
+					amount: result[0].daily_txs,
+					date: result[0].date,
+				},
+				min: {
+					amount: result[0].daily_txs,
+					date: result[0].date,
+				},
+			},
+			unique_addresses: {
+				max_gap: {
+					amount: result[0].unique_addresses_increase,
+					date: result[0].date,
+				},
+				min_gap: {
+					amount: result[0].unique_addresses_increase,
+					date: result[0].date,
+				},
+			},
+		};
+		for (let res of result) {
+			if (res.daily_txs > extremeData.daily_txs.max.amount) {
+				extremeData.daily_txs.max.amount = res.daily_txs;
+				extremeData.daily_txs.max.date = res.date;
+			}
+			if (res.daily_txs < extremeData.daily_txs.min.amount) {
+				extremeData.daily_txs.min.amount = res.daily_txs;
+				extremeData.daily_txs.min.date = res.date;
+			}
+			if (res.unique_addresses_increase > extremeData.unique_addresses.max_gap.amount) {
+				extremeData.unique_addresses.max_gap.amount = res.unique_addresses_increase;
+				extremeData.unique_addresses.max_gap.date = res.date;
+			}
+			if (res.unique_addresses_increase < extremeData.unique_addresses.min_gap.amount) {
+				extremeData.unique_addresses.min_gap.amount = res.unique_addresses_increase;
+				extremeData.unique_addresses.min_gap.date = res.date;
+			}
+		}
+		return {
+			code: ErrorCode.SUCCESSFUL,
+			message: ErrorMessage.SUCCESSFUL,
+			data: {
+				dailyData: result.slice(0, params.limit),
+				extremeData,
+			},
+		};
+	}
 	/**
 	 *  @swagger
 	 *  /v1/daily-tx-statistics:
@@ -52,15 +113,7 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: string
-	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-1","euphoria-2","cosmoshub-4"]
-	 *          description: "Chain Id of network need to query"
-	 *          example: "aura-testnet-2"
-	 *        - in: query
-	 *          name: timezone
-	 *          required: true
-	 *          schema:
-	 *            type: string
-	 *            enum: [-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12]
+	 *            enum: ["aura-testnet-2","serenity-testnet-001","halo-testnet-001","theta-testnet-001","osmo-test-4","evmos_9000-4","euphoria-2","cosmoshub-4"]
 	 *          description: "Chain Id of network need to query"
 	 *          example: "aura-testnet-2"
 	 *        - in: query
@@ -93,6 +146,9 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 	 *                        type: number
 	 *                        example: 100
 	 *                      unique_addresses:
+	 *                        type: number
+	 *                        example: 100
+	 *                      unique_addresses_increase:
 	 *                        type: number
 	 *                        example: 100
 	 *                      date:
@@ -138,64 +194,4 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 	 *                           type: string
 	 *                           example: "v1.block.chain"
 	 */
-	@Get('/', {
-		name: 'getDailyData',
-		/**
-		 * Service guard services allowed to connect
-		 */
-		restricted: ['api'],
-		params: {
-			chainId: 'string',
-			timezone: { type: 'number', convert: true },
-			limit: { type: 'number', convert: true },
-		},
-	})
-	async getDailyData(ctx: Context<BlockchainDataRequest>) {
-		const params = await this.sanitizeParams(ctx, ctx.params);
-		const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
-		if (network && network.databaseName) {
-			this.adapter.useDb(network.databaseName);
-		}
-		let skip = 0,
-			limit = params.limit * 24;
-		if (params.timezone < 0) {
-			skip = params.timezone;
-		} else if (params.timezone > 0) {
-			limit -= params.timezone;
-		}
-		let result = await this.adapter.lean({
-			sort: '-date',
-			limit,
-			skip,
-		});
-		let data: any[] = [],
-			firstDay = true;
-		while (result.length > 0) {
-			let lastDayRange = result.length > 24 ? 24 : result.length;
-			let eachDay = {
-				daily_txs: 0,
-				total_active_addresses: 0,
-				unique_addresses: 0,
-				date: null,
-			};
-			if (params.timezone > 0 && firstDay) {
-				lastDayRange = 24 - params.timezone;
-				firstDay = false;
-			} else if (firstDay) firstDay = false;
-			let lastDay = result.slice(0, lastDayRange);
-			lastDay.map((x: any) => {
-				eachDay.daily_txs += x.daily_txs;
-				eachDay.total_active_addresses += x.daily_active_addresses;
-			});
-			eachDay.unique_addresses = result[0].unique_addresses;
-			eachDay.date = result[0].date;
-			data.push(eachDay);
-			result.splice(0, lastDayRange);
-		}
-		return {
-			code: ErrorCode.SUCCESSFUL,
-			message: ErrorMessage.SUCCESSFUL,
-			data,
-		};
-	}
 }

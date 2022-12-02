@@ -589,17 +589,17 @@ export default class CrawlAccountStatsService extends Service {
 				removeOnFail: {
 					count: 3,
 				},
-				// repeat: {
-				// 	cron: '0 0 0 * * ?'
-				// },
+				repeat: {
+					cron: '0 0 0 * * ?'
+				},
 			},
 		);
 
 		this.getQueue('crawl.account-stats').on('completed', (job: Job) => {
-			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
+			this.logger.info(`Job #${job.id} completed! result: ${job.returnvalue}`);
 		});
 		this.getQueue('crawl.account-stats').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
+			this.logger.error(`Job #${job.id} failed! error: ${job.failedReason}`);
 		});
 		this.getQueue('crawl.account-stats').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);

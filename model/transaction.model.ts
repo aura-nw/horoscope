@@ -184,5 +184,8 @@ export const transactionMongoModel = (collection: string): unknown => {
 		{ name: 'withdraw_rewards_validator_asc', sparse: true },
 	);
 
+	schema.index({ 'indexes.addresses': 1 }, { sparse: true });
+	schema.index({ 'indexes.timestamp': -1 });
+
 	return models[collection] || model(collection, schema);
 };

@@ -1,7 +1,6 @@
 /* eslint-disable capitalized-comments */
 import os from 'os';
 import { LogLevels } from 'moleculer';
-import dotenvFlow from 'dotenv-flow';
 import _ from 'lodash';
 import { DBDialog, DBInfo } from '../types';
 import { PATH_COSMOS_SDK } from './constant';
@@ -164,6 +163,7 @@ export default class ConfigClass {
 	public GET_PARAMS_IBC_DENOM =
 		process.env.GET_PARAMS_IBC_DENOM || PATH_COSMOS_SDK.GET_PARAMS_IBC_DENOM;
 	public GET_VALIDATOR = process.env.GET_VALIDATOR || PATH_COSMOS_SDK.GET_VALIDATOR;
+	public GET_DATA_HASH = process.env.GET_DATA_HASH || PATH_COSMOS_SDK.GET_DATA_HASH;
 	public GET_SUPPLY = process.env.GET_SUPPLY || PATH_COSMOS_SDK.GET_SUPPLY;
 	public PATH_HEAP_DUMP = process.env.PATH_HEAP_DUMP || '/app/heap_';
 	// Dynamic property key

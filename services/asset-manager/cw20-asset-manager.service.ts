@@ -140,7 +140,7 @@ export default class CW20AssetManagerService extends moleculer.Service {
 		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
 		//@ts-ignore
 		delete ctx.params.query['custom_info.chain_id'];
-		return await this.adapter.find(ctx.params);
+		return await this.adapter.lean(ctx.params);
 	}
 
 	@Action()

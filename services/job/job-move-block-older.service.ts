@@ -45,7 +45,7 @@ export default class MoveBlockService extends Service {
 			if (blockTime) {
 				let timeRange = new Date();
 				timeRange.setDate(blockTime.getDate() + parseInt(Config.RANGE_DAY_MOVE_BLOCK, 10));
-				if (timeRange <= new Date()) {
+				if (timeRange >= new Date()) {
 					handleBlock.push(block);
 				}
 			}

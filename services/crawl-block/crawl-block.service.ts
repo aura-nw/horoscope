@@ -102,8 +102,8 @@ export default class CrawlBlockService extends Service {
 		const startBlock = this.currentBlock + 1;
 
 		let endBlock = startBlock + parseInt(Config.NUMBER_OF_BLOCK_PER_CALL) - 1;
-		if (endBlock > Math.max(latestBlockNetwork, latestBlockRedis)) {
-			endBlock = Math.max(latestBlockNetwork, latestBlockRedis);
+		if (endBlock > Math.min(latestBlockNetwork, latestBlockRedis)) {
+			endBlock = Math.min(latestBlockNetwork, latestBlockRedis);
 		}
 		this.logger.info('startBlock: ' + startBlock + ' endBlock: ' + endBlock);
 		try {
@@ -129,9 +129,10 @@ export default class CrawlBlockService extends Service {
 				throw new Error('cannot crawl block');
 			}
 			this.handleListBlock(data);
-			this.currentBlock = endBlock;
-
-			redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
+			if (this.currentBlock < endBlock) {
+				this.currentBlock = endBlock;
+				redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
+			}
 		} catch (error) {
 			this.logger.error(error);
 			throw new Error('cannot crawl block');

@@ -8,6 +8,7 @@ export interface IDailyTxStatistics {
     daily_txs: Number;
     daily_active_addresses: Number;
     unique_addresses: Number;
+    unique_addresses_increase: Number;
     date: Date | null;
 }
 
@@ -21,6 +22,8 @@ export class DailyTxStatistics implements IDailyTxStatistics {
     daily_active_addresses: Number = 0;
     @JsonProperty('unique_addresses', Number)
     unique_addresses: Number = 0;
+    @JsonProperty('unique_addresses_increase', Number)
+    unique_addresses_increase: Number = 0;
     @JsonProperty('date', DateConverter)
     date: Date | null = null;
 }

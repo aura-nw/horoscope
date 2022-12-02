@@ -35,7 +35,6 @@ export interface GetBlockRequest
 export interface GetVoteRequest extends ChainIdParams, PageLimit {
 	answer: string;
 	proposalid: number;
-	code: string;
 }
 
 export interface GetAssetByAddressRequest extends ChainIdParams, PageLimit {

@@ -8,6 +8,7 @@ const definition: definitionType<IDailyTxStatistics> = (collection?: string) => 
     daily_txs: Number,
     daily_active_addresses: Number,
     unique_addresses: Number,
+	unique_addresses_increase: Number,
     date: Date,
 	custom_info: customInfoModel,
 });

@@ -68,8 +68,6 @@ export default class CrawlSmartContractsService extends Service {
 	async handleJob(listTx: any, chainId: string) {
 		let smartContracts: any[] = [];
 
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		for (let txs of listTx) {
 			this.logger.info(`Get smart contract from TxHash: ${txs.tx_response.txhash}`);
 			for (let msg of txs.tx.body.messages) {
@@ -90,21 +88,15 @@ export default class CrawlSmartContractsService extends Service {
 							const contract_address = instant_contract_addresses[i].value;
 							let contract_hash;
 							try {
-								contract_hash = await this.callApiWithAxios(
-									Config.VERIFY_CONTRACT_API,
-									PATH_COSMOS_SDK.VERIFY_API_GET_HASH + code_id,
-								);
+								const param = Config.GET_DATA_HASH + code_id;
+								const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
+								contract_hash = (await this.callApiFromDomain(url, param))
+									.code_info.data_hash.toLowerCase();
 							} catch (error) {
 								this.logger.error(
 									'Can not connect to smart contract verify service',
 									error,
 								);
-							}
-							if (contract_hash) {
-								contract_hash =
-									contract_hash.Message?.length === 64
-										? contract_hash.Message
-										: '';
 							}
 							const smartContract = {
 								_id: new Types.ObjectId(),

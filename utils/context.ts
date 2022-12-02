@@ -41,6 +41,22 @@ export const prismaEvmosTestnet = new PrismaClient({
 	},
 	log: ['query', 'info', 'warn', 'error'],
 });
+export const prismaSerenityStaging = new PrismaClient({
+	datasources: {
+		db: {
+			url: Config.DATABASE_URL_SERENITY_STAGING,
+		},
+	},
+	log: ['query', 'info', 'warn', 'error'],
+});
+export const prismaEuphoriaStaging = new PrismaClient({
+	datasources: {
+		db: {
+			url: Config.DATABASE_URL_EUPHORIA_STAGING,
+		},
+	},
+	log: ['query', 'info', 'warn', 'error'],
+});
 export const prismaEuphoriaProd = new PrismaClient({
 	datasources: {
 		db: {
@@ -72,6 +88,8 @@ export interface Context {
 	prismaEuphoriaTestnet: PrismaClient;
 	prismaThetaTestnet: PrismaClient;
 	prismaEvmosTestnet: PrismaClient;
+	prismaSerenityStaging: PrismaClient;
+	prismaEuphoriaStaging: PrismaClient;
 	prismaEuphoriaProd: PrismaClient;
 	prismaCosmoshubProd: PrismaClient;
 	prismaOsmosisProd: PrismaClient;
@@ -83,6 +101,8 @@ export const context: Context = {
 	prismaEuphoriaTestnet,
 	prismaThetaTestnet,
 	prismaEvmosTestnet,
+	prismaSerenityStaging,
+	prismaEuphoriaStaging,
 	prismaEuphoriaProd,
 	prismaCosmoshubProd,
 	prismaOsmosisProd,
@@ -91,13 +111,15 @@ export const context: Context = {
 export enum CHAIN_ID_DEV {
 	AURA_TESTNET = 'aura-testnet-2',
 	SERENITY_TESTNET = 'serenity-testnet-001',
-	EUPHORIA_TESTNET = 'euphoria-1',
+	EUPHORIA_TESTNET_1 = 'euphoria-1',
+	EUPHORIA_TESTNET_2 = 'euphoria-2',
 	THETA_TESTNET = 'theta-testnet-001',
 	EVMOS_TESTNET = 'evmos_9000-4',
 }
 
 export enum CHAIN_ID_PROD {
-    EUPHORIA = 'euphoria-1',
+    EUPHORIA_1 = 'euphoria-1',
+	EUPHORIA_2 = 'euphoria-2',
     COSMOSHUB = 'cosmoshub-4',
     OSMOSIS = 'osmosis-1',
 };
