@@ -20,7 +20,7 @@ const definition: definitionType<ITransaction> = (collection?: string) => ({
 				{
 					public_key: {
 						'@type': String,
-						key: String,
+						key: Object,
 					},
 					mode_info: {
 						single: {
