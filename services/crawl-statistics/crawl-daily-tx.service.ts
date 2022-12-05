@@ -153,7 +153,7 @@ export default class CrawlDailyTxService extends Service {
 					DailyTxStatistics,
 				);
 				await this.adapter.insert(item);
-				this.logger.info(`Daily Blockchain Statistics for day ${startTime}`);
+				this.logger.info(`Daily Blockchain Statistics for day ${new Date(startTime)}`);
 				this.logger.info(JSON.stringify(item));
 			} catch (error) {
 				this.logger.error(

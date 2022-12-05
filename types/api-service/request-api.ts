@@ -161,7 +161,6 @@ export interface QueryTransactionStatsParams {
 	query: Object;
 	sort: string;
 	limit: number;
-	offset: number;
 }
 
 export interface BlockchainDataRequest {
