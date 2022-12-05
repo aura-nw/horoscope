@@ -58,7 +58,6 @@ export default class FeegrantService extends MoleculerDBService<
 			expired: {
 				type: 'boolean',
 				optional: true,
-				default: false,
 				convert: true,
 			},
 			pageLimit: {
@@ -130,7 +129,9 @@ export default class FeegrantService extends MoleculerDBService<
 				ctx.params.status.split(',').forEach((e) => queryIn.push(e));
 				query['status'] = { $in: queryIn };
 			}
-			query['expired'] = ctx.params.expired;
+			if (ctx.params.expired !== undefined) {
+				query['expired'] = ctx.params.expired;
+			}
 			this.logger.info(query);
 			let [result, count]: [any[], number] = await Promise.all([
 				this.adapter.lean({
@@ -192,6 +193,7 @@ export default class FeegrantService extends MoleculerDBService<
 			},
 			granter: { type: 'string', optional: true },
 			grantee: { type: 'string', optional: true },
+			txhash: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -252,6 +254,9 @@ export default class FeegrantService extends MoleculerDBService<
 			}
 			if (ctx.params.grantee) {
 				query['grantee'] = ctx.params.grantee;
+			}
+			if (ctx.params.txhash) {
+				query['tx_hash'] = ctx.params.txhash;
 			}
 			query['$or'] = [
 				{
@@ -521,6 +526,12 @@ export default class FeegrantService extends MoleculerDBService<
  *          schema:
  *            type: string
  *          description: "Grantee of feegrant"
+ *        - in: query
+ *          name: txhash
+ *          required: false
+ *          schema:
+ *            type: string
+ *          description: "Original Txhash of feegrant"
  *        - in: query
  *          name: pageOffset
  *          required: false

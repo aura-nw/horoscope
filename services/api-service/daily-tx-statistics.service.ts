@@ -4,12 +4,7 @@
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbDailyTxStatisticsMixin } from '../../mixins/dbMixinMongoose';
-import {
-	BlockchainDataRequest,
-	ErrorCode,
-	ErrorMessage,
-	MoleculerDBService,
-} from '../../types';
+import { BlockchainDataRequest, ErrorCode, ErrorMessage, MoleculerDBService } from '../../types';
 import { IDailyTxStatistics } from '../../entities';
 import { LIST_NETWORK } from '../../common/constant';
 
@@ -75,13 +70,13 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 					amount: result[0].unique_addresses_increase,
 					date: result[0].date,
 				},
-			}
+			},
 		};
 		for (let res of result) {
 			if (res.daily_txs > extremeData.daily_txs.max.amount) {
 				extremeData.daily_txs.max.amount = res.daily_txs;
 				extremeData.daily_txs.max.date = res.date;
-			} 
+			}
 			if (res.daily_txs < extremeData.daily_txs.min.amount) {
 				extremeData.daily_txs.min.amount = res.daily_txs;
 				extremeData.daily_txs.min.date = res.date;
@@ -89,7 +84,7 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 			if (res.unique_addresses_increase > extremeData.unique_addresses.max_gap.amount) {
 				extremeData.unique_addresses.max_gap.amount = res.unique_addresses_increase;
 				extremeData.unique_addresses.max_gap.date = res.date;
-			} 
+			}
 			if (res.unique_addresses_increase < extremeData.unique_addresses.min_gap.amount) {
 				extremeData.unique_addresses.min_gap.amount = res.unique_addresses_increase;
 				extremeData.unique_addresses.min_gap.date = res.date;
@@ -100,7 +95,7 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 			message: ErrorMessage.SUCCESSFUL,
 			data: {
 				dailyData: result.slice(0, params.limit),
-				extremeData
+				extremeData,
 			},
 		};
 	}

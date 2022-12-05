@@ -100,19 +100,33 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			const chainId = ctx.params.chainid;
 			if (ctx.params.answer) query.answer = ctx.params.answer;
 
-			let sort = '-height';
+			let sort = '-height -_id';
 
 			if (ctx.params.reverse) {
-				sort = 'height';
+				sort = 'height _id';
 			}
 
 			if (nextKey) {
 				if (ctx.params.reverse) {
-					query._id = { $gt: new ObjectId(nextKey._id) };
-					query['height'] = { $gte: nextKey.height };
+					query['$or'] = [
+						{
+							height: { $gt: nextKey.height },
+						},
+						{
+							height: nextKey.height,
+							_id: { $gt: new ObjectId(nextKey._id) },
+						},
+					];
 				} else {
-					query._id = { $lt: new ObjectId(nextKey._id) };
-					query['height'] = { $lte: nextKey.height };
+					query['$or'] = [
+						{
+							height: { $lt: nextKey.height },
+						},
+						{
+							height: nextKey.height,
+							_id: { $lt: new ObjectId(nextKey._id) },
+						},
+					];
 				}
 			}
 
@@ -136,7 +150,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 					: { _id: votes[votes.length - 2]._id, height: votes[votes.length - 2].height };
 
 			// remove the last item if there is a next page
-			if (nextKey) {
+			if (newNextKey) {
 				votes.pop();
 			}
 			return {

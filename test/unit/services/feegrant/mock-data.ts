@@ -1245,6 +1245,346 @@ export const tx_create_with_feegrant_then_useup = {
     }
 }
 
+export const tx_create_instantiate_specified_contract = {
+    "tx": {
+        "body": {
+            "messages": [
+                {
+                    "@type": "/cosmos.feegrant.v1beta1.MsgGrantAllowance",
+                    "granter": "aura1afuqcya9g59v0slx4e930gzytxvpx2c43xhvtx",
+                    "grantee": "aura1p8k9dk0x3r7rlmlnsafzqdrh3dp8nwg8rwxpty",
+                    "allowance": {
+                        "@type": "/cosmos.feegrant.v1beta1.AllowedContractAllowance",
+                        "allowance": {
+                            "@type": "/cosmos.feegrant.v1beta1.AllowedMsgAllowance",
+                            "allowance": {
+                                "@type": "/cosmos.feegrant.v1beta1.PeriodicAllowance",
+                                "basic": {
+                                    "spend_limit": [
+                                        {
+                                            "denom": "utaura",
+                                            "amount": "3000000"
+                                        }
+                                    ],
+                                    "expiration": "2022-12-21T16:59:59Z"
+                                },
+                                "period": "86400s",
+                                "period_spend_limit": [
+                                    {
+                                        "denom": "utaura",
+                                        "amount": "2000000"
+                                    }
+                                ],
+                                "period_can_spend": [
+                                    {
+                                        "denom": "utaura",
+                                        "amount": "2000000"
+                                    }
+                                ],
+                                "period_reset": "2022-12-01T01:25:21Z"
+                            },
+                            "allowed_messages": [
+                                "/cosmwasm.wasm.v1.MsgInstantiateContract",
+                                "/cosmwasm.wasm.v1.MsgExecuteContract"
+                            ]
+                        },
+                        "allowed_address": [
+                            "aura103f9xxjj9938dh9ghxtet53cat4dl42k2x07l6",
+                            "aura1afuqcya9g59v0slx4e930gzytxvpx2c43xhvtx",
+                            "aura1h9gmwepxzm2nzl4exalny762xjzvad02zxwejc"
+                        ]
+                    }
+                }
+            ],
+            "memo": "",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+        },
+        "auth_info": {
+            "signer_infos": [
+                {
+                    "public_key": {
+                        "@type": "/cosmos.crypto.secp256k1.PubKey",
+                        "key": "A38T6LMB532XQyKdDQOLaUIptluD3old7CWvLMAWE2VU"
+                    },
+                    "mode_info": {
+                        "single": {
+                            "mode": "SIGN_MODE_DIRECT"
+                        }
+                    },
+                    "sequence": "1388"
+                }
+            ],
+            "fee": {
+                "amount": [
+                    {
+                        "denom": "utaura",
+                        "amount": "1000"
+                    }
+                ],
+                "gas_limit": "400000",
+                "payer": "",
+                "granter": ""
+            }
+        },
+        "signatures": [
+            "k1FyZL/t/6Pl5JO6k/62hx0UIxeIG9JHstKd2VKgW49osL0MFv2kmCKQsVu2xKDHMeCWOj/oLCjkav5Pdi1CwQ=="
+        ]
+    },
+    "tx_response": {
+        "height": "3051355",
+        "txhash": "A02EBB30AA9DC65D979339ECC97049FEB6D4CE0754CCA56CFA1697173D0A76A8",
+        "codespace": "",
+        "code": 0,
+        "data": "0A2C0A2A2F636F736D6F732E6665656772616E742E763162657461312E4D73674772616E74416C6C6F77616E6365",
+        "raw_log": "[{\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/cosmos.feegrant.v1beta1.MsgGrantAllowance\"}]},{\"type\":\"set_feegrant\",\"attributes\":[{\"key\":\"granter\",\"value\":\"aura1afuqcya9g59v0slx4e930gzytxvpx2c43xhvtx\"},{\"key\":\"grantee\",\"value\":\"aura1p8k9dk0x3r7rlmlnsafzqdrh3dp8nwg8rwxpty\"}]}]}]",
+        "logs": [
+            {
+                "msg_index": 0,
+                "log": "",
+                "events": [
+                    {
+                        "type": "message",
+                        "attributes": [
+                            {
+                                "key": "action",
+                                "value": "/cosmos.feegrant.v1beta1.MsgGrantAllowance"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "set_feegrant",
+                        "attributes": [
+                            {
+                                "key": "granter",
+                                "value": "aura1afuqcya9g59v0slx4e930gzytxvpx2c43xhvtx"
+                            },
+                            {
+                                "key": "grantee",
+                                "value": "aura1p8k9dk0x3r7rlmlnsafzqdrh3dp8nwg8rwxpty"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "info": "",
+        "gas_wanted": "400000",
+        "gas_used": "83640",
+        "tx": {
+            "@type": "/cosmos.tx.v1beta1.Tx",
+            "body": {
+                "messages": [
+                    {
+                        "@type": "/cosmos.feegrant.v1beta1.MsgGrantAllowance",
+                        "granter": "aura1afuqcya9g59v0slx4e930gzytxvpx2c43xhvtx",
+                        "grantee": "aura1p8k9dk0x3r7rlmlnsafzqdrh3dp8nwg8rwxpty",
+                        "allowance": {
+                            "@type": "/cosmos.feegrant.v1beta1.AllowedContractAllowance",
+                            "allowance": {
+                                "@type": "/cosmos.feegrant.v1beta1.AllowedMsgAllowance",
+                                "allowance": {
+                                    "@type": "/cosmos.feegrant.v1beta1.PeriodicAllowance",
+                                    "basic": {
+                                        "spend_limit": [
+                                            {
+                                                "denom": "utaura",
+                                                "amount": "3000000"
+                                            }
+                                        ],
+                                        "expiration": "2022-12-21T16:59:59Z"
+                                    },
+                                    "period": "86400s",
+                                    "period_spend_limit": [
+                                        {
+                                            "denom": "utaura",
+                                            "amount": "2000000"
+                                        }
+                                    ],
+                                    "period_can_spend": [
+                                        {
+                                            "denom": "utaura",
+                                            "amount": "2000000"
+                                        }
+                                    ],
+                                    "period_reset": "2022-12-01T01:25:21Z"
+                                },
+                                "allowed_messages": [
+                                    "/cosmwasm.wasm.v1.MsgInstantiateContract",
+                                    "/cosmwasm.wasm.v1.MsgExecuteContract"
+                                ]
+                            },
+                            "allowed_address": [
+                                "aura103f9xxjj9938dh9ghxtet53cat4dl42k2x07l6",
+                                "aura1afuqcya9g59v0slx4e930gzytxvpx2c43xhvtx",
+                                "aura1h9gmwepxzm2nzl4exalny762xjzvad02zxwejc"
+                            ]
+                        }
+                    }
+                ],
+                "memo": "",
+                "timeout_height": "0",
+                "extension_options": [],
+                "non_critical_extension_options": []
+            },
+            "auth_info": {
+                "signer_infos": [
+                    {
+                        "public_key": {
+                            "@type": "/cosmos.crypto.secp256k1.PubKey",
+                            "key": "A38T6LMB532XQyKdDQOLaUIptluD3old7CWvLMAWE2VU"
+                        },
+                        "mode_info": {
+                            "single": {
+                                "mode": "SIGN_MODE_DIRECT"
+                            }
+                        },
+                        "sequence": "1388"
+                    }
+                ],
+                "fee": {
+                    "amount": [
+                        {
+                            "denom": "utaura",
+                            "amount": "1000"
+                        }
+                    ],
+                    "gas_limit": "400000",
+                    "payer": "",
+                    "granter": ""
+                }
+            },
+            "signatures": [
+                "k1FyZL/t/6Pl5JO6k/62hx0UIxeIG9JHstKd2VKgW49osL0MFv2kmCKQsVu2xKDHMeCWOj/oLCjkav5Pdi1CwQ=="
+            ]
+        },
+        "timestamp": "2022-11-30T01:25:24Z",
+        "events": [
+            {
+                "type": "coin_spent",
+                "attributes": [
+                    {
+                        "key": "c3BlbmRlcg==",
+                        "value": "YXVyYTFhZnVxY3lhOWc1OXYwc2x4NGU5MzBnenl0eHZweDJjNDN4aHZ0eA==",
+                        "index": true
+                    },
+                    {
+                        "key": "YW1vdW50",
+                        "value": "MTAwMHV0YXVyYQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "coin_received",
+                "attributes": [
+                    {
+                        "key": "cmVjZWl2ZXI=",
+                        "value": "YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "YW1vdW50",
+                        "value": "MTAwMHV0YXVyYQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "transfer",
+                "attributes": [
+                    {
+                        "key": "cmVjaXBpZW50",
+                        "value": "YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "c2VuZGVy",
+                        "value": "YXVyYTFhZnVxY3lhOWc1OXYwc2x4NGU5MzBnenl0eHZweDJjNDN4aHZ0eA==",
+                        "index": true
+                    },
+                    {
+                        "key": "YW1vdW50",
+                        "value": "MTAwMHV0YXVyYQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "message",
+                "attributes": [
+                    {
+                        "key": "c2VuZGVy",
+                        "value": "YXVyYTFhZnVxY3lhOWc1OXYwc2x4NGU5MzBnenl0eHZweDJjNDN4aHZ0eA==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "tx",
+                "attributes": [
+                    {
+                        "key": "ZmVl",
+                        "value": "MTAwMHV0YXVyYQ==",
+                        "index": true
+                    },
+                    {
+                        "key": "ZmVlX3BheWVy",
+                        "value": "YXVyYTFhZnVxY3lhOWc1OXYwc2x4NGU5MzBnenl0eHZweDJjNDN4aHZ0eA==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "tx",
+                "attributes": [
+                    {
+                        "key": "YWNjX3NlcQ==",
+                        "value": "YXVyYTFhZnVxY3lhOWc1OXYwc2x4NGU5MzBnenl0eHZweDJjNDN4aHZ0eC8xMzg4",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "tx",
+                "attributes": [
+                    {
+                        "key": "c2lnbmF0dXJl",
+                        "value": "azFGeVpML3QvNlBsNUpPNmsvNjJoeDBVSXhlSUc5SkhzdEtkMlZLZ1c0OW9zTDBNRnYya21DS1FzVnUyeEtESE1lQ1dPai9vTENqa2F2NVBkaTFDd1E9PQ==",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "message",
+                "attributes": [
+                    {
+                        "key": "YWN0aW9u",
+                        "value": "L2Nvc21vcy5mZWVncmFudC52MWJldGExLk1zZ0dyYW50QWxsb3dhbmNl",
+                        "index": true
+                    }
+                ]
+            },
+            {
+                "type": "set_feegrant",
+                "attributes": [
+                    {
+                        "key": "Z3JhbnRlcg==",
+                        "value": "YXVyYTFhZnVxY3lhOWc1OXYwc2x4NGU5MzBnenl0eHZweDJjNDN4aHZ0eA==",
+                        "index": true
+                    },
+                    {
+                        "key": "Z3JhbnRlZQ==",
+                        "value": "YXVyYTFwOGs5ZGsweDNyN3JsbWxuc2FmenFkcmgzZHA4bndnOHJ3eHB0eQ==",
+                        "index": true
+                    }
+                ]
+            }
+        ]
+    }
+}
+
 export const tx_revoke_with_feegrant = {
     "_id": 9,
     "indexes": {},
