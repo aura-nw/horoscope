@@ -7,6 +7,8 @@ import { Job } from 'bull';
 import { MSG_TYPE } from '../../common/constant';
 import { AccountStatistics, DailyStats } from '../../entities';
 import { JsonConvert } from 'json2typescript';
+import { ObjectId } from 'mongodb';
+
 import { QueueConfig } from '../../config/queue';
 import { Config } from '../../common';
 const QueueService = require('moleculer-bull');
@@ -29,7 +31,7 @@ export default class CrawlAccountStatsService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.offset, job.data.listData);
+						await this.handleJob(job.data.id, job.data.listData);
 						job.progress(100);
 						return true;
 					},
@@ -38,14 +40,15 @@ export default class CrawlAccountStatsService extends Service {
 		});
 	}
 
-	async handleJob(offset: number, listData: any[]) {
+	async handleJob(id: any, listData: any[]) {
 		let listAddresses: any[] = [],
 			listUpdateQueries: any[] = [];
 
 		const syncDate = new Date();
+		const endTime = syncDate.setUTCHours(0, 0, 0, 0);
 		syncDate.setDate(syncDate.getDate() - 1);
 		const startTime = syncDate.setUTCHours(0, 0, 0, 0);
-		const endTime = syncDate.setUTCHours(23, 59, 59, 999);
+		this.logger.info(`Get txs from _id ${id} for day ${new Date(startTime)}`);
 
 		let query: any = {
 			'indexes.message_action': {
@@ -53,17 +56,22 @@ export default class CrawlAccountStatsService extends Service {
 			},
 			'indexes.timestamp': {
 				$gte: new Date(startTime),
-				$lte: new Date(endTime),
+				$lt: new Date(endTime),
 			},
 		};
+		if (id) query._id = { $gt: new ObjectId(id) };
+		this.logger.info(`Query ${JSON.stringify(query)}`);
 
-		const dailyTxs: any = await this.broker.call('v1.transaction-stats.act-find', {
-			query,
-			sort: '_id',
-			limit: 100,
-			offset: offset * 100,
-		});
-		this.logger.info(`Number of Txs retrieved at page ${offset + 1}: ${dailyTxs.length}`);
+		const dailyTxs: any = await this.broker.call(
+			'v1.transaction-stats.act-find',
+			{
+				query,
+				sort: '_id',
+				limit: 100,
+			},
+			{ meta: { $cache: false }, timeout: 0 },
+		);
+		this.logger.info(`Number of Txs retrieved from _id ${id}: ${dailyTxs.length}`);
 
 		if (dailyTxs.length > 0) {
 			try {
@@ -166,12 +174,11 @@ export default class CrawlAccountStatsService extends Service {
 				this.logger.error(error);
 			}
 
-			const newOffset = offset + 1;
-			this.logger.info(`Next paging: ${newOffset + 1}`);
+			const newId = dailyTxs[dailyTxs.length - 1]._id;
 			this.createJob(
 				'crawl.account-stats',
 				{
-					offset: newOffset,
+					id: newId,
 					listData,
 				},
 				{
@@ -581,7 +588,7 @@ export default class CrawlAccountStatsService extends Service {
 		this.createJob(
 			'crawl.account-stats',
 			{
-				offset: 0,
+				id: null,
 				listData: [],
 			},
 			{
