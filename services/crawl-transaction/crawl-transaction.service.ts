@@ -134,15 +134,10 @@ export default class CrawlTransactionService extends Service {
 		let result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
 
 		if (result) {
-			this.redisClient.sendCommand([
-				'XADD',
-				Config.REDIS_STREAM_TRANSACTION_NAME,
-				'*',
-				'source',
-				txHash,
-				'element',
-				JSON.stringify(result),
-			]);
+			this.redisClient.xAdd(Config.REDIS_STREAM_TRANSACTION_NAME, '*', {
+				source: txHash,
+				element: JSON.stringify(result),
+			});
 			this.logger.debug(`result: ${JSON.stringify(result)}`);
 		}
 	}

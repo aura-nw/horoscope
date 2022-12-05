@@ -147,15 +147,10 @@ export default class CrawlBlockService extends Service {
 			//pust block to redis stream
 			this.logger.info('xadd block: ' + block?.block?.header?.height);
 
-			this.redisClient.sendCommand([
-				'XADD',
-				Config.REDIS_STREAM_BLOCK_NAME,
-				'*',
-				'source',
-				block.block?.header?.height,
-				'element',
-				JSON.stringify(block),
-			]);
+			this.redisClient.xAdd(Config.REDIS_STREAM_BLOCK_NAME, '*', {
+				source: block.block?.header?.height,
+				element: JSON.stringify(block),
+			});
 		});
 	}
 	getStatistic() {
