@@ -5,7 +5,8 @@ import { Config } from '../../common';
 import { Context, Service, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
 import RedisMixin from '../../mixins/redis/redis.mixin';
-import { sha256 } from 'js-sha256';
+import { fromBase64, toHex } from '@cosmjs/encoding';
+import { sha256 } from '@cosmjs/crypto';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Job } from 'bull';
@@ -123,7 +124,7 @@ export default class CrawlTransactionService extends Service {
 	// }
 	async handleJob(listTx: string[]) {
 		listTx.map((tx: string) => {
-			const txHash = sha256(Buffer.from(tx, 'base64')).toUpperCase();
+			const txHash = toHex(sha256(fromBase64(tx))).toUpperCase();
 			this.crawlTransaction(txHash);
 		});
 	}
