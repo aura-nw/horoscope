@@ -37,6 +37,12 @@ export default class SmartContractsService extends MoleculerDBService<
 				type: 'number',
 				interger: true,
 				convert: true,
+				optional: true,
+			},
+			contract_addresses: {
+				type: 'array',
+				items: 'string',
+				optional: true
 			},
 			limit: {
 				type: 'number',
@@ -57,7 +63,11 @@ export default class SmartContractsService extends MoleculerDBService<
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		let query: any = { height: ctx.params.height };
+		let query: any = {};
+		if (ctx.params.height && ctx.params.height !== 0) 
+			query = { height: ctx.params.height };
+		else if (ctx.params.contract_addresses && ctx.params.contract_addresses.length > 0)
+			query = { contract_address: { $in: ctx.params.contract_addresses } };
 		if (ctx.params.nextKey && ctx.params.nextKey !== '') query._id = { $gte: new ObjectId(ctx.params.nextKey) };
 		this.logger.info('query', query);
 		let data: any = await this.adapter.find({
@@ -96,10 +106,16 @@ export default class SmartContractsService extends MoleculerDBService<
 	 *          example: "aura-testnet-2"
 	 *        - in: query
 	 *          name: height
-	 *          required: true
 	 *          schema:
 	 *            type: number
 	 *          description: "Smart contract creation block height"
+	 *        - in: query
+	 *          name: contract_addresses[]
+	 *          schema:
+	 *            type: array
+	 *            items:
+	 *              type: string
+	 *          description: "Smart contract address"
 	 *        - in: query
 	 *          name: limit
 	 *          required: true
