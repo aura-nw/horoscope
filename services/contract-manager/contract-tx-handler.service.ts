@@ -86,6 +86,8 @@ export default class CrawlSmartContractsService extends Service {
 						for (let i = 0; i < instant_contract_addresses.length; i++) {
 							const code_id = instant_code_ids[i].value;
 							const contract_address = instant_contract_addresses[i].value;
+							const [token_info, marketing_info] =
+								await this.queryContractInfo(chainId, instant_contract_addresses[i].value);
 							let contract_hash;
 							try {
 								const param = Config.GET_DATA_HASH + code_id;
@@ -93,10 +95,7 @@ export default class CrawlSmartContractsService extends Service {
 								contract_hash = (await this.callApiFromDomain(url, param))
 									.code_info.data_hash.toLowerCase();
 							} catch (error) {
-								this.logger.error(
-									'Can not connect to smart contract verify service',
-									error,
-								);
+								this.logger.error(error);
 							}
 							const smartContract = {
 								_id: new Types.ObjectId(),
@@ -107,11 +106,15 @@ export default class CrawlSmartContractsService extends Service {
 								tx_hash: instant_tx_hash,
 								height: instant_height,
 								code_id,
+								num_tokens: 0,
+								token_info,
+								marketing_info,
 							} as ISmartContracts;
 							smartContracts.push(smartContract);
 						}
 						break;
 					case MSG_TYPE.MSG_EXECUTE_CONTRACT:
+						await this.updateContractNumTokens(msg, chainId);
 						const tx_hash = txs.tx_response.txhash;
 						const height = txs.tx_response.height;
 						const contract_addresses = txs.tx_response.logs[0].events
@@ -133,29 +136,23 @@ export default class CrawlSmartContractsService extends Service {
 								URL_TYPE_CONSTANTS.LCD,
 							);
 							let contract_hash, cosmwasm_contract;
+							const [token_info, marketing_info] = await this.queryContractInfo(chainId, contract_address);
 							try {
+								const param = Config.GET_DATA_HASH + code_id;
+								const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
+								contract_hash = (await this.callApiFromDomain(url, param))
+									.code_info.data_hash.toLowerCase();
 								[contract_hash, cosmwasm_contract] = await Promise.all([
-									this.callApiWithAxios(
-										Config.VERIFY_CONTRACT_API,
-										PATH_COSMOS_SDK.VERIFY_API_GET_HASH + code_id,
-									),
+									this.callApiFromDomain(url, param),
 									this.callApiFromDomain(
 										URL,
 										PATH_COSMOS_SDK.COSMWASM_CONTRACT_PARAM + contract_address,
 									),
 								]);
 							} catch (error) {
-								this.logger.error(
-									'Can not connect to smart contract verify service',
-									error,
-								);
+								this.logger.error(error);
 							}
-							if (contract_hash) {
-								contract_hash =
-									contract_hash.Message.length === 64
-										? contract_hash.Message
-										: '';
-							}
+							contract_hash = contract_hash.code_info.data_hash.toLowerCase();
 							const smartContract = {
 								_id: new Types.ObjectId(),
 								contract_name: cosmwasm_contract.contract_info.label,
@@ -165,6 +162,9 @@ export default class CrawlSmartContractsService extends Service {
 								tx_hash,
 								height,
 								code_id,
+								num_tokens: 0,
+								token_info,
+								marketing_info,
 							} as ISmartContracts;
 							smartContracts.push(smartContract);
 						}
@@ -178,6 +178,40 @@ export default class CrawlSmartContractsService extends Service {
 		} catch (error) {
 			this.logger.error('Duplicate contract(s) detected', smartContracts);
 		}
+	}
+
+	async updateContractNumTokens(msg: any, chainId: string) {
+		const burnOrMintMessages = !!msg.msg?.mint?.token_id || !!msg.msg?.burn?.token_id;
+		if (burnOrMintMessages) {
+			this.logger.info(
+				`Call contract lcd api to query num_tokens with parameter: {contract_address: ${msg.contract}}`,
+			);
+			const base64RequestNumToken = Buffer.from(`{ "num_tokens": {} }`).toString('base64');
+			const param = Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestNumToken}`;
+			const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
+			let result = await this.callApiFromDomain(url, param);
+
+			let executeContract = await this.adapter.findOne({ contract_address: msg.contract });
+			if (result?.data !== 0 && executeContract) {
+				await this.adapter.updateById(executeContract._id, {
+					$set: { num_tokens: Number(result.data.count) },
+				});
+			}
+		}
+	}
+
+	async queryContractInfo(chainId: string, contract_address: string) {
+		const base64RequestTokenInfo = Buffer.from(`{ "token_info": {} }`).toString('base64');
+		const base64RequestMarketingInfo = Buffer.from(`{ "marketing_info": {} }`).toString('base64');
+		const paramTokenInfo = Config.CONTRACT_URI + `${contract_address}/smart/${base64RequestTokenInfo}`;
+		const paramMarketingInfo = Config.CONTRACT_URI + `${contract_address}/smart/${base64RequestMarketingInfo}`;
+		const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
+		const [tokenInfo, marketingInfo] = await Promise.all([
+			this.callApiFromDomain(url, paramTokenInfo),
+			this.callApiFromDomain(url, paramMarketingInfo),
+		]);
+
+		return [tokenInfo.data ? tokenInfo.data : {}, marketingInfo.data ? marketingInfo.data : {}];
 	}
 
 	async _start() {
