@@ -14,17 +14,19 @@ export default class RedisMixin implements Partial<ServiceSchema>, ThisType<Serv
 			methods: {
 				async getRedisClient() {
 					if (this.redisClient === undefined) {
-						this.redisClient = createClient({
-							username: Config.REDIS_USERNAME,
-							password: Config.REDIS_PASSWORD,
-							socket: {
-								host: Config.REDIS_HOST,
-								port: Config.REDIS_PORT,
-							},
-							database: Config.REDIS_DB_NUMBER,
-							// url: `redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
-						});
-						console.log("REDIS connection",Config.REDIS_USERNAME, Config.REDIS_PASSWORD, Config.REDIS_HOST, Config.REDIS_DB_NUMBER);
+						if (Config.REDIS_URI) {
+							this.redisClient = createClient({ url: Config.REDIS_URI });
+						} else {
+							this.redisClient = createClient({
+								username: Config.REDIS_USERNAME,
+								password: Config.REDIS_PASSWORD,
+								socket: {
+									host: Config.REDIS_HOST,
+									port: Config.REDIS_PORT,
+								},
+								database: Config.REDIS_DB_NUMBER,
+							});
+						}
 						await this.redisClient.connect();
 					}
 					return <RedisClientType>this.redisClient;
