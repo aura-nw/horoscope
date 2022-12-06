@@ -113,6 +113,7 @@ export default class ConfigClass {
 	public static DB_SMART_CONTRACTS: any;
 	public static DB_DAILY_CW20_HOLDER: any;
 	public static DB_EPOCH: any;
+	public static DB_GAMM_POOL: any;
 
 	public ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
 
@@ -218,5 +219,6 @@ export default class ConfigClass {
 		this.DB_SMART_CONTRACTS = genericDbInfo('SMART_CONTRACTS');
 		this.DB_DAILY_CW20_HOLDER = genericDbInfo('DAILY_CW20_HOLDER');
 		this.DB_EPOCH = genericDbInfo('EPOCH');
+		this.DB_GAMM_POOL = genericDbInfo('GAMM_POOL');
 	}
 }

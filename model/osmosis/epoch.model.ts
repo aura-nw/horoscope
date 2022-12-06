@@ -1,7 +1,5 @@
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../../types';
-import { customInfoModel } from '../custom-info.model';
-import { IEpoch } from '../../entities/osmosis/epoch.entity';
 import { EpochInfoSDKType } from 'osmojs/types/codegen/osmosis/epochs/genesis';
 
 const definition: definitionType<EpochInfoSDKType> = (collection?: string) => ({

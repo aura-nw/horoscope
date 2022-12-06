@@ -4,33 +4,33 @@
 import CallApiMixin from '../../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
 const QueueService = require('moleculer-bull');
-import { dbEpochMixin } from '../../../mixins/dbMixinMongoose';
+import { dbGammPoolMixin } from '../../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
 import { Config } from '../../../common';
 import { URL_TYPE_CONSTANTS } from '../../../common/constant';
 import { Job } from 'bull';
 import { Utils } from '../../../utils/utils';
 import { QueueConfig } from '../../../config/queue';
-import { QueryEpochsInfoResponseSDKType } from 'osmojs/types/codegen/osmosis/epochs/query';
-import { EpochInfoSDKType } from 'osmojs/types/codegen/osmosis/epochs/genesis';
+import { QueryPoolsResponseSDKType } from 'osmojs/types/codegen/osmosis/gamm/v1beta1/query';
+import { Pool } from 'osmojs/types/codegen/osmosis/gamm/pool-models/balancer/balancerPool';
 import { Types } from 'mongoose';
 
-export default class CrawlEpochService extends Service {
+export default class CrawlGammPoolService extends Service {
 	private callApiMixin = new CallApiMixin().start();
-	private dbEpochMixin = dbEpochMixin;
+	private dbGammPoolMixin = dbGammPoolMixin;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'crawlEpoch',
+			name: 'crawlGammPool',
 			version: 1,
 			mixins: [
 				QueueService(QueueConfig.redis, QueueConfig.opts),
 				this.callApiMixin,
-				this.dbEpochMixin,
+				this.dbGammPoolMixin,
 			],
 			queues: {
-				'crawl.epoch': {
+				'crawl.gamm.pool': {
 					concurrency: 1,
 					async process(job: Job) {
 						job.progress(10);
@@ -45,43 +45,49 @@ export default class CrawlEpochService extends Service {
 	}
 
 	async handleJob() {
-		let listEpoch: EpochInfoSDKType[] = [];
+		let listPool: any[] = [];
 
-		let resultCallApi: QueryEpochsInfoResponseSDKType;
+		let resultCallApi: QueryPoolsResponseSDKType;
 
 		let done = false;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
-		const path = '/osmosis/epochs/v1beta1/epochs';
-
+		const originPath = 'osmosis/gamm/v1beta1/pools?pagination.limit=100';
+		let path = originPath;
 		while (!done) {
 			resultCallApi = await this.callApiFromDomain(url, path);
-			listEpoch.push(...resultCallApi.epochs);
-			done = true;
+			listPool.push(...resultCallApi.pools);
+			const nextKey = resultCallApi.pagination?.next_key;
+			if (nextKey) {
+				path = `${originPath}&pagination.key=${nextKey}`;
+			} else {
+				done = true;
+			}
 		}
 
-		this.logger.debug(`result: ${JSON.stringify(listEpoch)}`);
+		this.logger.debug(`result: ${JSON.stringify(listPool)}`);
 
-		let listEpochInDB: any[] = await this.adapter.lean({
+		let listPoolInDB: any[] = await this.adapter.lean({
 			query: {},
 		});
-		let listPromise: Promise<any>[] = [];
+		let listBulk: any[] = [];
 		let listIndexDelete: number[] = [];
 		await Promise.all(
-			listEpoch.map(async (epoch) => {
-				let foundEpoch = listEpochInDB.find((item) => item.identifier == epoch.identifier);
-				let foundEpochIndex = listEpochInDB.findIndex(
-					(item) => item.identifier == epoch.identifier,
-				);
+			listPool.map(async (pool) => {
+				let foundPool = listPoolInDB.find((item) => item.id == pool.id);
+				let foundPoolIndex = listPoolInDB.findIndex((item) => item.id == pool.id);
 
 				try {
-					if (foundEpoch) {
-						listPromise.push(this.adapter.updateById(foundEpoch._id, epoch));
+					if (foundPool) {
+						listBulk.push({
+							updateOne: { filter: { _id: foundPool._id }, update: pool },
+						});
 					} else {
-						let item = { _id: Types.ObjectId(), ...epoch };
-						listPromise.push(this.adapter.insert(item));
+						let item = { _id: Types.ObjectId(), ...pool };
+						listBulk.push({ insertOne: { document: item } });
+						// listPromise.push(this.adapter.insert(item));
 					}
-					if (foundEpochIndex > -1 && foundEpoch) {
-						listIndexDelete.push(foundEpochIndex);
+					if (foundPoolIndex > -1 && foundPool) {
+						listIndexDelete.push(foundPoolIndex);
 					}
 				} catch (error) {
 					this.logger.error(error);
@@ -90,22 +96,24 @@ export default class CrawlEpochService extends Service {
 		);
 		await Promise.all(
 			listIndexDelete.map((index) => {
-				delete listEpochInDB[index];
+				delete listPoolInDB[index];
 			}),
 		);
 
 		await Promise.all(
-			listEpochInDB.map(async (epoch) => {
-				listPromise.push(this.adapter.removeById(epoch._id));
+			listPoolInDB.map(async (pool) => {
+				listBulk.push({ deleteOne: { _id: pool._id } });
 			}),
 		);
 
-		await Promise.all(listPromise);
+		// await Promise.all(listPromise);
+		let result = await this.adapter.bulkWrite(listBulk);
+		this.logger.info(result);
 	}
 
 	async _start() {
 		this.createJob(
-			'crawl.epoch',
+			'crawl.gamm.pool',
 			{},
 			{
 				removeOnComplete: true,

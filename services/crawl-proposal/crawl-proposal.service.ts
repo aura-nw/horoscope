@@ -70,7 +70,7 @@ export default class CrawlProposalService extends Service {
 		let listProposalInDB: ProposalEntity[] = await this.adapter.lean({
 			query: {},
 		});
-		let listPromise: Promise<any>[] = [];
+		let listBulk: any[] = [];
 		let listIndexDelete: number[] = [];
 		await Promise.all(
 			listProposal.map(async (proposal) => {
@@ -112,13 +112,15 @@ export default class CrawlProposalService extends Service {
 								proposal.initial_deposit = proposer.initialDeposit;
 							}
 						}
-						listPromise.push(this.adapter.updateById(foundProposal._id, proposal));
+						listBulk.push({
+							updateOne: { filter: { _id: foundProposal._id }, update: proposal },
+						});
 					} else {
 						const item: ProposalEntity = new JsonConvert().deserializeObject(
 							proposal,
 							ProposalEntity,
 						);
-						listPromise.push(this.adapter.insert(item));
+						listBulk.push({ insertOne: { document: item } });
 					}
 					if (foundProposalIndex > -1 && foundProposal) {
 						listIndexDelete.push(foundProposalIndex);
@@ -137,11 +139,15 @@ export default class CrawlProposalService extends Service {
 		await Promise.all(
 			listProposalInDB.map(async (proposal: ProposalEntity) => {
 				proposal.status = PROPOSAL_STATUS.PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT;
-				listPromise.push(this.adapter.updateById(proposal._id, proposal));
+				listBulk.push({
+					updateOne: { filter: { _id: proposal._id }, update: proposal },
+				});
 			}),
 		);
 
-		await Promise.all(listPromise);
+		// await Promise.all(listPromise);
+		let result = await this.adapter.bulkWrite(listBulk);
+		this.logger.info(result);
 	}
 
 	async getProposerBySearchTx(proposalId: string) {
