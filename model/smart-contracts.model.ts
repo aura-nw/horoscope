@@ -11,6 +11,9 @@ export interface ISmartContracts {
     creator_address: String;
     contract_hash: String;
     tx_hash: String;
+    num_tokens: Number;
+    token_info: Object;
+    marketing_info: Object;
 }
 
 const definition: definitionType<ISmartContracts> = (collection?: string) => ({
@@ -28,6 +31,15 @@ const definition: definitionType<ISmartContracts> = (collection?: string) => ({
     creator_address: String,
     contract_hash: String,
     tx_hash: String,
+    num_tokens: Number,
+    token_info: {
+        type: Object,
+        default: {}
+    },
+    marketing_info: {
+        type: Object,
+        default: {}
+    },
 	custom_info: customInfoModel,
 })
 
