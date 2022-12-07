@@ -127,9 +127,9 @@ export default class MoveBlockService extends Service {
 				removeOnFail: {
 					count: 3,
 				},
-				// repeat: {
-				// 	cron: Config.CRON_JOB_MOVE_BLOCK,
-				// },
+				repeat: {
+					cron: Config.CRON_JOB_MOVE_BLOCK,
+				},
 			},
 		);
 		this.getQueue('move.block').on('completed', (job: Job) => {
