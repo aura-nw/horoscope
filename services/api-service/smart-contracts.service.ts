@@ -4,11 +4,12 @@
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { ErrorCode, ErrorMessage, GetContractsRequest, MoleculerDBService } from '../../types';
-import { LIST_NETWORK } from '../../common/constant';
+import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 import { dbSmartContractsMixin } from '../../mixins/dbMixinMongoose';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { ISmartContracts } from '../../model/smart-contracts.model';
 import { ObjectId } from 'mongodb';
+import { CodeIDStatus } from '../../model';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -64,7 +65,7 @@ export default class SmartContractsService extends MoleculerDBService<
 			this.adapter.useDb(network.databaseName);
 		}
 		let query: any = {};
-		if (ctx.params.height && ctx.params.height !== 0) 
+		if (ctx.params.height && ctx.params.height !== 0)
 			query = { height: ctx.params.height };
 		else if (ctx.params.contract_addresses && ctx.params.contract_addresses.length > 0)
 			query = { contract_address: { $in: ctx.params.contract_addresses } };
@@ -76,6 +77,21 @@ export default class SmartContractsService extends MoleculerDBService<
 			sort: '_id',
 			limit: ctx.params.limit + 1,
 		});
+		let list_asset_queries: any = [];
+		data = data.map((d: any) => {
+			d = d.toObject();
+			list_asset_queries.push(this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
+				chain_id: ctx.params.chainId,
+				code_id: d.code_id,
+			}));
+			return d;
+		});
+		let result_asset = await Promise.all(list_asset_queries);
+		result_asset.map((ra: any, index: number) => {
+			data[index].contract_type = 
+				ra.status === CodeIDStatus.COMPLETED ? ra.contractType : null;
+		});
+
 		let next_key = data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;
 		let response = {
 			code: ErrorCode.SUCCESSFUL,
