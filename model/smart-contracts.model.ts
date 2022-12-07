@@ -14,6 +14,7 @@ export interface ISmartContracts {
     num_tokens: Number;
     token_info: Object;
     marketing_info: Object;
+    contract_info: Object;
 }
 
 const definition: definitionType<ISmartContracts> = (collection?: string) => ({
@@ -37,6 +38,10 @@ const definition: definitionType<ISmartContracts> = (collection?: string) => ({
         default: {}
     },
     marketing_info: {
+        type: Object,
+        default: {}
+    },
+    contract_info: {
         type: Object,
         default: {}
     },
