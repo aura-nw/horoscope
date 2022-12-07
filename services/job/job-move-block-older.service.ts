@@ -35,7 +35,7 @@ export default class MoveBlockService extends Service {
 
 	async handleJobMoveBlock() {
 		const oldestBlock: IBlock[] = await this.adapter.lean({
-			sort: '_id',
+			sort: 'block.header.height',
 			limit: 10,
 		});
 
@@ -43,69 +43,78 @@ export default class MoveBlockService extends Service {
 		oldestBlock.map((block: IBlock) => {
 			let blockTime = block.block?.header?.time;
 			if (blockTime) {
-				let timeRange = new Date();
-				timeRange.setDate(blockTime.getDate() + parseInt(Config.RANGE_DAY_MOVE_BLOCK, 10));
-				if (timeRange >= new Date()) {
+				let timeRange = blockTime;
+				const RANGE_DAY_MOVE_BLOCK = parseInt(Config.RANGE_DAY_MOVE_BLOCK, 10);
+				timeRange.setDate(timeRange.getDate() + RANGE_DAY_MOVE_BLOCK);
+				if (timeRange <= new Date()) {
 					handleBlock.push(block);
 				}
 			}
 		});
 		// insert block to block-aggregate table
-		this.createJob(
-			'listblock.insert',
-			{
-				listBlock: handleBlock,
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
-				},
-			},
-		);
-		//delete block in block table
-		let listBulk: any[] = [];
-		listBulk = handleBlock.map((block) => {
-			return {
-				deleteOne: {
-					filter: {
-						//@ts-ignore
-						_id: new ObjectId(block._id.toString()),
-					},
-				},
-			};
-		});
-		let resultDeleteBlock = await this.adapter.bulkWrite(listBulk);
-		this.logger.info('Result delete block: ', resultDeleteBlock);
-
-		//create job move tx older
-		const handleBlockHeight = handleBlock.map((block: IBlock) => {
-			return block.block?.header?.height;
-		});
-		this.createJob(
-			'move.tx',
-			{
-				listBlockHeight: handleBlockHeight,
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
-				},
-			},
-		);
-
-		if (oldestBlock.length && handleBlock.length && oldestBlock.length == handleBlock.length) {
+		if (handleBlock.length > 0) {
 			this.createJob(
-				'move.block',
-				{},
+				'listblock.insert',
+				{
+					listBlock: handleBlock,
+				},
 				{
 					removeOnComplete: true,
 					removeOnFail: {
-						count: 3,
+						count: 10,
 					},
 				},
 			);
+
+			//delete block in block table
+			let listBulk: any[] = [];
+			listBulk = handleBlock.map((block) => {
+				return {
+					deleteOne: {
+						filter: {
+							//@ts-ignore
+							_id: new ObjectId(block._id.toString()),
+						},
+					},
+				};
+			});
+			if (listBulk.length > 0) {
+				let resultDeleteBlock = await this.adapter.bulkWrite(listBulk);
+				this.logger.info('Result delete block: ', resultDeleteBlock);
+			}
+			//create job move tx older
+			const handleBlockHeight = handleBlock.map((block: IBlock) => {
+				return block.block?.header?.height;
+			});
+			this.createJob(
+				'move.tx',
+				{
+					listBlockHeight: handleBlockHeight,
+				},
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: 10,
+					},
+				},
+			);
+
+			if (
+				oldestBlock.length &&
+				handleBlock.length &&
+				oldestBlock.length == handleBlock.length
+			) {
+				this.createJob(
+					'move.block',
+					{},
+					{
+						removeOnComplete: true,
+						removeOnFail: {
+							count: 3,
+						},
+					},
+				);
+			}
 		}
 	}
 
@@ -118,9 +127,9 @@ export default class MoveBlockService extends Service {
 				removeOnFail: {
 					count: 3,
 				},
-				repeat: {
-					cron: Config.CRON_JOB_MOVE_BLOCK,
-				},
+				// repeat: {
+				// 	cron: Config.CRON_JOB_MOVE_BLOCK,
+				// },
 			},
 		);
 		this.getQueue('move.block').on('completed', (job: Job) => {
