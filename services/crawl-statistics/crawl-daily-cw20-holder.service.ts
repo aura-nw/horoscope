@@ -10,31 +10,31 @@ import { Types } from 'mongoose';
 const QueueService = require('moleculer-bull');
 
 export default class CrawlDailyCw20HolderService extends Service {
-	private dbDailyCw20HolderMixin = dbDailyCw20HolderMixin;
+    private dbDailyCw20HolderMixin = dbDailyCw20HolderMixin;
 
-	public constructor(public broker: ServiceBroker) {
-		super(broker);
-		this.parseServiceSchema({
-			name: 'crawlDailyCw20Holder',
-			version: 1,
-			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.dbDailyCw20HolderMixin,
-			],
-			queues: {
-				'crawl.daily-cw20-holder': {
-					concurrency: parseInt(Config.CONCURRENCY_DAILY_CW20_HOLDER, 10),
-					async process(job: Job) {
-						job.progress(10);
-						// @ts-ignore
-						await this.handleJob();
-						job.progress(100);
-						return true;
-					},
-				},
-			},
-		});
-	}
+    public constructor(public broker: ServiceBroker) {
+        super(broker);
+        this.parseServiceSchema({
+            name: 'crawlDailyCw20Holder',
+            version: 1,
+            mixins: [
+                QueueService(QueueConfig.redis, QueueConfig.opts),
+                this.dbDailyCw20HolderMixin,
+            ],
+            queues: {
+                'crawl.daily-cw20-holder': {
+                    concurrency: parseInt(Config.CONCURRENCY_DAILY_CW20_HOLDER, 10),
+                    async process(job: Job) {
+                        job.progress(10);
+                        // @ts-ignore
+                        await this.handleJob();
+                        job.progress(100);
+                        return true;
+                    },
+                },
+            },
+        });
+    }
 
     async handleJob() {
         let listQueries: any[] = [];
@@ -58,10 +58,12 @@ export default class CrawlDailyCw20HolderService extends Service {
             if (holder) {
                 listQueries.push(
                     this.adapter.updateById(holder._id, {
-                        $set: { 
+                        $set: {
                             old_holders: holder.new_holders,
                             new_holders: asset.total_holders,
-                            change_percent: ((asset.total_holders - holder.new_holders) / holder.new_holders) * 100
+                            change_percent: holder.new_holders === 0
+                                ? null
+                                : ((asset.total_holders - holder.new_holders) / holder.new_holders) * 100,
                         },
                     }),
                 );
@@ -87,29 +89,29 @@ export default class CrawlDailyCw20HolderService extends Service {
     }
 
     async _start() {
-		this.createJob(
-			'crawl.daily-cw20-holder',
-			{},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 3,
-				},
-				repeat: {
-					cron: '0 0 0 * * ?',
-				},
-			},
-		);
+        this.createJob(
+            'crawl.daily-cw20-holder',
+            {},
+            {
+                removeOnComplete: true,
+                removeOnFail: {
+                    count: 3,
+                },
+                repeat: {
+                	cron: '0 0 0 * * ?',
+                },
+            },
+        );
 
-		this.getQueue('crawl.daily-cw20-holder').on('completed', (job: Job) => {
-			this.logger.info(`Job #${job.id} completed! result: ${job.returnvalue}`);
-		});
-		this.getQueue('crawl.daily-cw20-holder').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed! error: ${job.failedReason}`);
-		});
-		this.getQueue('crawl.daily-cw20-holder').on('progress', (job: Job) => {
-			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
-		});
-		return super._start();
-	}
+        this.getQueue('crawl.daily-cw20-holder').on('completed', (job: Job) => {
+            this.logger.info(`Job #${job.id} completed! result: ${job.returnvalue}`);
+        });
+        this.getQueue('crawl.daily-cw20-holder').on('failed', (job: Job) => {
+            this.logger.error(`Job #${job.id} failed! error: ${job.failedReason}`);
+        });
+        this.getQueue('crawl.daily-cw20-holder').on('progress', (job: Job) => {
+            this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
+        });
+        return super._start();
+    }
 }
