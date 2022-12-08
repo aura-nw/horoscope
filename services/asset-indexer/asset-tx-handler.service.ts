@@ -2,11 +2,13 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
-import { Config } from '../../common';
 import { CallingOptions, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
 import * as _ from 'lodash';
+import { IAttribute, IEvent, ITransaction } from 'entities';
+import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
+import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';
+import { Config } from '../../common';
 import {
 	URL_TYPE_CONSTANTS,
 	EVENT_TYPE,
@@ -18,17 +20,16 @@ import {
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
 import { CodeIDStatus } from '../../model/codeid.model';
-import { IAttribute, IEvent, ITransaction } from 'entities';
-import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
-import { QueueConfig } from '../../config/queue';
-const QueueService = require('moleculer-bull');
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
-const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
+const opts: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
 export default class CrawlAccountInfoService extends Service {
-	private callApiMixin = new CallApiMixin().start();
+	private _callApiMixin = new CallApiMixin().start();
 	private dbAssetMixin = dbCW721AssetMixin;
 
 	public constructor(public broker: ServiceBroker) {
@@ -37,9 +38,9 @@ export default class CrawlAccountInfoService extends Service {
 			name: 'handle-asset-tx',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
+				queueService(queueConfig.redis, queueConfig.opts),
 				this.dbAssetMixin,
-				this.callApiMixin,
+				this._callApiMixin,
 			],
 			queues: {
 				'asset.tx-handle': {
@@ -101,7 +102,7 @@ export default class CrawlAccountInfoService extends Service {
 								`contract_${chainId}_${contractAddress}`,
 								true,
 							);
-							let contractInfo = await this.verifyAddressByCodeID(
+							const contractInfo = await this.verifyAddressByCodeID(
 								URL,
 								contractAddress,
 								chainId,
@@ -114,18 +115,18 @@ export default class CrawlAccountInfoService extends Service {
 											!tokenId &&
 											contractAddress
 										) {
-											// await this.broker.call(
+											// Await this.broker.call(
 											// 	`v1.CW20.enrichData`,
 											// 	[
 											// 		{
 											// 			URL,
-											// 			chain_id: chainId,
-											// 			code_id: contractInfo.code_id,
-											// 			address: contractAddress,
+											// 			Chain_id: chainId,
+											// 			Code_id: contractInfo.code_id,
+											// 			Address: contractAddress,
 											// 		},
 											// 		ENRICH_TYPE.UPSERT,
 											// 	],
-											// 	OPTs,
+											// 	Opts,
 											// );
 											this.createJob(
 												'CW20.enrich',
@@ -213,12 +214,12 @@ export default class CrawlAccountInfoService extends Service {
 										break;
 								}
 							}
-							// this.logger.debug(`Contract's type does not verify!`, address);
+							// This.logger.debug(`Contract's type does not verify!`, address);
 							await this.broker.cacher?.del(`contract_${chainId}_${contractAddress}`);
 						}
 					}),
 				);
-				// await updateInforPromises;
+				// Await updateInforPromises;
 			}
 		} catch (error) {
 			this.logger.error(error);
@@ -227,7 +228,7 @@ export default class CrawlAccountInfoService extends Service {
 	}
 
 	getContractAndTokenIdFromListTx(listTx: ITransaction[]) {
-		let listContractAndTokenID: any[] = [];
+		const listContractAndTokenID: any[] = [];
 		if (listTx.length > 0) {
 			listTx.forEach((tx: ITransaction) => {
 				tx.tx_response.events.map((event: IEvent) => {
@@ -290,8 +291,8 @@ export default class CrawlAccountInfoService extends Service {
 	// TODO: handleTxBurnCw4973 ???
 
 	async verifyAddressByCodeID(URL: string, address: string, chain_id: string) {
-		let urlGetContractInfo = `${CONTRACT_URI}${address}`;
-		let contractInfo = await this.callApiFromDomain(URL, urlGetContractInfo);
+		const urlGetContractInfo = `${CONTRACT_URI}${address}`;
+		const contractInfo = await this.callApiFromDomain(URL, urlGetContractInfo);
 		if (contractInfo?.contract_info?.code_id != undefined) {
 			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, {
 				query: {
@@ -311,7 +312,9 @@ export default class CrawlAccountInfoService extends Service {
 						contract_type: res[0].contract_type,
 						status: res[0].status,
 					};
-				} else return null;
+				} else {
+					return null;
+				}
 			} else {
 				return null;
 			}
@@ -321,7 +324,7 @@ export default class CrawlAccountInfoService extends Service {
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.getQueue('asset.tx-handle').on('completed', (job: Job) => {
 			this.logger.debug(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
@@ -331,6 +334,8 @@ export default class CrawlAccountInfoService extends Service {
 		this.getQueue('asset.tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

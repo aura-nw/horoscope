@@ -4,6 +4,7 @@ import { LogLevels } from 'moleculer';
 import _ from 'lodash';
 import { DBDialog, DBInfo } from '../types';
 import { PATH_COSMOS_SDK } from './constant';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 
 const processEnv = process.env;
@@ -38,7 +39,7 @@ const getDbInfo = (where: string, what: string, defaultValue: string) => {
 
 const genericDbInfo = (where: string): DBInfo => ({
 	dialect:
-		process.env['NODE_ENV'] != 'test'
+		process.env.NODE_ENV !== 'test'
 			? (getDbInfo(where, 'DIALECT', 'local') as DBDialog)
 			: (getDbInfo(where, 'TEST_DIALECT', 'local') as DBDialog),
 	user: getDbInfo(where, 'USER', ''),
@@ -46,7 +47,7 @@ const genericDbInfo = (where: string): DBInfo => ({
 	host: getDbInfo(where, 'HOST', ''),
 	port: +getDbInfo(where, 'PORT', '0'),
 	dbname:
-		process.env['NODE_ENV'] != 'test'
+		process.env.NODE_ENV !== 'test'
 			? getDbInfo(where, 'DBNAME', '')
 			: getDbInfo(where, 'DBNAME_TEST', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),

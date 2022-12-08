@@ -1,25 +1,26 @@
-import { Config } from '../../common';
+/* eslint-disable no-underscore-dangle */
 import { Service, ServiceBroker } from 'moleculer';
-import { dbTransactionAggregateMixin, dbTransactionMixin } from '../../mixins/dbMixinMongoose';
-import RedisMixin from '../../mixins/redis/redis.mixin';
 import { Job } from 'bull';
 import { ObjectId } from 'mongodb';
+import { Config } from '../../common';
+import { dbTransactionAggregateMixin } from '../../mixins/dbMixinMongoose';
+import RedisMixin from '../../mixins/redis/redis.mixin';
 import { ITransaction } from '../../entities';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class InitVotingData extends Service {
-	private redisMixin = new RedisMixin().start();
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'job-init-voting-data',
 			version: 1,
 			mixins: [
-				QueueService(
+				queueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 				),
 				dbTransactionAggregateMixin,
-				this.redisMixin,
+				new RedisMixin().start(),
 			],
 			queues: {
 				'init.voting.data': {
@@ -37,7 +38,7 @@ export default class InitVotingData extends Service {
 		});
 	}
 
-	async handleJob(lastTxId: string, stopPoint?: string) {
+	public async handleJob(lastTxId: string, stopPoint?: string) {
 		let query: any = {};
 		if (lastTxId === '0') {
 			query = {
@@ -51,7 +52,9 @@ export default class InitVotingData extends Service {
 			};
 		}
 		this.logger.info(`stopPoint: ${stopPoint}, lastTxId: ${lastTxId}`);
-		if (stopPoint && lastTxId > stopPoint) return true;
+		if (stopPoint && lastTxId > stopPoint) {
+			return true;
+		}
 		if (stopPoint) {
 			query = {
 				_id: { $gt: new ObjectId(lastTxId), $lt: new ObjectId(stopPoint) },
@@ -70,16 +73,16 @@ export default class InitVotingData extends Service {
 			const lastId = listTx.at(-1)?._id;
 			this.logger.info(`lastId: ${lastId}`);
 			this.redisClient.set(Config.REDIS_KEY_VOTE_LAST_TX_AGGREGATE_ID, lastId?.toString());
-			const stopPoint = Config.SCAN_TX_STOP_POINT;
-			this.createJob('init.voting.data', { lastId, stopPoint }, { removeOnComplete: true });
+			const stopPoint2 = Config.SCAN_TX_STOP_POINT;
+			this.createJob('init.voting.data', { lastId, stopPoint2 }, { removeOnComplete: true });
 			await this.broker.call(Config.SCAN_TX_ACTION, { listTx });
 		}
 		return true;
 	}
 
-	async _start() {
+	public async _start() {
 		this.redisClient = await this.getRedisClient();
-		let lastId =
+		const lastId =
 			(await this.redisClient.get(Config.REDIS_KEY_VOTE_LAST_TX_AGGREGATE_ID)) || '0';
 		this.createJob(
 			'init.voting.data',
@@ -99,6 +102,7 @@ export default class InitVotingData extends Service {
 		this.getQueue('index.tx').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

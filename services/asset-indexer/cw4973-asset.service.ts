@@ -2,9 +2,13 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import moleculer, { CallingOptions, Context } from 'moleculer';
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { toBase64, toUtf8 } from '@cosmjs/encoding';
+import { AddBurnedToAsset } from 'types';
+import { Job } from 'bull';
+import { isValidObjectId } from 'mongoose';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbCW4973AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CodeIDStatus } from '../../model/codeid.model';
 import { Config } from '../../common';
@@ -18,34 +22,31 @@ import {
 	URL_TYPE_CONSTANTS,
 	CW4973_ACTION,
 } from '../../common/constant';
+import { queueConfig } from '../../config/queue';
+import { Utils } from '../../utils/utils';
 import CommonService, { Common, TokenInfo } from './common.service';
-import { toBase64, toUtf8 } from '@cosmjs/encoding';
-import { AddBurnedToAsset } from 'types';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
-const OPTs: CallingOptions = { timeout: 0, retries: MAX_RETRY_REQ };
+const opts: CallingOptions = { timeout: 0, retries: MAX_RETRY_REQ };
 const ASSET_INDEXER_TOKEN_ID_LIMIT = Config.ASSET_INDEXER_TOKEN_ID_LIMIT;
 const VALIDATE_CODEID_PREFIX = 'validate_codeid';
 const HANDLE_CODEID_PREFIX = 'handle_codeid';
 
-import { QueueConfig } from '../../config/queue';
-import { Job } from 'bull';
-import { Utils } from '../../utils/utils';
-import { isValidObjectId } from 'mongoose';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
-const callApiMixin = new CallApiMixin().start();
+const _callApiMixin = new CallApiMixin().start();
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
 	name: 'CW4973',
 	version: 1,
-	mixins: [callApiMixin, dbCW4973AssetMixin, QueueService(QueueConfig.redis, QueueConfig.opts)],
+	mixins: [_callApiMixin, dbCW4973AssetMixin, queueService(queueConfig.redis, queueConfig.opts)],
 	queues: {
 		'CW4973.enrich-tokenid': {
 			concurrency: parseInt(Config.CONCURRENCY_ENRICH_TOKEN_ID, 10),
@@ -73,7 +74,7 @@ const callApiMixin = new CallApiMixin().start();
 			concurrency: 1,
 			async process(job: Job) {
 				const chain_id = job.data.chain_id;
-				//@ts-ignore
+				// @ts-ignore
 				this.handleMigrateOldData(chain_id);
 			},
 		},
@@ -83,7 +84,7 @@ const callApiMixin = new CallApiMixin().start();
 			async handler(ctx: Context<any>) {
 				const code_id = ctx.params.code_id;
 				const chain_id = ctx.params.chain_id;
-				// const contract_type = ctx.params.contract_type;
+				// Const contract_type = ctx.params.contract_type;
 				const URL = ctx.params.URL;
 				const cacheKey = `${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`;
 				// @ts-ignore
@@ -92,14 +93,14 @@ const callApiMixin = new CallApiMixin().start();
 				// @ts-ignore
 				await this.checkIfContractImplementInterface(URL, chain_id, code_id);
 				// @ts-ignore
-				// const processingFlag = await this.broker.cacher?.get(cacheKey);
-				// if (!processingFlag) {
+				// Const processingFlag = await this.broker.cacher?.get(cacheKey);
+				// If (!processingFlag) {
 				// 	// @ts-ignore
-				// 	await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
+				// 	Await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
 				// 	// @ts-ignore
-				// 	await this.checkIfContractImplementInterface(URL, chain_id, code_id);
+				// 	Await this.checkIfContractImplementInterface(URL, chain_id, code_id);
 				// 	// @ts-ignore
-				// 	await this.broker.cacher?.del(cacheKey);
+				// 	Await this.broker.cacher?.del(cacheKey);
 				// }
 			},
 		},
@@ -120,9 +121,9 @@ const callApiMixin = new CallApiMixin().start();
 					this.handleJob(URL, chain_id, code_id);
 					// @ts-ignore
 					await this.broker.cacher?.del(cacheKey);
-					//TODO emit event index history of the NFT.
+					// TODO emit event index history of the NFT.
 				}
-				//TODO subcribe the event index the history of the NFT
+				// TODO subcribe the event index the history of the NFT
 			},
 		},
 	},
@@ -136,14 +137,14 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.debug('Call urlGetContractList', URL, urlGetContractList);
 			let next_key = null;
 			do {
-				let resultCallApi = await this.callApiFromDomain(URL, path);
+				const resultCallApi = await this.callApiFromDomain(URL, path);
 				this.logger.debug('Call resultCallApi', JSON.stringify(resultCallApi));
 				if (resultCallApi?.contracts?.length > 0) {
 					let i = 0;
 					while (i < resultCallApi.contracts.length) {
-						let address = resultCallApi.contracts[i];
-						let urlGetListToken = `${CONTRACT_URI}${address}/smart/${CW4973_ACTION.URL_GET_TOKEN_LIST}`;
-						let listTokenIDs = await this.callApiFromDomain(URL, urlGetListToken);
+						const address = resultCallApi.contracts[i];
+						const urlGetListToken = `${CONTRACT_URI}${address}/smart/${CW4973_ACTION.URL_GET_TOKEN_LIST}`;
+						const listTokenIDs = await this.callApiFromDomain(URL, urlGetListToken);
 						this.logger.debug('Call urlGetListToken', urlGetListToken);
 						this.logger.debug('Call listTokenIDs', JSON.stringify(listTokenIDs));
 						if (listTokenIDs?.data?.tokens !== undefined) {
@@ -151,8 +152,8 @@ export default class CrawlAssetService extends moleculer.Service {
 								const id = listTokenIDs.data.tokens[0];
 								const str = `{"all_nft_info":{"token_id":"${id}"}}`;
 								const stringEncode64bytes = Buffer.from(str).toString('base64');
-								let urlGetOwner = `${CONTRACT_URI}${address}/smart/${stringEncode64bytes}`;
-								let tokenInfo = await this.callApiFromDomain(URL, urlGetOwner);
+								const urlGetOwner = `${CONTRACT_URI}${address}/smart/${stringEncode64bytes}`;
+								const tokenInfo = await this.callApiFromDomain(URL, urlGetOwner);
 								cw4973flag = tokenInfo?.data?.access?.owner !== undefined;
 								break;
 							}
@@ -205,23 +206,23 @@ export default class CrawlAssetService extends moleculer.Service {
 			await this.broker.cacher?.del(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
 		}
 	}
-	async handleJob(URL: string, chain_id: string, code_id: Number) {
+	async handleJob(URL: string, chain_id: string, code_id: number) {
 		try {
 			const contractList: any = await this.broker.call(
 				COMMON_ACTION.GET_CONTRACT_LIST,
 				{ URL, code_id },
-				OPTs,
+				opts,
 			);
-			// const contractList: any = await this.getContractListByCodeID();
+			// Const contractList: any = await this.getContractListByCodeID();
 
-			contractList.map((address: String) => {
+			contractList.map((address: string) => {
 				this.broker.call(
 					CW4973_ACTION.ENRICH_DATA,
 					[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
-					OPTs,
+					opts,
 				);
 			});
-			// await insertInforPromises;
+			// Await insertInforPromises;
 			this.logger.debug('Asset handler DONE!', contractList.length);
 		} catch (err) {
 			this.logger.error(err);
@@ -237,10 +238,10 @@ export default class CrawlAssetService extends moleculer.Service {
 		token_id: string,
 		type_enrich: string,
 	) {
-		let tokenInfo: any = await this.broker.call(
+		const tokenInfo: any = await this.broker.call(
 			CW4973_ACTION.GET_TOKEN_INFOR,
 			{ URL: url, code_id, address, token_id },
-			OPTs,
+			opts,
 		);
 		if (tokenInfo != null) {
 			let [uri, type, file_name, media_link_key] = ['', '', '', ''];
@@ -259,13 +260,13 @@ export default class CrawlAssetService extends moleculer.Service {
 			}
 
 			try {
-				// if has token uri, download and validate schema
+				// If has token uri, download and validate schema
 				if (tokenInfo.data.info.token_uri) {
 					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(
 						tokenInfo.data.info.token_uri,
 					);
-					let schemaIPFS: Buffer = await Common.downloadAttachment(uri);
-					// let schemaType = await Common.getFileTypeFromBuffer(schemaIPFS);
+					const schemaIPFS: Buffer = await Common.downloadAttachment(uri);
+					// Let schemaType = await Common.getFileTypeFromBuffer(schemaIPFS);
 
 					if (schemaIPFS) {
 						metadata = JSON.parse(schemaIPFS.toString());
@@ -284,7 +285,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				}
 			}
 
-			//create a record to save CW4973
+			// Create a record to save CW4973
 			const asset = Common.createCW4973AssetObject(
 				code_id,
 				address,
@@ -295,16 +296,16 @@ export default class CrawlAssetService extends moleculer.Service {
 				metadata,
 			);
 
-			let resultInsert: any = await this.broker.call(
+			const resultInsert: any = await this.broker.call(
 				`v1.CW4973-asset-manager.act-${type_enrich}`,
 				asset,
 			);
 			this.logger.debug('insert new asset: ', JSON.stringify(resultInsert));
-			// const assetId = resultInsert._id.toString();
+			// Const assetId = resultInsert._id.toString();
 			try {
 				if (animationLink) {
 					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(animationLink);
-					let paramEmit = {
+					const paramEmit = {
 						sourceUri: animationLink,
 						uri,
 						type,
@@ -319,7 +320,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				}
 				if (imageLink) {
 					[uri, type, file_name, media_link_key] = Common.getKeyFromUri(imageLink);
-					let paramEmit = {
+					const paramEmit = {
 						sourceUri: imageLink,
 						uri,
 						type,
@@ -346,23 +347,23 @@ export default class CrawlAssetService extends moleculer.Service {
 		const code_id = ctx.params[0].code_id;
 		const typeEnrich = ctx.params[1];
 		const chain_id = ctx.params[0].chain_id;
-		let listTokenIDs: any = await this.broker.call(
+		const listTokenIDs: any = await this.broker.call(
 			CW4973_ACTION.GET_TOKEN_LIST,
 			{ URL, code_id, address },
-			OPTs,
+			opts,
 		);
 
 		if (listTokenIDs != null) {
-			listTokenIDs.map((token_id: String) => {
+			listTokenIDs.map((token_id: string) => {
 				this.createJob(
 					'CW4973.enrich-tokenid',
 					{
 						url: URL,
-						address: address,
-						code_id: code_id,
+						address,
+						code_id,
 						type_enrich: typeEnrich,
-						chain_id: chain_id,
-						token_id: token_id,
+						chain_id,
+						token_id,
 					},
 					{
 						removeOnComplete: true,
@@ -381,12 +382,12 @@ export default class CrawlAssetService extends moleculer.Service {
 		const address = ctx.params.address;
 		try {
 			let doneLoop = false;
-			let listTokenId = [];
+			const listTokenId = [];
 			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
 				toUtf8(`{"all_tokens":{"limit":${ASSET_INDEXER_TOKEN_ID_LIMIT}}}`),
 			)}`;
 			while (!doneLoop) {
-				let resultCallApi = await this.callApiFromDomain(URL, urlGetListToken);
+				const resultCallApi = await this.callApiFromDomain(URL, urlGetListToken);
 				this.logger.debug('Call urlGetListToken', urlGetListToken);
 				this.logger.debug('Call listTokenIDs', JSON.stringify(resultCallApi));
 				if (resultCallApi?.data?.tokens && resultCallApi.data.tokens.length > 0) {
@@ -417,13 +418,15 @@ export default class CrawlAssetService extends moleculer.Service {
 		try {
 			const str = `{"all_nft_info":{"token_id":"${ctx.params.token_id}"}}`;
 			const stringEncode64bytes = Common.updateBase64InUrl(toBase64(toUtf8(str)));
-			let urlGetOwner = `${CONTRACT_URI}${ctx.params.address}/smart/${encodeURIComponent(
+			const urlGetOwner = `${CONTRACT_URI}${ctx.params.address}/smart/${encodeURIComponent(
 				stringEncode64bytes,
 			)}`;
-			let tokenInfo = await this.callApiFromDomain(URL, urlGetOwner);
+			const tokenInfo = await this.callApiFromDomain(URL, urlGetOwner);
 			if (tokenInfo?.data?.access?.owner !== undefined) {
 				return tokenInfo;
-			} else return null;
+			} else {
+				return null;
+			}
 		} catch (error) {
 			this.logger.error('getTokenInfor error', error);
 		}
@@ -463,6 +466,8 @@ export default class CrawlAssetService extends moleculer.Service {
 		this.getQueue('CW4973.enrich-tokenid').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

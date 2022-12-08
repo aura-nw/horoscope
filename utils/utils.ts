@@ -1,8 +1,8 @@
-import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../common/constant';
 import { fromBech32 } from '@cosmjs/encoding';
+import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../common/constant';
 export class Utils {
 	public static getUrlByChainIdAndType(chainId: string, typeUrl: string) {
-		let chain = LIST_NETWORK.find((chain) => chain.chainId === chainId);
+		const chain = LIST_NETWORK.find((chainItem) => chainItem.chainId === chainId);
 		if (chain) {
 			switch (typeUrl) {
 				case URL_TYPE_CONSTANTS.LCD:
@@ -25,18 +25,18 @@ export class Utils {
 		} else {
 			queryArray = [query];
 		}
-		let queryObject: any[] = [];
+		const queryObject: any[] = [];
 		queryArray.forEach((element) => {
-			let keyValueList = element.split('=');
+			const keyValueList = element.split('=');
 			if (keyValueList.length === 2) {
-				let value = keyValueList[1];
-				let typeKeyList = keyValueList[0].split('.');
+				const value = keyValueList[1];
+				const typeKeyList = keyValueList[0].split('.');
 				if (typeKeyList.length === 2) {
-					let type = typeKeyList[0];
-					let key = typeKeyList[1];
+					const type = typeKeyList[0];
+					const key = typeKeyList[1];
 					queryObject.push({
-						type: type,
-						key: key,
+						type,
+						key,
 						value: value.replace(/(^'|'$)/g, ''),
 					});
 				}
@@ -45,13 +45,13 @@ export class Utils {
 		return queryObject;
 	}
 
-	public static isValidAddress(address: string, length: number = -1) {
+	public static isValidAddress(address: string, length = -1) {
 		try {
-			let decodeResult = fromBech32(address);
-			if (length == -1) {
+			const decodeResult = fromBech32(address);
+			if (length === -1) {
 				return true;
 			}
-			if (decodeResult.data.length == length) {
+			if (decodeResult.data.length === length) {
 				return true;
 			}
 		} catch (error) {

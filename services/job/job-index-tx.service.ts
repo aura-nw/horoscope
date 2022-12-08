@@ -1,32 +1,32 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
-import { Service, Context, ServiceBroker } from 'moleculer';
-
-const QueueService = require('moleculer-bull');
+import { Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
-import { IAttribute, IEvent, ITransaction } from '../../entities';
-import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { ObjectId } from 'bson';
 import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
+import { IAttribute, IEvent, ITransaction } from '../../entities';
+import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
+import { Config } from '../../common';
 import RedisMixin from '../../mixins/redis/redis.mixin';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 export default class IndexTxService extends Service {
-	private redisMixin = new RedisMixin().start();
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'indextx',
 			version: 1,
 			mixins: [
-				QueueService(
+				queueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'index.tx',
 					},
 				),
 				dbTransactionMixin,
-				this.redisMixin,
+				new RedisMixin().start(),
 			],
 			queues: {
 				'index.tx': {
@@ -44,15 +44,13 @@ export default class IndexTxService extends Service {
 	}
 
 	async handleJob(lastId: string) {
-		let query: any = {};
-		if (lastId == '0') {
-		} else {
-			query['_id'] = { $gt: new ObjectId(lastId) };
-			// query['indexes.timestamp'] = { $eq: null };
+		const query: any = {};
+		if (lastId !== '0') {
+			query._id = { $gt: new ObjectId(lastId) };
 		}
-		query['indexes'] = { $eq: null };
+		query.indexes = { $eq: null };
 		const listTx: ITransaction[] = await this.adapter.find({
-			query: query,
+			query,
 			sort: '_id',
 			limit: 100,
 			skip: 0,
@@ -61,7 +59,7 @@ export default class IndexTxService extends Service {
 			this.createJob(
 				'index.tx',
 				{
-					//@ts-ignore
+					// @ts-ignore
 					lastId: listTx[listTx.length - 1]._id.toString(),
 				},
 				{
@@ -72,38 +70,38 @@ export default class IndexTxService extends Service {
 				},
 			);
 		}
-		// const [tx, nextTx]: [ITransaction, ITransaction] = await Promise.all([
-		// 	this.adapter.findOne({
+		// Const [tx, nextTx]: [ITransaction, ITransaction] = await Promise.all([
+		// 	This.adapter.findOne({
 		// 		_id: new ObjectId(lastId),
 		// 	}),
-		// 	this.adapter.findOne({
+		// 	This.adapter.findOne({
 		// 		_id: { $gt: new ObjectId(lastId) },
 		// 	}),
 		// ]);
 
-		// if (nextTx) {
-		// 	this.createJob(
+		// If (nextTx) {
+		// 	This.createJob(
 		// 		'index.tx',
 		// 		{
 		// 			//@ts-ignore
-		// 			lastId: lastId,
+		// 			LastId: lastId,
 		// 		},
 		// 		{
-		// 			removeOnComplete: true,
+		// 			RemoveOnComplete: true,
 		// 		},
 		// 	);
 		// }
 
 		if (listTx) {
-			let listBulk: any[] = [];
+			const listBulk: any[] = [];
 			listTx.map((tx: ITransaction) => {
-				let indexes: any = {};
-				indexes['timestamp'] = tx.tx_response.timestamp;
-				indexes['height'] = tx.tx_response.height;
+				const indexes: any = {};
+				indexes.timestamp = tx.tx_response.timestamp;
+				indexes.height = tx.tx_response.height;
 				tx.tx_response.events.map((event: IEvent) => {
 					let type = event.type.toString();
 					type = type.replace(/\./g, '_');
-					let attributes = event.attributes;
+					const attributes = event.attributes;
 					attributes.map((attribute: IAttribute) => {
 						try {
 							let key = fromUtf8(fromBase64(attribute.key.toString()));
@@ -112,24 +110,24 @@ export default class IndexTxService extends Service {
 								: '';
 							key = key.replace(/\./g, '_');
 							value = value.replace(/\./g, '_');
-							let array = indexes[`${type}_${key}`];
+							const array = indexes[`${type}_${key}`];
 							if (array && array.length > 0) {
-								let position = indexes[`${type}_${key}`].indexOf(value);
-								if (position == -1) {
+								const position = indexes[`${type}_${key}`].indexOf(value);
+								if (position === -1) {
 									indexes[`${type}_${key}`].push(value);
 								}
 							} else {
 								indexes[`${type}_${key}`] = [value];
 							}
 
-							let hashValue = this.redisClient
+							const hashValue = this.redisClient
 								.hGet(`att-${type}`, key)
-								.then((value: any) => {
-									if (value) {
+								.then((valueHash: any) => {
+									if (valueHash) {
 										this.redisClient.hSet(
 											`att-${type}`,
 											key,
-											Number(value) + 1,
+											Number(valueHash) + 1,
 										);
 									} else {
 										this.redisClient.hSet(`att-${type}`, key, 1);
@@ -141,7 +139,7 @@ export default class IndexTxService extends Service {
 						}
 					});
 				});
-				// this.logger.info(indexes);
+				// This.logger.info(indexes);
 				this.logger.info('add indexes to id: ', tx._id);
 				listBulk.push({
 					updateOne: {
@@ -149,23 +147,23 @@ export default class IndexTxService extends Service {
 							_id: tx._id,
 						},
 						update: {
-							indexes: indexes,
+							indexes,
 						},
 					},
 				});
 			});
 			this.logger.debug(JSON.stringify(listBulk));
-			let result = await this.adapter.bulkWrite(listBulk);
-			// let result = await this.adapter.updateById(tx._id, {
+			const result = await this.adapter.bulkWrite(listBulk);
+			// Let result = await this.adapter.updateById(tx._id, {
 			// 	$set: {
-			// 		indexes: indexes,
+			// 		Indexes: indexes,
 			// 	},
 			// });
 			this.logger.debug('Result: ', JSON.stringify(result));
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.redisClient = await this.getRedisClient();
 		this.createJob(
 			'index.tx',
@@ -188,6 +186,7 @@ export default class IndexTxService extends Service {
 		this.getQueue('index.tx').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

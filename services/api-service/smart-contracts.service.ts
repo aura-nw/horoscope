@@ -3,12 +3,12 @@
 'use strict';
 import { Context } from 'moleculer';
 import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { ObjectId } from 'mongodb';
 import { ErrorCode, ErrorMessage, GetContractsRequest, MoleculerDBService } from '../../types';
 import { LIST_NETWORK } from '../../common/constant';
 import { dbSmartContractsMixin } from '../../mixins/dbMixinMongoose';
-import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
+import { _callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { ISmartContracts } from '../../model/smart-contracts.model';
-import { ObjectId } from 'mongodb';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -18,7 +18,7 @@ import { ObjectId } from 'mongodb';
 	/**
 	 * Mixins
 	 */
-	mixins: [callApiMixin, dbSmartContractsMixin],
+	mixins: [_callApiMixin, dbSmartContractsMixin],
 	/**
 	 * Settings
 	 */
@@ -42,7 +42,7 @@ export default class SmartContractsService extends MoleculerDBService<
 			contract_addresses: {
 				type: 'array',
 				items: 'string',
-				optional: true
+				optional: true,
 			},
 			limit: {
 				type: 'number',
@@ -64,25 +64,29 @@ export default class SmartContractsService extends MoleculerDBService<
 			this.adapter.useDb(network.databaseName);
 		}
 		let query: any = {};
-		if (ctx.params.height && ctx.params.height !== 0) 
+		if (ctx.params.height && ctx.params.height !== 0) {
 			query = { height: ctx.params.height };
-		else if (ctx.params.contract_addresses && ctx.params.contract_addresses.length > 0)
+		} else if (ctx.params.contract_addresses && ctx.params.contract_addresses.length > 0) {
 			query = { contract_address: { $in: ctx.params.contract_addresses } };
-		if (ctx.params.nextKey && ctx.params.nextKey !== '') query._id = { $gte: new ObjectId(ctx.params.nextKey) };
+		}
+		if (ctx.params.nextKey && ctx.params.nextKey !== '') {
+			query._id = { $gte: new ObjectId(ctx.params.nextKey) };
+		}
 		this.logger.info('query', query);
-		let data: any = await this.adapter.find({
+		const data: any = await this.adapter.find({
 			query,
 			// @ts-ignore
 			sort: '_id',
 			limit: ctx.params.limit + 1,
 		});
-		let next_key = data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;
-		let response = {
+		const next_key =
+			data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;
+		const response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
 			data: {
 				smart_contracts: data.slice(0, ctx.params.limit - 1),
-				next_key
+				next_key,
 			},
 		};
 		return response;

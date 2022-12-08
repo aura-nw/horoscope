@@ -3,6 +3,7 @@
 'use strict';
 import moleculer, { CallingOptions, Context } from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { Job } from 'bull';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
 import { Common } from '../asset-indexer/common.service';
 import {
@@ -15,15 +16,15 @@ import { Config } from '../../common';
 
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const ACTION_TIMEOUT = 0;
-// const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
-const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
-import { QueueConfig } from '../../config/queue';
-import { Job } from 'bull';
+// Const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
+const opts: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
+import { queueConfig } from '../../config/queue';
 import { CW721AssetEntity } from '../../entities/cw721-asset.entity';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 @Service({
 	name: 'CW721-asset-media-manager',
-	mixins: [dbCW721MediaLinkMixin, QueueService(QueueConfig.redis, QueueConfig.opts)],
+	mixins: [dbCW721MediaLinkMixin, queueService(queueConfig.redis, queueConfig.opts)],
 	version: 1,
 	broker: {},
 	queues: {
@@ -61,15 +62,15 @@ const QueueService = require('moleculer-bull');
 			},
 		},
 		// 'act-count': {
-		// 	async handler(ctx: Context): Promise<any> {
+		// 	Async handler(ctx: Context): Promise<any> {
 		// 		// @ts-ignore
-		// 		this.logger.debug(`ctx.params CW721-asset-media-manager count ${JSON.stringify(ctx.params)}`);
+		// 		This.logger.debug(`ctx.params CW721-asset-media-manager count ${JSON.stringify(ctx.params)}`);
 		// 		// @ts-ignore
-		// 		return await this.adapter.count(ctx.params);
+		// 		Return await this.adapter.count(ctx.params);
 		// 	}
 		// },
 		'act-find': {
-			// cache: { ttl: 10 },
+			// Cache: { ttl: 10 },
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
 				this.actions.useDb({
@@ -87,17 +88,17 @@ const QueueService = require('moleculer-bull');
 			},
 		},
 		// 'act-list': {
-		// 	async handler(ctx: Context): Promise<any> {
+		// 	Async handler(ctx: Context): Promise<any> {
 		// 		// @ts-ignore
-		// 		this.logger.debug(`ctx.params CW721-asset-media-manager list ${JSON.stringify(ctx.params)}`);
+		// 		This.logger.debug(`ctx.params CW721-asset-media-manager list ${JSON.stringify(ctx.params)}`);
 		// 		// @ts-ignore
-		// 		return await this.adapter.list(ctx.params);
+		// 		Return await this.adapter.list(ctx.params);
 		// 	}
 		// },
 		'act-upsert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
-				// this.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
+				// This.actions.useDb({query: {chainId: ctx.params.query['custom_info.chain_id']}});
 				// @ts-ignore
 				this.logger.debug(
 					`ctx.params CW721-asset-media-manager upsert ${JSON.stringify(ctx.params)}`,
@@ -119,17 +120,17 @@ const QueueService = require('moleculer-bull');
 				// @ts-ignore
 				this.logger.debug('update-media-link ctx.params', uri, file_name, key, chain_id);
 				// @ts-ignore
-				// await this.updateMediaLink(uri, file_name, key);
+				// Await this.updateMediaLink(uri, file_name, key);
 				this.createJob(
 					'CW721-asset-media-manager.update-media-link',
 					{
 						sourceUri,
 						uri,
 						type,
-						file_name: file_name,
+						file_name,
 						key,
 						chainId: chain_id,
-						field: field,
+						field,
 					},
 					{
 						removeOnComplete: true,
@@ -144,8 +145,8 @@ const QueueService = require('moleculer-bull');
 		},
 		useDb: {
 			async handler(ctx: Context) {
-				//@ts-ignore
-				const chainId = ctx.params.query['chainId'];
+				// @ts-ignore
+				const chainId = ctx.params.query.chainId;
 				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
 				if (network && network.databaseName) {
 					// @ts-ignore
@@ -157,15 +158,15 @@ const QueueService = require('moleculer-bull');
 })
 export default class CW721AssetMediaManagerService extends moleculer.Service {
 	async upsert_handler(asset_media: any) {
-		this.logger.debug(`asset `, asset_media);
+		this.logger.debug('asset ', asset_media);
 		const network = LIST_NETWORK.find((x) => x.chainId == asset_media.custom_info.chain_id);
 		if (network && network.databaseName) {
 			// @ts-ignore
 			this.adapter.useDb(network.databaseName);
 		}
-		let item = await this.adapter.findOne({ key: asset_media.key });
+		const item = await this.adapter.findOne({ key: asset_media.key });
 		if (item) {
-			// this.logger.debug(`rs `, item._id);
+			// This.logger.debug(`rs `, item._id);
 			asset_media._id = item._id;
 			await this.adapter.updateById(item._id, asset_media);
 		} else {
@@ -184,7 +185,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 		field: string,
 	) {
 		try {
-			// this.logger.info("updateMediaLink", uri, key);
+			// This.logger.info("updateMediaLink", uri, key);
 			const result: any = await Common.handleUri(uri, type, file_name);
 			this.logger.info(result);
 			this.logger.debug('result handle uri:', JSON.stringify(result));
@@ -198,7 +199,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 						chain_id: chainId,
 					},
 				});
-				let query: any = {
+				const query: any = {
 					$or: [
 						{ 'metadata.image': sourceUri },
 						{ 'metadata.animation_url': sourceUri },
@@ -208,7 +209,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 					],
 				};
 
-				let listFoundCW721: CW721AssetEntity[] = await this.broker.call(
+				const listFoundCW721: CW721AssetEntity[] = await this.broker.call(
 					CW721_MANAGER_ACTION.FIND,
 					{
 						query,
@@ -233,11 +234,11 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 									},
 								},
 							});
-							// this.broker.call('v1.CW721-asset-manager.update', {
+							// This.broker.call('v1.CW721-asset-manager.update', {
 							// 	_id: CW721._id,
-							// 	image: {
-							// 		link_s3: result.linkS3,
-							// 		content_type: result.contentType,
+							// 	Image: {
+							// 		Link_s3: result.linkS3,
+							// 		Content_type: result.contentType,
 							// 	},
 							// });
 						}
@@ -257,11 +258,11 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 									},
 								},
 							});
-							// this.broker.call('v1.CW721-asset-manager.update', {
+							// This.broker.call('v1.CW721-asset-manager.update', {
 							// 	_id: CW721._id,
-							// 	animation: {
-							// 		link_s3: result.linkS3,
-							// 		content_type: result.contentType,
+							// 	Animation: {
+							// 		Link_s3: result.linkS3,
+							// 		Content_type: result.contentType,
 							// 	},
 							// });
 						}
@@ -293,6 +294,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 		this.getQueue('CW721-asset-media-manager.update-media-link').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

@@ -1,33 +1,30 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, Context, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import { Job } from 'bull';
+import { fromBase64, toBech32 } from '@cosmjs/encoding';
+import { pubkeyToRawAddress } from '@cosmjs/tendermint-rpc';
 import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { LIST_NETWORK, MODULE_PARAM, URL_TYPE_CONSTANTS } from '../../common/constant';
-import { Job } from 'bull';
 import { ISigningInfoEntityResponseFromLCD, ListValidatorAddress } from '../../types';
 import { IValidator, ParamEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
-// import { JsonConvert } from 'json2typescript';
-import { QueueConfig } from '../../config/queue';
-import { fromBase64, toBech32 } from '@cosmjs/encoding';
-import { pubkeyToRawAddress } from '@cosmjs/tendermint-rpc';
+import { queueConfig } from '../../config/queue';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 export default class CrawlSigningInfoService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbValidatorMixin = dbValidatorMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlSigningInfo',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbValidatorMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				dbValidatorMixin,
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'crawl.signinginfo': {
@@ -53,8 +50,9 @@ export default class CrawlSigningInfoService extends Service {
 	}
 
 	async handleJob(listAddress: string[]) {
-		let listFoundValidator: IValidator[] = await this.adapter.find({
+		const listFoundValidator: IValidator[] = await this.adapter.find({
 			query: {
+				// eslint-disable-next-line camelcase
 				operator_address: {
 					$in: listAddress,
 				},
@@ -64,7 +62,7 @@ export default class CrawlSigningInfoService extends Service {
 		const prefixAddress = LIST_NETWORK.find(
 			(item) => item.chainId === Config.CHAIN_ID,
 		)?.prefixAddress;
-		let paramSlashing: ParamEntity[] = await this.broker.call('v1.crawlparam.find', {
+		const paramSlashing: ParamEntity[] = await this.broker.call('v1.crawlparam.find', {
 			query: {
 				module: MODULE_PARAM.SLASHING,
 			},
@@ -72,13 +70,13 @@ export default class CrawlSigningInfoService extends Service {
 		let listBulk: any[] = await Promise.all(
 			listFoundValidator.map(async (foundValidator: IValidator) => {
 				try {
-					let consensusPubkey = foundValidator.consensus_pubkey;
+					const consensusPubkey = foundValidator.consensus_pubkey;
 					this.logger.debug(
 						`Found validator with address ${foundValidator.operator_address}`,
 					);
 					this.logger.debug(`Found validator with consensusPubkey ${consensusPubkey}`);
 
-					let address = pubkeyToRawAddress(
+					const address = pubkeyToRawAddress(
 						'ed25519',
 						fromBase64(consensusPubkey.key.toString()),
 					);
@@ -87,20 +85,20 @@ export default class CrawlSigningInfoService extends Service {
 						`${prefixAddress}${Config.CONSENSUS_PREFIX_ADDRESS}`,
 						address,
 					);
-					let path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
+					const path = `${Config.GET_SIGNING_INFO}/${consensusAddress}`;
 
 					this.logger.debug(path);
-					let result: ISigningInfoEntityResponseFromLCD = await this.callApiFromDomain(
+					const result: ISigningInfoEntityResponseFromLCD = await this.callApiFromDomain(
 						url,
 						path,
 					);
 					this.logger.debug(result);
 
 					if (result.val_signing_info) {
-						let uptime: Number = 0;
+						let uptime = 0;
 						if (paramSlashing.length > 0) {
 							const blockWindow =
-								//@ts-ignore
+								// @ts-ignore
 								paramSlashing[0].params?.signed_blocks_window.toString();
 							const missedBlock =
 								result.val_signing_info.missed_blocks_counter.toString();
@@ -113,11 +111,13 @@ export default class CrawlSigningInfoService extends Service {
 						}
 						return {
 							updateOne: {
+								// eslint-disable-next-line no-underscore-dangle
 								filter: { _id: foundValidator._id },
 								update: {
 									$set: {
+										// eslint-disable-next-line camelcase
 										val_signing_info: result.val_signing_info,
-										uptime: uptime,
+										uptime,
 									},
 								},
 								upsert: true,
@@ -131,15 +131,13 @@ export default class CrawlSigningInfoService extends Service {
 			}),
 		);
 
-		listBulk = listBulk.filter(function (element) {
-			return element !== undefined;
-		});
+		listBulk = listBulk.filter((element) => element !== undefined);
 
-		let result = await this.adapter.bulkWrite(listBulk);
-		this.logger.info(`result : ${listBulk.length}`, result);
+		const resultBulkWrite = await this.adapter.bulkWrite(listBulk);
+		this.logger.info(`result : ${listBulk.length} `, resultBulkWrite);
 	}
 
-	async _start() {
+	public async _start() {
 		this.getQueue('crawl.signinginfo').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
@@ -149,6 +147,7 @@ export default class CrawlSigningInfoService extends Service {
 		this.getQueue('crawl.signinginfo').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

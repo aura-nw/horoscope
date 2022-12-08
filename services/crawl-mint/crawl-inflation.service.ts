@@ -1,32 +1,31 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import { Job } from 'bull';
+import { JsonConvert, OperationMode } from 'json2typescript';
+import { IMintInflationResponseFromLCD } from 'types';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { dbInflationMixin } from '../../mixins/dbMixinMongoose';
-import { Job } from 'bull';
-import { JsonConvert, OperationMode } from 'json2typescript';
 import { InflationEntity } from '../../entities';
-import { IMintInflationResponseFromLCD } from 'types';
+import { Config } from '../../common';
 import { Utils } from '../../utils/utils';
-import { QueueConfig } from '../../config/queue';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlInflationService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbInflationMixin = dbInflationMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlinflation',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbInflationMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				new CallApiMixin().start(),
+				dbInflationMixin,
 			],
 			queues: {
 				'crawl.inflation': {
@@ -45,18 +44,19 @@ export default class CrawlInflationService extends Service {
 	async handleJob(param: any) {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let resultCallApi: IMintInflationResponseFromLCD = await this.callApiFromDomain(
+		const resultCallApi: IMintInflationResponseFromLCD = await this.callApiFromDomain(
 			url,
 			param.url,
 		);
 
 		this.logger.debug(`result: ${JSON.stringify(resultCallApi)}`);
-		let foundInflation: InflationEntity = await this.adapter.findOne({});
+		const foundInflation: InflationEntity = await this.adapter.findOne({});
 		if (foundInflation) {
 			foundInflation.inflation = resultCallApi.inflation;
+			// eslint-disable-next-line no-underscore-dangle
 			await this.adapter.updateById(foundInflation._id, foundInflation);
 		} else {
-			let jsonConvert = new JsonConvert();
+			const jsonConvert = new JsonConvert();
 			jsonConvert.operationMode = OperationMode.LOGGING;
 
 			const item: InflationEntity = jsonConvert.deserializeObject(
@@ -67,7 +67,7 @@ export default class CrawlInflationService extends Service {
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.inflation',
 			{
@@ -93,6 +93,7 @@ export default class CrawlInflationService extends Service {
 		this.getQueue('crawl.inflation').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

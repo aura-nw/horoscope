@@ -2,33 +2,25 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
+import { QueryOptions } from 'moleculer-db';
+import { ObjectId } from 'mongodb';
+import { fromBase64, fromUtf8, toBase64, toUtf8 } from '@cosmjs/encoding';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
 	ErrorMessage,
-	GetIBCTxRequest,
 	GetPowerEventTxRequest,
 	GetTxRequest,
 	ISearchTxQuery,
 	MoleculerDBService,
 	ResponseDto,
-	ResponseFromRPC,
 } from '../../types';
 import { ITransaction, TransactionEntity } from '../../entities';
-import { QueryOptions } from 'moleculer-db';
-import { ObjectId } from 'mongodb';
-import {
-	BASE_64_ENCODE,
-	LIST_NETWORK,
-	MSG_TYPE,
-	SEARCH_TX_QUERY,
-	URL_TYPE_CONSTANTS,
-} from '../../common/constant';
+import { LIST_NETWORK, MSG_TYPE, SEARCH_TX_QUERY, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Utils } from '../../utils/utils';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Config } from '../../common';
-import { fromBase64, fromUtf8, toBase64, toUtf8 } from '@cosmjs/encoding';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -49,9 +41,7 @@ export default class BlockService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			blockHeight: { type: 'number', optional: true, convert: true },
 			fromHeight: { type: 'number', optional: true, convert: true },
@@ -73,17 +63,13 @@ export default class BlockService extends MoleculerDBService<
 				type: 'string',
 				optional: true,
 				default: null,
-				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => {
-					return e.type;
-				}),
+				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => e.type),
 			},
 			searchKey: {
 				type: 'string',
 				optional: true,
 				default: null,
-				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => {
-					return e.key;
-				}),
+				enum: Object.values(SEARCH_TX_QUERY).map((e: ISearchTxQuery) => e.key),
 			},
 			searchValue: {
 				type: 'string',
@@ -135,17 +121,18 @@ export default class BlockService extends MoleculerDBService<
 		let response: ResponseDto = {} as ResponseDto;
 		let nextKey: any = null;
 		if (ctx.params.nextKey) {
-			// if (!ObjectId.isValid(ctx.params.nextKey)) {
-			// 	return (response = {
-			// 		code: ErrorCode.WRONG,
-			// 		message: ErrorMessage.VALIDATION_ERROR,
-			// 		data: {
-			// 			message: 'The nextKey is not a valid ObjectId',
+			// If (!ObjectId.isValid(ctx.params.nextKey)) {
+			// 	Return (response = {
+			// 		Code: ErrorCode.WRONG,
+			// 		Message: ErrorMessage.VALIDATION_ERROR,
+			// 		Data: {
+			// 			Message: 'The nextKey is not a valid ObjectId',
 			// 		},
 			// 	});
 			// }
 			try {
 				nextKey = JSON.parse(fromUtf8(fromBase64(ctx.params.nextKey)));
+				// eslint-disable-next-line no-underscore-dangle
 				if (!(nextKey._id && nextKey.height)) {
 					throw new Error('The nextKey is not a valid next key');
 				}
@@ -171,21 +158,17 @@ export default class BlockService extends MoleculerDBService<
 		const addressInContract = ctx.params.addressInContract;
 		const sequenceIBC = ctx.params.sequenceIBC;
 		const needFullLog = ctx.params.needFullLog;
-		let findOne = false;
+		/* eslint-disable camelcase , no-underscore-dangle*/
 		let projection: any = { indexes: 0, custom_info: 0 };
 
-		//TODO: fix slow when count in query
-		// const countTotal = ctx.params.countTotal;
-		// ctx.params.countTotal = false;
 		const sort = ctx.params.reverse ? 'tx_response.height' : '-tx_response.height';
 
-		// const sort = '-indexes.height';
-		let query: QueryOptions = {};
+		// Const sort = '-indexes.height';
+		const query: QueryOptions = {};
 		if (ctx.params.txHash) {
 			ctx.params.nextKey = undefined;
 			ctx.params.countTotal = false;
 			ctx.params.pageOffset = 0;
-			findOne = true;
 		}
 		if (nextKey) {
 			if (ctx.params.reverse) {
@@ -196,7 +179,7 @@ export default class BlockService extends MoleculerDBService<
 				query['tx_response.height'] = { $lte: nextKey.height };
 			}
 		}
-		// query['custom_info.chain_id'] = ctx.params.chainid;
+		// Query['custom_info.chain_id'] = ctx.params.chainid;
 		if (blockHeight) {
 			query['tx_response.height'] = blockHeight;
 		}
@@ -206,9 +189,9 @@ export default class BlockService extends MoleculerDBService<
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;
 		} else {
-			// project field when get list tx
+			// Project field when get list tx
 			if (!needFullLog) {
-				projection['tx'] = 0;
+				projection.tx = 0;
 				projection['tx_response.tx.body.messages'] = { $slice: 3 };
 				projection['tx_response.events'] = { $slice: 3 };
 				projection['tx_response.logs'] = 0;
@@ -216,15 +199,15 @@ export default class BlockService extends MoleculerDBService<
 				projection['tx_response.raw_log'] = 0;
 			}
 
-			//only show ibc token denom when search IBC tx
+			// Only show ibc token denom when search IBC tx
 			if (sequenceIBC) {
-				delete projection['indexes'];
+				delete projection.indexes;
 				projection = this.setProjectionForIBC(projection);
 			}
 		}
 
-		let listQueryAnd: any[] = [];
-		let listQueryOr: any[] = [];
+		const listQueryAnd: any[] = [];
+		const listQueryOr: any[] = [];
 
 		if (searchType && searchKey && searchValue) {
 			listQueryAnd.push({
@@ -233,10 +216,10 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		if (queryParam) {
-			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
-			let queryAndOperator: any[] = [];
+			const queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
+			const queryAndOperator: any[] = [];
 			queryParamFormat.forEach((e: any) => {
-				let tempQuery = {
+				const tempQuery = {
 					[`indexes.${e.type}_${e.key}`]: {
 						$exists: true,
 						$eq: e.value,
@@ -247,20 +230,20 @@ export default class BlockService extends MoleculerDBService<
 			listQueryAnd.push(...queryAndOperator);
 		}
 		if (queryAnd) {
-			let queryAndOperator: any[] = [];
+			const queryAndOperator: any[] = [];
 			queryAnd.forEach((operator: string) => {
-				let keyValueList = operator.split('=');
+				const keyValueList = operator.split('=');
 				if (keyValueList.length === 2) {
-					let value = keyValueList[1];
+					const value = keyValueList[1];
 					let key;
-					let typeKeyList = keyValueList[0].split('.');
+					const typeKeyList = keyValueList[0].split('.');
 					if (typeKeyList.length === 2) {
 						key = `indexes.${typeKeyList[0]}_${typeKeyList[1]}`;
 					} else if (typeKeyList.length === 1) {
 						key = `indexes.${typeKeyList[0]}`;
 					}
 
-					let tempQuery = {
+					const tempQuery = {
 						[`${key}`]: {
 							$exists: true,
 							$eq: value,
@@ -307,26 +290,26 @@ export default class BlockService extends MoleculerDBService<
 			);
 		}
 		if (listQueryAnd.length > 0) {
-			query['$and'] = listQueryAnd;
+			query.$and = listQueryAnd;
 		}
 
 		if (listQueryOr.length > 0) {
-			query['$or'] = listQueryOr;
+			query.$or = listQueryOr;
 		}
 		this.logger.info('query: ', JSON.stringify(query));
-		let listPromise = [];
+		const listPromise = [];
 
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainid);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
 
 		listPromise.push(
 			this.adapter.lean({
-				query: query,
-				projection: projection,
+				query,
+				projection,
 				// @ts-ignore
-				sort: sort,
+				sort,
 				limit: ctx.params.pageLimit + 1,
 				offset: ctx.params.pageOffset,
 			}),
@@ -334,28 +317,28 @@ export default class BlockService extends MoleculerDBService<
 
 		try {
 			// @ts-ignore
-			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
+			const [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
 				Promise.race(listPromise),
-				//@ts-ignore
+				// @ts-ignore
 				ctx.params.countTotal === true
 					? this.adapter.countWithSkipLimit({
-							query: query,
+							query,
 							skip: 0,
 							limit: ctx.params.pageLimit * 5,
 					  })
 					: 0,
 			]);
 
-			let nextKey = null;
+			let newNextKey = null;
 
 			if (result.length > 0) {
-				if (result.length == 1) {
-					nextKey = {
+				if (result.length === 1) {
+					newNextKey = {
 						_id: result[result.length - 1]?._id,
 						height: result[result.length - 1]?.tx_response.height,
 					};
 				} else {
-					nextKey = ctx.params.txHash
+					newNextKey = ctx.params.txHash
 						? null
 						: {
 								_id: result[result.length - 2]?._id,
@@ -370,14 +353,14 @@ export default class BlockService extends MoleculerDBService<
 					result.pop();
 				}
 			}
-
+			/* eslint-enable camelcase , no-underscore-dangle*/
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					transactions: result,
-					count: count,
-					nextKey: nextKey ? toBase64(toUtf8(JSON.stringify(nextKey))) : null,
+					count,
+					nextKey: newNextKey ? toBase64(toUtf8(JSON.stringify(nextKey))) : null,
 				},
 			};
 		} catch (error) {
@@ -399,9 +382,7 @@ export default class BlockService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			address: { type: 'string', optional: false },
 			pageLimit: {
@@ -455,16 +436,16 @@ export default class BlockService extends MoleculerDBService<
 		const address = ctx.params.address;
 
 		const sort = '-indexes.height';
-		let query: QueryOptions = {};
-
+		const query: QueryOptions = {};
+		/* eslint-disable camelcase, no-underscore-dangle, quote-props */
 		if (ctx.params.nextKey) {
 			query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 		}
-		// query['custom_info.chain_id'] = { $exists: true };
+		// Query['custom_info.chain_id'] = { $exists: true };
 
-		let listQueryAnd: any[] = [];
-		let listQueryOr: any[] = [];
-		let projection: any = {
+		const listQueryAnd: any[] = [];
+		const listQueryOr: any[] = [];
+		const projection: any = {
 			indexes: 0,
 			custom_info: 0,
 			tx: 0,
@@ -476,12 +457,6 @@ export default class BlockService extends MoleculerDBService<
 		};
 
 		if (address) {
-			// listQueryOr.push(
-			// 	{ 'indexes.delegate_validator': { $exists: true, $eq: address } },
-			// 	{ 'indexes.redelegate_source_validator': { $exists: true, $eq: address } },
-			// 	{ 'indexes.redelegate_destination_validator': { $exists: true, $eq: address } },
-			// 	{ 'indexes.unbond_validator': { $exists: true, $eq: address } },
-			// );
 			listQueryAnd.push(
 				{ 'indexes.addresses': { $exists: true, $eq: address } },
 				{
@@ -497,24 +472,24 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		if (listQueryAnd.length > 0) {
-			query['$and'] = listQueryAnd;
+			query.$and = listQueryAnd;
 		}
 		if (listQueryOr.length > 0) {
-			query['$or'] = listQueryOr;
+			query.$or = listQueryOr;
 		}
 
 		this.logger.info('query: ', JSON.stringify(query));
-		let listPromise = [];
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+		const listPromise = [];
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainid);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
 		listPromise.push(
 			this.adapter.lean({
-				query: query,
-				projection: projection,
+				query,
+				projection,
 				// @ts-ignore
-				sort: sort,
+				sort,
 				limit: ctx.params.pageLimit + 1,
 				offset: ctx.params.pageOffset,
 			}),
@@ -522,12 +497,11 @@ export default class BlockService extends MoleculerDBService<
 
 		try {
 			// @ts-ignore
-			let [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
+			const [result, count] = await Promise.all<TransactionEntity, TransactionEntity>([
 				Promise.race(listPromise),
-				//@ts-ignore
 				ctx.params.countTotal === true
 					? this.adapter.countWithSkipLimit({
-							query: query,
+							query,
 							skip: 0,
 							limit: ctx.params.pageLimit * 5,
 					  })
@@ -536,7 +510,7 @@ export default class BlockService extends MoleculerDBService<
 
 			let nextKey = null;
 			if (result.length > 0) {
-				if (result.length == 1) {
+				if (result.length === 1) {
 					nextKey = result[result.length - 1]?._id;
 				} else {
 					nextKey = result[result.length - 2]?._id;
@@ -549,14 +523,14 @@ export default class BlockService extends MoleculerDBService<
 					result.pop();
 				}
 			}
-
+			/* eslint-enable camelcase, no-underscore-dangle, quote-props */
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					transactions: result,
-					count: count,
-					nextKey: nextKey,
+					count,
+					nextKey,
 				},
 			};
 		} catch (error) {
@@ -584,8 +558,8 @@ export default class BlockService extends MoleculerDBService<
 		const pageLimit = ctx.params.pageLimit;
 		const sort = ctx.params.reverse === true ? 'asc' : 'desc';
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainid, URL_TYPE_CONSTANTS.RPC);
-		let listPromise = [];
-		let query = [];
+		const listPromise = [];
+		const query = [];
 		if (blockHeight) {
 			query.push(`tx.height=${blockHeight}`);
 		}
@@ -597,7 +571,7 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		if (queryParam) {
-			let queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
+			const queryParamFormat = Utils.formatSearchQueryInTxSearch(ctx.params.query);
 			queryParamFormat.forEach((e: any) => {
 				query.push(`${e.type}.${e.key}=${e.value}`);
 			});
@@ -645,7 +619,7 @@ export default class BlockService extends MoleculerDBService<
 		return listPromise;
 	}
 
-	private setProjectionForIBC(projection: any) {
+	private _setProjectionForIBC(projection: any) {
 		projection['indexes.timestamp'] = 0;
 		projection['indexes.height'] = 0;
 		projection['indexes.acknowledge_packet_packet_timeout_height'] = 0;

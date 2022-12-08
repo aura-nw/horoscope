@@ -1,9 +1,10 @@
-import { IParam } from '../entities';
+/* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
+import { IParam } from '../entities';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
-// export interface IParam {
+// Export interface IParam {
 // 	_id: ObjectIdNull;
 // }
 
@@ -19,7 +20,7 @@ export const paramMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	return models[collection] || model(collection, schema);
 };

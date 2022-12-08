@@ -1,6 +1,7 @@
+/* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
-import { definitionType, ObjectIdNull } from '../../types';
 import { EpochInfoSDKType } from 'osmojs/types/codegen/osmosis/epochs/genesis';
+import { definitionType, ObjectIdNull } from '../../types';
 
 const definition: definitionType<EpochInfoSDKType> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -18,7 +19,7 @@ export const epochMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	return models[collection] || model(collection, schema);
 };

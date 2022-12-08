@@ -1,32 +1,30 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import { JsonConvert } from 'json2typescript';
+import { Job } from 'bull';
 import { dbPoolMixin } from '../../mixins/dbMixinMongoose';
-import { JsonConvert, OperationMode } from 'json2typescript';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { IPoolResponseFromLCD } from '../../types';
-import { Job, KeepJobsOptions } from 'bull';
-import { PoolEntity, ValidatorEntity } from '../../entities';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
+import { PoolEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
-import { QueueConfig } from '../../config/queue';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlPoolService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbPoolMixin = dbPoolMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlPool',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbPoolMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				new CallApiMixin().start(),
+				dbPoolMixin,
 			],
 			queues: {
 				'crawl.pool': {
@@ -43,20 +41,22 @@ export default class CrawlPoolService extends Service {
 		});
 	}
 
-	async handleJob(path: String) {
-		let urlToCall = path;
+	async handleJob(path: string) {
+		const urlToCall = path;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let resultCallApi: IPoolResponseFromLCD = await this.callApiFromDomain(url, urlToCall);
+		const resultCallApi: IPoolResponseFromLCD = await this.callApiFromDomain(url, urlToCall);
 		const item: PoolEntity = new JsonConvert().deserializeObject(
 			resultCallApi.pool,
 			PoolEntity,
 		);
 
 		try {
-			let foundPool = await this.adapter.findOne({});
+			const foundPool = await this.adapter.findOne({});
 			if (foundPool) {
+				// eslint-disable-next-line no-underscore-dangle
 				item._id = foundPool._id;
+				// eslint-disable-next-line no-underscore-dangle
 				await this.adapter.updateById(foundPool._id, item);
 			} else {
 				await this.adapter.insert(item);
@@ -65,7 +65,7 @@ export default class CrawlPoolService extends Service {
 			this.logger.error(error);
 		}
 	}
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.pool',
 			{
@@ -91,6 +91,7 @@ export default class CrawlPoolService extends Service {
 		this.getQueue('crawl.pool').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

@@ -1,6 +1,11 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable camelcase */
+import { Job } from 'bull';
+import { JsonConvert } from 'json2typescript';
+import { Context, Service, ServiceBroker } from 'moleculer';
+import { fromBech32 } from '@cosmjs/encoding';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
-import { Job } from 'bull';
 import { Config } from '../../common';
 import {
 	DELAY_JOB_TYPE,
@@ -9,29 +14,23 @@ import {
 	URL_TYPE_CONSTANTS,
 	VESTING_ACCOUNT_TYPE,
 } from '../../common/constant';
-import { JsonConvert } from 'json2typescript';
-import { Context, Service, ServiceBroker } from 'moleculer';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams, QueryDelayJobParams } from '../../types';
 import { AccountInfoEntity, DelayJobEntity } from '../../entities';
-import { fromBech32 } from '@cosmjs/encoding';
-import { QueueConfig } from '../../config/queue';
-const QueueService = require('moleculer-bull');
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlAccountAuthInfoService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbAccountInfoMixin = dbAccountInfoMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlAccountAuthInfo',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				// this.redisMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
 				this.dbAccountInfoMixin,
-				this.callApiMixin,
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'crawl.account-auth-info': {
@@ -48,7 +47,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 			events: {
 				'account-info.upsert-auth': {
 					handler: (ctx: Context<CrawlAccountInfoParams>) => {
-						this.logger.debug(`Crawl account auth info`);
+						this.logger.debug('Crawl account auth info');
 						this.createJob(
 							'crawl.account-auth-info',
 							{
@@ -69,17 +68,15 @@ export default class CrawlAccountAuthInfoService extends Service {
 		});
 	}
 
-	async handleJob(listAddresses: string[], chainId: string) {
-		let listAccounts: AccountInfoEntity[] = [],
-			listUpdateQueries: any[] = [],
-			listDelayJobs: DelayJobEntity[] = [];
+	public async handleJob(listAddresses: string[], chainId: string) {
+		const listAccounts: AccountInfoEntity[] = [];
+		let listUpdateQueries: any[] = [];
+		const listDelayJobs: DelayJobEntity[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter(
-			(addr: string) => fromBech32(addr).data.length === 20
-		);
+		listAddresses = listAddresses.filter((addr: string) => fromBech32(addr).data.length === 20);
 		if (listAddresses.length > 0) {
-			for (let address of listAddresses) {
+			for (const address of listAddresses) {
 				this.logger.info(`Handle address: ${address}`);
 
 				const param = Config.GET_PARAMS_AUTH_INFO + `/${address}`;
@@ -87,7 +84,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 
 				let accountInfo: AccountInfoEntity;
 				try {
-					const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+					const network = LIST_NETWORK.find((x) => x.chainId === chainId);
 					if (network && network.databaseName) {
 						this.adapter.useDb(network.databaseName);
 					}
@@ -126,6 +123,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 								resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.PERIODIC
 									? DELAY_JOB_TYPE.PERIODIC_VESTING
 									: DELAY_JOB_TYPE.DELAYED_VESTING,
+							// eslint-disable-next-line camelcase
 							chain_id: chainId,
 						} as QueryDelayJobParams);
 					} catch (error) {
@@ -133,7 +131,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 						throw error;
 					}
 					if (!existsJob) {
-						let newDelayJob = {} as DelayJobEntity;
+						const newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
 						switch (resultCallApi.account['@type']) {
 							case VESTING_ACCOUNT_TYPE.DELAYED:
@@ -161,20 +159,19 @@ export default class CrawlAccountAuthInfoService extends Service {
 											10,
 										) *
 										1000;
-								if (expire_time < new Date().getTime())
+								if (expire_time < new Date().getTime()) {
 									expire_time +=
 										parseInt(
 											resultCallApi.account.vesting_periods[0].length,
 											10,
 										) * 1000;
+								}
 								newDelayJob.expire_time = new Date(expire_time);
 								break;
 						}
-						newDelayJob.indexes =
-							address +
-							newDelayJob.type +
-							newDelayJob.expire_time!.getTime() +
-							chainId;
+						newDelayJob.indexes = `${address}${
+							newDelayJob.type
+						}${newDelayJob?.expire_time!.getTime()}${chainId}`;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: chain ? chain.chainName : '',
@@ -186,7 +183,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 				if (
 					resultCallApi &&
 					resultCallApi.account &&
-					resultCallApi.account['@type'] == EVMOS_TYPE_ACCOUNT.ETH_ACCOUNT
+					resultCallApi.account['@type'] === EVMOS_TYPE_ACCOUNT.ETH_ACCOUNT
 				) {
 					if (resultCallApi.account.base_account) {
 						resultCallApi.account.address = resultCallApi.account.base_account.address;
@@ -203,18 +200,20 @@ export default class CrawlAccountAuthInfoService extends Service {
 			}
 		}
 		try {
-			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+			const network = LIST_NETWORK.find((x) => x.chainId === chainId);
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
 			}
 			listAccounts.map((element) => {
-				if (element._id)
+				// eslint-disable-next-line no-underscore-dangle
+				if (element._id) {
 					listUpdateQueries.push(
+						// eslint-disable-next-line no-underscore-dangle
 						this.adapter.updateById(element._id, {
 							$set: { account_auth: element.account_auth },
 						}),
 					);
-				else {
+				} else {
 					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 						element,
 						AccountInfoEntity,
@@ -242,7 +241,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.getQueue('crawl.account-auth-info').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
@@ -252,6 +251,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 		this.getQueue('crawl.account-auth-info').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

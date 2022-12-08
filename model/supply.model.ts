@@ -1,7 +1,8 @@
-import { model, models, Schema, Types } from "mongoose";
-import { ISupply } from "../entities/supply.entity";
-import { definitionType } from "../types";
-import { customInfoModel } from "./custom-info.model";
+/* eslint-disable camelcase */
+import { model, models, Schema, Types } from 'mongoose';
+import { ISupply } from '../entities/supply.entity';
+import { definitionType } from '../types';
+import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<ISupply> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -17,10 +18,10 @@ const definition: definitionType<ISupply> = (collection?: string) => ({
 export const supplyMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	// const schema = new Schema({}, { autoIndex: true, strict: false, collection: collection });
+	// Const schema = new Schema({}, { autoIndex: true, strict: false, collection: collection });
 	const schema = new Schema(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	return models[collection] || model(collection, schema);
 };

@@ -1,6 +1,7 @@
-import { IInflation } from '../entities';
+/* eslint-disable camelcase */
 import { model, models, Types, Schema } from 'mongoose';
 import { definitionType } from 'types';
+import { IInflation } from '../entities';
 import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<IInflation> = (collection?: string) => ({
@@ -14,7 +15,7 @@ export const inflationMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema<IInflation>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	return models[collection] || model(collection, schema);
 };

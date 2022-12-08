@@ -1,26 +1,27 @@
-import { Config } from '../../common';
+/* eslint-disable camelcase */
 import { Service, ServiceBroker } from 'moleculer';
-import { dbFeegrantMixin } from '../../mixins/dbMixinMongoose';
-import RedisMixin from '../../mixins/redis/redis.mixin';
 import { Job } from 'bull';
 import { ObjectId } from 'mongodb';
-import { ITransaction } from '../../entities';
 import { IVote } from 'entities/vote.entity';
 import { FEEGRANT_STATUS } from 'common/constant';
-import { QueueConfig } from '../../config/queue';
-const QueueService = require('moleculer-bull');
+import { ITransaction } from '../../entities';
+import RedisMixin from '../../mixins/redis/redis.mixin';
+import { dbFeegrantMixin } from '../../mixins/dbMixinMongoose';
+import { Config } from '../../common';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class UpdateOriginalRevoke extends Service {
-	private redisMixin = new RedisMixin().start();
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'feegrant-update-update-original-revoke-txhash',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
+				queueService(queueConfig.redis, queueConfig.opts),
 				dbFeegrantMixin,
-				this.redisMixin,
+				new RedisMixin().start(),
 			],
 			queues: {
 				'update.original.revoke': {
@@ -38,7 +39,7 @@ export default class UpdateOriginalRevoke extends Service {
 		});
 	}
 
-	async handleJob() {
+	public async handleJob() {
 		const listTxRevoke = (await this.broker.call('v1.feegrantHistoryDb.find', {
 			query: {
 				status: FEEGRANT_STATUS.REVOKED,
@@ -52,11 +53,13 @@ export default class UpdateOriginalRevoke extends Service {
 			bulkUpdate.push({
 				updateOne: {
 					filter: {
-						origin_feegrant_txhash: e['origin_feegrant_txhash'],
+						// @ts-ignore
+						origin_feegrant_txhash: e.origin_feegrant_txhash,
 					},
 					update: {
 						$set: {
-							origin_revoke_txhash: e['tx_hash'],
+							// @ts-ignore
+							origin_revoke_txhash: e.tx_hash,
 						},
 					},
 				},
@@ -66,7 +69,7 @@ export default class UpdateOriginalRevoke extends Service {
 		await this.adapter.bulkWrite(bulkUpdate);
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'update.original.revoke',
 			{},
@@ -83,6 +86,7 @@ export default class UpdateOriginalRevoke extends Service {
 		this.getQueue('update.original.revoke').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

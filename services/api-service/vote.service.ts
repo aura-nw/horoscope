@@ -1,11 +1,8 @@
-import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
-import { redisMixin } from './../../mixins/redis/redis.mixin';
 import { Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { LIST_NETWORK } from '../../common/constant';
-import { IVote } from '../../entities/vote.entity';
 import { Context } from 'moleculer';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
+import { fromBase64, fromUtf8, toBase64, toUtf8 } from '@cosmjs/encoding';
 import {
 	CountVoteParams,
 	CountVoteResponse,
@@ -15,14 +12,17 @@ import {
 	MoleculerDBService,
 	ValidatorVoteResponse,
 } from '../../types';
-import { fromBase64, fromUtf8, toBase64, toUtf8 } from '@cosmjs/encoding';
+import { IVote } from '../../entities/vote.entity';
+import { LIST_NETWORK } from '../../common/constant';
+import { _redisMixin } from './../../mixins/redis/redis.mixin';
+import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
 	name: 'votes',
 	version: 1,
-	mixins: [dbVoteMixin, redisMixin],
+	mixins: [dbVoteMixin, _redisMixin],
 })
 export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }, IVote> {
 	@Get('/', {
@@ -31,9 +31,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			proposalid: {
 				type: 'number',
@@ -95,10 +93,12 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			}
 		}
 		try {
-			let query: QueryOptions = {};
-			query['proposal_id'] = ctx.params.proposalid;
+			const query: QueryOptions = {};
+			query.proposal_id = ctx.params.proposalid;
 			const chainId = ctx.params.chainid;
-			if (ctx.params.answer) query.answer = ctx.params.answer;
+			if (ctx.params.answer) {
+				query.answer = ctx.params.answer;
+			}
 
 			let sort = '-height -_id';
 
@@ -108,7 +108,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 
 			if (nextKey) {
 				if (ctx.params.reverse) {
-					query['$or'] = [
+					query.$or = [
 						{
 							height: { $gt: nextKey.height },
 						},
@@ -118,7 +118,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 						},
 					];
 				} else {
-					query['$or'] = [
+					query.$or = [
 						{
 							height: { $lt: nextKey.height },
 						},
@@ -134,22 +134,22 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
 			}
-			// find pageLimit + 1 to check if there is a next page
+			// Find pageLimit + 1 to check if there is a next page
 			const votes: any[] = await this.adapter.find({
 				query,
 				limit: ctx.params.pageLimit + 1,
 				offset: ctx.params.pageOffset,
 				// @ts-ignore
-				sort: sort,
+				sort,
 			});
 
-			// check if there is a next page
+			// Check if there is a next page
 			const newNextKey =
 				votes.length < 1 || votes.length <= ctx.params.pageLimit
 					? null
 					: { _id: votes[votes.length - 2]._id, height: votes[votes.length - 2].height };
 
-			// remove the last item if there is a next page
+			// Remove the last item if there is a next page
 			if (newNextKey) {
 				votes.pop();
 			}
@@ -178,9 +178,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			proposalid: {
 				type: 'number',
@@ -208,14 +206,14 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				},
 				{ meta: { $cache: false } },
 			);
-			const validatorAccountAddress = validators.map((e) => {
-				return e.account_address;
-			});
-			let query: QueryOptions = {
+			const validatorAccountAddress = validators.map((e) => e.account_address);
+			const query: QueryOptions = {
 				proposal_id: ctx.params.proposalid,
 				voter_address: { $in: validatorAccountAddress },
 			};
-			if (ctx.params.answer) query.answer = ctx.params.answer;
+			if (ctx.params.answer) {
+				query.answer = ctx.params.answer;
+			}
 			const network = LIST_NETWORK.find((x) => x.chainId == chainId);
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
@@ -225,9 +223,7 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 			const validatorVotes: ValidatorVoteResponse[] = [];
 			for (let i = 0; i < validators.length; i++) {
 				const validator = validators[i];
-				const vote = votes.find((e) => {
-					return e.voter_address === validator.account_address;
-				});
+				const vote = votes.find((e) => e.voter_address === validator.account_address);
 				const tx_hash = vote ? vote.txhash : '';
 				const answer = vote ? vote.answer : '';
 				const timestamp = vote ? vote.timestamp : '';

@@ -1,32 +1,30 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
-import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { JsonConvert } from 'json2typescript';
+import { Job } from 'bull';
+import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { IProposal, ProposalEntity } from '../../entities/proposal.entity';
 import { Config } from '../../common';
 import { PROPOSAL_STATUS, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { IProposalResponseFromLCD } from '../../types';
-import { Job } from 'bull';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
-import { QueueConfig } from '../../config/queue';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlProposalService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbProposalMixin = dbProposalMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlProposal',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbProposalMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				dbProposalMixin,
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'crawl.proposal': {
@@ -43,8 +41,8 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async handleJob(path: String) {
-		let listProposal: IProposal[] = [];
+	async handleJob(path: string) {
+		const listProposal: IProposal[] = [];
 
 		let param = path;
 		let resultCallApi: IProposalResponseFromLCD;
@@ -67,39 +65,40 @@ export default class CrawlProposalService extends Service {
 
 		this.logger.debug(`result: ${JSON.stringify(listProposal)}`);
 
-		let listProposalInDB: ProposalEntity[] = await this.adapter.lean({
+		const listProposalInDB: ProposalEntity[] = await this.adapter.lean({
 			query: {},
 		});
-		let listBulk: any[] = [];
-		let listIndexDelete: number[] = [];
+		const listBulk: any[] = [];
+		const listIndexDelete: number[] = [];
 		await Promise.all(
 			listProposal.map(async (proposal) => {
-				if (proposal.proposal_id == undefined) {
-					this.logger.error(`proposal_id is undefined`);
+				if (proposal.proposal_id === undefined) {
+					this.logger.error('proposal_id is undefined');
 				}
 				if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_DEPOSIT_PERIOD) {
 					this.broker.emit('proposal.depositing', { id: proposal.proposal_id });
 				}
 
-				// this.broker.emit('proposal.upsert', { id: proposal.proposal_id });
+				// This.broker.emit('proposal.upsert', { id: proposal.proposal_id });
 				if (proposal.status === PROPOSAL_STATUS.PROPOSAL_STATUS_VOTING_PERIOD) {
 					this.broker.emit('proposal.voting', { id: proposal.proposal_id });
 				}
-				let foundProposal = listProposalInDB.find(
-					(item: ProposalEntity) => item.proposal_id == proposal.proposal_id,
+				const foundProposal = listProposalInDB.find(
+					(item: ProposalEntity) => item.proposal_id === proposal.proposal_id,
 				);
-				let foundProposalIndex = listProposalInDB.findIndex(
-					(item: ProposalEntity) => item.proposal_id == proposal.proposal_id,
+				const foundProposalIndex = listProposalInDB.findIndex(
+					(item: ProposalEntity) => item.proposal_id === proposal.proposal_id,
 				);
 
 				try {
 					if (foundProposal) {
+						/* eslint-disable no-underscore-dangle, camelcase */
 						proposal._id = foundProposal._id;
 						if (
 							foundProposal.proposal_id &&
 							(!foundProposal.proposer_address || !foundProposal.initial_deposit)
 						) {
-							let proposer = await this.getProposerBySearchTx(
+							const proposer = await this.getProposerBySearchTx(
 								foundProposal.proposal_id,
 							);
 							if (proposer?.nameValidator) {
@@ -145,8 +144,8 @@ export default class CrawlProposalService extends Service {
 			}),
 		);
 
-		// await Promise.all(listPromise);
-		let result = await this.adapter.bulkWrite(listBulk);
+		// Await Promise.all(listPromise);
+		const result = await this.adapter.bulkWrite(listBulk);
 		this.logger.info(result);
 	}
 
@@ -159,7 +158,7 @@ export default class CrawlProposalService extends Service {
 		try {
 			const initialDeposit = resultCallApi.txs[0].body.messages[0].initial_deposit;
 			const proposerAddress = resultCallApi.txs[0].body.messages[0].proposer;
-			let result: any = await this.broker.call('v1.crawlValidator.find', {
+			const result: any = await this.broker.call('v1.crawlValidator.find', {
 				query: {
 					'custom_info.chain_id': Config.CHAIN_ID,
 					account_address: proposerAddress,
@@ -169,13 +168,13 @@ export default class CrawlProposalService extends Service {
 				const nameValidator = result[0].description.moniker;
 				return {
 					proposalAddress: proposerAddress,
-					nameValidator: nameValidator,
-					initialDeposit: initialDeposit,
+					nameValidator,
+					initialDeposit,
 				};
 			} else {
 				return {
 					proposalAddress: proposerAddress,
-					initialDeposit: initialDeposit,
+					initialDeposit,
 				};
 			}
 		} catch (error) {
@@ -184,7 +183,7 @@ export default class CrawlProposalService extends Service {
 		return null;
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.proposal',
 			{
@@ -210,6 +209,7 @@ export default class CrawlProposalService extends Service {
 		this.getQueue('crawl.proposal').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

@@ -1,7 +1,7 @@
 /* eslint-disable no-shadow */
-import { IDbAdapterCustom } from '../mixins/customMongooseAdapter/IDBAdapterCustom';
 import moleculer, { Context } from 'moleculer';
-import { DbAdapter, DbContextParameters } from 'moleculer-db';
+import { DbContextParameters } from 'moleculer-db';
+import { IDbAdapterCustom } from '../mixins/customMongooseAdapter/IDBAdapterCustom';
 
 export const listActionConfig = {
 	cache: {

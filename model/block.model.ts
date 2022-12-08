@@ -1,8 +1,9 @@
-import { IBlock } from '../entities';
+/* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
+import { IBlock } from '../entities';
 import { definitionType, ObjectIdNull } from '../types';
-import { customInfoModel } from './custom-info.model';
 import { NumericConverter } from '../entities/converters/numeric.converter';
+import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<IBlock> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -72,11 +73,11 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 export const blockMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	// const schema = new Schema({}, { autoIndex: true, strict: false, collection: collection });
+	// Const schema = new Schema({}, { autoIndex: true, strict: false, collection: collection });
 	const schema = new Schema(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
-	// schema.index({ 'block.header.height': -1, 'custom_info.chain_id': 1 });
+	// Schema.index({ 'block.header.height': -1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

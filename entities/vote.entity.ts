@@ -1,7 +1,11 @@
-import { Config } from '../common';
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/explicit-member-accessibility */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable max-classes-per-file */
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { ObjectIdNull } from 'types';
 import { Types } from 'mongoose';
+import { Config } from '../common';
 import { DateConverter } from './converters/date.converter';
 import { CustomInfo, ICustomInfo } from './custom-info.entity';
 
