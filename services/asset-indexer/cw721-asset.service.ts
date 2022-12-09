@@ -91,14 +91,14 @@ export default class CrawlAssetService extends moleculer.Service {
 	async cw721Handle(ctx: Context<any>) {
 		const chainId = ctx.params.chainId;
 		const codeId = ctx.params.codeId;
-		const URL = ctx.params.URL;
+		const url = ctx.params.url;
 		const cacheKey = `${HANDLE_CODEID_PREFIX}_${chainId}_${codeId}`;
 		// @ts-ignore
 		const processingFlag = await this.broker.cacher?.get(cacheKey);
 		if (!processingFlag) {
 			await this.broker.cacher?.set(cacheKey, true);
 			this.logger.debug('Asset handler registered', chainId, codeId);
-			this.handleJob(URL, chainId, codeId);
+			this.handleJob(url, chainId, codeId);
 			await this.broker.cacher?.del(cacheKey);
 		}
 	}
@@ -107,17 +107,17 @@ export default class CrawlAssetService extends moleculer.Service {
 			let cw721flag: any = null;
 			const urlGetContractList = `${CODE_ID_URI}${codeId}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&`;
 			let path = `${CODE_ID_URI}${codeId}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&`;
-			this.logger.debug('Call urlGetContractList', URL, urlGetContractList);
+			this.logger.debug('Call urlGetContractList', url, urlGetContractList);
 			let nextKey = null;
 			do {
-				const resultCallApi = await this.callApiFromDomain(URL, path);
+				const resultCallApi = await this.callApiFromDomain(url, path);
 				this.logger.debug('Call resultCallApi', JSON.stringify(resultCallApi));
 				if (resultCallApi?.contracts?.length > 0) {
 					let i = 0;
 					while (i < resultCallApi.contracts.length) {
 						const address = resultCallApi.contracts[i];
 						const urlGetListToken = `${CONTRACT_URI}${address}/smart/${CW721_ACTION.URL_GET_TOKEN_LIST}`;
-						const listTokenIDs = await this.callApiFromDomain(URL, urlGetListToken);
+						const listTokenIDs = await this.callApiFromDomain(url, urlGetListToken);
 						this.logger.debug('Call urlGetListToken', urlGetListToken);
 						this.logger.debug('Call listTokenIDs', JSON.stringify(listTokenIDs));
 						if (listTokenIDs?.data?.tokens !== undefined) {
@@ -126,7 +126,7 @@ export default class CrawlAssetService extends moleculer.Service {
 								const str = `{"all_nft_info":{"tokenId":"${id}"}}`;
 								const stringEncode64bytes = Buffer.from(str).toString('base64');
 								const urlGetOwner = `${CONTRACT_URI}${address}/smart/${stringEncode64bytes}`;
-								const tokenInfo = await this.callApiFromDomain(URL, urlGetOwner);
+								const tokenInfo = await this.callApiFromDomain(url, urlGetOwner);
 								cw721flag = tokenInfo?.data?.access?.owner !== undefined;
 								break;
 							}
@@ -142,7 +142,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					}
 					path = `${urlGetContractList}pagination.key=${encodeURIComponent(nextKey)}`;
 				} else {
-					this.logger.warn('Call urlGetContractList unsatisfactory return', URL, path);
+					this.logger.warn('Call urlGetContractList unsatisfactory return', url, path);
 				}
 			} while (nextKey != null && cw721flag === null);
 			this.logger.debug(
@@ -164,7 +164,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						condition,
 						update: { status: CodeIDStatus.COMPLETED },
 					});
-					this.broker.emit('CW721.handle', { URL, chainId, codeId });
+					this.broker.emit('CW721.handle', { url, chainId, codeId });
 					break;
 				}
 				case false: {
@@ -184,14 +184,14 @@ export default class CrawlAssetService extends moleculer.Service {
 		try {
 			const contractList: any = await this.broker.call(
 				COMMON_ACTION.GET_CONTRACT_LIST,
-				{ URL, codeId },
+				{ url, codeId },
 				opts,
 			);
 
 			contractList.map((address: string) => {
 				this.broker.call(
 					CW721_ACTION.ENRICH_DATA,
-					[{ URL, chainId, codeId, address }, ENRICH_TYPE.INSERT],
+					[{ url, chainId, codeId, address }, ENRICH_TYPE.INSERT],
 					opts,
 				);
 			});
@@ -213,7 +213,7 @@ export default class CrawlAssetService extends moleculer.Service {
 	) {
 		const tokenInfo: any = await this.broker.call(
 			CW721_ACTION.GET_TOKEN_INFOR,
-			{ URL: url, codeId, address, tokenId },
+			{ url, codeId, address, tokenId },
 			opts,
 		);
 		if (tokenInfo != null) {
@@ -315,24 +315,23 @@ export default class CrawlAssetService extends moleculer.Service {
 
 	@Action({ name: 'enrichData' })
 	private async _enrichData(ctx: Context<[ITokenInfo, string]>) {
-		const URL = ctx.params[0].url;
+		const url = ctx.params[0].url;
 		const address = ctx.params[0].address;
 		const codeId = ctx.params[0].codeId;
 		const typeEnrich = ctx.params[1];
 		const chainId = ctx.params[0].chainId;
 		const listTokenIDs: any = await this.broker.call(
 			CW721_ACTION.GET_TOKEN_LIST,
-			{ URL, codeId, address },
+			{ url, codeId, address },
 			opts,
 		);
-		// Let listTokenIDs = await this.actions.getTokenList({ URL, codeId, address }, opts);
 
 		if (listTokenIDs != null) {
 			listTokenIDs.map((tokenId: string) => {
 				this.createJob(
 					'CW721.enrich-tokenid',
 					{
-						url: URL,
+						url,
 						address,
 						codeId,
 						typeEnrich,
@@ -349,28 +348,6 @@ export default class CrawlAssetService extends moleculer.Service {
 					},
 				);
 			});
-			// Const getInforPromises = await Promise.all(
-			// 	ListTokenIDs.map(async (tokenId: String) => {
-			// 		This.createJob(
-			// 			'CW721.enrich-tokenid',
-			// 			{
-			// 				Url: URL,
-			// 				Address: address,
-			// 				Code_id: codeId,
-			// 				Type_enrich: typeEnrich,
-			// 				Chain_id: chainId,
-			// 				Token_id: tokenId,
-			// 			},
-			// 			{
-			// 				RemoveOnComplete: true,
-			// 				RemoveOnFail: {
-			// 					Count: 3,
-			// 				},
-			// 			},
-			// 		);
-			// 	}),
-			// );
-			// Await getInforPromises;
 		}
 	}
 

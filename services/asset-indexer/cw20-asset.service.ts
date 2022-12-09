@@ -320,7 +320,7 @@ export default class CrawlAssetService extends moleculer.Service {
 
 		const listOwnerAddress: any = await this.broker.call(
 			CW20_ACTION.GET_OWNER_LIST,
-			{ URL: url, codeId, address },
+			{ url, codeId, address },
 			opts,
 		);
 		this.logger.debug(`Cw20 listOwnerAddress ${JSON.stringify(listOwnerAddress)}`);

@@ -42,16 +42,15 @@ export default class CrawlAccountInfoService extends Service {
 					concurrency: parseInt(Config.CONCURRENCY_ASSET_TX_HANDLER, 10),
 					process(job: Job) {
 						job.progress(10);
-						const URL = Utils.getUrlByChainIdAndType(
+						const url = Utils.getUrlByChainIdAndType(
 							job.data.chainId,
 							URL_TYPE_CONSTANTS.LCD,
 						);
 
 						// @ts-ignore
-						this.handleJob(URL, job.data.listTx, job.data.chainId);
+						this.handleJob(url, job.data.listTx, job.data.chainId);
 						// @ts-ignore
 						this.handleTxBurnCw721(job.data.listTx, job.data.chainId);
-						// TODO: handleTxBurnCw4973 ???
 						job.progress(100);
 						return true;
 					},
@@ -126,7 +125,7 @@ export default class CrawlAccountInfoService extends Service {
 											this.createJob(
 												'CW20.enrich',
 												{
-													url: URL,
+													url,
 													address: contractAddress,
 													codeId: contractInfo.codeId,
 													typeEnrich: ENRICH_TYPE.UPSERT,
@@ -148,7 +147,7 @@ export default class CrawlAccountInfoService extends Service {
 											this.createJob(
 												'CW721.enrich-tokenid',
 												{
-													url: URL,
+													url,
 													address: contractAddress,
 													codeId: contractInfo.codeId,
 													typeEnrich: ENRICH_TYPE.UPSERT,
@@ -171,7 +170,7 @@ export default class CrawlAccountInfoService extends Service {
 											this.createJob(
 												'CW4973.enrich-tokenid',
 												{
-													url: URL,
+													url,
 													address: contractAddress,
 													codeId: contractInfo.codeId,
 													typeEnrich: ENRICH_TYPE.UPSERT,
@@ -189,14 +188,14 @@ export default class CrawlAccountInfoService extends Service {
 										break;
 									case CodeIDStatus.WAITING:
 										this.broker.emit(`${contractInfo.contractType}.validate`, {
-											URL,
+											url,
 											chainId,
 											codeId: contractInfo.codeId,
 										});
 										break;
 									case CodeIDStatus.TBD:
 										this.broker.emit(`${contractInfo.contractType}.validate`, {
-											URL,
+											url,
 											chainId,
 											codeId: contractInfo.codeId,
 										});
@@ -285,11 +284,9 @@ export default class CrawlAccountInfoService extends Service {
 		});
 	}
 
-	// TODO: handleTxBurnCw4973 ???
-
 	async verifyAddressByCodeID(url: string, address: string, chainId: string) {
 		const urlGetContractInfo = `${CONTRACT_URI}${address}`;
-		const contractInfo = await this.callApiFromDomain(URL, urlGetContractInfo);
+		const contractInfo = await this.callApiFromDomain(url, urlGetContractInfo);
 		if (contractInfo?.contract_info?.code_id !== undefined) {
 			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, {
 				query: {

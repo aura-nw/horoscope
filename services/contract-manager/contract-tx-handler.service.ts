@@ -136,7 +136,7 @@ export default class CrawlSmartContractsService extends Service {
 									// eslint-disable-next-line no-underscore-dangle
 									(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
 								).value;
-							const URL = Utils.getUrlByChainIdAndType(
+							const url = Utils.getUrlByChainIdAndType(
 								chainId,
 								URL_TYPE_CONSTANTS.LCD,
 							);
@@ -149,17 +149,13 @@ export default class CrawlSmartContractsService extends Service {
 							try {
 								// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 								const param = `${Config.GET_DATA_HASH}${code_id}`;
-								const url = Utils.getUrlByChainIdAndType(
-									chainId,
-									URL_TYPE_CONSTANTS.LCD,
-								);
 								contract_hash = (
 									await this.callApiFromDomain(url, param)
 								).code_info.data_hash.toLowerCase();
 								[contract_hash, cosmwasm_contract] = await Promise.all([
 									this.callApiFromDomain(url, param),
 									this.callApiFromDomain(
-										URL,
+										url,
 										`${PATH_COSMOS_SDK.COSMWASM_CONTRACT_PARAM}${contract_address}`,
 									),
 								]);
