@@ -17,6 +17,7 @@ import {
 	CONTRACT_TYPE,
 } from '../../common/constant';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
+import RedisMixin from '../../mixins/redis/redis.mixin';
 import { Utils } from '../../utils/utils';
 import { CodeIDStatus } from '../../model/codeid.model';
 import { queueConfig } from '../../config/queue';
@@ -34,6 +35,7 @@ export default class CrawlAccountInfoService extends Service {
 				queueService(queueConfig.redis, queueConfig.opts),
 				dbCW721AssetMixin,
 				new CallApiMixin().start(),
+				new RedisMixin().start(),
 			],
 			queues: {
 				'asset.tx-handle': {
