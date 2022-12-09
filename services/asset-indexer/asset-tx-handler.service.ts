@@ -24,14 +24,8 @@ import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
-const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
-const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
-const opts: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
 export default class CrawlAccountInfoService extends Service {
-	private _callApiMixin = new CallApiMixin().start();
-	private dbAssetMixin = dbCW721AssetMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -39,8 +33,8 @@ export default class CrawlAccountInfoService extends Service {
 			version: 1,
 			mixins: [
 				queueService(queueConfig.redis, queueConfig.opts),
-				this.dbAssetMixin,
-				this._callApiMixin,
+				dbCW721AssetMixin,
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'asset.tx-handle': {
@@ -85,12 +79,12 @@ export default class CrawlAccountInfoService extends Service {
 		});
 	}
 
-	async handleJob(URL: string, listTx: ITransaction[], chainId: string): Promise<any[]> {
+	async handleJob(url: string, listTx: ITransaction[], chainId: string): Promise<any[]> {
 		try {
 			const listContractAndTokenId = this.getContractAndTokenIdFromListTx(listTx);
 
 			if (listContractAndTokenId.length > 0) {
-				const updateInforPromises = await Promise.all(
+				await Promise.all(
 					listContractAndTokenId.map(async (item) => {
 						const contractAddress = item.contractAddress;
 						const tokenId = item.tokenId;
@@ -111,7 +105,7 @@ export default class CrawlAccountInfoService extends Service {
 								switch (contractInfo.status) {
 									case CodeIDStatus.COMPLETED:
 										if (
-											contractInfo.contract_type == CONTRACT_TYPE.CW20 &&
+											contractInfo.contract_type === CONTRACT_TYPE.CW20 &&
 											!tokenId &&
 											contractAddress
 										) {
@@ -133,9 +127,9 @@ export default class CrawlAccountInfoService extends Service {
 												{
 													url: URL,
 													address: contractAddress,
-													code_id: contractInfo.code_id,
-													type_enrich: ENRICH_TYPE.UPSERT,
-													chain_id: chainId,
+													codeId: contractInfo.code_id,
+													typeEnrich: ENRICH_TYPE.UPSERT,
+													chainId,
 												},
 												{
 													removeOnComplete: true,
@@ -146,7 +140,7 @@ export default class CrawlAccountInfoService extends Service {
 											);
 										}
 										if (
-											contractInfo.contract_type == CONTRACT_TYPE.CW721 &&
+											contractInfo.contract_type === CONTRACT_TYPE.CW721 &&
 											tokenId &&
 											contractAddress
 										) {
@@ -155,10 +149,10 @@ export default class CrawlAccountInfoService extends Service {
 												{
 													url: URL,
 													address: contractAddress,
-													code_id: contractInfo.code_id,
-													type_enrich: ENRICH_TYPE.UPSERT,
-													chain_id: chainId,
-													token_id: tokenId,
+													codeId: contractInfo.code_id,
+													typeEnrich: ENRICH_TYPE.UPSERT,
+													chainId,
+													tokenId,
 												},
 												{
 													removeOnComplete: true,
@@ -169,7 +163,7 @@ export default class CrawlAccountInfoService extends Service {
 											);
 										}
 										if (
-											contractInfo.contract_type == CONTRACT_TYPE.CW4973 &&
+											contractInfo.contract_type === CONTRACT_TYPE.CW4973 &&
 											tokenId &&
 											contractAddress
 										) {
@@ -178,10 +172,10 @@ export default class CrawlAccountInfoService extends Service {
 												{
 													url: URL,
 													address: contractAddress,
-													code_id: contractInfo.code_id,
-													type_enrich: ENRICH_TYPE.UPSERT,
-													chain_id: chainId,
-													token_id: tokenId,
+													codeId: contractInfo.codeId,
+													typeEnrich: ENRICH_TYPE.UPSERT,
+													chainId,
+													tokenId,
 												},
 												{
 													removeOnComplete: true,
@@ -195,15 +189,15 @@ export default class CrawlAccountInfoService extends Service {
 									case CodeIDStatus.WAITING:
 										this.broker.emit(`${contractInfo.contract_type}.validate`, {
 											URL,
-											chain_id: chainId,
-											code_id: contractInfo.code_id,
+											chainId,
+											codeId: contractInfo.codeId,
 										});
 										break;
 									case CodeIDStatus.TBD:
 										this.broker.emit(`${contractInfo.contract_type}.validate`, {
 											URL,
-											chain_id: chainId,
-											code_id: contractInfo.code_id,
+											chainId,
+											codeId: contractInfo.codeId,
 										});
 										break;
 									default:
@@ -234,16 +228,17 @@ export default class CrawlAccountInfoService extends Service {
 				tx.tx_response.events.map((event: IEvent) => {
 					const type = event.type.toString();
 					const attributes = event.attributes;
-					if (type == EVENT_TYPE.WASM) {
+					if (type === EVENT_TYPE.WASM) {
 						let contractFromEvent: any = null;
 						let tokenIdFromEvent: any = null;
 						attributes.map((attribute: IAttribute) => {
 							const key = attribute.key.toString();
-							if (key == BASE_64_ENCODE._CONTRACT_ADDRESS) {
+							// eslint-disable-next-line no-underscore-dangle
+							if (key === BASE_64_ENCODE._CONTRACT_ADDRESS) {
 								const value = fromUtf8(fromBase64(attribute.value.toString()));
 								contractFromEvent = value;
 							}
-							if (key == BASE_64_ENCODE.TOKEN_ID) {
+							if (key === BASE_64_ENCODE.TOKEN_ID) {
 								const value = fromUtf8(fromBase64(attribute.value.toString()));
 								tokenIdFromEvent = value;
 							}
@@ -262,25 +257,26 @@ export default class CrawlAccountInfoService extends Service {
 	handleTxBurnCw721(listTx: any[], chainId: string) {
 		listTx.map((tx) => {
 			const events = tx.tx_response.events;
-			const attributes = events.find((x: IEvent) => x.type == EVENT_TYPE.WASM)?.attributes;
+			const attributes = events.find((x: IEvent) => x.type === EVENT_TYPE.WASM)?.attributes;
 			if (attributes) {
-				const key_value = attributes.find(
+				const keyValue = attributes.find(
 					(x: IAttribute) =>
-						x.key == BASE_64_ENCODE.ACTION && x.value == BASE_64_ENCODE.BURN,
+						x.key === BASE_64_ENCODE.ACTION && x.value === BASE_64_ENCODE.BURN,
 				);
-				if (key_value) {
-					const contract_address = attributes.find(
-						(x: IAttribute) => x.key == BASE_64_ENCODE._CONTRACT_ADDRESS,
+				if (keyValue) {
+					const contractAddress = attributes.find(
+						// eslint-disable-next-line no-underscore-dangle
+						(x: IAttribute) => x.key === BASE_64_ENCODE._CONTRACT_ADDRESS,
 					)?.value;
 					const tokenId = attributes.find(
-						(x: IAttribute) => x.key == BASE_64_ENCODE.TOKEN_ID,
+						(x: IAttribute) => x.key === BASE_64_ENCODE.TOKEN_ID,
 					)?.value;
 
-					this.logger.info(`${fromUtf8(fromBase64(contract_address))}`);
+					this.logger.info(`${fromUtf8(fromBase64(contractAddress))}`);
 					this.logger.info(`${fromUtf8(fromBase64(tokenId))}`);
 					this.broker.call('v1.CW721.addBurnedToAsset', {
 						chainid: chainId,
-						contractAddress: `${fromUtf8(fromBase64(contract_address))}`,
+						contractAddress: `${fromUtf8(fromBase64(contractAddress))}`,
 						tokenId: `${fromUtf8(fromBase64(tokenId))}`,
 					});
 				}
@@ -290,14 +286,15 @@ export default class CrawlAccountInfoService extends Service {
 
 	// TODO: handleTxBurnCw4973 ???
 
-	async verifyAddressByCodeID(URL: string, address: string, chain_id: string) {
+	async verifyAddressByCodeID(url: string, address: string, chainId: string) {
 		const urlGetContractInfo = `${CONTRACT_URI}${address}`;
 		const contractInfo = await this.callApiFromDomain(URL, urlGetContractInfo);
-		if (contractInfo?.contract_info?.code_id != undefined) {
+		if (contractInfo?.contract_info?.code_id !== undefined) {
 			const res: any[] = await this.broker.call(CODEID_MANAGER_ACTION.FIND, {
 				query: {
+					// eslint-disable-next-line camelcase
 					code_id: contractInfo.contract_info.code_id,
-					'custom_info.chain_id': chain_id,
+					'custom_info.chain_id': chainId,
 				},
 			});
 			this.logger.debug('codeid-manager.find res', res);
@@ -308,8 +305,8 @@ export default class CrawlAccountInfoService extends Service {
 					res[0].status === CodeIDStatus.TBD
 				) {
 					return {
-						code_id: contractInfo.contract_info.code_id,
-						contract_type: res[0].contract_type,
+						codeId: contractInfo.contract_info.code_id,
+						contractType: res[0].contract_type,
 						status: res[0].status,
 					};
 				} else {

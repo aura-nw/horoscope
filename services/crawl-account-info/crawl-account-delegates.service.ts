@@ -21,7 +21,7 @@ export default class CrawlAccountDelegatesService extends Service {
 			version: 1,
 			mixins: [
 				queueService(queueConfig.redis, queueConfig.opts),
-				// This._redisMixin,
+				// This.redisMixin,
 				dbAccountInfoMixin,
 				new CallApiMixin().start(),
 			],

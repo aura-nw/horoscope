@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
@@ -19,10 +20,10 @@ import {
 	LIST_NETWORK,
 	MEDIA_STATUS,
 } from '../../common/constant';
-const _callApiMixin = new CallApiMixin().start();
+const callApiMixin = new CallApiMixin().start();
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
-const CACHER_INDEXER_TTL = parseInt(Config.CACHER_INDEXER_TTL);
+const CACHER_INDEXER_TTL = parseInt(Config.CACHER_INDEXER_TTL, 10);
 const opts: CallingOptions = { timeout: 0, retries: MAX_RETRY_REQ };
 
 const GET_MEDIA_LINK_PREFIX = 'get_media_link';

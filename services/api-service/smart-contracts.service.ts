@@ -1,13 +1,14 @@
+/* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
 import { ObjectId } from 'mongodb';
 import { ErrorCode, ErrorMessage, GetContractsRequest, MoleculerDBService } from '../../types';
 import { LIST_NETWORK } from '../../common/constant';
 import { dbSmartContractsMixin } from '../../mixins/dbMixinMongoose';
-import { _callApiMixin } from '../../mixins/callApi/call-api.mixin';
+import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { ISmartContracts } from '../../model/smart-contracts.model';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -18,7 +19,7 @@ import { ISmartContracts } from '../../model/smart-contracts.model';
 	/**
 	 * Mixins
 	 */
-	mixins: [_callApiMixin, dbSmartContractsMixin],
+	mixins: [callApiMixin, dbSmartContractsMixin],
 	/**
 	 * Settings
 	 */
@@ -59,7 +60,7 @@ export default class SmartContractsService extends MoleculerDBService<
 		},
 	})
 	async getContracts(ctx: Context<GetContractsRequest>) {
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
@@ -70,6 +71,7 @@ export default class SmartContractsService extends MoleculerDBService<
 			query = { contract_address: { $in: ctx.params.contract_addresses } };
 		}
 		if (ctx.params.nextKey && ctx.params.nextKey !== '') {
+			// eslint-disable-next-line no-underscore-dangle
 			query._id = { $gte: new ObjectId(ctx.params.nextKey) };
 		}
 		this.logger.info('query', query);
@@ -79,14 +81,15 @@ export default class SmartContractsService extends MoleculerDBService<
 			sort: '_id',
 			limit: ctx.params.limit + 1,
 		});
-		const next_key =
+		const nextKey =
+			// eslint-disable-next-line no-underscore-dangle
 			data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;
 		const response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
 			data: {
 				smart_contracts: data.slice(0, ctx.params.limit - 1),
-				next_key,
+				next_key: nextKey,
 			},
 		};
 		return response;

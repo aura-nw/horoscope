@@ -2,8 +2,8 @@
 
 import { createBullBoard } from '@bull-board/api';
 import Queue from 'bull';
-import BullAdapter from '@bull-board/api/bullAdapter';
-import ExpressAdapter from '@bull-board/express';
+import { BullAdapter } from '@bull-board/api/bullAdapter';
+import { ExpressAdapter } from '@bull-board/express';
 import { queues } from '../../config/queue';
 import { Config } from '../../common';
 import { LIST_NETWORK } from '../../common/constant';

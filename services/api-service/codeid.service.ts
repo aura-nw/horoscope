@@ -13,9 +13,8 @@ import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 @Service({
 	name: 'codeid',
 	version: 1,
-	mixins: [dbBlockMixin],
 })
-export default class BlockService extends MoleculerDBService<
+export default class CodeIdService extends MoleculerDBService<
 	{
 		rest: 'v1/codeid';
 	},
