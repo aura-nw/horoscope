@@ -11,7 +11,7 @@ COPY package.json package-lock.json ./
 
 # Install dependencies yarn
 # COPY package.json yarn.lock ./
-
+RUN export NODE_OPTIONS=--max_old_space_size=4096
 # Add moleculer
 RUN npm install -g moleculer-cli
 # RUN yarn global add moleculer-cli
