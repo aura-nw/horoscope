@@ -74,7 +74,7 @@ export default class SmartContractsService extends MoleculerDBService<
 		let data: any = await this.adapter.find({
 			query,
 			// @ts-ignore
-			sort: '_id',
+			sort: '-_id',
 			limit: ctx.params.limit + 1,
 		});
 		let list_asset_queries: any = [];

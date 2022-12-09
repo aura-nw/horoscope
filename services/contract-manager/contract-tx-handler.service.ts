@@ -83,6 +83,7 @@ export default class CrawlSmartContractsService extends Service {
 						const instant_code_ids = txs.tx_response.logs[0].events
 							.find((x: any) => x.type == CONST_CHAR.INSTANTIATE)
 							.attributes.filter((x: any) => x.key == CONST_CHAR.CODE_ID);
+						const mess = msg.msg;
 						for (let i = 0; i < instant_contract_addresses.length; i++) {
 							const code_id = instant_code_ids[i].value;
 							const contract_address = instant_contract_addresses[i].value;
@@ -110,6 +111,7 @@ export default class CrawlSmartContractsService extends Service {
 								token_info,
 								marketing_info,
 								contract_info,
+								msg: mess,
 							} as ISmartContracts;
 							smartContracts.push(smartContract);
 						}
@@ -124,6 +126,7 @@ export default class CrawlSmartContractsService extends Service {
 						const code_ids = txs.tx_response.logs[0].events
 							.find((x: any) => x.type == CONST_CHAR.INSTANTIATE)
 							.attributes.filter((x: any) => x.key == CONST_CHAR.CODE_ID);
+						const executeMess = msg.msg;
 						for (let i = 0; i < contract_addresses.length; i++) {
 							const code_id = code_ids[i].value;
 							const contract_address = contract_addresses[i].value;
@@ -168,6 +171,7 @@ export default class CrawlSmartContractsService extends Service {
 								token_info,
 								marketing_info,
 								contract_info,
+								msg: executeMess,
 							} as ISmartContracts;
 							smartContracts.push(smartContract);
 						}
