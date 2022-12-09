@@ -82,7 +82,7 @@ export default class FeegrantTxHandler extends Service {
 			: -1;
 		this._currentBlock = handledBlockRedis
 			? parseInt(handledBlockRedis, 10)
-			: this.currentBlock;
+			: this._currentBlock;
 	}
 
 	async handleJob(chainId: string): Promise<any[]> {
@@ -97,7 +97,7 @@ export default class FeegrantTxHandler extends Service {
 		})) as ITransaction[];
 		const latestBlock = latestBlockTx[0]
 			? latestBlockTx[0].tx_response.height.valueOf()
-			: this.currentBlock;
+			: this._currentBlock;
 		this.logger.info(
 			`Feegrant from  ${this._currentBlock + 1} to ${
 				this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
@@ -105,7 +105,7 @@ export default class FeegrantTxHandler extends Service {
 					: latestBlock
 			}`,
 		);
-		// Get all transactions in BLOCK_PER_BATCH sequence blocks, start from currentBlock
+		// Get all transactions in BLOCK_PER_BATCH sequence blocks, start from _currentBlock
 		const listTx = (await this.adapter.lean({
 			query: {
 				'tx_response.height': {
@@ -397,7 +397,7 @@ export default class FeegrantTxHandler extends Service {
 			this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
 				? this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
 				: latestBlock;
-		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
+		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this._currentBlock);
 		this.logger.info(JSON.stringify(feegrantList));
 		return feegrantList;
 	}
