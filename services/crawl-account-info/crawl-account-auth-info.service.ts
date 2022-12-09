@@ -29,7 +29,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 			version: 1,
 			mixins: [
 				queueService(queueConfig.redis, queueConfig.opts),
-				this.dbAccountInfoMixin,
+				dbAccountInfoMixin,
 				new CallApiMixin().start(),
 			],
 			queues: {
