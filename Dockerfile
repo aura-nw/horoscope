@@ -1,4 +1,4 @@
-FROM node:16-alpine3.15
+FROM node:16.14-alpine
 
 # Install python
 # RUN apk add --update python3 make g++\
@@ -60,6 +60,7 @@ COPY . .
 # Generate prisma
 RUN npm run graphql:generate
 
+RUN export NODE_OPTIONS="--max-old-space-size=5120"
 # build
 RUN npm run build \
 	&& npm prune
