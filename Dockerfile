@@ -1,4 +1,4 @@
-FROM node:16-alpine3.15
+FROM node:16.14-alpine
 
 # Install python
 # RUN apk add --update python3 make g++\
