@@ -250,7 +250,7 @@ export default class CrawlAssetService extends moleculer.Service {
 								content_type: media[0].content_type,
 							};
 							this.broker.call('v1.CW4973-asset-manager.act-update-by-id', {
-								obj: CW4973,
+								obj: cw4973,
 								updateOperator: {
 									$set: {
 										image: {
@@ -268,7 +268,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							};
 
 							this.broker.call('v1.CW4973-asset-manager.act-update-by-id', {
-								obj: CW4973,
+								obj: cw4973,
 								updateOperator: {
 									$set: {
 										animation: {
@@ -280,7 +280,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							});
 						}
 						// This.broker.call(CW4973_MANAGER_ACTION.UPSERT, CW4973);
-						this.logger.info(CW4973);
+						this.logger.info(cw4973);
 					});
 				}
 			}

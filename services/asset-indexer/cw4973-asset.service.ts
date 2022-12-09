@@ -21,7 +21,7 @@ import {
 	CW4973_ACTION,
 } from '../../common/constant';
 import { queueConfig } from '../../config/queue';
-import { Common, TokenInfo } from './common.service';
+import { Common, ITokenInfo } from './common.service';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
@@ -341,7 +341,7 @@ export default class CrawlAssetService extends moleculer.Service {
 	}
 
 	@Action({ name: 'enrichData' })
-	private async _enrichData(ctx: Context<[TokenInfo, string]>) {
+	private async _enrichData(ctx: Context<[ITokenInfo, string]>) {
 		const url = ctx.params[0].url;
 		const address = ctx.params[0].address;
 		const codeId = ctx.params[0].codeId;
@@ -377,7 +377,7 @@ export default class CrawlAssetService extends moleculer.Service {
 	}
 
 	@Action({ name: 'getTokenList' })
-	private async _getTokenList(ctx: Context<TokenInfo>) {
+	private async _getTokenList(ctx: Context<ITokenInfo>) {
 		const url = ctx.params.url;
 		const address = ctx.params.address;
 		try {
@@ -412,8 +412,8 @@ export default class CrawlAssetService extends moleculer.Service {
 		return null;
 	}
 
-	@Action({ name: 'getTokenInfor' })
-	private async _getTokenInfor(ctx: Context<TokenInfo>) {
+	@Action({ name: 'getITokenInfor' })
+	private async _getITokenInfor(ctx: Context<ITokenInfo>) {
 		const url = ctx.params.url;
 		try {
 			const str = `{"all_nft_info":{"token_id":"${ctx.params.tokenId}"}}`;
@@ -428,7 +428,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				return null;
 			}
 		} catch (error) {
-			this.logger.error('getTokenInfor error', error);
+			this.logger.error('getITokenInfor error', error);
 		}
 	}
 	@Action({ name: 'addBurnedToAsset' })

@@ -5,10 +5,10 @@ import { sync as mkdir } from 'mkdirp';
 import DbService, { DbAdapter } from 'moleculer-db';
 import { Context, ServiceSchema } from 'moleculer';
 import { Model } from 'mongoose';
-import SqlAdapter from 'moleculer-db-adapter-sequelize';
 import { Config } from '../../common';
 import { DBInfo } from '../../types';
 import CustomMongooseDbAdapter = require('../customMongooseAdapter');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 export interface BaseMixinConfig {
 	name: string;
 	model: Model<any>;
@@ -200,20 +200,25 @@ export class DbBaseMixin {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private getSequelizeAdapter(schema: ServiceSchema) {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		let SequelizedDbAdapter: any;
+		let SequelizeDbAdapter: any;
 		import('moleculer-db-adapter-sequelize').then(
-			(AdapterMySql) => (SequelizedDbAdapter = AdapterMySql),
+			(AdapterMySql) => (SequelizeDbAdapter = AdapterMySql),
 		);
 		return {
 			...schema,
-			adapter: new SqlAdapter(this.dbInfo.dbname, this.dbInfo.user, this.dbInfo.password, {
-				host: this.dbInfo.host,
-				port: this.dbInfo.port,
-				dialect: 'mysql',
-				define: {
-					timestamps: false,
+			adapter: new SequelizeDbAdapter(
+				this.dbInfo.dbname,
+				this.dbInfo.user,
+				this.dbInfo.password,
+				{
+					host: this.dbInfo.host,
+					port: this.dbInfo.port,
+					dialect: 'mysql',
+					define: {
+						timestamps: false,
+					},
 				},
-			}),
+			),
 			collection: this.collection,
 			model: this.mixModel,
 		};

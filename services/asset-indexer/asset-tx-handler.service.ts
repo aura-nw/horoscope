@@ -96,7 +96,7 @@ export default class CrawlAccountInfoService extends Service {
 								true,
 							);
 							const contractInfo = await this.verifyAddressByCodeID(
-								URL,
+								url,
 								contractAddress,
 								chainId,
 							);
@@ -104,7 +104,7 @@ export default class CrawlAccountInfoService extends Service {
 								switch (contractInfo.status) {
 									case CodeIDStatus.COMPLETED:
 										if (
-											contractInfo.contract_type === CONTRACT_TYPE.CW20 &&
+											contractInfo.contractType === CONTRACT_TYPE.CW20 &&
 											!tokenId &&
 											contractAddress
 										) {
@@ -126,7 +126,7 @@ export default class CrawlAccountInfoService extends Service {
 												{
 													url: URL,
 													address: contractAddress,
-													codeId: contractInfo.code_id,
+													codeId: contractInfo.codeId,
 													typeEnrich: ENRICH_TYPE.UPSERT,
 													chainId,
 												},
@@ -139,7 +139,7 @@ export default class CrawlAccountInfoService extends Service {
 											);
 										}
 										if (
-											contractInfo.contract_type === CONTRACT_TYPE.CW721 &&
+											contractInfo.contractType === CONTRACT_TYPE.CW721 &&
 											tokenId &&
 											contractAddress
 										) {
@@ -148,7 +148,7 @@ export default class CrawlAccountInfoService extends Service {
 												{
 													url: URL,
 													address: contractAddress,
-													codeId: contractInfo.code_id,
+													codeId: contractInfo.codeId,
 													typeEnrich: ENRICH_TYPE.UPSERT,
 													chainId,
 													tokenId,
@@ -162,7 +162,7 @@ export default class CrawlAccountInfoService extends Service {
 											);
 										}
 										if (
-											contractInfo.contract_type === CONTRACT_TYPE.CW4973 &&
+											contractInfo.contractType === CONTRACT_TYPE.CW4973 &&
 											tokenId &&
 											contractAddress
 										) {
@@ -186,14 +186,14 @@ export default class CrawlAccountInfoService extends Service {
 										}
 										break;
 									case CodeIDStatus.WAITING:
-										this.broker.emit(`${contractInfo.contract_type}.validate`, {
+										this.broker.emit(`${contractInfo.contractType}.validate`, {
 											URL,
 											chainId,
 											codeId: contractInfo.codeId,
 										});
 										break;
 									case CodeIDStatus.TBD:
-										this.broker.emit(`${contractInfo.contract_type}.validate`, {
+										this.broker.emit(`${contractInfo.contractType}.validate`, {
 											URL,
 											chainId,
 											codeId: contractInfo.codeId,

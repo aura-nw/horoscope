@@ -250,8 +250,8 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 								},
 							});
 						}
-						this.broker.call(CW4973_MANAGER_ACTION.UPSERT, CW4973);
-						this.logger.info(CW4973);
+						this.broker.call(CW4973_MANAGER_ACTION.UPSERT, cw4973);
+						this.logger.info(cw4973);
 					});
 				}
 			} else {

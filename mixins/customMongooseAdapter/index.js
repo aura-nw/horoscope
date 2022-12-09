@@ -1,8 +1,11 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
-import _ from 'lodash';
-import MongooseDbAdapter from 'moleculer-db-adapter-mongoose';
-import mongoose from 'mongoose';
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/no-var-requires */
+'use strict';
+const _ = require('lodash');
+const MongooseDbAdapter = require('moleculer-db-adapter-mongoose');
+const mongoose = require('mongoose');
 
 class CustomMongooseDbAdapter extends MongooseDbAdapter {
 	aggregate(param) {
