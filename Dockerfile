@@ -1,4 +1,4 @@
-FROM node:16.14-alpine
+FROM node:16-alpine3.15
 
 # Install python
 # RUN apk add --update python3 make g++\
@@ -34,11 +34,11 @@ RUN npm install -g ioredis
 # 	rhea-promise
 
 # Add all supported serializers
-RUN npm install -g avsc \
-	msgpack5 \
-	notepack.io \
-	protobufjs \
-	thrift
+# RUN npm install -g avsc \
+# 	msgpack5 \
+# 	notepack.io \
+# 	protobufjs \
+# 	thrift
 
 # RUN yarn global add avsc \
 # 	msgpack5 \
@@ -60,7 +60,6 @@ COPY . .
 # Generate prisma
 RUN npm run graphql:generate
 
-RUN export NODE_OPTIONS="--max-old-space-size=5120"
 # build
 RUN npm run build \
 	&& npm prune
