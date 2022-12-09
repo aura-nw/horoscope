@@ -146,10 +146,10 @@ export class DbBaseMixin {
 			listParamUri.push(
 				`${this.dbInfo.host}:${this.dbInfo.port}/?maxPoolSize=${this.dbInfo.maxPoolSize}`,
 			);
-			if (this.dbInfo.retryWrites != '') {
+			if (this.dbInfo.retryWrites !== '') {
 				listParamUri.push(`&retryWrites=${this.dbInfo.retryWrites}`);
 			}
-			if (this.dbInfo.replicaSet != '') {
+			if (this.dbInfo.replicaSet !== '') {
 				listParamUri.push(
 					`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`,
 				);

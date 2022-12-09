@@ -2,9 +2,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import { CallingOptions, Service, ServiceBroker } from 'moleculer';
+import { Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
-import * as _ from 'lodash';
 import { IAttribute, IEvent, ITransaction } from 'entities';
 import { fromBase64, fromUtf8 } from '@cosmjs/encoding';
 import { dbCW721AssetMixin } from '../../mixins/dbMixinMongoose';

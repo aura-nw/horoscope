@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
@@ -14,10 +15,6 @@ import {
 	MEDIA_STATUS,
 } from '../../common/constant';
 import { Config } from '../../common';
-
-const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
-const ACTION_TIMEOUT = 0;
-const opts: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
 import { queueConfig } from '../../config/queue';
 import { CW4973AssetEntity } from '../../entities/cw4973-asset.entity';
@@ -38,7 +35,7 @@ const queueService = require('moleculer-bull');
 					job.data.sourceUri,
 					job.data.uri,
 					job.data.type,
-					job.data.file_name,
+					job.data.fileName,
 					job.data.key,
 					job.data.chainId,
 					job.data.field,
@@ -99,32 +96,32 @@ const queueService = require('moleculer-bull');
 					`ctx.params CW4973-asset-media-manager upsert ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				return await this.upsert_handler(ctx.params);
+				return await this.upsertHandler(ctx.params);
 			},
 		},
 		'update-media-link': {
 			async handler(ctx: Context<any>) {
 				const uri = ctx.params.uri;
-				const file_name = ctx.params.file_name;
+				const fileName = ctx.params.fileName;
 				const key = ctx.params.key;
-				const chain_id = ctx.params.chainId;
+				const chainId = ctx.params.chainId;
 				const type = ctx.params.type;
 				const assetId = ctx.params.assetId;
 				const field = ctx.params.field;
 				const sourceUri = ctx.params.sourceUri;
 				// @ts-ignore
-				this.logger.debug('update-media-link ctx.params', uri, file_name, key, chain_id);
+				this.logger.debug('update-media-link ctx.params', uri, fileName, key, chainId);
 				// @ts-ignore
-				// Await this.updateMediaLink(uri, file_name, key);
+				// Await this.updateMediaLink(uri, fileName, key);
 				this.createJob(
 					'CW4973-asset-media-manager.update-media-link',
 					{
 						sourceUri,
 						uri,
 						type,
-						file_name,
+						fileName,
 						key,
-						chainId: chain_id,
+						chainId,
 						field,
 					},
 					{
@@ -142,7 +139,7 @@ const queueService = require('moleculer-bull');
 			async handler(ctx: Context) {
 				// @ts-ignore
 				const chainId = ctx.params.query.chainId;
-				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				const network = LIST_NETWORK.find((x) => x.chainId === chainId);
 				if (network && network.databaseName) {
 					// @ts-ignore
 					this.adapter.useDb(network.databaseName);
@@ -152,41 +149,42 @@ const queueService = require('moleculer-bull');
 	},
 })
 export default class CW4973AssetMediaManagerService extends moleculer.Service {
-	async upsert_handler(asset_media: any) {
-		this.logger.debug('asset ', asset_media);
-		const network = LIST_NETWORK.find((x) => x.chainId == asset_media.custom_info.chain_id);
+	async upsertHandler(assetMedia: any) {
+		this.logger.debug('asset ', assetMedia);
+		const network = LIST_NETWORK.find((x) => x.chainId === assetMedia.custom_info.chain_id);
 		if (network && network.databaseName) {
 			// @ts-ignore
 			this.adapter.useDb(network.databaseName);
 		}
-		const item = await this.adapter.findOne({ key: asset_media.key });
+		const item = await this.adapter.findOne({ key: assetMedia.key });
 		if (item) {
 			// This.logger.debug(`rs `, item._id);
-			asset_media._id = item._id;
-			await this.adapter.updateById(item._id, asset_media);
+			assetMedia._id = item._id;
+			await this.adapter.updateById(item._id, assetMedia);
 		} else {
-			await this.adapter.insert(asset_media);
+			await this.adapter.insert(assetMedia);
 		}
-		return asset_media._id;
+		return assetMedia._id;
 	}
 
 	async updateMediaLink(
 		sourceUri: string,
 		uri: string,
 		type: string,
-		file_name: string,
+		fileName: string,
 		key: string,
 		chainId: string,
 		field: string,
 	) {
 		try {
 			// This.logger.info("updateMediaLink", uri, key);
-			const result: any = await Common.handleUri(uri, type, file_name);
+			const result: any = await Common.handleUri(uri, type, fileName);
 			this.logger.info(result);
 			this.logger.debug('result handle uri:', JSON.stringify(result));
 			if (result) {
 				this.broker.call(CW4973_MEDIA_MANAGER_ACTION.UPSERT, {
 					key,
+					/* eslint-disable camelcase*/
 					media_link: result.linkS3,
 					content_type: result.contentType,
 					status: MEDIA_STATUS.COMPLETED,
@@ -216,15 +214,15 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 					},
 				);
 				if (listFoundCW4973 && listFoundCW4973.length > 0) {
-					listFoundCW4973.map((CW4973: CW4973AssetEntity) => {
-						this.logger.debug('CW4973 update: ', JSON.stringify(CW4973));
-						if (CW4973?.metadata?.image == sourceUri) {
-							CW4973.image = {
+					listFoundCW4973.map((cw4973: CW4973AssetEntity) => {
+						this.logger.debug('CW4973 update: ', JSON.stringify(cw4973));
+						if (cw4973?.metadata?.image === sourceUri) {
+							cw4973.image = {
 								link_s3: result.linkS3,
 								content_type: result.contentType,
 							};
 							this.broker.call('v1.CW4973-asset-manager.act-update-by-id', {
-								obj: CW4973,
+								obj: cw4973,
 								updateOperator: {
 									$set: {
 										image: {
@@ -235,13 +233,13 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 								},
 							});
 						}
-						if (CW4973?.metadata?.animation_url == sourceUri) {
-							CW4973.animation = {
+						if (cw4973?.metadata?.animation_url === sourceUri) {
+							cw4973.animation = {
 								link_s3: result.linkS3,
 								content_type: result.contentType,
 							};
 							this.broker.call('v1.CW4973-asset-manager.act-update-by-id', {
-								obj: CW4973,
+								obj: cw4973,
 								updateOperator: {
 									$set: {
 										animation: {
