@@ -11,7 +11,7 @@ COPY package.json package-lock.json ./
 
 # Install dependencies yarn
 # COPY package.json yarn.lock ./
-RUN export NODE_OPTIONS=--max_old_space_size=4096
+
 # Add moleculer
 RUN npm install -g moleculer-cli
 # RUN yarn global add moleculer-cli
@@ -60,6 +60,7 @@ COPY . .
 # Generate prisma
 RUN npm run graphql:generate
 
+RUN export NODE_OPTIONS="--max-old-space-size=5120"
 # build
 RUN npm run build \
 	&& npm prune
