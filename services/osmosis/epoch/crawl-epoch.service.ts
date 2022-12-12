@@ -1,33 +1,32 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import CallApiMixin from '../../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
-import { dbEpochMixin } from '../../../mixins/dbMixinMongoose';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { JsonConvert } from 'json2typescript';
-import { Config } from '../../../common';
-import { URL_TYPE_CONSTANTS } from '../../../common/constant';
 import { Job } from 'bull';
-import { Utils } from '../../../utils/utils';
-import { QueueConfig } from '../../../config/queue';
 import { QueryEpochsInfoResponseSDKType } from 'osmojs/types/codegen/osmosis/epochs/query';
 import { EpochInfoSDKType } from 'osmojs/types/codegen/osmosis/epochs/genesis';
 import { Types } from 'mongoose';
+import { dbEpochMixin } from '../../../mixins/dbMixinMongoose';
+import { Config } from '../../../common';
+import { URL_TYPE_CONSTANTS } from '../../../common/constant';
+import { Utils } from '../../../utils/utils';
+import { queueConfig } from '../../../config/queue';
+import CallApiMixin from '../../../mixins/callApi/call-api.mixin';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlEpochService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbEpochMixin = dbEpochMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlEpoch',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbEpochMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				new CallApiMixin().start(),
+				dbEpochMixin,
 			],
 			queues: {
 				'crawl.epoch': {
@@ -45,7 +44,7 @@ export default class CrawlEpochService extends Service {
 	}
 
 	async handleJob() {
-		let listEpoch: EpochInfoSDKType[] = [];
+		const listEpoch: EpochInfoSDKType[] = [];
 
 		let resultCallApi: QueryEpochsInfoResponseSDKType;
 
@@ -61,23 +60,26 @@ export default class CrawlEpochService extends Service {
 
 		this.logger.debug(`result: ${JSON.stringify(listEpoch)}`);
 
-		let listEpochInDB: any[] = await this.adapter.lean({
+		const listEpochInDB: any[] = await this.adapter.lean({
 			query: {},
 		});
-		let listPromise: Promise<any>[] = [];
-		let listIndexDelete: number[] = [];
+		const listPromise: Promise<any>[] = [];
+		const listIndexDelete: number[] = [];
 		await Promise.all(
 			listEpoch.map(async (epoch) => {
-				let foundEpoch = listEpochInDB.find((item) => item.identifier == epoch.identifier);
-				let foundEpochIndex = listEpochInDB.findIndex(
-					(item) => item.identifier == epoch.identifier,
+				const foundEpoch = listEpochInDB.find(
+					(item) => item.identifier === epoch.identifier,
+				);
+				const foundEpochIndex = listEpochInDB.findIndex(
+					(item) => item.identifier === epoch.identifier,
 				);
 
 				try {
 					if (foundEpoch) {
+						// eslint-disable-next-line no-underscore-dangle
 						listPromise.push(this.adapter.updateById(foundEpoch._id, epoch));
 					} else {
-						let item = { _id: Types.ObjectId(), ...epoch };
+						const item = { _id: Types.ObjectId(), ...epoch };
 						listPromise.push(this.adapter.insert(item));
 					}
 					if (foundEpochIndex > -1 && foundEpoch) {
@@ -96,6 +98,7 @@ export default class CrawlEpochService extends Service {
 
 		await Promise.all(
 			listEpochInDB.map(async (epoch) => {
+				// eslint-disable-next-line no-underscore-dangle
 				listPromise.push(this.adapter.removeById(epoch._id));
 			}),
 		);
@@ -103,7 +106,7 @@ export default class CrawlEpochService extends Service {
 		await Promise.all(listPromise);
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.epoch',
 			{},
@@ -127,6 +130,7 @@ export default class CrawlEpochService extends Service {
 		this.getQueue('crawl.epoch').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

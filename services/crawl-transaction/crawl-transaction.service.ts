@@ -1,33 +1,32 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
 import { Context, Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
-import RedisMixin from '../../mixins/redis/redis.mixin';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { fromBase64, toHex } from '@cosmjs/encoding';
 import { sha256 } from '@cosmjs/crypto';
+import { Job } from 'bull';
+import { ListTxInBlockParams, TransactionHashParam } from 'types';
+import RedisMixin from '../../mixins/redis/redis.mixin';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
-import { ListTxInBlockParams, TransactionHashParam } from 'types';
-import { QueueConfig } from '../../config/queue';
-// var heapdump = require('heapdump');
+import { Config } from '../../common';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
+// Var heapdump = require('heapdump');
 
 export default class CrawlTransactionService extends Service {
-	private redisMixin = new RedisMixin().start();
-	private callApiMixin = new CallApiMixin().start();
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawltransaction',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.redisMixin,
-				this.callApiMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				new RedisMixin().start(),
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'crawl.transaction': {
@@ -60,7 +59,7 @@ export default class CrawlTransactionService extends Service {
 							this.createJob(
 								'crawl.transaction',
 								{
-									listTx: listTx,
+									listTx,
 								},
 								{
 									removeOnComplete: true,
@@ -97,29 +96,29 @@ export default class CrawlTransactionService extends Service {
 					},
 				},
 			},
-			// actions: {
-			// 	writeHeapDump: {
-			// 		async handler(ctx: Context) {
-			// 			this.writeHeapDump();
+			// Actions: {
+			// 	WriteHeapDump: {
+			// 		Async handler(ctx: Context) {
+			// 			This.writeHeapDump();
 			// 		},
 			// 	},
 			// },
 		});
 	}
 
-	// async writeHeapDump() {
-	// 	try {
-	// 		if (Config.PATH_HEAP_DUMP) {
-	// 			let path =
+	// Async writeHeapDump() {
+	// 	Try {
+	// 		If (Config.PATH_HEAP_DUMP) {
+	// 			Let path =
 	// 				Config.PATH_HEAP_DUMP +
-	// 				new Date().toISOString().split('T')[0] +
+	// 				New Date().toISOString().split('T')[0] +
 	// 				'.heapsnapshot';
-	// 			this.logger.info('write to heap log: ', path);
+	// 			This.logger.info('write to heap log: ', path);
 
-	// 			heapdump.writeSnapshot(path);
+	// 			Heapdump.writeSnapshot(path);
 	// 		}
 	// 	} catch (error) {
-	// 		this.logger.error(error);
+	// 		This.logger.error(error);
 	// 	}
 	// }
 	async handleJob(listTx: string[]) {
@@ -132,7 +131,7 @@ export default class CrawlTransactionService extends Service {
 	async crawlTransaction(txHash: string) {
 		this.logger.info(`txhash: ${txHash}`);
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
-		let result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
+		const result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
 
 		if (result) {
 			this.redisClient.xAdd(Config.REDIS_STREAM_TRANSACTION_NAME, '*', {
@@ -142,7 +141,7 @@ export default class CrawlTransactionService extends Service {
 			this.logger.debug(`result: ${JSON.stringify(result)}`);
 		}
 	}
-	async _start() {
+	public async _start() {
 		this.redisClient = await this.getRedisClient();
 		this.getQueue('crawl.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
@@ -153,6 +152,8 @@ export default class CrawlTransactionService extends Service {
 		this.getQueue('crawl.transaction').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

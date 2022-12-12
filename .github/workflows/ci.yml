@@ -2,7 +2,7 @@ name: Continuous integration
 
 on:
   push:
-    branches: [main, develop, staging, test-performance, feature/multiple-database]
+    branches: [main, develop, staging, test-performance, feature/multiple-database, fix/eslint]
 
 jobs:
   build:
@@ -43,8 +43,3 @@ jobs:
         run: |
           chmod 777 -R ./ci
           ./ci/build.sh
-      - name: Update manifest
-        env:
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.GITOPS_PASSWORD }}
-        run: |
-          ./ci/updateManifest.sh

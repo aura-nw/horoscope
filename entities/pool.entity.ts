@@ -1,7 +1,11 @@
-import { Config } from '../common';
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/explicit-member-accessibility */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable max-classes-per-file */
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
 import { ObjectIdNull } from 'types';
+import { Config } from '../common';
 export interface IPool {
 	_id: ObjectIdNull;
 	not_bonded_tokens: String;

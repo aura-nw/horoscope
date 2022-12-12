@@ -33,7 +33,6 @@ export interface RouteSchemaOpts {
 	whitelist?: string[];
 	authorization?: boolean;
 	authentication?: boolean;
-	// roles?: UserRole[];
 	aliases?: any;
 }
 
@@ -61,7 +60,7 @@ export interface RequestMessage extends IncomingMessage {
 
 export interface RestOptions extends ActionOptions {
 	auth?: boolean;
-	// roles?: UserRole | UserRole[];
+	// Roles?: UserRole | UserRole[];
 }
 
 export interface ApiGatewayMeta {

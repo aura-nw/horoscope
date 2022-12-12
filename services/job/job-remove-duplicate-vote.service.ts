@@ -1,23 +1,25 @@
-import { Config } from '../../common';
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable camelcase */
 import { Service, ServiceBroker } from 'moleculer';
-import RedisMixin from '../../mixins/redis/redis.mixin';
 import { Job } from 'bull';
+import { Config } from '../../common';
+import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbVoteMixin } from '../../mixins/dbMixinMongoose/db-vote.mixin';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class RemoveDuplicateVotingData extends Service {
-	private redisMixin = new RedisMixin().start();
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'remove-duplicate-vote',
 			version: 1,
 			mixins: [
-				QueueService(
+				queueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 				),
 				dbVoteMixin,
-				this.redisMixin,
+				new RedisMixin().start(),
 			],
 			queues: {
 				'remove.duplicate.vote': {
@@ -35,7 +37,7 @@ export default class RemoveDuplicateVotingData extends Service {
 		});
 	}
 
-	async handleJob() {
+	public async handleJob() {
 		for (let i = 0; ; i++) {
 			this.logger.info(`Start job ${i}`);
 			const vote = await this.adapter.find({
@@ -46,7 +48,9 @@ export default class RemoveDuplicateVotingData extends Service {
 				limit: 1,
 				offset: i,
 			});
-			if (vote.length === 0) break;
+			if (vote.length === 0) {
+				break;
+			}
 			const listVote = await this.adapter.find({
 				query: {
 					'custom_info.chain_id': vote[0].custom_info.chain_id,
@@ -57,7 +61,7 @@ export default class RemoveDuplicateVotingData extends Service {
 				limit: 100,
 				skip: 0,
 			});
-			// keep the first one
+			// Keep the first one
 			if (listVote.length > 1) {
 				for (let j = 1; j < listVote.length; j++) {
 					const result = await this.adapter.removeById(listVote[j]._id.toString());
@@ -69,7 +73,7 @@ export default class RemoveDuplicateVotingData extends Service {
 		return;
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'remove.duplicate.vote',
 			{},
@@ -86,6 +90,7 @@ export default class RemoveDuplicateVotingData extends Service {
 		this.getQueue('index.tx').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

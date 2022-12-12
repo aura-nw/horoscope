@@ -1,29 +1,27 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import { Job } from 'bull';
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { Job } from 'bull';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Utils } from '../../utils/utils';
-import { QueueConfig } from '../../config/queue';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlProposalService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbProposalMixin = dbProposalMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlTallyProposal',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbProposalMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				dbProposalMixin,
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'crawl.tally.proposal': {
@@ -60,15 +58,16 @@ export default class CrawlProposalService extends Service {
 			},
 		});
 	}
-	async handleJob(proposalId: String) {
-		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/tally`;
+	async handleJob(proposalId: string) {
+		const path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/tally`;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let result = await this.callApiFromDomain(url, path);
+		const result = await this.callApiFromDomain(url, path);
 		this.logger.debug(result);
 
-		let [foundProposal, foundStakingPool]: [any, any] = await Promise.all([
+		const [foundProposal, foundStakingPool]: [any, any] = await Promise.all([
 			this.adapter.findOne({
+				// eslint-disable-next-line camelcase
 				proposal_id: `${proposalId}`,
 			}),
 			this.broker.call('v1.crawlPool.find', {
@@ -77,10 +76,10 @@ export default class CrawlProposalService extends Service {
 		]);
 		if (foundProposal) {
 			try {
-				let adding: any = { tally: result.tally };
-				let tally = result.tally;
+				const adding: any = { tally: result.tally };
+				const tally = result.tally;
 				if (foundStakingPool && foundStakingPool.length > 0) {
-					let turnout =
+					const turnout =
 						Number(
 							((BigInt(tally.yes) +
 								BigInt(tally.no) +
@@ -89,10 +88,11 @@ export default class CrawlProposalService extends Service {
 								BigInt(100000000)) /
 								BigInt(foundStakingPool[0].bonded_tokens),
 						) / 1000000;
-					adding['turnout'] = turnout;
+					adding.turnout = turnout;
 				}
 
-				let res = await this.adapter.updateById(foundProposal._id, {
+				// eslint-disable-next-line no-underscore-dangle
+				const res = await this.adapter.updateById(foundProposal._id, {
 					$set: adding,
 				});
 				this.logger.debug(res);
@@ -101,7 +101,7 @@ export default class CrawlProposalService extends Service {
 			}
 		}
 	}
-	async _start() {
+	public async _start() {
 		this.getQueue('crawl.tally.proposal').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
@@ -111,6 +111,7 @@ export default class CrawlProposalService extends Service {
 		this.getQueue('crawl.tally.proposal').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

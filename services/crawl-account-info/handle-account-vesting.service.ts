@@ -1,27 +1,25 @@
-import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
-import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
+import { Coin } from 'entities/coin.entity';
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
+import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from '../../common/constant';
 import { Utils } from '../../utils/utils';
-import { Coin } from 'entities/coin.entity';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import { QueueConfig } from '../../config/queue';
-const QueueService = require('moleculer-bull');
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class HandleAccountVestingService extends Service {
-	private dbAccountInfoMixin = dbAccountInfoMixin;
-	private callApiMixin = new CallApiMixin().start();
-
 	public constructor(broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'handleAccountVesting',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.dbAccountInfoMixin,
-				this.callApiMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				dbAccountInfoMixin,
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'handle.account-continuous-vesting': {
@@ -38,8 +36,8 @@ export default class HandleAccountVestingService extends Service {
 		});
 	}
 
-	async handleContinuousVestingJob() {
-		let listUpdateQueries: any[] = [];
+	public async handleContinuousVestingJob() {
+		const listUpdateQueries: any[] = [];
 		let continuousVestingAccounts;
 		try {
 			continuousVestingAccounts = await this.adapter.find({
@@ -59,7 +57,7 @@ export default class HandleAccountVestingService extends Service {
 					parseInt(account.account_auth.account.base_vesting_account.end_time, 10) * 1000,
 				).getTime() >= new Date().getTime()
 			) {
-				let listSpendableBalances: Coin[] = [];
+				const listSpendableBalances: Coin[] = [];
 				const param =
 					Config.GET_PARAMS_SPENDABLE_BALANCE +
 					`/${account.address}?pagination.limit=100`;
@@ -76,8 +74,9 @@ export default class HandleAccountVestingService extends Service {
 						throw error;
 					}
 
-					if (resultCallApi.balances.length > 0)
+					if (resultCallApi.balances.length > 0) {
 						listSpendableBalances.push(...resultCallApi.balances);
+					}
 					if (resultCallApi.pagination.next_key === null) {
 						done = true;
 					} else {
@@ -86,7 +85,9 @@ export default class HandleAccountVestingService extends Service {
 						)}`;
 					}
 				}
+				// eslint-disable-next-line camelcase
 				account.account_spendable_balances = listSpendableBalances;
+				// eslint-disable-next-line no-underscore-dangle
 				listUpdateQueries.push(this.adapter.updateById(account._id, account));
 			}
 		});
@@ -99,7 +100,7 @@ export default class HandleAccountVestingService extends Service {
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'handle.account-continuous-vesting',
 			{},
@@ -123,6 +124,7 @@ export default class HandleAccountVestingService extends Service {
 		this.getQueue('handle.account-continuous-vesting').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

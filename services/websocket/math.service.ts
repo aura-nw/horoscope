@@ -3,10 +3,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import moleculer, {  } from 'moleculer';
+import moleculer from 'moleculer';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
-import { io } from 'socket.io-client';
-import { LIST_NETWORK } from '../../common/constant';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  * @typedef {import('http').IncomingMessage} IncomingRequest Incoming HTTP Request
@@ -18,48 +16,48 @@ import { LIST_NETWORK } from '../../common/constant';
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	actions: {
 		add(ctx) {
-			//@ts-ignore
+			// @ts-ignore
 			this.broker.call('io.broadcast', { event: 'abc', args: [ctx.params.a, ctx.params.b] });
 
 			return Number(ctx.params.a) + Number(ctx.params.b);
 		},
 		minus(ctx) {
-			//@ts-ignore
+			// @ts-ignore
 			this.broker.call('io.broadcast', { event: 'abc', args: [ctx.params.a, ctx.params.b] });
 
 			return Number(ctx.params.a) - Number(ctx.params.b);
 		},
 	},
-	started(): any {
-		console.log('network info');
-		console.log(LIST_NETWORK);
-		console.log(LIST_NETWORK[0].chainId);
+	// Started: async (): Promise<unknown> => {
+	// 	Console.log('network info');
+	// 	Console.log(LIST_NETWORK);
+	// 	Console.log(LIST_NETWORK[0].chainId);
 
-		const socket = io('ws://localhost:3001');
-		socket.on('open', () => {
-			console.log('socket open');
-		});
-		socket.on('connect', () => {
-			console.log('socket connected');
-		});
-		socket.on('abc', (...arg) => {
-			console.log('listen abc: ', arg);
-		});
+	// 	Const socket = io('ws://localhost:3001');
+	// 	Socket.on('open', () => {
+	// 		Console.log('socket open');
+	// 	});
+	// 	Socket.on('connect', () => {
+	// 		Console.log('socket connected');
+	// 	});
+	// 	Socket.on('abc', (...arg) => {
+	// 		Console.log('listen abc: ', arg);
+	// 	});
 
-		socket.onAny((event, ...data) => {
-			console.log('event ne');
-			console.log(event, data);
-		});
+	// 	Socket.onAny((event, ...data) => {
+	// 		Console.log('event ne');
+	// 		Console.log(event, data);
+	// 	});
 
-		// socket.emit('call', 'math.add', { a: 123, b: 456 }, function (err: any, res: any) {
-		// 	if (err) {
-		// 		console.error(err);
-		// 	} else {
-		// 		console.log('call success:', res);
-		// 	}
-		// });
-		return true;
-	},
+	// Socket.emit('call', 'math.add', { a: 123, b: 456 }, function (err: any, res: any) {
+	// 	If (err) {
+	// 		Console.error(err);
+	// 	} else {
+	// 		Console.log('call success:', res);
+	// 	}
+	// });
+	// 	Return true;
+	// },
 })
-//@ts-ignore
+// @ts-ignore
 export default class MathService extends moleculer.Service {}

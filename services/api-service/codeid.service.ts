@@ -2,22 +2,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import {
-	Put,
-	Method,
-	Service,
-	Get,
-	Action,
-	Post,
-} from '@ourparentcenter/moleculer-decorators-extended';
-import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
-import { ErrorCode, ErrorMessage, MoleculerDBService, ResponseDto, RestOptions } from '../../types';
-import { IBlock } from '../../entities';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
 import { AssetIndexParams } from 'types/asset';
-import { Types } from 'mongoose';
-// import rateLimit from 'micro-ratelimit';
-import { CodeIDStatus } from '../../model/codeid.model';
-import { Ok } from 'ts-results';
+import { ErrorCode, ErrorMessage, MoleculerDBService, ResponseDto } from '../../types';
 import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 
 /**
@@ -26,13 +13,12 @@ import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 @Service({
 	name: 'codeid',
 	version: 1,
-	mixins: [dbBlockMixin],
 })
-export default class BlockService extends MoleculerDBService<
+export default class CodeIdService extends MoleculerDBService<
 	{
 		rest: 'v1/codeid';
 	},
-	{}
+	unknown
 > {
 	/**
 	 *  @swagger
@@ -126,20 +112,19 @@ export default class BlockService extends MoleculerDBService<
 			codeId: { type: 'number', convert: true },
 			chainId: {
 				type: 'string',
-				enum: LIST_NETWORK.map(function (e) {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 		},
 	})
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		try {
-			let result: any = await this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
+			/* eslint-disable camelcase */
+			const result: any = await this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
 				chain_id: ctx.params.chainId,
 				code_id: ctx.params.codeId,
 			});
-
+			/* eslint-enable camelcase */
 			this.logger.debug('codeid-manager.checkStatus res', result);
 
 			return (response = {

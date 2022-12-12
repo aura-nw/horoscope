@@ -1,3 +1,5 @@
+/* eslint-disable no-shadow */
+/* eslint-disable @typescript-eslint/naming-convention */
 import { PrismaClient } from '@prisma/client';
 import { Config } from '../common';
 
@@ -118,14 +120,14 @@ export enum CHAIN_ID_DEV {
 }
 
 export enum CHAIN_ID_PROD {
-    EUPHORIA_1 = 'euphoria-1',
+	EUPHORIA_1 = 'euphoria-1',
 	EUPHORIA_2 = 'euphoria-2',
-    COSMOSHUB = 'cosmoshub-4',
-    OSMOSIS = 'osmosis-1',
-};
+	COSMOSHUB = 'cosmoshub-4',
+	OSMOSIS = 'osmosis-1',
+}
 
 export enum ENV_NAMESPACE {
-    DEV = 'horoscope_dev_api_gateway',
-    STAGING = 'crawl-staging-api-gateway',
-    PROD = 'crawl-system-euphoria'
+	DEV = 'horoscope_dev_api_gateway',
+	STAGING = 'crawl-staging-api-gateway',
+	PROD = 'crawl-system-euphoria',
 }

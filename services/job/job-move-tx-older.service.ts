@@ -1,15 +1,18 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
 
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Job } from 'bull';
+import { ObjectId } from 'bson';
 import { ITransaction } from '../../entities';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
-import { ObjectId } from 'bson';
-import { QueueConfig } from '../../config/queue';
+import { Config } from '../../common';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class MoveTxService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -17,7 +20,7 @@ export default class MoveTxService extends Service {
 		this.parseServiceSchema({
 			name: 'movetx',
 			version: 1,
-			mixins: [QueueService(QueueConfig.redis, QueueConfig.opts), dbTransactionMixin],
+			mixins: [queueService(queueConfig.redis, queueConfig.opts), dbTransactionMixin],
 			queues: {
 				'move.tx': {
 					concurrency: 1,
@@ -36,12 +39,12 @@ export default class MoveTxService extends Service {
 	async handleJob(listBlockHeight: string[]) {
 		if (listBlockHeight && listBlockHeight.length) {
 			listBlockHeight.map(async (height) => {
-				let listTransactionInHeight: ITransaction[] = await this.adapter.lean({
+				const listTransactionInHeight: ITransaction[] = await this.adapter.lean({
 					query: {
 						'tx_response.height': height,
 					},
 				});
-				//insert transaction to transaction-aggregate table
+				// Insert transaction to transaction-aggregate table
 				this.createJob(
 					'listtx.insert',
 					{
@@ -54,25 +57,23 @@ export default class MoveTxService extends Service {
 						},
 					},
 				);
-				//delete transaction in transaction table
+				// Delete transaction in transaction table
 				let listBulk: any[] = [];
-				listBulk = listTransactionInHeight.map((transaction) => {
-					return {
-						deleteOne: {
-							filter: {
-								//@ts-ignore
-								_id: new ObjectId(transaction._id.toString()),
-							},
+				listBulk = listTransactionInHeight.map((transaction) => ({
+					deleteOne: {
+						filter: {
+							// @ts-ignore
+							_id: new ObjectId(transaction._id.toString()),
 						},
-					};
-				});
-				let resultDeleteBlock = await this.adapter.bulkWrite(listBulk);
+					},
+				}));
+				const resultDeleteBlock = await this.adapter.bulkWrite(listBulk);
 				this.logger.info('Result delete transaction: ', resultDeleteBlock);
 			});
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.getQueue('move.tx').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
@@ -82,6 +83,7 @@ export default class MoveTxService extends Service {
 		this.getQueue('move.tx').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

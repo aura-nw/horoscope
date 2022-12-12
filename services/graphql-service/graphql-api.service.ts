@@ -1,15 +1,12 @@
 'use strict';
-import moleculer from 'moleculer';
-import mongoose from 'mongoose';
-import ApiGateway from 'moleculer-web';
-const { ApolloService } = require('moleculer-apollo-server');
-import { Service } from '@ourparentcenter/moleculer-decorators-extended';
-// import { context } from "./context";
-import { Config } from '../../common';
-import { RequestMessage } from 'types';
 import { ServerResponse } from 'http';
+import moleculer from 'moleculer';
+import ApiGateway from 'moleculer-web';
+import { Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { RequestMessage } from 'types';
 import pick from 'lodash/pick';
-import { Resolvers, TypeDefs } from '../../types/graphql/schema';
+import { ApolloService } from 'moleculer-apollo-server';
+import { RESOLVERS, TYPE_DEFS } from '../../types/graphql/schema';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -22,8 +19,9 @@ import { Resolvers, TypeDefs } from '../../types/graphql/schema';
 		ApiGateway,
 		// GraphQL Apollo Server
 		ApolloService({
-			typeDefs: TypeDefs,
-			resolvers: Resolvers,
+			// @ts-ignore
+			typeDefs: TYPE_DEFS,
+			resolvers: RESOLVERS,
 
 			// https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
 			serverOptions: {
