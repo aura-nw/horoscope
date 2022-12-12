@@ -42,6 +42,7 @@ export default class FeegrantTxHandler extends Service {
 	private redisMixin = new RedisMixin().start();
 	private dbTransactionMixin = dbTransactionMixin;
 	private currentBlock = 0
+	private syncCatchUp = false
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -97,13 +98,21 @@ export default class FeegrantTxHandler extends Service {
 			},
 		}) as ITransaction[]
 		const latestBlock = latestBlockTx[0] ? latestBlockTx[0].tx_response.height.valueOf() : this.currentBlock
-		this.logger.info(`Feegrant from  ${this.currentBlock + 1} to ${(this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock)}`)
-		// get all transactions in BLOCK_PER_BATCH sequence blocks, start from currentBlock
+		const fromBlock = this.currentBlock
+		let toBlock = this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
+		if (fromBlock >= toBlock) {
+			this.syncCatchUp = true
+		}
+		if (this.syncCatchUp) {
+			toBlock = latestBlock
+		}
+		this.logger.info(`Feegrant from  ${fromBlock} to ${toBlock}`)
+		// get all transactions in BLOCK_PER_BATCH sequence blocks, start from fromBlock: fromBlock+1, fromBlock+2,..., toBlock
 		const listTx = await this.adapter.lean({
 			query: {
 				"tx_response.height": {
-					$gt: this.currentBlock,
-					$lte: this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
+					$gt: fromBlock,
+					$lte: toBlock
 				}
 			},
 			projection: {
@@ -380,7 +389,7 @@ export default class FeegrantTxHandler extends Service {
 			);
 		}
 		// update feegrant latest block
-		this.currentBlock = this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
+		this.currentBlock = toBlock
 		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
 		this.logger.info(JSON.stringify(feegrantList))
 		return feegrantList;
