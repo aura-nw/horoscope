@@ -346,10 +346,10 @@ export default class BlockService extends MoleculerDBService<
 						  };
 				}
 				if (result.length <= ctx.params.pageLimit) {
-					nextKey = null;
+					newNextKey = null;
 				}
 
-				if (nextKey) {
+				if (newNextKey) {
 					result.pop();
 				}
 			}
@@ -360,7 +360,7 @@ export default class BlockService extends MoleculerDBService<
 				data: {
 					transactions: result,
 					count,
-					nextKey: newNextKey ? toBase64(toUtf8(JSON.stringify(nextKey))) : null,
+					nextKey: newNextKey ? toBase64(toUtf8(JSON.stringify(newNextKey))) : null,
 				},
 			};
 		} catch (error) {
