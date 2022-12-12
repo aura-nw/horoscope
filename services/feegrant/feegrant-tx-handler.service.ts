@@ -34,7 +34,10 @@ export interface IFeegrantData {
 	custom_info: CustomInfo;
 }
 export default class FeegrantTxHandler extends Service {
-	private _currentBlock = 0;
+	private redisMixin = new RedisMixin().start();
+	private dbTransactionMixin = dbTransactionMixin;
+	private currentBlock = 0
+	private syncCatchUp = false
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -86,26 +89,32 @@ export default class FeegrantTxHandler extends Service {
 	}
 
 	async handleJob(chainId: string): Promise<any[]> {
-		const feegrantList: IFeegrantData[] = [];
-		// Latest real block
-		const latestBlockStr = await this.redisClient.get(Config.REDIS_KEY_LATEST_BLOCK);
-		const latestBlock = latestBlockStr ? parseInt(latestBlockStr, 10) : this.currentBlock;
-		this.logger.info(`Feegrant from  ${this._currentBlock + 1} 
-			to ${
-				this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
-					? this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
-					: latestBlock
-			}`);
-		// Get all transactions in BLOCK_PER_BATCH sequence blocks, start from currentBlock
-		const listTx = (await this.adapter.lean({
+		let feegrantList: IFeegrantData[] = [];
+		// latest block in transaction DB
+		const latestBlockTx = await this.adapter.lean({
+			sort: "-tx_response.height",
+			limit: 1,
+			projection: {
+				"tx_response.height": 1
+			},
+		}) as ITransaction[]
+		const latestBlock = latestBlockTx[0] ? latestBlockTx[0].tx_response.height.valueOf() : this.currentBlock
+		const fromBlock = this.currentBlock
+		let toBlock = this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
+		if (fromBlock >= toBlock) {
+			this.syncCatchUp = true
+		}
+		if (this.syncCatchUp) {
+			toBlock = latestBlock
+		}
+		this.logger.info(`Feegrant from  ${fromBlock} to ${toBlock}`)
+		// get all transactions in BLOCK_PER_BATCH sequence blocks, start from fromBlock: fromBlock+1, fromBlock+2,..., toBlock
+		const listTx = await this.adapter.lean({
 			query: {
-				'tx_response.height': {
-					$gt: this._currentBlock,
-					$lte:
-						this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
-							? this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
-							: latestBlock,
-				},
+				"tx_response.height": {
+					$gt: fromBlock,
+					$lte: toBlock
+				}
 			},
 			projection: {
 				'tx.body.messages': 1,
@@ -383,13 +392,10 @@ export default class FeegrantTxHandler extends Service {
 				},
 			);
 		}
-		// Update feegrant latest block
-		this._currentBlock =
-			this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
-				? this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
-				: latestBlock;
-		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this._currentBlock);
-		this.logger.info(JSON.stringify(feegrantList));
+		// update feegrant latest block
+		this.currentBlock = toBlock
+		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
+		this.logger.info(JSON.stringify(feegrantList))
 		return feegrantList;
 	}
 
