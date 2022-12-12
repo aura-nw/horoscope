@@ -84,10 +84,12 @@ export default class CrawlProposalService extends Service {
 					this.broker.emit('proposal.voting', { id: proposal.proposal_id });
 				}
 				const foundProposal = listProposalInDB.find(
-					(item: ProposalEntity) => item.proposal_id === proposal.proposal_id,
+					// eslint-disable-next-line eqeqeq
+					(item: ProposalEntity) => item.proposal_id == proposal.proposal_id,
 				);
 				const foundProposalIndex = listProposalInDB.findIndex(
-					(item: ProposalEntity) => item.proposal_id === proposal.proposal_id,
+					// eslint-disable-next-line eqeqeq
+					(item: ProposalEntity) => item.proposal_id == proposal.proposal_id,
 				);
 
 				try {
