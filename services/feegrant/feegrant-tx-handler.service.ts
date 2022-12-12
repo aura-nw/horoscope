@@ -89,7 +89,7 @@ export default class FeegrantTxHandler extends Service {
 	async handleJob(chainId: string): Promise<any[]> {
 		let feegrantList: IFeegrantData[] = [];
 		// latest real block
-		const latestBlockStr = await this.redisClient.get(Config.REDIS_KEY_CURRENT_BLOCK)
+		const latestBlockStr = await this.redisClient.get(Config.REDIS_KEY_LATEST_BLOCK)
 		const latestBlock = latestBlockStr ? parseInt(latestBlockStr) : this.currentBlock
 		this.logger.info(`Feegrant from  ${this.currentBlock + 1} to ${(this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock)}`)
 		// get all transactions in BLOCK_PER_BATCH sequence blocks, start from currentBlock
