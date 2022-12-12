@@ -1,57 +1,45 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
 
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import { RedisClientType } from '@redis/client';
+import { Job } from 'bull';
+import { IBlock } from 'entities';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import RedisMixin from '../../mixins/redis/redis.mixin';
-import { RedisClientType } from '@redis/client';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { BlockResponseFromLCD, ResponseFromRPC } from '../../types';
-import { IBlock } from 'entities';
-import { QueueConfig } from '../../config/queue';
+import { Config } from '../../common';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlBlockService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private redisMixin = new RedisMixin().start();
-
-	private currentBlock = 0;
+	private _currentBlock = 0;
 
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		const self = this;
 		this.parseServiceSchema({
 			name: 'crawlblock',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.redisMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				new CallApiMixin().start(),
+				new RedisMixin().start(),
 			],
 			queues: {
 				'crawl.block': {
 					concurrency: 1,
-					async process(job: Job) {
+					process: async (job: Job) => {
 						job.progress(10);
-						// @ts-ignore
-						await this.initEnv();
-						// @ts-ignore
-						await this.handleJobCrawlBlock();
-						job.progress(100);
-						return true;
-					},
-				},
-				'crawl.block-from-lcd': {
-					concurrency: 1,
-					async process(job: Job) {
-						job.progress(10);
-						const url = job.data.url;
-						const pathBlock = job.data.path;
-						// @ts-ignore
-						await this.handleJobCrawlBlockLCD(url, path);
+						await self.initEnv();
+						await self.handleJobCrawlBlock();
 						job.progress(100);
 						return true;
 					},
@@ -61,25 +49,27 @@ export default class CrawlBlockService extends Service {
 	}
 
 	async initEnv() {
-		//get handled block
-		let handledBlockRedis = await this.redisClient.get(Config.REDIS_KEY_CURRENT_BLOCK);
-		this.currentBlock = 0;
-		let START_BLOCK = Config.START_BLOCK;
+		// Get handled block
+		const handledBlockRedis = await this.redisClient.get(Config.REDIS_KEY_CURRENT_BLOCK);
+		this._currentBlock = 0;
+		const START_BLOCK = Config.START_BLOCK;
 
 		if (handledBlockRedis) {
-			this.currentBlock = parseInt(handledBlockRedis);
+			this._currentBlock = parseInt(handledBlockRedis, 10);
 		} else {
 			if (!isNaN(START_BLOCK)) {
-				this.currentBlock = parseInt(START_BLOCK);
+				this._currentBlock = parseInt(START_BLOCK, 10);
 			} else {
-				this.currentBlock = 0;
+				this._currentBlock = 0;
 			}
 		}
-		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : this.currentBlock;
-		this.logger.info(`currentBlock: ${this.currentBlock}`);
+		this._currentBlock = handledBlockRedis
+			? parseInt(handledBlockRedis, 10)
+			: this._currentBlock;
+		this.logger.info(`_currentBlock: ${this._currentBlock}`);
 	}
 	async handleJobCrawlBlock() {
-		let redisClient: RedisClientType = await this.getRedisClient();
+		const redisClient: RedisClientType = await this.getRedisClient();
 
 		const latestBlockRedis = parseInt(
 			(await redisClient.get(Config.REDIS_KEY_LATEST_BLOCK)) ?? '0',
@@ -91,7 +81,7 @@ export default class CrawlBlockService extends Service {
 			url,
 			`${Config.GET_LATEST_BLOCK_API}`,
 		);
-		const latestBlockNetwork = parseInt(responseGetLatestBlock.result.block.header.height);
+		const latestBlockNetwork = parseInt(responseGetLatestBlock.result.block.header.height, 10);
 
 		if (latestBlockNetwork > latestBlockRedis) {
 			await redisClient.set(Config.REDIS_KEY_LATEST_BLOCK, latestBlockNetwork);
@@ -99,29 +89,27 @@ export default class CrawlBlockService extends Service {
 
 		this.logger.info(`latestBlockNetwork: ${latestBlockNetwork}`);
 
-		const startBlock = this.currentBlock + 1;
+		const startBlock = this._currentBlock + 1;
 
-		let endBlock = startBlock + parseInt(Config.NUMBER_OF_BLOCK_PER_CALL) - 1;
+		let endBlock = startBlock + parseInt(Config.NUMBER_OF_BLOCK_PER_CALL, 10) - 1;
 		if (endBlock > Math.max(latestBlockNetwork, latestBlockRedis)) {
 			endBlock = Math.max(latestBlockNetwork, latestBlockRedis);
 		}
-		this.logger.info('startBlock: ' + startBlock + ' endBlock: ' + endBlock);
+		this.logger.info(`startBlock: ${startBlock} endBlock: ${endBlock}`);
 		try {
-			let listPromise = [];
+			const listPromise = [];
 			for (let i = startBlock; i <= endBlock; i++) {
 				listPromise.push(
 					this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`),
 				);
 			}
-			let resultListPromise: ResponseFromRPC[] = await Promise.all(listPromise);
+			const resultListPromise: ResponseFromRPC[] = await Promise.all(listPromise);
 
-			let data: ResponseFromRPC = {
+			const data: ResponseFromRPC = {
 				id: '',
 				jsonrpc: '',
 				result: {
-					blocks: resultListPromise.map((item) => {
-						return item.result;
-					}),
+					blocks: resultListPromise.map((item) => item.result),
 				},
 			};
 
@@ -129,23 +117,21 @@ export default class CrawlBlockService extends Service {
 				throw new Error('cannot crawl block');
 			}
 			this.handleListBlock(data);
-			if (this.currentBlock < endBlock) {
-				this.currentBlock = endBlock;
-				redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this.currentBlock);
+			if (this._currentBlock < endBlock) {
+				this._currentBlock = endBlock;
+				redisClient.set(Config.REDIS_KEY_CURRENT_BLOCK, this._currentBlock);
 			}
 		} catch (error) {
 			this.logger.error(error);
 			throw new Error('cannot crawl block');
 		}
 	}
-	async handleJobCrawlBlockLCD(url: string, path: string) {
-		let block = await this.callApiFromDomain(url, path);
-	}
+
 	async handleListBlock(data: ResponseFromRPC) {
 		const listBlock: BlockResponseFromLCD = data.result;
 		listBlock.blocks.map((block: IBlock) => {
-			//pust block to redis stream
-			this.logger.info('xadd block: ' + block?.block?.header?.height);
+			// Pust block to redis stream
+			this.logger.info(`xadd block: ${block?.block?.header?.height}`);
 
 			this.redisClient.xAdd(Config.REDIS_STREAM_BLOCK_NAME, '*', {
 				source: block.block?.header?.height,
@@ -156,26 +142,26 @@ export default class CrawlBlockService extends Service {
 	getStatistic() {
 		this.getQueue('crawl.block')
 			.getCompletedCount()
-			.then((count: String) => {
+			.then((count: string) => {
 				this.logger.info(`Completed jobs: ${count}`);
 			});
 		this.getQueue('crawl.block')
 			.getFailedCount()
-			.then((count: String) => {
+			.then((count: string) => {
 				this.logger.info(`Failed jobs: ${count}`);
 			});
 		this.getQueue('crawl.block')
 			.getActiveCount()
-			.then((count: String) => {
+			.then((count: string) => {
 				this.logger.info(`Active jobs: ${count}`);
 			});
 		this.getQueue('crawl.block')
 			.getWaitingCount()
-			.then((count: String) => {
+			.then((count: string) => {
 				this.logger.info(`Waiting jobs: ${count}`);
 			});
 	}
-	async _start() {
+	public async _start() {
 		this.redisClient = await this.getRedisClient();
 		this.createJob(
 			'crawl.block',
@@ -199,6 +185,7 @@ export default class CrawlBlockService extends Service {
 		this.getQueue('crawl.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

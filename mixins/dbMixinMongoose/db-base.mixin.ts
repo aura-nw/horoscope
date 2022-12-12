@@ -7,10 +7,8 @@ import { Context, ServiceSchema } from 'moleculer';
 import { Model } from 'mongoose';
 import { Config } from '../../common';
 import { DBInfo } from '../../types';
-// import { MongooseDbAdapter } from 'moleculer-db-adapter-mongoose';
-import MongooseDbAdapter = require('moleculer-db-adapter-mongoose');
 import CustomMongooseDbAdapter = require('../customMongooseAdapter');
-const SqlAdapter = require('moleculer-db-adapter-sequelize');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 export interface BaseMixinConfig {
 	name: string;
 	model: Model<any>;
@@ -139,7 +137,7 @@ export class DbBaseMixin {
 		if (this.dbInfo.uri) {
 			return this.dbInfo.uri;
 		} else {
-			let listParamUri = [`${this.dbInfo.dialect}://`];
+			const listParamUri = [`${this.dbInfo.dialect}://`];
 			if (this.dbInfo.user && this.dbInfo.password) {
 				listParamUri.push(
 					`${this.dbInfo.user}:${encodeURIComponent(this.dbInfo.password)}@`,
@@ -148,15 +146,15 @@ export class DbBaseMixin {
 			listParamUri.push(
 				`${this.dbInfo.host}:${this.dbInfo.port}/?maxPoolSize=${this.dbInfo.maxPoolSize}`,
 			);
-			if (this.dbInfo.retryWrites != '') {
+			if (this.dbInfo.retryWrites !== '') {
 				listParamUri.push(`&retryWrites=${this.dbInfo.retryWrites}`);
 			}
-			if (this.dbInfo.replicaSet != '') {
+			if (this.dbInfo.replicaSet !== '') {
 				listParamUri.push(
 					`&replicaSet=${this.dbInfo.replicaSet}&readPreference=${this.dbInfo.readPreference}`,
 				);
 			}
-			let uri = listParamUri.join('');
+			const uri = listParamUri.join('');
 			return uri;
 		}
 	}
@@ -181,8 +179,8 @@ export class DbBaseMixin {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private getMongoAdapter(schema: ServiceSchema) {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		// let MongoAdapter: any;
-		// import('moleculer-db-adapter-mongoose').then(
+		// Let MongoAdapter: any;
+		// Import('moleculer-db-adapter-mongoose').then(
 		// 	(AdapterMongo) => (MongoAdapter = AdapterMongo),
 		// );
 		return {
@@ -202,20 +200,25 @@ export class DbBaseMixin {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private getSequelizeAdapter(schema: ServiceSchema) {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		let SequelizedDbAdapter: any;
+		let SequelizeDbAdapter: any;
 		import('moleculer-db-adapter-sequelize').then(
-			(AdapterMySql) => (SequelizedDbAdapter = AdapterMySql),
+			(AdapterMySql) => (SequelizeDbAdapter = AdapterMySql),
 		);
 		return {
 			...schema,
-			adapter: new SqlAdapter(this.dbInfo.dbname, this.dbInfo.user, this.dbInfo.password, {
-				host: this.dbInfo.host,
-				port: this.dbInfo.port,
-				dialect: 'mysql',
-				define: {
-					timestamps: false,
+			adapter: new SequelizeDbAdapter(
+				this.dbInfo.dbname,
+				this.dbInfo.user,
+				this.dbInfo.password,
+				{
+					host: this.dbInfo.host,
+					port: this.dbInfo.port,
+					dialect: 'mysql',
+					define: {
+						timestamps: false,
+					},
 				},
-			}),
+			),
 			collection: this.collection,
 			model: this.mixModel,
 		};

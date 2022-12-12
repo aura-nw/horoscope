@@ -1,7 +1,7 @@
-import { IAccountDelegations } from "entities/account-delegations.entity";
-import { model, models, Types, Schema } from "mongoose";
-import { definitionType } from "types";
-import { customInfoModel } from "./custom-info.model";
+/* eslint-disable camelcase */
+import { IAccountDelegations } from 'entities/account-delegations.entity';
+import { model, models, Types, Schema } from 'mongoose';
+import { definitionType } from 'types';
 
 const definition: definitionType<IAccountDelegations> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -26,12 +26,12 @@ const definition: definitionType<IAccountDelegations> = (collection?: string) =>
 });
 
 export const accountDelegationsMongoModel = (collection: string): unknown => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	const schema = new Schema<IAccountDelegations>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
-	schema.index({ 'address': 1, 'custom_info.chain_id': 1 });
+	schema.index({ address: 1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

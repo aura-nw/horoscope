@@ -1,8 +1,8 @@
 'use strict';
 
 import { Config } from '../../common';
-import { DbBaseMixin } from './db-base.mixin';
 import { gammPoolMongoModel } from '../../model/osmosis/gamm-pool.model';
+import { DbBaseMixin } from './db-base.mixin';
 
 const dbInfo = Config.DB_GAMM_POOL;
 

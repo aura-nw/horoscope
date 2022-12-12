@@ -1,33 +1,29 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import CallApiMixin from '../../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import { Job } from 'bull';
+import { QueryPoolsResponseSDKType } from 'osmojs/types/codegen/osmosis/gamm/v1beta1/query';
+import { Types } from 'mongoose';
 import { dbGammPoolMixin } from '../../../mixins/dbMixinMongoose';
-import { JsonConvert } from 'json2typescript';
 import { Config } from '../../../common';
 import { URL_TYPE_CONSTANTS } from '../../../common/constant';
-import { Job } from 'bull';
 import { Utils } from '../../../utils/utils';
-import { QueueConfig } from '../../../config/queue';
-import { QueryPoolsResponseSDKType } from 'osmojs/types/codegen/osmosis/gamm/v1beta1/query';
-import { Pool } from 'osmojs/types/codegen/osmosis/gamm/pool-models/balancer/balancerPool';
-import { Types } from 'mongoose';
+import { queueConfig } from '../../../config/queue';
+import CallApiMixin from '../../../mixins/callApi/call-api.mixin';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlGammPoolService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbGammPoolMixin = dbGammPoolMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlGammPool',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbGammPoolMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				new CallApiMixin().start(),
+				dbGammPoolMixin,
 			],
 			queues: {
 				'crawl.gamm.pool': {
@@ -45,7 +41,7 @@ export default class CrawlGammPoolService extends Service {
 	}
 
 	async handleJob() {
-		let listPool: any[] = [];
+		const listPool: any[] = [];
 
 		let resultCallApi: QueryPoolsResponseSDKType;
 
@@ -66,25 +62,25 @@ export default class CrawlGammPoolService extends Service {
 
 		this.logger.debug(`result: ${JSON.stringify(listPool)}`);
 
-		let listPoolInDB: any[] = await this.adapter.lean({
+		const listPoolInDB: any[] = await this.adapter.lean({
 			query: {},
 		});
-		let listBulk: any[] = [];
-		let listIndexDelete: number[] = [];
+		const listBulk: any[] = [];
+		const listIndexDelete: number[] = [];
 		await Promise.all(
 			listPool.map(async (pool) => {
-				let foundPool = listPoolInDB.find((item) => item.id == pool.id);
-				let foundPoolIndex = listPoolInDB.findIndex((item) => item.id == pool.id);
+				const foundPool = listPoolInDB.find((item) => item.id === pool.id);
+				const foundPoolIndex = listPoolInDB.findIndex((item) => item.id === pool.id);
 
 				try {
 					if (foundPool) {
 						listBulk.push({
+							// eslint-disable-next-line no-underscore-dangle
 							updateOne: { filter: { _id: foundPool._id }, update: pool },
 						});
 					} else {
-						let item = { _id: Types.ObjectId(), ...pool };
+						const item = { _id: Types.ObjectId(), ...pool };
 						listBulk.push({ insertOne: { document: item } });
-						// listPromise.push(this.adapter.insert(item));
 					}
 					if (foundPoolIndex > -1 && foundPool) {
 						listIndexDelete.push(foundPoolIndex);
@@ -102,16 +98,17 @@ export default class CrawlGammPoolService extends Service {
 
 		await Promise.all(
 			listPoolInDB.map(async (pool) => {
+				// eslint-disable-next-line no-underscore-dangle
 				listBulk.push({ deleteOne: { _id: pool._id } });
 			}),
 		);
 
-		// await Promise.all(listPromise);
-		let result = await this.adapter.bulkWrite(listBulk);
+		// Await Promise.all(listPromise);
+		const result = await this.adapter.bulkWrite(listBulk);
 		this.logger.info(result);
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.gamm.pool',
 			{},
@@ -135,6 +132,7 @@ export default class CrawlGammPoolService extends Service {
 		this.getQueue('crawl.epoch').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

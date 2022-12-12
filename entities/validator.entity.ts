@@ -1,10 +1,14 @@
-import { Config } from '../common';
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/explicit-member-accessibility */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable max-classes-per-file */
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
 import { ObjectIdNull } from 'types';
+import { Config } from '../common';
+import { ISigningInfo } from '../model/signing-info.model';
 import { Coin, ICoin } from './coin.entity';
 import { SigningInfoEntity } from './signing-info.entity';
-import { ISigningInfo } from '../model/signing-info.model';
 
 export interface IConsensusPubkey {
 	'@type': String;
@@ -140,6 +144,6 @@ export class ValidatorEntity implements IValidator {
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle
-		return { ...this, _id: this._id && (this._id as Types.ObjectId).toString() };
+		return { ...this, _id: this._id && this._id.toString() };
 	}
 }

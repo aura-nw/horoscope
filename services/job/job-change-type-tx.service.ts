@@ -1,29 +1,31 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
 
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Job } from 'bull';
+import { Config } from '../../common';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import RedisMixin from '../../mixins/redis/redis.mixin';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 export default class IndexTxService extends Service {
-	private redisMixin = new RedisMixin().start();
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'indextx',
 			version: 1,
 			mixins: [
-				QueueService(
+				queueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'index.tx',
 					},
 				),
 				dbTransactionMixin,
-				this.redisMixin,
+				new RedisMixin().start(),
 			],
 			queues: {
 				'index.tx': {
@@ -41,7 +43,7 @@ export default class IndexTxService extends Service {
 	}
 
 	async handleJob(lastId: string) {
-		let listTx = await this.adapter.find({
+		const listTx = await this.adapter.find({
 			query: {
 				'custom_info.chain_id': 'euphoria-1',
 				'indexes.height': { $type: 'string' },
@@ -49,20 +51,20 @@ export default class IndexTxService extends Service {
 			limit: 500,
 			sort: '-indexes.height',
 		});
-		// let listTx = await this.adapter.find({
-		// 	query: { 'indexes.message_action': { $regex: /[_]/g } },
-		// 	limit: 5000,
+		// Let listTx = await this.adapter.find({
+		// 	Query: { 'indexes.message_action': { $regex: /[_]/g } },
+		// 	Limit: 5000,
 		// });
 		this.logger.info(1);
 		let bulkOps: any[] = [];
 		listTx.forEach(async (tx: any) => {
 			this.logger.info(tx._id.toString());
-			let indexes: any = {};
-			indexes['timestamp'] = tx.tx_response.timestamp;
-			indexes['height'] = tx.tx_response.height;
-			// const actions = tx.indexes.message_action;
-			// let newActions = actions.map((action: string) => {
-			// 	return action.replace(/\_/g, '.');
+			const indexes: any = {};
+			indexes.timestamp = tx.tx_response.timestamp;
+			indexes.height = tx.tx_response.height;
+			// Const actions = tx.indexes.message_action;
+			// Let newActions = actions.map((action: string) => {
+			// 	Return action.replace(/\_/g, '.');
 			// });
 
 			bulkOps.push({
@@ -70,39 +72,39 @@ export default class IndexTxService extends Service {
 					filter: { _id: tx._id },
 					update: {
 						$set: {
-							'indexes.timestamp': indexes['timestamp'],
-							'indexes.height': indexes['height'],
+							'indexes.timestamp': indexes.timestamp,
+							'indexes.height': indexes.height,
 						},
 					},
 				},
 			});
 			if (bulkOps.length === 500) {
-				let result = await this.adapter.bulkWrite(bulkOps);
+				const result = await this.adapter.bulkWrite(bulkOps);
 				this.logger.info(result);
 				this.logger.info('done 500');
 				bulkOps = [];
 			}
 		});
 		if (bulkOps.length > 0) {
-			let result = await this.adapter.bulkWrite(bulkOps);
+			const result = await this.adapter.bulkWrite(bulkOps);
 			this.logger.info(result);
 		}
 		this.logger.info('done');
 	}
 
-	async _start() {
-		// let operatorAddress = 'cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en';
-		// const operator_address = data.operator_address;
-		// const decodeAcc = bech32.decode(operatorAddress);
-		// const wordsByte = bech32.fromWords(decodeAcc.words);
-		// const account_address = bech32.encode('cosmos', bech32.toWords(wordsByte));
+	public async _start() {
+		// Let operatorAddress = 'cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en';
+		// Const operator_address = data.operator_address;
+		// Const decodeAcc = bech32.decode(operatorAddress);
+		// Const wordsByte = bech32.fromWords(decodeAcc.words);
+		// Const account_address = bech32.encode('cosmos', bech32.toWords(wordsByte));
 
-		// const operator_address = operatorAddress;
-		// const decodeAcc = bech32.decode(operator_address.toString());
-		// const wordsByte = bech32.fromWords(decodeAcc.words);
-		// const account_address = bech32.encode('cosmos', bech32.toWords(wordsByte));
-		// this.logger.info('account_address:', account_address);
-		// this.redisClient = await this.getRedisClient();
+		// Const operator_address = operatorAddress;
+		// Const decodeAcc = bech32.decode(operator_address.toString());
+		// Const wordsByte = bech32.fromWords(decodeAcc.words);
+		// Const account_address = bech32.encode('cosmos', bech32.toWords(wordsByte));
+		// This.logger.info('account_address:', account_address);
+		// This.redisClient = await this.getRedisClient();
 		this.createJob(
 			'index.tx',
 			{
@@ -122,6 +124,7 @@ export default class IndexTxService extends Service {
 		this.getQueue('index.tx').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

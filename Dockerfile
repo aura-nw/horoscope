@@ -34,11 +34,11 @@ RUN npm install -g ioredis
 # 	rhea-promise
 
 # Add all supported serializers
-RUN npm install -g avsc \
-	msgpack5 \
-	notepack.io \
-	protobufjs \
-	thrift
+# RUN npm install -g avsc \
+# 	msgpack5 \
+# 	notepack.io \
+# 	protobufjs \
+# 	thrift
 
 # RUN yarn global add avsc \
 # 	msgpack5 \

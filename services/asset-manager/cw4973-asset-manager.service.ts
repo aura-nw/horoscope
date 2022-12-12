@@ -1,12 +1,11 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import moleculer, { Context } from 'moleculer';
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { CursorOptions } from 'moleculer-db';
 import { dbCW4973AssetMixin } from '../../mixins/dbMixinMongoose';
-import { CursorOptions, QueryOptions } from 'moleculer-db';
-import _ from 'lodash';
-import { ObjectID } from 'bson';
 import { LIST_NETWORK } from '../../common/constant';
 
 @Service({
@@ -86,7 +85,7 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw4973-asset-manager upsert ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				const resultUpsert = await this.upsert_handler(ctx.params);
+				const resultUpsert = await this.upsertHandler(ctx.params);
 				return resultUpsert;
 			},
 		},
@@ -102,9 +101,9 @@ import { LIST_NETWORK } from '../../common/constant';
 		},
 		useDb: {
 			async handler(ctx: Context) {
-				//@ts-ignore
-				const chainId = ctx.params.query['chainId'];
-				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				// @ts-ignore
+				const chainId = ctx.params.query.chainId;
+				const network = LIST_NETWORK.find((x) => x.chainId === chainId);
 				if (network && network.databaseName) {
 					// @ts-ignore
 					this.adapter.useDb(network.databaseName);
@@ -114,35 +113,36 @@ import { LIST_NETWORK } from '../../common/constant';
 	},
 })
 export default class CW4973AssetManagerService extends moleculer.Service {
-	async upsert_handler(asset: any) {
-		this.logger.debug(`upsert_handler asset `, asset);
+	async upsertHandler(asset: any) {
+		this.logger.debug('upsertHandler asset ', asset);
 		// @ts-ignore
 		this.actions.useDb({ query: { chainId: asset.custom_info.chain_id } });
-		let item = await this.adapter.findOne({ asset_id: asset.asset_id });
+		// eslint-disable-next-line camelcase
+		const item = await this.adapter.findOne({ asset_id: asset.asset_id });
 		if (item) {
 			this.logger.debug('this is existed item', JSON.stringify(item));
 			asset._id = item._id;
 			if (
-				item.contract_address != asset.contract_address ||
-				item.token_id != asset.token_id ||
-				item.owner != asset.owner ||
-				item.is_burned != asset.is_burned ||
-				item.image != asset.image ||
-				item.animation != asset.animation
+				item.contract_address !== asset.contract_address ||
+				item.token_id !== asset.token_id ||
+				item.owner !== asset.owner ||
+				item.is_burned !== asset.is_burned ||
+				item.image !== asset.image ||
+				item.animation !== asset.animation
 			) {
 				await this.adapter.updateById(item._id, asset);
 			}
 			return asset._id;
 		} else {
 			this.logger.debug('this is not existed item: ', JSON.stringify(asset));
-			let resultInsert = await this.adapter.insert(asset);
+			const resultInsert = await this.adapter.insert(asset);
 			this.logger.debug('result insert: ', JSON.stringify(resultInsert));
 			return resultInsert._id;
 		}
 	}
 
 	async updateById(asset: any, updateOperator: any) {
-		this.logger.debug(`updateById asset `, asset);
+		this.logger.debug('updateById asset ', asset);
 		// @ts-ignore
 		this.actions.useDb({ query: { chainId: asset.custom_info.chain_id } });
 		if (asset._id) {
@@ -156,13 +156,14 @@ export default class CW4973AssetManagerService extends moleculer.Service {
 		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
 		// @ts-ignore
 		delete ctx.params.query['custom_info.chain_id'];
-		let result = await this.adapter.aggregate([
+		const result = await this.adapter.aggregate([
 			{
 				$match: ctx.params.query,
 			},
 			{
 				$group: {
 					_id: {
+						// eslint-disable-next-line camelcase
 						contract_address: '$contract_address',
 						owner: '$owner',
 					},
@@ -181,6 +182,7 @@ export default class CW4973AssetManagerService extends moleculer.Service {
 			},
 			{
 				$addFields: {
+					// eslint-disable-next-line camelcase
 					contract_address: '$_id.contract_address',
 					owner: '$_id.owner',
 				},
@@ -201,13 +203,14 @@ export default class CW4973AssetManagerService extends moleculer.Service {
 		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
 		// @ts-ignore
 		delete ctx.params.query['custom_info.chain_id'];
-		let result = await this.adapter.aggregate([
+		const result = await this.adapter.aggregate([
 			{
 				$match: ctx.params.query,
 			},
 			{
 				$group: {
 					_id: {
+						// eslint-disable-next-line camelcase
 						contract_address: '$contract_address',
 						owner: '$owner',
 					},

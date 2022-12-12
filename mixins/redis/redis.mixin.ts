@@ -1,16 +1,14 @@
-import { Method } from '@ourparentcenter/moleculer-decorators-extended';
 import { RedisClientType } from '@redis/client';
-import { defaultMaxListeners } from 'events';
-import { Context, Service, ServiceBroker, ServiceSchema } from 'moleculer';
-import { Config } from '../../common';
-// const redis = require('redis');
+import { Service, ServiceSchema } from 'moleculer';
 import { createClient } from 'redis';
+import { Config } from '../../common';
 
 export default class RedisMixin implements Partial<ServiceSchema>, ThisType<Service> {
-	private schema: Partial<ServiceSchema> & ThisType<Service>;
+	private _schema: Partial<ServiceSchema> & ThisType<Service>;
 
 	public constructor() {
-		this.schema = {
+		// eslint-disable-next-line no-underscore-dangle
+		this._schema = {
 			methods: {
 				async getRedisClient() {
 					if (this.redisClient === undefined) {
@@ -29,14 +27,15 @@ export default class RedisMixin implements Partial<ServiceSchema>, ThisType<Serv
 						}
 						await this.redisClient.connect();
 					}
-					return <RedisClientType>this.redisClient;
+					return this.redisClient as RedisClientType;
 				},
 			},
 		};
 	}
 
 	public start() {
-		return this.schema;
+		// eslint-disable-next-line no-underscore-dangle
+		return this._schema;
 	}
 }
 

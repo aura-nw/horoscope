@@ -2955,7 +2955,7 @@
                                                                         "type": "array",
                                                                         "items": {
                                                                             "type": "string",
-                                                                            "example": "Cr4CCpwBCjcvY29zbW9zLmRpc3RyaWJ1dGlvbi52MWJldGExLk1zZ1dpdGhkcmF3RGVsZWdhdG9yUmV3YXJkEmEKK2F1cmExZ3lwdDJ3N3hnNXQ5eXI3Nmh4NnplbXdkNHh2NzJqY2trMDNyNnQSMmF1cmF2YWxvcGVyMWQzbjB2NWYyM3NxemtobGNuZXdoa3NhajhsM3g3amV5dTkzOGd4CpwBCjcvY29zbW9zLmRpc3RyaWJ1dGlvbi52MWJldGExLk1zZ1dpdGhkcmF3RGVsZWdhdG9yUmV3YXJkEmEKK2F1cmExZ3lwdDJ3N3hnNXQ5eXI3Nmh4NnplbXdkNHh2NzJqY2trMDNyNnQSMmF1cmF2YWxvcGVyMWVkdzRsd2N6M2VzbmxnemN3NjByYThtMzhrM3p5Z3oyeHRsMnFoEmkKUgpGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOpI9dkWS6LMKVUiDKO+l6Cj42RgpHPB6zsDR5g+T9EoBIECgIIARjc/g0SEwoNCgZ1dGF1cmESAzIwMBDAmgwaQCbAXZBszJbxJBkFDQ34+gO1S0eSG8uHMa//hZ4RNjYnIhHVZfhQtdsAP+tVumfrCKifITaDFaZIiEORBlgmZSk="
+                                                                            "example": "CqY2trMDNyNnQECgIIARjc/ghZ4RNjYnIhHVZfhQtdsAP+tVumfrCKifITaDFaZIiEORBlgmZSk="
                                                                         }
                                                                     }
                                                                 }
@@ -3785,6 +3785,15 @@
                             "type": "string"
                         },
                         "description": "Grantee of feegrant"
+                    },
+                    {
+                        "in": "query",
+                        "name": "txhash",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Original Txhash of feegrant"
                     },
                     {
                         "in": "query",
@@ -4670,11 +4679,21 @@
                     {
                         "in": "query",
                         "name": "height",
-                        "required": true,
                         "schema": {
                             "type": "number"
                         },
-                        "description": "Smart contract's creation block height"
+                        "description": "Smart contract creation block height"
+                    },
+                    {
+                        "in": "query",
+                        "name": "contract_addresses[]",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "description": "Smart contract address"
                     },
                     {
                         "in": "query",
@@ -4688,13 +4707,11 @@
                     },
                     {
                         "in": "query",
-                        "name": "offset",
-                        "required": true,
+                        "name": "nextKey",
                         "schema": {
-                            "type": "number"
+                            "type": "string"
                         },
-                        "description": "Number of records skipped",
-                        "example": 0
+                        "description": "Next key to query"
                     }
                 ],
                 "responses": {
@@ -4751,6 +4768,10 @@
                                                             }
                                                         }
                                                     }
+                                                },
+                                                "next_key": {
+                                                    "type": "string",
+                                                    "example": "6332a5b8b0257f00177afebb"
                                                 }
                                             }
                                         }

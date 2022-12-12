@@ -1,32 +1,31 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
-import { dbCommunityPoolMixin } from '../../mixins/dbMixinMongoose';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { JsonConvert } from 'json2typescript';
+import { Job } from 'bull';
+import { dbCommunityPoolMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { ICommunityPoolResponseFromLCD } from '../../types';
-import { Job } from 'bull';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { CommunityPoolEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
-import { QueueConfig } from '../../config/queue';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlCommunityPoolService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbCommunityPoolMixin = dbCommunityPoolMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlCommunityPool',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbCommunityPoolMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				dbCommunityPoolMixin,
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'crawl.community-pool': {
@@ -43,20 +42,25 @@ export default class CrawlCommunityPoolService extends Service {
 		});
 	}
 
-	async handleJob(path: String) {
+	async handleJob(path: string) {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let resultCallApi: ICommunityPoolResponseFromLCD = await this.callApiFromDomain(url, path);
-		let jsonConvert = new JsonConvert();
-		// jsonConvert.operationMode = OperationMode.LOGGING;
+		const resultCallApi: ICommunityPoolResponseFromLCD = await this.callApiFromDomain(
+			url,
+			path,
+		);
+		const jsonConvert = new JsonConvert();
+		// JsonConvert.operationMode = OperationMode.LOGGING;
 		const item: CommunityPoolEntity = jsonConvert.deserializeObject(
 			resultCallApi,
 			CommunityPoolEntity,
 		);
-		let foundPool: CommunityPoolEntity = await this.adapter.findOne({});
+		const foundPool: CommunityPoolEntity = await this.adapter.findOne({});
 		try {
 			if (foundPool) {
+				// eslint-disable-next-line no-underscore-dangle
 				item._id = foundPool._id;
+				// eslint-disable-next-line no-underscore-dangle
 				await this.adapter.updateById(foundPool._id, item);
 			} else {
 				await this.adapter.insert(item);
@@ -66,7 +70,7 @@ export default class CrawlCommunityPoolService extends Service {
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.community-pool',
 			{
@@ -92,6 +96,7 @@ export default class CrawlCommunityPoolService extends Service {
 		this.getQueue('crawl.community-pool').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

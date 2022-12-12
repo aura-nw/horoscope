@@ -1,29 +1,29 @@
+/* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import { Job } from 'bull';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { dbParamMixin } from '../../mixins/dbMixinMongoose';
-import { Job } from 'bull';
+import { Config } from '../../common';
 import { Utils } from '../../utils/utils';
-import { QueueConfig } from '../../config/queue';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlParamService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbParamMixin = dbParamMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlparam',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbParamMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				new CallApiMixin().start(),
+				dbParamMixin,
 			],
 			queues: {
 				'crawl.param': {
@@ -43,7 +43,7 @@ export default class CrawlParamService extends Service {
 	async handleJob() {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let [
+		const [
 			paramBank,
 			paramDistribution,
 			paramGovVoting,
@@ -72,7 +72,7 @@ export default class CrawlParamService extends Service {
 		this.logger.debug(`paramApiTransfer: ${JSON.stringify(paramIBCTransfer)}`);
 		this.logger.debug(`paramMint: ${JSON.stringify(paramMint)}`);
 
-		let paramGov = {
+		const paramGov = {
 			type: 'gov',
 			params: {
 				voting_param: paramGovVoting.voting_params,
@@ -82,7 +82,7 @@ export default class CrawlParamService extends Service {
 		};
 		this.logger.debug(`paramGov: ${JSON.stringify(paramGov)}`);
 
-		let listParamInDb = await this.adapter.find({
+		const listParamInDb = await this.adapter.find({
 			query: {
 				module: {
 					$in: [
@@ -99,7 +99,7 @@ export default class CrawlParamService extends Service {
 		});
 
 		this.logger.debug(`listParamInDb: ${listParamInDb}`);
-		let id = await Promise.all([
+		const id = await Promise.all([
 			this.findAndUpdate(listParamInDb, 'bank', paramBank.params),
 			this.findAndUpdate(listParamInDb, 'distribution', paramDistribution.params),
 			this.findAndUpdate(listParamInDb, 'gov', paramGov.params),
@@ -111,39 +111,34 @@ export default class CrawlParamService extends Service {
 		this.logger.debug(`id: ${JSON.stringify(id)}`);
 	}
 
-	async findAndUpdate(listParamInDb: any, module: String, params: any) {
+	async findAndUpdate(listParamInDb: any, module: string, params: any) {
 		if (listParamInDb.length > 0) {
-			let item = listParamInDb.find((item: any) => item._doc.module == module);
+			// eslint-disable-next-line no-underscore-dangle
+			const item = listParamInDb.find((param: any) => param._doc.module === module);
 			this.logger.debug(`item: ${item}`);
 			if (item) {
-				await this.adapter.updateById(item._id, { params: params });
+				// eslint-disable-next-line no-underscore-dangle
+				await this.adapter.updateById(item._id, { params });
 			}
 		} else {
-			// let jsonConvert = new JsonConvert();
-			// jsonConvert.operationMode = OperationMode.LOGGING;
-			// const item: any = jsonConvert.deserializeObject(
-			// 	{ module: module, params: params },
-			// 	ParamEntity,
-			// );
-			// this.logger.info(`item: ${item}`);
-			await this.adapter.insert({ _id: null, module: module, params: params });
+			await this.adapter.insert({ _id: null, module, params });
 		}
 	}
 
-	async createParamFromApi(type: String, path: String) {
+	async createParamFromApi(type: string, path: string) {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		return {
-			type: type,
+			type,
 			params: (await this.callApiFromDomain(url, path)).params,
 		};
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.param',
 			{
-				param: `param`,
+				param: 'param',
 			},
 			{
 				removeOnComplete: true,
@@ -164,6 +159,7 @@ export default class CrawlParamService extends Service {
 		this.getQueue('crawl.param').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

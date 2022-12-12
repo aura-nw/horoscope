@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbDailyTxStatisticsMixin } from '../../mixins/dbMixinMongoose';
 import { BlockchainDataRequest, ErrorCode, ErrorMessage, MoleculerDBService } from '../../types';
 import { IDailyTxStatistics } from '../../entities';
@@ -41,16 +41,17 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 	})
 	async getDailyData(ctx: Context<BlockchainDataRequest>) {
 		const params = await this.sanitizeParams(ctx, ctx.params);
-		const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
+		const network = LIST_NETWORK.find((x) => x.chainId === params.chainId);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		let limit = 365;
-		let result: IDailyTxStatistics[] = await this.adapter.lean({
+		const limit = 365;
+		const result: IDailyTxStatistics[] = await this.adapter.lean({
 			sort: '-date',
 			limit,
 		});
-		let extremeData = {
+		/* eslint-disable camelcase */
+		const extremeData = {
 			daily_txs: {
 				max: {
 					amount: result[0].daily_txs,
@@ -71,8 +72,8 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 					date: result[0].date,
 				},
 			},
-		};
-		for (let res of result) {
+		}; /* eslint-enable camelcase */
+		for (const res of result) {
 			if (res.daily_txs > extremeData.daily_txs.max.amount) {
 				extremeData.daily_txs.max.amount = res.daily_txs;
 				extremeData.daily_txs.max.date = res.date;

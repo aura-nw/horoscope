@@ -1,13 +1,17 @@
-import { Config } from '../common';
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/explicit-member-accessibility */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable max-classes-per-file */
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
+import { Config } from '../common';
 import { CustomInfo, ICustomInfo } from './custom-info.entity';
 import { Coin, ICoin } from './coin.entity';
 import { DateConverter } from './converters/date.converter';
 
 export interface IAccountInfo {
 	_id: Types.ObjectId | string | null;
-	address: String;
+	address: string;
 	account_auth: IAccount;
 	account_balances: ICoin[];
 	account_delegations: IDelegationResponse[];
@@ -23,9 +27,9 @@ export interface IAccount {
 }
 
 export interface IDelegation {
-	delegator_address: String;
-	validator_address: String;
-	shares: String;
+	delegator_address: string;
+	validator_address: string;
+	shares: string;
 }
 
 export interface IDelegationResponse {
@@ -34,21 +38,21 @@ export interface IDelegationResponse {
 }
 
 export interface IRedelegationEntry {
-	creation_height: String;
+	creation_height: string;
 	completion_time: Date | null;
-	initial_balance: String;
-	shares_dst: String;
+	initial_balance: string;
+	shares_dst: string;
 }
 
 export interface IRedelegateEntry {
 	redelegation_entry: IRedelegationEntry;
-	balance: String;
+	balance: string;
 }
 
 export interface IRedelegation {
-	delegator_address: String;
-	validator_src_address: String;
-	validator_dst_address: String;
+	delegator_address: string;
+	validator_src_address: string;
+	validator_dst_address: string;
 	entries: IRedelegateEntry[];
 }
 
@@ -58,22 +62,22 @@ export interface IRedelegationResponse {
 }
 
 export interface IUndelegateEntry {
-	creation_height: String;
+	creation_height: string;
 	completion_time: Date | null;
-	initial_balance: String;
-	balance: String;
+	initial_balance: string;
+	balance: string;
 }
 
 export interface IUnbondingResponse {
-	delegator_address: String;
-	validator_address: String;
+	delegator_address: string;
+	validator_address: string;
 	entries: IUndelegateEntry[];
 }
 
 export interface IReward {
-	validator_address: String;
-	amount: String;
-	denom: String;
+	validator_address: string;
+	amount: string;
+	denom: string;
 }
 
 export class Account implements IAccount {
@@ -83,11 +87,11 @@ export class Account implements IAccount {
 
 export class Delegation implements IDelegation {
 	@JsonProperty('delegator_address', String)
-	delegator_address: String = '';
+	delegator_address = '';
 	@JsonProperty('validator_address', String)
-	validator_address: String = '';
+	validator_address = '';
 	@JsonProperty('shares', String)
-	shares: String = '';
+	shares = '';
 }
 
 export class DelegationResponse implements IDelegationResponse {
@@ -99,49 +103,49 @@ export class DelegationResponse implements IDelegationResponse {
 
 export class RedelegationEntry implements IRedelegationEntry {
 	@JsonProperty('creation_height', String)
-	creation_height: String = '';
+	creation_height = '';
 	@JsonProperty('completion_time', DateConverter)
 	completion_time: Date | null = null;
 	@JsonProperty('initial_balance', String)
-	initial_balance: String = '';
+	initial_balance = '';
 	@JsonProperty('shares_dst', String)
-	shares_dst: String = '';
+	shares_dst = '';
 }
 
 export class RedelegateEntry implements IRedelegateEntry {
 	@JsonProperty('redelegation_entry', RedelegationEntry)
 	redelegation_entry = {} as RedelegationEntry;
 	@JsonProperty('balance', String)
-	balance: String = '';
+	balance = '';
 }
 
 export class Redelegation implements IRedelegation {
 	@JsonProperty('delegator_address', String)
-	delegator_address: String = '';
+	delegator_address = '';
 	@JsonProperty('validator_src_address', String)
-	validator_src_address: String = '';
+	validator_src_address = '';
 	@JsonProperty('validator_dst_address', String)
-	validator_dst_address: String = '';
+	validator_dst_address = '';
 	@JsonProperty('entries', [RedelegateEntry], true)
 	entries: RedelegateEntry[] = [];
 }
 
 export class UndelegateEntry implements IUndelegateEntry {
 	@JsonProperty('creation_height', String)
-	creation_height: String = '';
+	creation_height = '';
 	@JsonProperty('completion_time', DateConverter)
 	completion_time: Date | null = null;
 	@JsonProperty('initial_balance', String)
-	initial_balance: String = '';
+	initial_balance = '';
 	@JsonProperty('balance', String)
-	balance: String = '';
+	balance = '';
 }
 
 export class UnbondingResponse implements IUnbondingResponse {
 	@JsonProperty('delegator_address', String)
-	delegator_address: String = '';
+	delegator_address = '';
 	@JsonProperty('validator_address', String)
-	validator_address: String = '';
+	validator_address = '';
 	@JsonProperty('entries', [UndelegateEntry])
 	entries: UndelegateEntry[] = [];
 }
@@ -154,9 +158,9 @@ export class RedelegationResponse implements IRedelegationResponse {
 }
 
 export class Rewards implements IReward {
-	validator_address: String = '';
-	amount: String = '';
-	denom: String = '';
+	validator_address = '';
+	amount = '';
+	denom = '';
 }
 
 @JsonObject('AccountInfo')
@@ -164,7 +168,7 @@ export class AccountInfoEntity implements IAccountInfo {
 	@JsonProperty('_id', String, true)
 	_id = Config.DB_ACCOUNT_INFO.dialect === 'local' ? Types.ObjectId() : null;
 	@JsonProperty('address', String)
-	address: String = '';
+	address = '';
 	@JsonProperty('account_auth', Account, true)
 	account_auth: Account = {} as Account;
 	@JsonProperty('account_balances', [Coin], true)
@@ -184,6 +188,6 @@ export class AccountInfoEntity implements IAccountInfo {
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle
-		return { ...this, _id: this._id && (this._id as Types.ObjectId).toString() };
+		return { ...this, _id: this._id && this._id.toString() };
 	}
 }

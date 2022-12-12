@@ -1,8 +1,8 @@
-// import { VoteEntity } from 'entities/vote.entity';
-import { VoteEntity } from '../../entities/vote.entity';
+/* eslint-disable camelcase */
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
+import { VoteEntity } from '../../entities/vote.entity';
 import { CountVoteParams, CountVoteResponse } from '../../types';
+import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
 
 export default class VoteHandlerService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -43,6 +43,7 @@ export default class VoteHandlerService extends Service {
 							existVote[0].answer = newVote.answer;
 							existVote[0].txhash = newVote.txhash;
 							existVote[0].timestamp = newVote.timestamp;
+							// eslint-disable-next-line no-underscore-dangle
 							result = await this.adapter.updateById(existVote[0]._id, existVote[0]);
 							this.logger.debug(`updatedVote ${JSON.stringify(result)}`);
 						} else {
@@ -66,6 +67,7 @@ export default class VoteHandlerService extends Service {
 							sort: '_id',
 						});
 
+						// eslint-disable-next-line no-underscore-dangle
 						return smallestVote?._id.toString();
 					},
 				},
@@ -78,6 +80,7 @@ export default class VoteHandlerService extends Service {
 							)}`,
 						);
 
+						// eslint-disable-next-line @typescript-eslint/naming-convention
 						const { chain_id, proposal_id } = ctx.params;
 
 						// @ts-ignore
@@ -101,6 +104,7 @@ export default class VoteHandlerService extends Service {
 						const countVoteResult = [];
 						for (const item of data) {
 							const countVoteType: CountVoteResponse = {
+								// eslint-disable-next-line no-underscore-dangle
 								answer: item._id.answer,
 								count: item.count,
 							};

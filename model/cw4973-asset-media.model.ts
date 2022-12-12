@@ -1,12 +1,13 @@
-import { MEDIA_STATUS } from '../common/constant';
+/* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
+import { MEDIA_STATUS } from '../common/constant';
 import { definitionType, ObjectIdNull } from '../types';
 
 export interface ICW4973Media {
 	_id: ObjectIdNull;
-	key: String;
-	media_link: String;
-	status: String;
+	key: string;
+	media_link: string;
+	status: string;
 }
 
 const definition: definitionType<ICW4973Media> = (collection?: string) => ({
@@ -28,12 +29,12 @@ export const cw4973MediaMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema<ICW4973Media>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 		timestamps: {
 			createdAt: true,
 			updatedAt: true,
 		},
-		// strict: true
+		// Strict: true
 	});
 	return models[collection] || model(collection, schema);
 };

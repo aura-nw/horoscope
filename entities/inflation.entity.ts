@@ -1,6 +1,10 @@
-import { Config } from '../common';
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/explicit-member-accessibility */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable max-classes-per-file */
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
+import { Config } from '../common';
 
 export interface IInflation {
 	_id: Types.ObjectId | string | null;
@@ -18,6 +22,6 @@ export class InflationEntity {
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle
-		return { ...this, _id: this._id && (this._id as Types.ObjectId).toString() };
+		return { ...this, _id: this._id && this._id.toString() };
 	}
 }

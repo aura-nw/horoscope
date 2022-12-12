@@ -1,7 +1,6 @@
-import { ObjectID } from 'bson';
 import { ProposalEntity } from 'entities';
-import { AutoMapperUtil } from '../utils/auto-mapper';
 import { ProposalSDKType } from 'osmojs/types/codegen/cosmos/gov/v1beta1/gov';
+import { AutoMapperUtil } from '../utils/auto-mapper';
 export const MAPPER_CONFIG = {
 	PROPOSAL_MAPPING: AutoMapperUtil.createMap()
 		.mapProperties((t: ProposalEntity) => [

@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { IAccountInfo } from 'entities/account-info.entity';
 import { model, models, Types, Schema } from 'mongoose';
 import { definitionType } from 'types';
@@ -98,7 +99,7 @@ export const accountInfoMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema<IAccountInfo>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	// @ts-ignore
 	schema.index({ address: 1, 'custom_info.chain_id': 1 }, { unique: true });
