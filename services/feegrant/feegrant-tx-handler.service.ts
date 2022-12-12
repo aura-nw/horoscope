@@ -34,8 +34,6 @@ export interface IFeegrantData {
 	custom_info: CustomInfo;
 }
 export default class FeegrantTxHandler extends Service {
-	private redisMixin = new RedisMixin().start();
-	private dbTransactionMixin = dbTransactionMixin;
 	private currentBlock = 0
 	private syncCatchUp = false
 	public constructor(public broker: ServiceBroker) {
@@ -124,7 +122,7 @@ export default class FeegrantTxHandler extends Service {
 				'tx_response.timestamp': 1,
 				'tx_response.txhash': 1,
 			},
-		})) as ITransaction[];
+		}) as ITransaction[];
 		// Filter feegrant transactions
 		if (listTx.length > 0) {
 			for (const tx of listTx) {
