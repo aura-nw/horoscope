@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
-import { Service, Context, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import { Service, ServiceBroker } from 'moleculer';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Job } from 'bull';
-import { dbTransactionAggregateMixin } from '../../mixins/dbMixinMongoose';
 import { ITransaction } from 'entities';
-import { QueueConfig } from '../../config/queue';
+import { dbTransactionAggregateMixin } from '../../mixins/dbMixinMongoose';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class TxAggregateService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -16,7 +17,7 @@ export default class TxAggregateService extends Service {
 			name: 'transactionAggregate',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
+				queueService(queueConfig.redis, queueConfig.opts),
 				dbTransactionAggregateMixin,
 			],
 			queues: {
@@ -54,8 +55,10 @@ export default class TxAggregateService extends Service {
 	}
 
 	async handleJob(listTx: ITransaction[]) {
-		let listBulk: any[] = [];
-		if (!listTx) return;
+		const listBulk: any[] = [];
+		if (!listTx) {
+			return;
+		}
 		listTx.map(async (tx: ITransaction) => {
 			listBulk.push({
 				insertOne: {
@@ -63,11 +66,11 @@ export default class TxAggregateService extends Service {
 				},
 			});
 		});
-		let result = await this.adapter.bulkWrite(listBulk);
+		const result = await this.adapter.bulkWrite(listBulk);
 		this.logger.debug(`Update tx: ${listTx.length}`, result);
 	}
 
-	async _start() {
+	public async _start() {
 		this.getQueue('listtx.insert').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
@@ -77,6 +80,7 @@ export default class TxAggregateService extends Service {
 		this.getQueue('listtx.insert').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

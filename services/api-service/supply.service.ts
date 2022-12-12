@@ -2,12 +2,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbSupplyMixin } from '../../mixins/dbMixinMongoose';
-import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
+import { Service, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { DbContextParameters } from 'moleculer-db';
+import { dbSupplyMixin } from '../../mixins/dbMixinMongoose';
+import { MoleculerDBService } from '../../types';
 import { ISupply } from '../../entities';
-import { ChainIdParams } from '../../types/';
 import { LIST_NETWORK } from '../../common/constant';
 
 /**
@@ -32,11 +31,11 @@ export default class SupplyService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<DbContextParameters>) {
 		const params = await this.sanitizeParams(ctx, ctx.params);
-		const network = LIST_NETWORK.find((x) => x.chainId == params.chainid);
+		const network = LIST_NETWORK.find((x) => x.chainId === params.chainid);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		let result = await this.adapter.findOne({});
+		const result = await this.adapter.findOne({});
 		return result;
 	}
 }

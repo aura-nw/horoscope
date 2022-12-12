@@ -1,5 +1,6 @@
-import { IValidator } from '../entities';
+/* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
+import { IValidator } from '../entities';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
@@ -55,10 +56,10 @@ const definition: definitionType<IValidator> = (collection?: string) => ({
 export const validatorMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	// const schema = new Schema({}, { autoIndex: true, strict: false, collection: collection });
+	// Const schema = new Schema({}, { autoIndex: true, strict: false, collection: collection });
 	const schema = new Schema(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	schema.index({ operator_address: 1, 'custom_info.chain_id': 1 });
 	schema.index({ account_address: 1, 'custom_info.chain_id': 1 });

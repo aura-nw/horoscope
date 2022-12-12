@@ -1,39 +1,31 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
-import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
-import { JsonConvert } from 'json2typescript';
-import { IProposal, ProposalEntity } from '../../entities/proposal.entity';
-import { Config } from '../../common';
-import { PROPOSAL_STATUS, URL_TYPE_CONSTANTS } from '../../common/constant';
-import { IProposalResponseFromLCD } from '../../types';
 import { Job } from 'bull';
-import { Utils } from '../../utils/utils';
-import { QueueConfig } from '../../config/queue';
-import {
-	Proposal,
-	ProposalStatus,
-	ProposalSDKType,
-} from 'osmojs/types/codegen/cosmos/gov/v1beta1/gov';
+import { ProposalSDKType } from 'osmojs/types/codegen/cosmos/gov/v1beta1/gov';
 import { QueryProposalsResponseSDKType } from 'osmojs/types/codegen/cosmos/gov/v1beta1/query';
+import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
+import { ProposalEntity } from '../../entities/proposal.entity';
+import { Config } from '../../common';
+import { URL_TYPE_CONSTANTS } from '../../common/constant';
+import { Utils } from '../../utils/utils';
+import { queueConfig } from '../../config/queue';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { MAPPER_CONFIG } from '../../config/mapper';
 import { AutoMapperUtil } from '../../utils/auto-mapper';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 export default class CrawlProposalService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbProposalMixin = dbProposalMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlProposal',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbProposalMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				new CallApiMixin().start(),
+				dbProposalMixin,
 			],
 			queues: {
 				'crawl.proposal': {
@@ -50,8 +42,8 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async handleJob(path: String) {
-		let listProposal: ProposalSDKType[] = [];
+	async handleJob(path: string) {
+		const listProposal: ProposalSDKType[] = [];
 
 		let param = path;
 
@@ -63,12 +55,12 @@ export default class CrawlProposalService extends Service {
 		while (!done) {
 			resultCallApi = await this.callApiFromDomain(url, param);
 			listProposal.push(...resultCallApi.proposals);
-			let key = resultCallApi.pagination?.next_key;
+			const key = resultCallApi.pagination?.next_key;
 			if (resultCallApi?.pagination?.next_key === null) {
 				done = true;
 			} else {
 				if (key) {
-					let text = Buffer.from(key).toString();
+					const text = Buffer.from(key).toString();
 					param = `${path}&pagination.key=${encodeURIComponent(text)}`;
 				}
 			}
@@ -76,7 +68,7 @@ export default class CrawlProposalService extends Service {
 
 		this.logger.info('list proposal is: ', listProposal.length);
 		listProposal.map((proposal) => {
-			let proposalSaveToDB = AutoMapperUtil.mapEntity(
+			const proposalSaveToDB = AutoMapperUtil.mapEntity(
 				MAPPER_CONFIG.PROPOSAL_MAPPING,
 				new ProposalEntity(),
 				proposal,
@@ -85,7 +77,7 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.proposal',
 			{
@@ -111,6 +103,7 @@ export default class CrawlProposalService extends Service {
 		this.getQueue('crawl.proposal').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

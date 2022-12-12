@@ -1,31 +1,33 @@
 import { Service, ServiceSchema } from 'moleculer';
-const axios = require('axios').default;
-const Resilient = require('resilient');
+import axios from 'axios';
 import { Config } from '../../common';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const resilient = require('resilient');
 export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Service> {
-	private schema: Partial<ServiceSchema> & ThisType<Service>;
+	private _schema: Partial<ServiceSchema> & ThisType<Service>;
 	public constructor() {
-		this.schema = {
+		// eslint-disable-next-line no-underscore-dangle
+		this._schema = {
 			settings: {
 				enableLoadBalancer: Config.ENABLE_LOADBALANCER,
 			},
 			methods: {
-				async callApiFromDomain(domain: string[], path: string, retry: Number = Infinity) {
+				async callApiFromDomain(domain: string[], path: string, retry = Infinity) {
 					let callApiClient = null;
 					if (this.settings.enableLoadBalancer === 'false') {
-						let axiosClient = axios.create({
+						const axiosClient = axios.create({
 							baseURL: domain[0],
 						});
 						callApiClient = axiosClient;
 					} else {
-						let resilientClient = Resilient({
-							service: { basePath: '/', retry: retry },
+						const resilientClient = resilient({
+							service: { basePath: '/', retry },
 						});
 						resilientClient.setServers(domain);
 						callApiClient = resilientClient;
 					}
 					try {
-						let result = await callApiClient.get(path);
+						const result = await callApiClient.get(path);
 						if (result.data) {
 							return result.data;
 						} else {
@@ -38,11 +40,11 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 				},
 
 				async callApiWithAxios(domain: string, path: string) {
-					let callApiClient = axios.create({
+					const callApiClient = axios.create({
 						baseURL: domain,
 					});
 					try {
-						let result = await callApiClient.get(path);
+						const result = await callApiClient.get(path);
 						if (result.data) {
 							return result.data;
 						} else {
@@ -58,7 +60,8 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 	}
 
 	public start() {
-		return this.schema;
+		// eslint-disable-next-line no-underscore-dangle
+		return this._schema;
 	}
 }
 

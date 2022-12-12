@@ -1,18 +1,17 @@
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
-import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
-import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
+import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
+import { Config } from '../../common';
+import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
-import { QueueConfig } from '../../config/queue';
-const QueueService = require('moleculer-bull');
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlAccountClaimedRewardsService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbAccountInfoMixin = dbAccountInfoMixin;
-	private listMessageAction = [
+	private _listMessageAction = [
 		MSG_TYPE.MSG_DELEGATE,
 		MSG_TYPE.MSG_REDELEGATE,
 		MSG_TYPE.MSG_UNDELEGATE,
@@ -26,9 +25,9 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			name: 'crawlAccountClaimedRewards',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.dbAccountInfoMixin,
-				this.callApiMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				dbAccountInfoMixin,
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'crawl.account-claimed-rewards': {
@@ -45,31 +44,29 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			events: {
 				'account-info.upsert-claimed-rewards': {
 					handler: (ctx: Context<CrawlAccountClaimedRewardsService>) => {
-						this.logger.debug(`Crawl account total claimed rewards`);
-						const listTx = ctx.params.listTx.filter((tx: ITransaction) => {
-							function checkValidClaimRewardsTx(tx: ITransaction) {
-								const listMsg = tx.tx.body.messages;
-								const listMsgType = listMsg.map((msg: any) => {
-									return msg['@type'];
-								});
-								function checkEqualTypeClaimRewards(type: string) {
-									if (
-										type === MSG_TYPE.MSG_DELEGATE ||
-										type === MSG_TYPE.MSG_REDELEGATE ||
-										type === MSG_TYPE.MSG_UNDELEGATE ||
-										type === MSG_TYPE.MSG_WITHDRAW_REWARDS ||
-										type === MSG_TYPE.MSG_EXEC
-									) {
-										return true;
-									}
-									return false;
-								}
-								let result = listMsgType.find(checkEqualTypeClaimRewards);
-								if (result) {
+						this.logger.debug('Crawl account total claimed rewards');
+						const checkValidClaimRewardsTx = (tx: ITransaction) => {
+							const listMsg = tx.tx.body.messages;
+							const listMsgType = listMsg.map((msg: any) => msg['@type']);
+							const checkEqualTypeClaimRewards = (type: string) => {
+								if (
+									type === MSG_TYPE.MSG_DELEGATE ||
+									type === MSG_TYPE.MSG_REDELEGATE ||
+									type === MSG_TYPE.MSG_UNDELEGATE ||
+									type === MSG_TYPE.MSG_WITHDRAW_REWARDS ||
+									type === MSG_TYPE.MSG_EXEC
+								) {
 									return true;
 								}
 								return false;
+							};
+							const result = listMsgType.find(checkEqualTypeClaimRewards);
+							if (result) {
+								return true;
 							}
+							return false;
+						};
+						const listTx = ctx.params.listTx.filter((tx: ITransaction) => {
 							if (checkValidClaimRewardsTx(tx)) {
 								return true;
 							}
@@ -95,21 +92,24 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		});
 	}
 
-	async handleJob(listTx: any[], chainId: string) {
+	public async handleJob(listTx: any[], chainId: string) {
 		this.logger.info(`Handle Txs: ${JSON.stringify(listTx)}`);
 		if (listTx.length > 0) {
-			let listAccounts: AccountInfoEntity[] = [],
-				listUpdateQueries: any[] = [];
+			const listAccounts: AccountInfoEntity[] = [];
+			const listUpdateQueries: any[] = [];
 			chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 			const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-			for (let tx of listTx) {
-				if (tx.tx_response.code !== 0) continue;
+			for (const tx of listTx) {
+				if (tx.tx_response.code !== 0) {
+					continue;
+				}
 
 				await Promise.all(
 					tx.tx.body.messages
 						.filter(
 							(msg: any) =>
-								this.listMessageAction.includes(msg['@type']) &&
+								// eslint-disable-next-line no-underscore-dangle
+								this._listMessageAction.includes(msg['@type']) &&
 								tx.tx_response.code === 0,
 						)
 						.map(async (msg: any, index: any) => {
@@ -119,25 +119,29 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 								if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
 									await Promise.all(
 										msg.msgs.map(async (m: any) => {
-											let insertAcc = await this.handleStakeRewards(
+											const insertAcc = await this.handleStakeRewards(
 												m,
 												index,
 												tx.tx_response.logs,
 												userAddress,
 												chainId,
 											);
-											if (insertAcc) listAccounts.push(insertAcc);
+											if (insertAcc) {
+												listAccounts.push(insertAcc);
+											}
 										}),
 									);
 								} else {
-									let insertAcc = await this.handleStakeRewards(
+									const insertAcc = await this.handleStakeRewards(
 										msg,
 										index,
 										tx.tx_response.logs,
 										userAddress,
 										chainId,
 									);
-									if (insertAcc) listAccounts.push(insertAcc);
+									if (insertAcc) {
+										listAccounts.push(insertAcc);
+									}
 								}
 							} catch (error) {
 								this.logger.error(error);
@@ -149,13 +153,14 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 
 			try {
 				listAccounts.map((element) => {
-					if (element._id)
+					/* eslint-disable no-underscore-dangle, camelcase */
+					if (element._id) {
 						listUpdateQueries.push(
 							this.adapter.updateById(element._id, {
 								$set: { account_claimed_rewards: element.account_claimed_rewards },
 							}),
 						);
-					else {
+					} else {
 						const item: AccountInfoEntity = new JsonConvert().deserializeObject(
 							element,
 							AccountInfoEntity,
@@ -166,6 +171,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						};
 						listUpdateQueries.push(this.adapter.insert(item));
 					}
+					/* eslint-enable no-underscore-dangle, camelcase */
 				});
 				await Promise.all(listUpdateQueries);
 			} catch (error) {
@@ -175,7 +181,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		}
 	}
 
-	async handleStakeRewards(
+	public async handleStakeRewards(
 		msg: any,
 		index: any,
 		logs: any,
@@ -194,6 +200,8 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			this.logger.error(error);
 			throw error;
 		}
+
+		/* eslint-disable no-underscore-dangle, camelcase */
 		if (!account) {
 			account = {} as AccountInfoEntity;
 			account.address = userAddress;
@@ -204,15 +212,19 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			case MSG_TYPE.MSG_DELEGATE:
 				const validatorAddress = msg.validator_address;
 				let amount = '0';
-				let delegateReward = logs[index].events.find((x: any) => x.type === CONST_CHAR.WITHDRAW_REWARDS);
-				if (delegateReward)
+				const delegateReward = logs[index].events.find(
+					(x: any) => x.type === CONST_CHAR.WITHDRAW_REWARDS,
+				);
+				if (delegateReward) {
 					try {
-						amount = delegateReward.attributes.find((x: any) => x.key === CONST_CHAR.AMOUNT)
+						amount = delegateReward.attributes
+							.find((x: any) => x.key === CONST_CHAR.AMOUNT)
 							.value.match(/\d+/g)[0];
 					} catch (error) {
 						amount = '0';
 					}
-				let reward = account.account_claimed_rewards.find(
+				}
+				const reward = account.account_claimed_rewards.find(
 					(x: any) => x.validator_address === validatorAddress,
 				);
 				if (reward) {
@@ -230,24 +242,30 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				}
 				break;
 			case MSG_TYPE.MSG_REDELEGATE:
-				let redelegateReward = logs[index].events.find((x: any) => x.type === CONST_CHAR.WITHDRAW_REWARDS);
+				const redelegateReward = logs[index].events.find(
+					(x: any) => x.type === CONST_CHAR.WITHDRAW_REWARDS,
+				);
 				if (redelegateReward) {
 					let redelegateAmount = '0';
 					try {
-						redelegateAmount = redelegateReward.attributes.find((x: any) => x.key === CONST_CHAR.AMOUNT)
+						redelegateAmount = redelegateReward.attributes
+							.find((x: any) => x.key === CONST_CHAR.AMOUNT)
 							.value.match(/\d+/g)[0];
 					} catch (error) {
 						redelegateAmount = '0';
 					}
-					let redelegateVal = redelegateReward.attributes.find((x: any) => x.key === CONST_CHAR.VALIDATOR).value;
-					let srcReward = account.account_claimed_rewards.find(
+					const redelegateVal = redelegateReward.attributes.find(
+						(x: any) => x.key === CONST_CHAR.VALIDATOR,
+					).value;
+					const srcReward = account.account_claimed_rewards.find(
 						(x: any) => x.validator_address === redelegateVal,
 					);
 					if (srcReward) {
 						account.account_claimed_rewards.find(
 							(x: any) => x.validator_address === redelegateVal,
 						)!.amount = (
-							parseInt(srcReward.amount.toString(), 10) + parseInt(redelegateAmount, 10)
+							parseInt(srcReward.amount.toString(), 10) +
+							parseInt(redelegateAmount, 10)
 						).toString();
 					} else {
 						account.account_claimed_rewards.push({
@@ -258,16 +276,21 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 					}
 
 					if (redelegateReward.attributes.length > 2) {
-						let redelegateAmount = redelegateReward.attributes[2].value.match(/\d+/g)[0];
-						let redelegateVal = redelegateReward.attributes[3].value;
-						let srcReward = account.account_claimed_rewards.find(
+						// eslint-disable-next-line no-shadow
+						const redelegateAmount =
+							redelegateReward.attributes[2].value.match(/\d+/g)[0];
+						// eslint-disable-next-line no-shadow
+						const redelegateVal = redelegateReward.attributes[3].value;
+						// eslint-disable-next-line no-shadow
+						const srcReward = account.account_claimed_rewards.find(
 							(x: any) => x.validator_address === redelegateVal,
 						);
 						if (srcReward) {
 							account.account_claimed_rewards.find(
 								(x: any) => x.validator_address === redelegateVal,
 							)!.amount = (
-								parseInt(srcReward.amount.toString(), 10) + parseInt(redelegateAmount, 10)
+								parseInt(srcReward.amount.toString(), 10) +
+								parseInt(redelegateAmount, 10)
 							).toString();
 						} else {
 							account.account_claimed_rewards.push({
@@ -282,22 +305,27 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			case MSG_TYPE.MSG_UNDELEGATE:
 				const undelegateValAddress = msg.validator_address;
 				let undelegateAmount = '0';
-				let undelegateReward = logs[index].events.find((x: any) => x.type === CONST_CHAR.WITHDRAW_REWARDS);
-				if (undelegateReward)
+				const undelegateReward = logs[index].events.find(
+					(x: any) => x.type === CONST_CHAR.WITHDRAW_REWARDS,
+				);
+				if (undelegateReward) {
 					try {
-						undelegateAmount = delegateReward.attributes.find((x: any) => x.key === CONST_CHAR.AMOUNT)
+						undelegateAmount = delegateReward.attributes
+							.find((x: any) => x.key === CONST_CHAR.AMOUNT)
 							.value.match(/\d+/g)[0];
 					} catch (error) {
-						undelegateAmount = '0'
+						undelegateAmount = '0';
 					}
-				let undeleReward = account.account_claimed_rewards.find(
+				}
+				const undeleReward = account.account_claimed_rewards.find(
 					(x: any) => x.validator_address === undelegateValAddress,
 				);
 				if (undeleReward) {
 					account.account_claimed_rewards.find(
 						(x: any) => x.validator_address === undelegateValAddress,
 					)!.amount = (
-						parseInt(undeleReward.amount.toString(), 10) + parseInt(undelegateAmount, 10)
+						parseInt(undeleReward.amount.toString(), 10) +
+						parseInt(undelegateAmount, 10)
 					).toString();
 				} else {
 					account.account_claimed_rewards.push({
@@ -310,15 +338,19 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 			case MSG_TYPE.MSG_WITHDRAW_REWARDS:
 				const log = logs[index];
 				let amountWithdraw = '0';
-				let claimedRewardWithdraw = log.events.find((event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS);
-				if (claimedRewardWithdraw)
+				const claimedRewardWithdraw = log.events.find(
+					(event: any) => event.type === CONST_CHAR.WITHDRAW_REWARDS,
+				);
+				if (claimedRewardWithdraw) {
 					try {
-						amountWithdraw = claimedRewardWithdraw.attributes.find((x: any) => x.key === CONST_CHAR.AMOUNT)
+						amountWithdraw = claimedRewardWithdraw.attributes
+							.find((x: any) => x.key === CONST_CHAR.AMOUNT)
 							.value.match(/\d+/g)[0];
 					} catch (error) {
-						amountWithdraw = '0'
+						amountWithdraw = '0';
 					}
-				let rewardWithdraw = account.account_claimed_rewards.find(
+				}
+				const rewardWithdraw = account.account_claimed_rewards.find(
 					(x: any) => x.validator_address === msg.validator_address,
 				);
 				if (rewardWithdraw) {
@@ -337,10 +369,11 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				}
 				break;
 		}
+		/* eslint-enable no-underscore-dangle, camelcase */
 		return account;
 	}
 
-	async _start() {
+	public async _start() {
 		this.getQueue('crawl.account-claimed-rewards').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
@@ -350,6 +383,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		this.getQueue('crawl.account-claimed-rewards').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

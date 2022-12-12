@@ -2,33 +2,31 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
+import { Job } from 'bull';
+import { JsonConvert } from 'json2typescript';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbSupplyMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { ISupplyResponseFromLCD } from '../../types';
-import { JsonConvert } from 'json2typescript';
 import { SupplyEntity } from '../../entities';
 import { Coin } from '../../entities/coin.entity';
-import { QueueConfig } from '../../config/queue';
-const QueueService = require('moleculer-bull');
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlSupplyService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbSupplyMixin = dbSupplyMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlSupply',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbSupplyMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				dbSupplyMixin,
+				new CallApiMixin().start(),
 			],
 			queues: {
 				'crawl.supply': {
@@ -45,13 +43,13 @@ export default class CrawlSupplyService extends Service {
 		});
 	}
 
-	async handleJob(path: String) {
+	async handleJob(path: string) {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		let urlToCall = `${path}`;
 		let done = false;
 		let resultCallApi: ISupplyResponseFromLCD;
-		let listSupplies: Coin[] = [];
+		const listSupplies: Coin[] = [];
 		while (!done) {
 			resultCallApi = await this.callApiFromDomain(url, urlToCall);
 
@@ -65,16 +63,18 @@ export default class CrawlSupplyService extends Service {
 			}
 		}
 
-		let crawlSupply = {} as SupplyEntity;
+		const crawlSupply = {} as SupplyEntity;
 		crawlSupply.supply = listSupplies;
 
-		let foundSupply: SupplyEntity = await this.adapter.findOne({});
+		const foundSupply: SupplyEntity = await this.adapter.findOne({});
 		try {
 			if (foundSupply) {
+				// eslint-disable-next-line no-underscore-dangle
 				crawlSupply._id = foundSupply._id;
+				// eslint-disable-next-line no-underscore-dangle
 				await this.adapter.updateById(foundSupply._id, crawlSupply);
 			} else {
-				let jsonConvert = new JsonConvert();
+				const jsonConvert = new JsonConvert();
 				const item: SupplyEntity = jsonConvert.deserializeObject(crawlSupply, SupplyEntity);
 				await this.adapter.insert(item);
 			}
@@ -83,7 +83,7 @@ export default class CrawlSupplyService extends Service {
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.supply',
 			{
@@ -109,6 +109,7 @@ export default class CrawlSupplyService extends Service {
 		this.getQueue('crawl.supply').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

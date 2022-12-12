@@ -1,7 +1,11 @@
-import { Config } from '../common';
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/explicit-member-accessibility */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable max-classes-per-file */
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { ObjectIdNull } from 'types';
 import { Types } from 'mongoose';
+import { Config } from '../common';
 import { NumericConverter } from './converters/numeric.converter';
 import { DateConverter } from './converters/date.converter';
 
@@ -137,7 +141,7 @@ export class BlockDataEvidence implements IEvidenceDetail {
 @JsonObject('Signatures')
 export class Signature implements ISignature {
 	@JsonProperty('block_id_flag', Number)
-	block_id_flag: number = 0;
+	block_id_flag = 0;
 	@JsonProperty('validator_address', String)
 	validator_address: String = '';
 	@JsonProperty('timestamp', String)
@@ -151,7 +155,7 @@ export class BlockLastCommit implements ILastCommit {
 	@JsonProperty('height', NumericConverter)
 	height: Number = 0;
 	@JsonProperty('round', Number)
-	round: number = 0;
+	round = 0;
 	@JsonProperty('block_id', BlockId)
 	block_id: BlockId | null = null;
 	@JsonProperty('signatures', [Signature])
@@ -184,6 +188,6 @@ export class BlockEntity implements IBlock {
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle
-		return { ...this, _id: this._id && (this._id as Types.ObjectId).toString() };
+		return { ...this, _id: this._id && this._id.toString() };
 	}
 }

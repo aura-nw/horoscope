@@ -11,11 +11,7 @@ module.exports = {
 	},
 	ignorePatterns: ['test/*'],
 	parser: '@typescript-eslint/parser',
-	extends: [
-		'plugin:@typescript-eslint/recommended',
-		'prettier/@typescript-eslint',
-		'plugin:prettier/recommended',
-	],
+	extends: ['plugin:@typescript-eslint/recommended', 'prettier', 'plugin:prettier/recommended'],
 	parserOptions: {
 		sourceType: 'module',
 		ecmaVersion: '2018',
@@ -82,7 +78,15 @@ module.exports = {
 				},
 			},
 		],
-		'@typescript-eslint/member-ordering': 'error',
+		'@typescript-eslint/member-ordering': [
+			'error',
+			{
+				default: {
+					memberTypes: [],
+					order: 'alphabetically',
+				},
+			},
+		],
 		'@typescript-eslint/no-empty-function': 'error',
 		'@typescript-eslint/no-empty-interface': 'error',
 		'@typescript-eslint/no-misused-new': 'error',
@@ -91,6 +95,14 @@ module.exports = {
 		'@typescript-eslint/prefer-for-of': 'error',
 		'@typescript-eslint/prefer-function-type': 'error',
 		'@typescript-eslint/prefer-namespace-keyword': 'error',
+		'@typescript-eslint/no-this-alias': [
+			'error',
+			{
+				allowDestructuring: true, // Allow `const { props, state } = this`; false by default
+				allowedNames: ['vm'], // Allow `const vm= this`; `[]` by default
+			},
+		],
+		'@typescript-eslint/ban-ts-comment': 'off',
 		'@typescript-eslint/quotes': [
 			'error',
 			'single',
@@ -171,7 +183,7 @@ module.exports = {
 				ignoreReadBeforeAssign: true,
 			},
 		],
-		'quote-props': ['error', 'consistent-as-needed'],
+		// 'quote-props': ['error', 'consistent-as-needed'],
 		// eslint-disable-next-line quote-props
 		radix: 'error',
 		'space-before-function-paren': [
@@ -185,5 +197,6 @@ module.exports = {
 		'spaced-comment': 'error',
 		'use-isnan': 'error',
 		'no-mixed-spaces-and-tabs': ['warn'],
+		'prettier/prettier': ['error'],
 	},
 };

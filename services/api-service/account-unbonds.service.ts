@@ -2,20 +2,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { Config } from '../../common';
-import {
-	ErrorCode,
-	ErrorMessage,
-	GetAccountUnbondRequest,
-	getActionConfig,
-	MoleculerDBService,
-	RestOptions,
-} from '../../types';
-import { DbContextParameters } from 'moleculer-db';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
+import { IAccountInfo, ValidatorEntity } from 'entities';
+import { ErrorCode, ErrorMessage, GetAccountUnbondRequest, MoleculerDBService } from '../../types';
 import { LIST_NETWORK } from '../../common/constant';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
-import { IAccountInfo, ValidatorEntity } from 'entities';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -44,18 +35,17 @@ export default class AccountUnbondsService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 		},
 	})
 	async getByAddress(ctx: Context<GetAccountUnbondRequest, Record<string, unknown>>) {
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainid);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		let [result, validators]: [any, any] = await Promise.all([
+		/* eslint-disable camelcase */
+		const [result, validators]: [any, any] = await Promise.all([
 			this.adapter.lean({
 				query: {
 					address: ctx.params.address,
@@ -66,9 +56,9 @@ export default class AccountUnbondsService extends MoleculerDBService<
 				query: { 'custom_info.chain_id': ctx.params.chainid },
 			}),
 		]);
-		let data = Object.assign({}, result[0]);
+		const data = Object.assign({}, result[0]);
 		data.account_unbonding.map((unbond: any) => {
-			let validator = validators.find(
+			const validator = validators.find(
 				(val: ValidatorEntity) => val.operator_address === unbond.validator_address,
 			);
 			unbond.validator_description = {
@@ -76,7 +66,9 @@ export default class AccountUnbondsService extends MoleculerDBService<
 				jailed: validator.jailed,
 			};
 		});
-		let response = {
+
+		/* eslint-enable camelcase */
+		const response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
 			data,

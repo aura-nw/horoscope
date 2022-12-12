@@ -2,13 +2,14 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { IncomingMessage, ServerResponse } from 'http';
-import moleculer, { Context, Errors } from 'moleculer';
+import { ServerResponse } from 'http';
+import moleculer from 'moleculer';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import ApiGateway from 'moleculer-web';
-import { Service, Method, Post } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import pick from 'lodash/pick';
+import swStats from 'swagger-stats';
 import { openAPIMixin } from '../../mixins/openapi/openapi.mixin';
 import { Config } from '../../common';
 import {
@@ -20,22 +21,20 @@ import {
 	// UserTokenParams,
 	// UserAuthMeta,
 } from '../../types';
-import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
 import { LIST_NETWORK } from '../../common/constant';
-const BullBoard = require('../../mixins/bullBoard/bull-board');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const bullBoard = require('../../mixins/bullBoard/bull-board');
 
-const tlBucket = 60000;
-// const swMiddleware = swStats.getMiddleware({
-// 	name: 'swagger-stats',
-// 	timelineBucketDuration: tlBucket,
-// 	uriPath: '/dashboard',
-// 	swaggerSpec: swaggerSpec,
+// Const tlBucket = 60000;
+// Const swMiddleware = swStats.getMiddleware({
+// 	Name: 'swagger-stats',
+// 	TimelineBucketDuration: tlBucket,
+// 	UriPath: '/dashboard',
+// 	SwaggerSpec: swaggerSpec,
 // });
 
-const listLCD = LIST_NETWORK.map((e) => {
-	return e.LCD;
-}).flat();
+const listLCD = LIST_NETWORK.map((e) => e.LCD).flat();
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -44,7 +43,7 @@ const listLCD = LIST_NETWORK.map((e) => {
  */
 @Service({
 	name: 'api',
-	mixins: [ApiGateway, openAPIMixin(), BullBoard],
+	mixins: [ApiGateway, openAPIMixin(), bullBoard],
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	settings: {
 		port: Config.PORT || 3000,
@@ -71,21 +70,21 @@ const listLCD = LIST_NETWORK.map((e) => {
 		],
 		routes: [
 			// {
-			// 	path: '/auth',
-			// 	authorization: false,
-			// 	authentication: false,
-			// 	whitelist: ['v1.user.login'],
-			// 	aliases: {
+			// 	Path: '/auth',
+			// 	Authorization: false,
+			// 	Authentication: false,
+			// 	Whitelist: ['v1.user.login'],
+			// 	Aliases: {
 			// 		'POST /login': 'v1.user.login',
 			// 	},
 			// },
 			// {
-			// 	path: '/admin',
-			// 	whitelist: ['$node.*', 'api.listAliases'],
-			// 	authorization: true,
-			// 	authentication: true,
+			// 	Path: '/admin',
+			// 	Whitelist: ['$node.*', 'api.listAliases'],
+			// 	Authorization: true,
+			// 	Authentication: true,
 			// 	// roles: [UserRole.SUPERADMIN],
-			// 	aliases: {
+			// 	Aliases: {
 			// 		'GET /health': '$node.health',
 			// 		'GET /services': '$node.services',
 			// 		'GET /actions': '$node.actions',
@@ -142,7 +141,7 @@ const listLCD = LIST_NETWORK.map((e) => {
 					'v1.daily-cw20-holder.getCw20HolderChangePercent',
 				],
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
-				// use: [swMiddleware],
+				// Use: [swMiddleware],
 				// Enable/disable parameter merging method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Disable-merging
 				mergeParams: true,
 
@@ -157,17 +156,17 @@ const listLCD = LIST_NETWORK.map((e) => {
 				autoAliases: true,
 
 				aliases: {
-					'GET /'(req: any, res: any) {
-						// console.log(swStats.getPromClient());
+					'GET /': (req: any, res: any) => {
+						// Console.log(swStats.getPromClient());
 						res.statusCode = 302;
 						res.setHeader('Location', '/api/dashboard/');
 						return res.end();
 					},
-					'GET /stats'(req: any, res: any) {
+					'GET /stats': (req: any, res: any) => {
 						res.setHeader('Content-Type', 'application/json');
 						return res.end(JSON.stringify(swStats.getCoreStats()));
 					},
-					'GET /metrics'(req: any, res: any) {
+					'GET /metrics': (req: any, res: any) => {
 						res.setHeader('Content-Type', 'application/json');
 						return res.end(JSON.stringify(swStats.getPromStats()));
 					},

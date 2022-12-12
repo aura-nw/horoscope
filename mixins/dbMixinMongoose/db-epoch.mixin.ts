@@ -1,8 +1,8 @@
 'use strict';
 
 import { Config } from '../../common';
-import { DbBaseMixin } from './db-base.mixin';
 import { epochMongoModel } from '../../model/osmosis/epoch.model';
+import { DbBaseMixin } from './db-base.mixin';
 
 const dbInfo = Config.DB_EPOCH;
 

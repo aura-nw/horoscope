@@ -1,6 +1,10 @@
-import { Config } from '../common';
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/explicit-member-accessibility */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable max-classes-per-file */
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
+import { Config } from '../common';
 import { Coin, ICoin } from './coin.entity';
 import { NumericConverter } from './converters/numeric.converter';
 import { DateConverter } from './converters/date.converter';
@@ -232,38 +236,38 @@ export class MsgGrant {
 	grant: Grant = new Grant();
 }
 // @JsonObject('Body')
-// export class Body {
+// Export class Body {
 // 	@JsonProperty('memo', String, true)
-// 	memo: String = '';
+// 	Memo: String = '';
 // 	@JsonProperty('timeout_height', String, true)
-// 	timeout_height: String = '';
+// 	Timeout_height: String = '';
 // 	@JsonProperty('extension_options', [String], true)
-// 	extension_options: String[] = [];
+// 	Extension_options: String[] = [];
 // 	@JsonProperty('non_critical_extension_options', [String], true)
-// 	non_critical_extension_options: String[] = [];
+// 	Non_critical_extension_options: String[] = [];
 // }
 
 // @JsonObject('AuthInfo')
-// export class AuthInfo {
+// Export class AuthInfo {
 // 	@JsonProperty('signed_infos', [String], true)
-// 	signed_infos: String[] = [];
+// 	Signed_infos: String[] = [];
 // 	@JsonProperty('amount', [Coin], true)
-// 	amount: Coin[] = [];
+// 	Amount: Coin[] = [];
 // 	@JsonProperty('gas_limit', String, true)
-// 	gas_limit: string = '';
+// 	Gas_limit: string = '';
 // 	@JsonProperty('payer', String, true)
-// 	payer: string = '';
+// 	Payer: string = '';
 // 	@JsonProperty('granter', String, true)
-// 	granter: string = '';
+// 	Granter: string = '';
 // }
 
-// export class Attribute {
+// Export class Attribute {
 // 	@JsonProperty('key', String)
-// 	key: string = '';
+// 	Key: string = '';
 // 	@JsonProperty('value', String)
-// 	value: string = '';
+// 	Value: string = '';
 // 	@JsonProperty('index', Boolean)
-// 	index: Boolean = false;
+// 	Index: Boolean = false;
 // }
 export class TxResult {
 	@JsonProperty('code', Number)
@@ -299,6 +303,6 @@ export class TransactionEntity implements ITransaction {
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {
 		// eslint-disable-next-line no-underscore-dangle
-		return { ...this, _id: this._id && (this._id as Types.ObjectId).toString() };
+		return { ...this, _id: this._id && this._id.toString() };
 	}
 }

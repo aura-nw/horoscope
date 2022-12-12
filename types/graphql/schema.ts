@@ -1,6 +1,9 @@
-import { Config } from '../../common';
+/* eslint-disable camelcase */
 import { Kind } from 'graphql';
 import { gql } from 'moleculer-apollo-server';
+import { GraphQLScalarType } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { Config } from '../../common';
 import {
 	CHAIN_ID_DEV,
 	CHAIN_ID_PROD,
@@ -14,23 +17,16 @@ import {
 	prismaOsmosisProd,
 	prismaSerenityStaging,
 	prismaSerenityTestnet,
-	prismaThetaTestnet
+	prismaThetaTestnet,
 } from '../../utils/context';
-const { GraphQLScalarType } = require('graphql');
-const GraphQLJSON = require('graphql-type-json');
 
-export const TypeDefs = gql`
+export const TYPE_DEFS = gql`
 	type Query {
-		accountInfo(
-			address: String,
-			chain_id: String,
-			skip: Int,
-			take: Int
-		): [AccountInfo]
+		accountInfo(address: String, chain_id: String, skip: Int, take: Int): [AccountInfo]
 		accountStatistics(
-			address: String,
-			chain_id: String,
-			skip: Int,
+			address: String
+			chain_id: String
+			skip: Int
 			take: Int
 		): [AccountStatistics]
 		block(hash: String, chain_id: String, skip: Int, take: Int): [Block]
@@ -60,25 +56,19 @@ export const TypeDefs = gql`
 			take: Int
 		): [CW721Asset]
 		dailyCW20Holder(
-			code_id: Int,
-			contract_address: String,
-			chain_id: String,
-			skip: Int,
+			code_id: Int
+			contract_address: String
+			chain_id: String
+			skip: Int
 			take: Int
 		): [DailyCW20Holder]
 		dailyTxStatistics(
-			date: DateTime,
-			chain_id: String,
-			skip: Int,
+			date: DateTime
+			chain_id: String
+			skip: Int
 			take: Int
 		): [DailyTxStatistics]
-		delayJob(
-			address: String,
-			type: String,
-			chain_id: String,
-			skip: Int,
-			take: Int
-		): [DelayJob]
+		delayJob(address: String, type: String, chain_id: String, skip: Int, take: Int): [DelayJob]
 		ibcDenom(hash: String, chain_id: String): [IBCDenom]
 		inflation(chain_id: String): [Inflation]
 		param(module: String, chain_id: String, skip: Int, take: Int): [Param]
@@ -91,14 +81,14 @@ export const TypeDefs = gql`
 			take: Int
 		): [Proposal]
 		smartContracts(
-			code_id: Int,
-			contract_hash: String,
-			creator_address: String,
-			tx_hash: String,
-			height: Int,
-			contract_name: String,
-			chain_id: String,
-			skip: Int,
+			code_id: Int
+			contract_hash: String
+			creator_address: String
+			tx_hash: String
+			height: Int
+			contract_name: String
+			chain_id: String
+			skip: Int
 			take: Int
 		): [SmartContracts]
 		supply(chain_id: String): [Supply]
@@ -118,12 +108,12 @@ export const TypeDefs = gql`
 			take: Int
 		): [Validator]
 		vote(
-			voter_address: String,
-			proposal_id: Int,
-			answer: String,
-			tx_hash: String,
-			chain_id: String,
-			skip: Int,
+			voter_address: String
+			proposal_id: Int
+			answer: String
+			tx_hash: String
+			chain_id: String
+			skip: Int
 			take: Int
 		): [Vote]
 	}
@@ -226,30 +216,30 @@ export const TypeDefs = gql`
 	# Block type
 	type BlockIdPart {
 		total: Int
-		hash:  String
+		hash: String
 	}
 	type BlockId {
-		hash:  String
+		hash: String
 		parts: BlockIdPart
 	}
 	type BlockHeaderVersion {
 		block: Int
 	}
 	type BlockHeader {
-		version:              BlockHeaderVersion
-		chain_id:             String
-		height:               Int
-		time:                 DateTime
-		last_block_id:        BlockId
-		last_commit_hash:     String
-		data_hash:            String
-		validators_hash:      String
+		version: BlockHeaderVersion
+		chain_id: String
+		height: Int
+		time: DateTime
+		last_block_id: BlockId
+		last_commit_hash: String
+		data_hash: String
+		validators_hash: String
 		next_validators_hash: String
-		consensus_hash:       String
-		app_hash:             String
-		last_results_hash:    String
-		evidence_hash:        String
-		proposer_address:     String
+		consensus_hash: String
+		app_hash: String
+		last_results_hash: String
+		evidence_hash: String
+		proposer_address: String
 	}
 	type BlockData {
 		txs: [String]
@@ -258,27 +248,27 @@ export const TypeDefs = gql`
 		evidence: [Json]
 	}
 	type Signature {
-		block_id_flag:     Int
+		block_id_flag: Int
 		validator_address: String
-		timestamp:         String
-		signature:         String
+		timestamp: String
+		signature: String
 	}
 	type BlockLastCommit {
-		height:     Int
-		round:      Int
-		block_id:   BlockId
+		height: Int
+		round: Int
+		block_id: BlockId
 		signatures: [Signature]
 	}
 	type BlockDetail {
-		header:      BlockHeader
-		data:        BlockData
-		evidence:    BlockDataEvidence
+		header: BlockHeader
+		data: BlockData
+		evidence: BlockDataEvidence
 		last_commit: BlockLastCommit
 	}
 	type Block {
-		id:          String
-		block_id:    BlockId
-		block:       BlockDetail
+		id: String
+		block_id: BlockId
+		block: BlockDetail
 		custom_info: CustomInfo
 	}
 
@@ -586,20 +576,18 @@ export const TypeDefs = gql`
 	}
 `;
 
-export const Resolvers = {
+export const RESOLVERS = {
 	DateTime: new GraphQLScalarType({
 		name: 'DateTime',
 		description: 'DateTime custom scalar type',
-		parseValue(value: any) {
-			return new Date(value);
-		},
-		parseLiteral(ast: any) {
+		parseValue: (value: any) => new Date(value),
+		parseLiteral: (ast: any) => {
 			if (ast.kind === Kind.INT) {
 				return parseInt(ast.value, 10);
 			}
 			return null;
 		},
-		serialize(value: any) {
+		serialize: (value: any) => {
 			const date = new Date(value);
 			return date.toISOString();
 		},
@@ -610,8 +598,12 @@ export const Resolvers = {
 			console.log(`Query accountInfo with args ${JSON.stringify(args)}`);
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.address !== '' && args.address !== undefined) where.address = args.address;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.address !== '' && args.address !== undefined) {
+				where.address = args.address;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.account_info.findMany({
@@ -623,8 +615,12 @@ export const Resolvers = {
 		accountStatistics: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.address !== '' && args.address !== undefined) where.address = args.address;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.address !== '' && args.address !== undefined) {
+				where.address = args.address;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.account_statistics.findMany({
@@ -636,8 +632,12 @@ export const Resolvers = {
 		block: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.hash !== '' && args.hash !== undefined) where.block_id = { hash: args.hash };
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.hash !== '' && args.hash !== undefined) {
+				where.block_id = { hash: args.hash };
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.block.findMany({
@@ -649,11 +649,18 @@ export const Resolvers = {
 		codeId: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
-			if (args.contract_type !== '' && args.contract_type !== undefined)
+			if (args.code_id !== '' && args.code_id !== undefined) {
+				where.code_id = args.code_id;
+			}
+			if (args.contract_type !== '' && args.contract_type !== undefined) {
 				where.contract_type = args.contract_type;
-			if (args.status !== '' && args.status !== undefined) where.status = args.status;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			}
+			if (args.status !== '' && args.status !== undefined) {
+				where.status = args.status;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.code_id.findMany({
@@ -665,7 +672,9 @@ export const Resolvers = {
 		communityPool: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			return prisma.community_pool.findMany({
 				where,
 			});
@@ -673,11 +682,18 @@ export const Resolvers = {
 		cw20Asset: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
-			if (args.contract_address !== '' && args.contract_address !== undefined)
+			if (args.code_id !== '' && args.code_id !== undefined) {
+				where.code_id = args.code_id;
+			}
+			if (args.contract_address !== '' && args.contract_address !== undefined) {
 				where.contract_address = args.contract_address;
-			if (args.owner !== '' && args.owner !== undefined) where.owner = args.owner;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			}
+			if (args.owner !== '' && args.owner !== undefined) {
+				where.owner = args.owner;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.cw20_asset.findMany({
@@ -689,11 +705,18 @@ export const Resolvers = {
 		cw721Asset: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
-			if (args.contract_address !== '' && args.contract_address !== undefined)
+			if (args.code_id !== '' && args.code_id !== undefined) {
+				where.code_id = args.code_id;
+			}
+			if (args.contract_address !== '' && args.contract_address !== undefined) {
 				where.contract_address = args.contract_address;
-			if (args.owner !== '' && args.owner !== undefined) where.owner = args.owner;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			}
+			if (args.owner !== '' && args.owner !== undefined) {
+				where.owner = args.owner;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.cw721_asset.findMany({
@@ -705,9 +728,15 @@ export const Resolvers = {
 		dailyCW20Holder: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
-			if (args.contract_address !== '' && args.contract_address !== undefined) where.contract_address = args.contract_address;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.code_id !== '' && args.code_id !== undefined) {
+				where.code_id = args.code_id;
+			}
+			if (args.contract_address !== '' && args.contract_address !== undefined) {
+				where.contract_address = args.contract_address;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.daily_cw20_holder.findMany({
@@ -719,8 +748,12 @@ export const Resolvers = {
 		dailyTxStatistics: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.date !== '' && args.date !== undefined) where.date = args.date;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.date !== '' && args.date !== undefined) {
+				where.date = args.date;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.daily_tx_statistics.findMany({
@@ -732,9 +765,15 @@ export const Resolvers = {
 		delayJob: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.address !== '' && args.address !== undefined) where.address = args.address;
-			if (args.type !== '' && args.type !== undefined) where.address = args.address;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.address !== '' && args.address !== undefined) {
+				where.address = args.address;
+			}
+			if (args.type !== '' && args.type !== undefined) {
+				where.address = args.address;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.delay_job.findMany({
@@ -746,8 +785,12 @@ export const Resolvers = {
 		ibcDenom: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.hash !== '' && args.hash !== undefined) where.hash = args.hash;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.hash !== '' && args.hash !== undefined) {
+				where.hash = args.hash;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			return prisma.ibc_denom.findMany({
 				where,
 			});
@@ -755,7 +798,9 @@ export const Resolvers = {
 		inflation: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			return prisma.inflation.findMany({
 				where,
 			});
@@ -763,8 +808,12 @@ export const Resolvers = {
 		param: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.module !== '' && args.module !== undefined) where.module = args.module;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.module !== '' && args.module !== undefined) {
+				where.module = args.module;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.param.findMany({
@@ -776,7 +825,9 @@ export const Resolvers = {
 		pool: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			return prisma.pool.findMany({
 				where,
 			});
@@ -784,10 +835,15 @@ export const Resolvers = {
 		proposal: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.proposal_id !== '' && args.proposal_id !== undefined)
+			if (args.proposal_id !== '' && args.proposal_id !== undefined) {
 				where.proposal_id = args.proposal_id;
-			if (args.status !== '' && args.status !== undefined) where.status = args.status;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			}
+			if (args.status !== '' && args.status !== undefined) {
+				where.status = args.status;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.proposal.findMany({
@@ -799,16 +855,27 @@ export const Resolvers = {
 		smartContracts: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.code_id !== '' && args.code_id !== undefined) where.code_id = args.code_id;
-			if (args.contract_hash !== '' && args.contract_hash !== undefined)
+			if (args.code_id !== '' && args.code_id !== undefined) {
+				where.code_id = args.code_id;
+			}
+			if (args.contract_hash !== '' && args.contract_hash !== undefined) {
 				where.contract_hash = args.contract_hash;
-			if (args.creator_address !== '' && args.creator_address !== undefined)
+			}
+			if (args.creator_address !== '' && args.creator_address !== undefined) {
 				where.creator_address = args.creator_address;
-			if (args.tx_hash !== '' && args.tx_hash !== undefined) where.tx_hash = args.tx_hash;
-			if (args.height !== '' && args.height !== undefined) where.height = args.height;
-			if (args.contract_name !== '' && args.contract_name !== undefined)
+			}
+			if (args.tx_hash !== '' && args.tx_hash !== undefined) {
+				where.tx_hash = args.tx_hash;
+			}
+			if (args.height !== '' && args.height !== undefined) {
+				where.height = args.height;
+			}
+			if (args.contract_name !== '' && args.contract_name !== undefined) {
 				where.contract_name = args.contract_name;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.smart_contracts.findMany({
@@ -820,7 +887,9 @@ export const Resolvers = {
 		supply: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			return prisma.supply.findMany({
 				where,
 			});
@@ -828,10 +897,15 @@ export const Resolvers = {
 		transaction: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.type !== '' && args.type !== undefined)
+			if (args.type !== '' && args.type !== undefined) {
 				where.tx = { body: { messages: { '@type': args.type } } };
-			if (args.hash !== '' && args.hash !== undefined) where.tx_response = { txhash: args.hash };
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			}
+			if (args.hash !== '' && args.hash !== undefined) {
+				where.tx_response = { txhash: args.hash };
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.transaction.findMany({
@@ -843,11 +917,18 @@ export const Resolvers = {
 		validator: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.operator_address !== '' && args.operator_address !== undefined)
+			if (args.operator_address !== '' && args.operator_address !== undefined) {
 				where.operator_address = args.operator_address;
-			if (args.status !== '' && args.status !== undefined) where.status = args.status;
-			if (args.jailed !== '' && args.jailed !== undefined) where.jailed = args.jailed;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			}
+			if (args.status !== '' && args.status !== undefined) {
+				where.status = args.status;
+			}
+			if (args.jailed !== '' && args.jailed !== undefined) {
+				where.jailed = args.jailed;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.validator.findMany({
@@ -859,13 +940,21 @@ export const Resolvers = {
 		vote: (_parent: any, args: any, context: any, info: any) => {
 			let prisma = defaultPrisma();
 			const where: any = {};
-			if (args.voter_address !== '' && args.voter_address !== undefined)
+			if (args.voter_address !== '' && args.voter_address !== undefined) {
 				where.voter_address = args.voter_address;
-			if (args.proposal_id !== '' && args.proposal_id !== undefined)
+			}
+			if (args.proposal_id !== '' && args.proposal_id !== undefined) {
 				where.proposal_id = args.proposal_id;
-			if (args.answer !== '' && args.answer !== undefined) where.answer = args.answer;
-			if (args.tx_hash !== '' && args.tx_hash !== undefined) where.tx_hash = args.tx_hash;
-			if (args.chain_id !== '' && args.chain_id !== undefined) prisma = handleChainId(args.chain_id);
+			}
+			if (args.answer !== '' && args.answer !== undefined) {
+				where.answer = args.answer;
+			}
+			if (args.tx_hash !== '' && args.tx_hash !== undefined) {
+				where.tx_hash = args.tx_hash;
+			}
+			if (args.chain_id !== '' && args.chain_id !== undefined) {
+				prisma = handleChainId(args.chain_id);
+			}
 			const take = args.take || 20;
 			const skip = args.skip !== undefined ? args.skip * take : 0;
 			return prisma.vote.findMany({
@@ -888,12 +977,12 @@ const defaultPrisma = () => {
 		default:
 			return prismaAuraTestnet;
 	}
-}
+};
 
-const handleChainId = (chain_id: string) => {
+const handleChainId = (chainId: string) => {
 	switch (Config.NAMESPACE) {
 		case ENV_NAMESPACE.DEV:
-			switch (chain_id) {
+			switch (chainId) {
 				case CHAIN_ID_DEV.AURA_TESTNET:
 					return prismaAuraTestnet;
 				case CHAIN_ID_DEV.SERENITY_TESTNET:
@@ -909,7 +998,7 @@ const handleChainId = (chain_id: string) => {
 					return prismaAuraTestnet;
 			}
 		case ENV_NAMESPACE.STAGING:
-			switch (chain_id) {
+			switch (chainId) {
 				case CHAIN_ID_DEV.SERENITY_TESTNET:
 					return prismaSerenityStaging;
 				case CHAIN_ID_DEV.EUPHORIA_TESTNET_1:
@@ -919,7 +1008,7 @@ const handleChainId = (chain_id: string) => {
 					return prismaSerenityStaging;
 			}
 		case ENV_NAMESPACE.PROD:
-			switch (chain_id) {
+			switch (chainId) {
 				case CHAIN_ID_PROD.EUPHORIA_1:
 				case CHAIN_ID_PROD.EUPHORIA_2:
 					return prismaEuphoriaProd;

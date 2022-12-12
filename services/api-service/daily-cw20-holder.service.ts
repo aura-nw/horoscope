@@ -2,18 +2,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import {
-	Put,
-	Method,
-	Service,
-	Get,
-	Action,
-	Post,
-} from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
+import { IDailyCw20Holder } from '../../model';
 import { dbDailyCw20HolderMixin } from '../../mixins/dbMixinMongoose';
 import { ErrorCode, ErrorMessage, MoleculerDBService } from '../../types';
 import { LIST_NETWORK } from '../../common/constant';
-import { IDailyCw20Holder } from '@Model';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -143,12 +136,13 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 		},
 	})
 	async getCw20HolderChangePercent(ctx: Context<any>) {
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		let data = await this.adapter.lean({
+		const data = await this.adapter.lean({
 			query: {
+				// eslint-disable-next-line camelcase
 				contract_address: { $in: ctx.params.addresses },
 			},
 		});

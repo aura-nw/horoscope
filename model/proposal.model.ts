@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { IProposal } from 'entities';
 import { Long } from 'mongodb';
 import { model, models, Schema, Types } from 'mongoose';
@@ -79,7 +80,7 @@ export const proposalMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema<IProposal>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	schema.index({ proposal_id: 1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
