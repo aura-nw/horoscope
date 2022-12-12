@@ -2,7 +2,7 @@ name: Continuous integration
 
 on:
   push:
-    branches: [main, develop, staging, test-performance, feature/multiple-database]
+    branches: [main, develop, staging, test-performance, feature/multiple-database, feature/migrate-artaverse]
 
 jobs:
   build:

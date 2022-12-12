@@ -20,10 +20,10 @@ import {
 	// UserTokenParams,
 	// UserAuthMeta,
 } from '../../types';
-import swStats from 'swagger-stats';
+// import swStats from 'swagger-stats';
 import swaggerSpec = require('../../swagger.json');
 import { LIST_NETWORK } from '../../common/constant';
-const BullBoard = require('../../mixins/bullBoard/bull-board');
+// const BullBoard = require('../../mixins/bullBoard/bull-board');
 
 const tlBucket = 60000;
 // const swMiddleware = swStats.getMiddleware({
@@ -44,7 +44,7 @@ const listLCD = LIST_NETWORK.map((e) => {
  */
 @Service({
 	name: 'api',
-	mixins: [ApiGateway, openAPIMixin(), BullBoard],
+	mixins: [ApiGateway, openAPIMixin()],
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	settings: {
 		port: Config.PORT || 3000,
@@ -155,22 +155,22 @@ const listLCD = LIST_NETWORK.map((e) => {
 				// The gateway will dynamically build the full routes from service schema.
 				autoAliases: true,
 
-				aliases: {
-					'GET /'(req: any, res: any) {
-						// console.log(swStats.getPromClient());
-						res.statusCode = 302;
-						res.setHeader('Location', '/api/dashboard/');
-						return res.end();
-					},
-					'GET /stats'(req: any, res: any) {
-						res.setHeader('Content-Type', 'application/json');
-						return res.end(JSON.stringify(swStats.getCoreStats()));
-					},
-					'GET /metrics'(req: any, res: any) {
-						res.setHeader('Content-Type', 'application/json');
-						return res.end(JSON.stringify(swStats.getPromStats()));
-					},
-				},
+				// aliases: {
+				// 	'GET /'(req: any, res: any) {
+				// 		// console.log(swStats.getPromClient());
+				// 		res.statusCode = 302;
+				// 		res.setHeader('Location', '/api/dashboard/');
+				// 		return res.end();
+				// 	},
+				// 	'GET /stats'(req: any, res: any) {
+				// 		res.setHeader('Content-Type', 'application/json');
+				// 		return res.end(JSON.stringify(swStats.getCoreStats()));
+				// 	},
+				// 	'GET /metrics'(req: any, res: any) {
+				// 		res.setHeader('Content-Type', 'application/json');
+				// 		return res.end(JSON.stringify(swStats.getPromStats()));
+				// 	},
+				// },
 				/**
 			 * Before call hook. You can check the request.
 			 * @param {Context} ctx
