@@ -82,10 +82,11 @@ export default class CrawlSmartContractsService extends Service {
 						for (let i = 0; i < instant_contract_addresses.length; i++) {
 							const code_id = instant_code_ids[i].value;
 							const contract_address = instant_contract_addresses[i].value;
-							const [token_info, marketing_info] = await this.queryContractInfo(
-								chainId,
-								instant_contract_addresses[i].value,
-							);
+							const [token_info, marketing_info, contract_info] =
+								await this.queryContractInfo(
+									chainId,
+									instant_contract_addresses[i].value,
+								);
 							let contract_hash;
 							try {
 								const param = `${Config.GET_DATA_HASH}${code_id}`;
@@ -111,6 +112,7 @@ export default class CrawlSmartContractsService extends Service {
 								num_tokens: 0,
 								token_info,
 								marketing_info,
+								contract_info,
 							} as ISmartContracts;
 							smartContracts.push(smartContract);
 						}
@@ -142,10 +144,8 @@ export default class CrawlSmartContractsService extends Service {
 							);
 							let contract_hash;
 							let cosmwasm_contract;
-							const [token_info, marketing_info] = await this.queryContractInfo(
-								chainId,
-								contract_address,
-							);
+							const [token_info, marketing_info, contract_info] =
+								await this.queryContractInfo(chainId, contract_address);
 							try {
 								// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 								const param = `${Config.GET_DATA_HASH}${code_id}`;
@@ -175,6 +175,7 @@ export default class CrawlSmartContractsService extends Service {
 								num_tokens: 0,
 								token_info,
 								marketing_info,
+								contract_info,
 							} as ISmartContracts;
 							smartContracts.push(smartContract);
 						}
@@ -216,17 +217,25 @@ export default class CrawlSmartContractsService extends Service {
 		const base64RequestMarketingInfo = Buffer.from('{ "marketing_info": {} }').toString(
 			'base64',
 		);
+		const base64RequestContractInfo = Buffer.from('{ "contract_info": {} }').toString('base64');
 		const paramTokenInfo =
 			Config.CONTRACT_URI + `${contractAddress}/smart/${base64RequestTokenInfo}`;
 		const paramMarketingInfo =
 			Config.CONTRACT_URI + `${contractAddress}/smart/${base64RequestMarketingInfo}`;
+		const paramContractInfo =
+			Config.CONTRACT_URI + `${contractAddress}/smart/${base64RequestContractInfo}`;
 		const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-		const [tokenInfo, marketingInfo] = await Promise.all([
+		const [tokenInfo, marketingInfo, contractInfo] = await Promise.all([
 			this.callApiFromDomain(url, paramTokenInfo),
 			this.callApiFromDomain(url, paramMarketingInfo),
+			this.callApiFromDomain(url, paramContractInfo),
 		]);
 
-		return [tokenInfo.data ? tokenInfo.data : {}, marketingInfo.data ? marketingInfo.data : {}];
+		return [
+			tokenInfo.data ? tokenInfo.data : {},
+			marketingInfo.data ? marketingInfo.data : {},
+			contractInfo.data ? contractInfo.data : {},
+		];
 	}
 
 	public async _start() {

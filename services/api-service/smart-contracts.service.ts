@@ -6,10 +6,11 @@ import { Context } from 'moleculer';
 import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
 import { ObjectId } from 'mongodb';
 import { ErrorCode, ErrorMessage, GetContractsRequest, MoleculerDBService } from '../../types';
-import { LIST_NETWORK } from '../../common/constant';
+import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 import { dbSmartContractsMixin } from '../../mixins/dbMixinMongoose';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { ISmartContracts } from '../../model/smart-contracts.model';
+import { CodeIDStatus } from '../../model';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -75,12 +76,29 @@ export default class SmartContractsService extends MoleculerDBService<
 			query._id = { $gte: new ObjectId(ctx.params.nextKey) };
 		}
 		this.logger.info('query', query);
-		const data: any = await this.adapter.find({
+		let data: any = await this.adapter.find({
 			query,
 			// @ts-ignore
 			sort: '_id',
 			limit: ctx.params.limit + 1,
 		});
+		const listAssetQueries: any = [];
+		data = data.map((d: any) => {
+			d = d.toObject();
+			listAssetQueries.push(
+				this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
+					chain_id: ctx.params.chainId,
+					code_id: d.code_id,
+				}),
+			);
+			return d;
+		});
+		const resultAsset = await Promise.all(listAssetQueries);
+		resultAsset.map((ra: any, index: number) => {
+			data[index].contract_type =
+				ra.status === CodeIDStatus.COMPLETED ? ra.contractType : null;
+		});
+
 		const nextKey =
 			// eslint-disable-next-line no-underscore-dangle
 			data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;

@@ -87,25 +87,16 @@ export default class FeegrantTxHandler extends Service {
 
 	async handleJob(chainId: string): Promise<any[]> {
 		const feegrantList: IFeegrantData[] = [];
-		// Latest block in transaction DB
-		const latestBlockTx = (await this.adapter.lean({
-			sort: '-tx_response.height',
-			limit: 1,
-			projection: {
-				'tx_response.height': 1,
-			},
-		})) as ITransaction[];
-		const latestBlock = latestBlockTx[0]
-			? latestBlockTx[0].tx_response.height.valueOf()
-			: this._currentBlock;
-		this.logger.info(
-			`Feegrant from  ${this._currentBlock + 1} to ${
+		// Latest real block
+		const latestBlockStr = await this.redisClient.get(Config.REDIS_KEY_LATEST_BLOCK);
+		const latestBlock = latestBlockStr ? parseInt(latestBlockStr, 10) : this.currentBlock;
+		this.logger.info(`Feegrant from  ${this._currentBlock + 1} 
+			to ${
 				this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
 					? this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
 					: latestBlock
-			}`,
-		);
-		// Get all transactions in BLOCK_PER_BATCH sequence blocks, start from _currentBlock
+			}`);
+		// Get all transactions in BLOCK_PER_BATCH sequence blocks, start from currentBlock
 		const listTx = (await this.adapter.lean({
 			query: {
 				'tx_response.height': {

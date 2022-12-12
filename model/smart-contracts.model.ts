@@ -17,6 +17,8 @@ export interface ISmartContracts {
 	token_info: Object;
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	marketing_info: Object;
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	contract_info: Object;
 }
 
 const definition: definitionType<ISmartContracts> = (collection?: string) => ({
@@ -40,6 +42,10 @@ const definition: definitionType<ISmartContracts> = (collection?: string) => ({
 		default: {},
 	},
 	marketing_info: {
+		type: Object,
+		default: {},
+	},
+	contract_info: {
 		type: Object,
 		default: {},
 	},
