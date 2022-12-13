@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
@@ -13,12 +14,10 @@ export interface ISmartContracts {
 	contract_hash: string;
 	tx_hash: string;
 	num_tokens: number;
-	// eslint-disable-next-line @typescript-eslint/ban-types
 	token_info: Object;
-	// eslint-disable-next-line @typescript-eslint/ban-types
 	marketing_info: Object;
-	// eslint-disable-next-line @typescript-eslint/ban-types
 	contract_info: Object;
+	msg: Object;
 }
 
 const definition: definitionType<ISmartContracts> = (collection?: string) => ({
@@ -46,6 +45,10 @@ const definition: definitionType<ISmartContracts> = (collection?: string) => ({
 		default: {},
 	},
 	contract_info: {
+		type: Object,
+		default: {},
+	},
+	msg: {
 		type: Object,
 		default: {},
 	},
