@@ -47,7 +47,7 @@ const queueService = require('moleculer-bull');
 				const address = job.data.address;
 				const codeId = job.data.codeId;
 				const chainId = job.data.chainId;
-				const typeEnrich = job.data.type_enrich;
+				const typeEnrich = job.data.typeEnrich;
 				// @ts-ignore
 				// eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-non-null-assertion
 				await this!._handleJobEnrichData(url, address, codeId, typeEnrich, chainId);
@@ -354,6 +354,22 @@ export default class CrawlAssetService extends moleculer.Service {
 	}
 
 	async start(): Promise<void> {
+		this.createJob(
+			'CW20.enrich',
+			{
+				url: ['https://lcd.serenity.aura.network'],
+				address: 'aura1c0s4p3lf87c5x3u4zgqfvamkqrl47ucxcyfudfzauwtg5g3ra3lsv0tnzd',
+				codeId: '756',
+				typeEnrich: 'upsert',
+				chainId: 'serenity-testnet-001',
+			},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: 3,
+				},
+			},
+		);
 		this.getQueue('CW20.enrich').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
