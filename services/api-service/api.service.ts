@@ -9,7 +9,6 @@ import helmet from 'helmet';
 import ApiGateway from 'moleculer-web';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import pick from 'lodash/pick';
-// import swStats from 'swagger-stats';
 import { openAPIMixin } from '../../mixins/openapi/openapi.mixin';
 import { Config } from '../../common';
 import {

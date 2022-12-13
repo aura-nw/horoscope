@@ -150,8 +150,8 @@ export default class CrawlAssetService extends moleculer.Service {
 				'Check if cw721 interface implemented',
 				cw721flag == null ? CodeIDStatus.TBD : cw721flag,
 			);
-			// eslint-disable-next-line quote-props
-			const condition = { codeId, 'custom_info.chain_id': chainId };
+			// eslint-disable-next-line quote-props, camelcase
+			const condition = { code_id: codeId, 'custom_info.chain_id': chainId };
 			switch (cw721flag) {
 				case null: {
 					this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
