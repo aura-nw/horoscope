@@ -34,7 +34,7 @@ export interface IFeegrantData {
 	custom_info: CustomInfo;
 }
 export default class FeegrantTxHandler extends Service {
-	private currentBlock = 0;
+	private _currentBlock = 0;
 	private syncCatchUp = false;
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
@@ -98,11 +98,11 @@ export default class FeegrantTxHandler extends Service {
 		})) as ITransaction[];
 		const latestBlock = latestBlockTx[0]
 			? latestBlockTx[0].tx_response.height.valueOf()
-			: this.currentBlock;
-		const fromBlock = this.currentBlock;
+			: this._currentBlock;
+		const fromBlock = this._currentBlock;
 		let toBlock =
-			this.currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
-				? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
+			this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
+				? this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
 				: latestBlock;
 		if (fromBlock >= toBlock) {
 			this.syncCatchUp = true;
@@ -396,8 +396,8 @@ export default class FeegrantTxHandler extends Service {
 			);
 		}
 		// Update feegrant latest block
-		this.currentBlock = toBlock;
-		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
+		this._currentBlock = toBlock;
+		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this._currentBlock);
 		this.logger.info(JSON.stringify(feegrantList));
 		return feegrantList;
 	}
