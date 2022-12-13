@@ -126,6 +126,7 @@ export default class CrawlAssetService extends moleculer.Service {
 								const str = `{"all_nft_info":{"tokenId":"${id}"}}`;
 								const stringEncode64bytes = Buffer.from(str).toString('base64');
 								const urlGetOwner = `${CONTRACT_URI}${address}/smart/${stringEncode64bytes}`;
+								this.logger.debug(url, urlGetOwner);
 								const tokenInfo = await this.callApiFromDomain(url, urlGetOwner);
 								cw721flag = tokenInfo?.data?.access?.owner !== undefined;
 								break;

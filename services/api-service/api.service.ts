@@ -9,7 +9,7 @@ import helmet from 'helmet';
 import ApiGateway from 'moleculer-web';
 import { Service } from '@ourparentcenter/moleculer-decorators-extended';
 import pick from 'lodash/pick';
-import swStats from 'swagger-stats';
+// import swStats from 'swagger-stats';
 import { openAPIMixin } from '../../mixins/openapi/openapi.mixin';
 import { Config } from '../../common';
 import {
@@ -154,23 +154,6 @@ const listLCD = LIST_NETWORK.map((e) => e.LCD).flat();
 				// The auto-alias feature allows you to declare your route alias directly in your services.
 				// The gateway will dynamically build the full routes from service schema.
 				autoAliases: true,
-
-				aliases: {
-					'GET /': (req: any, res: any) => {
-						// Console.log(swStats.getPromClient());
-						res.statusCode = 302;
-						res.setHeader('Location', '/api/dashboard/');
-						return res.end();
-					},
-					'GET /stats': (req: any, res: any) => {
-						res.setHeader('Content-Type', 'application/json');
-						return res.end(JSON.stringify(swStats.getCoreStats()));
-					},
-					'GET /metrics': (req: any, res: any) => {
-						res.setHeader('Content-Type', 'application/json');
-						return res.end(JSON.stringify(swStats.getPromStats()));
-					},
-				},
 				/**
 			 * Before call hook. You can check the request.
 			 * @param {Context} ctx
