@@ -34,7 +34,13 @@ export default class SmartContractsService extends MoleculerDBService<
 		name: 'getContracts',
 		params: {
 			chainId: 'string',
-			height: {
+			fromHeight: {
+				type: 'number',
+				interger: true,
+				convert: true,
+				optional: true,
+			},
+			toHeight: {
 				type: 'number',
 				interger: true,
 				convert: true,
@@ -65,9 +71,11 @@ export default class SmartContractsService extends MoleculerDBService<
 			this.adapter.useDb(network.databaseName);
 		}
 		let query: any = {};
-		if (ctx.params.height && ctx.params.height !== 0)
-			query = { height: ctx.params.height };
-		else if (ctx.params.contract_addresses && ctx.params.contract_addresses.length > 0)
+		if (ctx.params.fromHeight && ctx.params.fromHeight !== 0) {
+			query = { height: { $gte: ctx.params.fromHeight } };
+			if (ctx.params.toHeight && ctx.params.toHeight !== 0)
+				query.height.$lte = ctx.params.toHeight;
+		} else if (ctx.params.contract_addresses && ctx.params.contract_addresses.length > 0)
 			query = { contract_address: { $in: ctx.params.contract_addresses } };
 		if (ctx.params.nextKey && ctx.params.nextKey !== '') query._id = { $gte: new ObjectId(ctx.params.nextKey) };
 		this.logger.info('query', query);
@@ -88,8 +96,10 @@ export default class SmartContractsService extends MoleculerDBService<
 		});
 		let result_asset = await Promise.all(list_asset_queries);
 		result_asset.map((ra: any, index: number) => {
-			data[index].contract_type = 
-				ra.status === CodeIDStatus.COMPLETED ? ra.contractType : null;
+			data[index].contract_type = {
+				status: ra.status,
+				type: ra.contractType,
+			};
 		});
 
 		let next_key = data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;
@@ -121,10 +131,15 @@ export default class SmartContractsService extends MoleculerDBService<
 	 *          description: "Chain Id of network need to query"
 	 *          example: "aura-testnet-2"
 	 *        - in: query
-	 *          name: height
+	 *          name: fromHeight
 	 *          schema:
 	 *            type: number
-	 *          description: "Smart contract creation block height"
+	 *          description: "Smart contract creation from block height"
+	 *        - in: query
+	 *          name: toHeight
+	 *          schema:
+	 *            type: number
+	 *          description: "Smart contract creation to block height"
 	 *        - in: query
 	 *          name: contract_addresses[]
 	 *          schema:

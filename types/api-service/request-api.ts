@@ -179,7 +179,8 @@ export interface TopAccountsRequest {
 
 export interface GetContractsRequest {
 	chainId: string;
-	height: number;
+	fromHeight: number;
+	toHeight: number;
 	contract_addresses: string[];
 	limit: number;
 	nextKey: string;
