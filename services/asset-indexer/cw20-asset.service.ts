@@ -147,6 +147,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			const str = `{"balance":{"address": "${ctx.params.owner}"}}`;
 			const stringEncode64bytes = Buffer.from(str).toString('base64');
 			const urlGetBalance = `${CONTRACT_URI}${ctx.params.address}/smart/${stringEncode64bytes}`;
+			this.logger.debug('path get balance: ', urlGetBalance);
 			const balanceInfo = await this.callApiFromDomain(url, urlGetBalance);
 			if (balanceInfo?.data?.balance !== undefined) {
 				return balanceInfo;
@@ -328,7 +329,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				listOwnerAddress.map(async (owner: string) => {
 					const balanceInfo: any = await this.broker.call(
 						CW20_ACTION.GET_BALANCE,
-						{ URL: url, codeId, address, owner },
+						{ url, codeId, address, owner },
 						opts,
 					);
 					if (balanceInfo != null) {
