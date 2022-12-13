@@ -24,3 +24,5 @@ export * from './db-account-statistics.mixin';
 export * from './db-delay-job.mixin';
 export * from './db-smart-contracts.mixin';
 export * from './db-daily-cw20-holder.mixin';
+export * from './db-epoch.mixin';
+export * from './db-gamm-pool.mixin';

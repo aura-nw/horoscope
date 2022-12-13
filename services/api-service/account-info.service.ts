@@ -1,13 +1,9 @@
-import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Get, Service } from '@ourparentcenter/moleculer-decorators-extended';
-import { Config } from '../../common';
-import {
-	CONST_CHAR,
-	LIST_NETWORK,
-	URL_TYPE_CONSTANTS,
-	VESTING_ACCOUNT_TYPE,
-} from '../../common/constant';
 import { Context } from 'moleculer';
+import { ValidatorEntity } from 'entities';
+import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
+import { Config } from '../../common';
+import { CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import {
 	AccountInfoRequest,
 	MoleculerDBService,
@@ -18,7 +14,6 @@ import {
 } from '../../types';
 import { Utils } from '../../utils/utils';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
-import { ValidatorEntity } from 'entities';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -38,7 +33,7 @@ export default class AccountInfoService extends MoleculerDBService<
 	{
 		rest: 'v1/account-info';
 	},
-	{}
+	unknown
 > {
 	/**
 	 *  @swagger
@@ -305,12 +300,12 @@ export default class AccountInfoService extends MoleculerDBService<
 			chainId: 'string',
 		},
 	})
-	async getAccountInfoByAddress(ctx: Context<AccountInfoRequest>) {
+	public async getAccountInfoByAddress(ctx: Context<AccountInfoRequest>) {
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
@@ -332,6 +327,7 @@ export default class AccountInfoService extends MoleculerDBService<
 					this.logger.error(error);
 				});
 			accountInfo = accountInfo.toObject();
+			// eslint-disable-next-line camelcase
 			accountInfo.account_delegate_rewards = accountRewards;
 			const data = accountInfo;
 			const result: ResponseDto = {
@@ -525,15 +521,16 @@ export default class AccountInfoService extends MoleculerDBService<
 			chainId: 'string',
 		},
 	})
-	async getAccountDelegationInfoByAddress(ctx: Context<AccountInfoRequest>) {
+	public async getAccountDelegationInfoByAddress(ctx: Context<AccountInfoRequest>) {
 		const paramDelegateRewards =
 			Config.GET_PARAMS_DELEGATE_REWARDS + `/${ctx.params.address}/rewards`;
 		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		let [accountInfo, accountRewards]: [any, any] = await Promise.all([
+		/* eslint-disable camelcase */
+		const [accountInfo, accountRewards]: [any, any] = await Promise.all([
 			this.adapter.lean({
 				query: {
 					address: ctx.params.address,
@@ -547,6 +544,7 @@ export default class AccountInfoService extends MoleculerDBService<
 			}),
 			this.callApiFromDomain(url, paramDelegateRewards),
 		]);
+		/* eslint-enabled camelcase */
 		let result: ResponseDto;
 		if (accountInfo.length > 0) {
 			this.broker
@@ -558,7 +556,7 @@ export default class AccountInfoService extends MoleculerDBService<
 				.catch((error) => {
 					this.logger.error(error);
 				});
-			let data = Object.assign({}, accountInfo[0]);
+			const data = Object.assign({}, accountInfo[0]);
 			data.account_delegate_rewards = accountRewards;
 			result = {
 				code: ErrorCode.SUCCESSFUL,
@@ -576,12 +574,11 @@ export default class AccountInfoService extends MoleculerDBService<
 					this.logger.error(error);
 				});
 			if (!accountRewards.code) {
-				const result: ResponseDto = {
+				result = {
 					code: ErrorCode.SUCCESSFUL,
 					message: ErrorMessage.CRAWL_SUCCESSFUL,
 					data: null,
 				};
-				return result;
 			} else {
 				result = {
 					code: ErrorCode.ADDRESS_NOT_FOUND,
@@ -727,9 +724,7 @@ export default class AccountInfoService extends MoleculerDBService<
 			chainId: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			type: { type: 'string', required: true },
 			limit: {
@@ -752,12 +747,12 @@ export default class AccountInfoService extends MoleculerDBService<
 			},
 		},
 	})
-	async getAccountStake(ctx: Context<GetAccountStakeParams, Record<string, unknown>>) {
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+	public async getAccountStake(ctx: Context<GetAccountStakeParams, Record<string, unknown>>) {
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		let projection: any = [
+		const projection: any = [
 			{
 				$match: {
 					address: ctx.params.address,
@@ -799,17 +794,17 @@ export default class AccountInfoService extends MoleculerDBService<
 				projection.push(
 					...[{ $project: { account_auth: 1 } }, { $unwind: '$account_auth' }],
 				);
-				projection['$project'] = { account_auth: 1 };
+				projection.$project = { account_auth: 1 };
 				break;
 		}
 
-		let data = await this.adapter.aggregate(projection);
+		const data = await this.adapter.aggregate(projection);
 		if (ctx.params.type === 'Unbondings') {
-			let validators: any = await this.broker.call('v1.validator.getByCondition', {
+			const validators: any = await this.broker.call('v1.validator.getByCondition', {
 				query: {},
 			});
 			data.map((unbond: any) => {
-				let validator = validators.find(
+				const validator = validators.find(
 					(val: ValidatorEntity) =>
 						val.operator_address === unbond.account_unbonding.validator_address,
 				);
@@ -819,7 +814,7 @@ export default class AccountInfoService extends MoleculerDBService<
 				};
 			});
 		}
-		let response = {
+		const response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
 			data,

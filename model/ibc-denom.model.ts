@@ -1,11 +1,12 @@
-import { IIBCDenom } from "../entities";
+/* eslint-disable camelcase */
 import { model, models, Types, Schema } from 'mongoose';
-import { definitionType } from "types";
+import { definitionType } from 'types';
+import { IIBCDenom } from '../entities';
 
 const definition: definitionType<IIBCDenom> = (collection?: string) => ({
 	_id: Types.ObjectId,
 	hash: String,
-    denom: String,
+	denom: String,
 });
 
 export const ibcDenomMongoModel = (collection: string): unknown => {
@@ -13,9 +14,9 @@ export const ibcDenomMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema<IIBCDenom>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
-    // @ts-ignore
-    schema.index({ 'hash': 1, 'denom': 1 }, { unique: true });
+	// @ts-ignore
+	schema.index({ hash: 1, denom: 1 }, { unique: true });
 	return models[collection] || model(collection, schema);
 };

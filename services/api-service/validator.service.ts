@@ -2,21 +2,19 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { DbContextParameters, QueryOptions } from 'moleculer-db';
+import { ObjectId } from 'bson';
 import { dbValidatorMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
 	ErrorMessage,
-	getActionConfig,
 	GetValidatorRequest,
 	MoleculerDBService,
 	ResponseDto,
-	RestOptions,
 } from '../../types';
-import { DbContextParameters, QueryOptions } from 'moleculer-db';
 import { IValidator } from '../../entities';
 import { BOND_STATUS, LIST_NETWORK } from '../../common/constant';
-import { ObjectId } from 'bson';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -38,17 +36,13 @@ export default class ValidatorService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			operatorAddress: { type: 'string', optional: true, default: null },
 			status: {
 				type: 'string',
 				optional: true,
-				enum: Object.keys(BOND_STATUS).map((e) => {
-					return e;
-				}),
+				enum: Object.keys(BOND_STATUS).map((e) => e),
 			},
 			pageLimit: {
 				type: 'number',
@@ -96,33 +90,34 @@ export default class ValidatorService extends MoleculerDBService<
 		try {
 			const operatorAddress = ctx.params.operatorAddress;
 			const status = ctx.params.status;
-			let needNextKey = true;
-			let query: QueryOptions = {};
+			const needNextKey = true;
+			const query: QueryOptions = {};
+			/* eslint-disable camelcase, no-underscore-dangle */
 			if (operatorAddress) {
-				query['operator_address'] = operatorAddress;
+				query.operator_address = operatorAddress;
 			}
 			if (status) {
-				query['status'] = status;
+				query.status = status;
 			}
 			if (ctx.params.nextKey) {
 				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
 			}
-			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+			const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainid);
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
 			}
-			let [result, count]: [any[], number] = await Promise.all([
+			const [result, count]: [any[], number] = await Promise.all([
 				this.adapter.find({
-					query: query,
+					query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
 					sort: '-percent_voting_power',
 				}),
 				this.adapter.count({
-					query: query,
+					query,
 				}),
 			]);
 			response = {
@@ -130,10 +125,11 @@ export default class ValidatorService extends MoleculerDBService<
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					validators: result,
-					count: count,
+					count,
 					nextKey: needNextKey && result.length ? result[result.length - 1]._id : null,
 				},
 			};
+			/* eslint-enable camelcase, no-underscore-dangle */
 		} catch (error) {
 			response = {
 				code: ErrorCode.WRONG,
@@ -155,20 +151,24 @@ export default class ValidatorService extends MoleculerDBService<
 	})
 	async getAllByChain(ctx: Context<DbContextParameters>) {
 		const params = await this.sanitizeParams(ctx, ctx.params);
-		let result = await this.adapter.find({ query: { 'custom_info.chain_id': params.chainId } });
+		const result = await this.adapter.find({
+			query: { 'custom_info.chain_id': params.chainId },
+		});
 		return result;
 	}
 
 	@Action()
 	async getByCondition(ctx: Context<DbContextParameters>) {
 		const params = await this.sanitizeParams(ctx, ctx.params);
-		const network = LIST_NETWORK.find((x) => x.chainId == params.query['custom_info.chain_id']);
+		const network = LIST_NETWORK.find(
+			(x) => x.chainId === params.query['custom_info.chain_id'],
+		);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
 		delete params.query['custom_info.chain_id'];
 		// @ts-ignore
-		let result = await this.adapter.find({ query: params.query, sort: params.sort });
+		const result = await this.adapter.find({ query: params.query, sort: params.sort });
 		return result;
 	}
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { MapperProfile } from './mapper-profile';
 
 export class AutoMapperUtil {
@@ -15,7 +16,7 @@ export class AutoMapperUtil {
 	}
 
 	/**
-	 * map
+	 * Map
 	 * @param mapConfig
 	 * @param source
 	 * @returns
@@ -29,7 +30,7 @@ export class AutoMapperUtil {
 	}
 
 	/**
-	 * mapEntity
+	 * MapEntity
 	 * @param mapConfig
 	 * @param entity
 	 * @param source

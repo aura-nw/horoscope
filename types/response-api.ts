@@ -1,25 +1,18 @@
 import { Coin } from 'entities/coin.entity';
 import { ISigningInfo } from 'model/signing-info.model';
 import {
-	BlockEntity,
-	CommunityPoolEntity,
 	IBlock,
 	ICommunityPool,
 	IDelegationResponse,
 	IDeposit,
 	IPool,
 	IProposal,
-	ISupply,
 	IValidator,
-	PoolEntity,
-	ProposalEntity,
-	SigningInfoEntity,
-	ValidatorEntity,
 } from '../entities';
 
 export interface IPagingationResponseFromLCD {
-	next_key: String | null;
-	total: String;
+	next_key: string | null;
+	total: string;
 }
 
 export interface IProposalResponseFromLCD {
@@ -49,7 +42,7 @@ export interface ISigningInfoEntityResponseFromLCD {
 	val_signing_info: ISigningInfo;
 }
 export interface IMintInflationResponseFromLCD {
-	inflation: String;
+	inflation: string;
 }
 
 export interface IDelegationResponseFromLCD {
@@ -58,8 +51,8 @@ export interface IDelegationResponseFromLCD {
 }
 
 export interface ResponseFromRPC {
-	jsonrpc: String;
-	id: String;
+	jsonrpc: string;
+	id: string;
 	result: any;
 }
 
@@ -72,8 +65,8 @@ export interface ISupplyResponseFromLCD {
 	pagination: IPagingationResponseFromLCD;
 }
 
-export type ResponseDto = {
+export interface ResponseDto {
 	code: number | string;
 	message: string;
 	data: any;
-};
+}

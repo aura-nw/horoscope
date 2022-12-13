@@ -14,6 +14,7 @@ export enum ErrorMessage {
 	VALIDATION_ERROR = 'Validation error',
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ErrorCode = {
 	SUCCESSFUL: constants.HTTP_STATUS_OK,
 	NOT_FOUND: constants.HTTP_STATUS_NOT_FOUND,

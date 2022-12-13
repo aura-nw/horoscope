@@ -1,41 +1,33 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
 import { Service, ServiceBroker } from 'moleculer';
-import { dbDailyTxStatisticsMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
-import { CONST_CHAR } from '../../common/constant';
-import { DailyTxStatistics } from '../../entities';
 import { JsonConvert } from 'json2typescript';
 import { ObjectId } from 'mongodb';
 import { fromBech32 } from '@cosmjs/encoding';
-import { QueueConfig } from '../../config/queue';
-const QueueService = require('moleculer-bull');
+import { DailyTxStatistics } from '../../entities';
+import { CONST_CHAR } from '../../common/constant';
+import { dbDailyTxStatisticsMixin } from '../../mixins/dbMixinMongoose';
+import { Config } from '../../common';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlDailyTxService extends Service {
-	private dbDailyTxStatisticsMixin = dbDailyTxStatisticsMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlDailyTx',
 			version: 1,
-			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.dbDailyTxStatisticsMixin,
-			],
+			mixins: [queueService(queueConfig.redis, queueConfig.opts), dbDailyTxStatisticsMixin],
 			queues: {
 				'crawl.daily-tx': {
 					concurrency: parseInt(Config.CONCURRENCY_DAILY_ACCOUNT_STATISTICS, 10),
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(
-							job.data.id,
-							job.data.txCount,
-							job.data.activeAddrs,
-						);
+						await this.handleJob(job.data.id, job.data.txCount, job.data.activeAddrs);
 						job.progress(100);
 						return true;
 					},
@@ -45,7 +37,7 @@ export default class CrawlDailyTxService extends Service {
 	}
 
 	async handleJob(id: any, txCount: number, activeAddrs: string[]) {
-		let listAddresses: string[] = [];
+		const listAddresses: string[] = [];
 
 		const syncDate = new Date();
 		const endTime = syncDate.setUTCHours(0, 0, 0, 0);
@@ -53,13 +45,16 @@ export default class CrawlDailyTxService extends Service {
 		const startTime = syncDate.setUTCHours(0, 0, 0, 0);
 		this.logger.info(`Get txs from _id ${id} for day ${new Date(startTime)}`);
 
-		let query: any = {
+		const query: any = {
 			'indexes.timestamp': {
 				$gte: new Date(startTime),
 				$lt: new Date(endTime),
 			},
 		};
-		if (id) query._id = { $gt: new ObjectId(id) };
+		if (id) {
+			// eslint-disable-next-line no-underscore-dangle
+			query._id = { $gt: new ObjectId(id) };
+		}
 		this.logger.info(`Query ${JSON.stringify(query)}`);
 
 		const dailyTxs: any = await this.broker.call(
@@ -81,8 +76,8 @@ export default class CrawlDailyTxService extends Service {
 							let event = log.events
 								.filter(
 									(e: any) =>
-										e.type == CONST_CHAR.COIN_RECEIVED ||
-										e.type == CONST_CHAR.COIN_SPENT,
+										e.type === CONST_CHAR.COIN_RECEIVED ||
+										e.type === CONST_CHAR.COIN_SPENT,
 								)
 								.map((e: any) => e.attributes)
 								.map((e: any) =>
@@ -95,10 +90,10 @@ export default class CrawlDailyTxService extends Service {
 										.map((x: any) => x.value),
 								)
 								.flat();
-							event = event.filter(
-								(e: string) => fromBech32(e).data.length === 20,
-							);
-							if (event) listAddresses.push(...event);
+							event = event.filter((e: string) => fromBech32(e).data.length === 20);
+							if (event) {
+								listAddresses.push(...event);
+							}
 						} catch (error) {
 							this.logger.error(error);
 							throw error;
@@ -111,6 +106,7 @@ export default class CrawlDailyTxService extends Service {
 
 			activeAddrs = activeAddrs.concat(listAddresses).filter(this.onlyUnique);
 
+			// eslint-disable-next-line no-underscore-dangle
 			const newId = dailyTxs[dailyTxs.length - 1]._id;
 			txCount += dailyTxs.length;
 			this.createJob(
@@ -131,14 +127,20 @@ export default class CrawlDailyTxService extends Service {
 			try {
 				syncDate.setDate(syncDate.getDate() - 1);
 				const previousDay = syncDate.setUTCHours(0, 0, 0, 0);
-				const [resultTotalAccs, previousDailyTx]: [any, DailyTxStatistics] = await Promise.all([
-					this.broker.call('v1.account-stats.countTotal', {}, { meta: { $cache: false }, timeout: 0 }),
-					this.adapter.findOne({
-						date: new Date(previousDay),
-					}),
-				]);
+				const [resultTotalAccs, previousDailyTx]: [any, DailyTxStatistics] =
+					await Promise.all([
+						this.broker.call(
+							'v1.account-stats.countTotal',
+							{},
+							{ meta: { $cache: false }, timeout: 0 },
+						),
+						this.adapter.findOne({
+							date: new Date(previousDay),
+						}),
+					]);
 
-				let dailyTxStatistics: DailyTxStatistics = {} as DailyTxStatistics;
+				const dailyTxStatistics: DailyTxStatistics = {} as DailyTxStatistics;
+				/* eslint-disable camelcase */
 				dailyTxStatistics.daily_txs = txCount;
 				dailyTxStatistics.daily_active_addresses = activeAddrs.filter(
 					this.onlyUnique,
@@ -155,6 +157,7 @@ export default class CrawlDailyTxService extends Service {
 				await this.adapter.insert(item);
 				this.logger.info(`Daily Blockchain Statistics for day ${new Date(startTime)}`);
 				this.logger.info(JSON.stringify(item));
+				/* eslint-enable camelcase */
 			} catch (error) {
 				this.logger.error(
 					`Error insert duplicate record of daily txs for day ${new Date(startTime)}`,
@@ -167,7 +170,7 @@ export default class CrawlDailyTxService extends Service {
 		return self.indexOf(value) === index;
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.daily-tx',
 			{
@@ -195,6 +198,7 @@ export default class CrawlDailyTxService extends Service {
 		this.getQueue('crawl.daily-tx').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

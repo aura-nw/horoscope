@@ -1,15 +1,18 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
-import { Service, Context, ServiceBroker } from 'moleculer';
 
-const QueueService = require('moleculer-bull');
+import { Service, ServiceBroker } from 'moleculer';
+
 import { Job } from 'bull';
+import { ObjectId } from 'bson';
 import { IBlock } from '../../entities';
 import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
-import { ObjectId } from 'bson';
-import { QueueConfig } from '../../config/queue';
+import { queueConfig } from '../../config/queue';
+import { Config } from '../../common';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class MoveBlockService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -17,13 +20,12 @@ export default class MoveBlockService extends Service {
 		this.parseServiceSchema({
 			name: 'moveblock',
 			version: 1,
-			mixins: [QueueService(QueueConfig.redis, QueueConfig.opts), dbBlockMixin],
+			mixins: [queueService(queueConfig.redis, queueConfig.opts), dbBlockMixin],
 			queues: {
 				'move.block': {
 					concurrency: 1,
-					process(job: Job) {
+					process: (job: Job) => {
 						job.progress(10);
-						// @ts-ignore
 						this.handleJobMoveBlock();
 						job.progress(100);
 						return true;
@@ -35,81 +37,87 @@ export default class MoveBlockService extends Service {
 
 	async handleJobMoveBlock() {
 		const oldestBlock: IBlock[] = await this.adapter.lean({
-			sort: '_id',
+			sort: 'block.header.height',
 			limit: 10,
 		});
 
-		let handleBlock: IBlock[] = [];
+		const handleBlock: IBlock[] = [];
 		oldestBlock.map((block: IBlock) => {
-			let blockTime = block.block?.header?.time;
+			const blockTime = block.block?.header?.time;
 			if (blockTime) {
-				let timeRange = new Date();
-				timeRange.setDate(blockTime.getDate() + parseInt(Config.RANGE_DAY_MOVE_BLOCK, 10));
-				if (timeRange >= new Date()) {
+				const timeRange = blockTime;
+				const RANGE_DAY_MOVE_BLOCK = parseInt(Config.RANGE_DAY_MOVE_BLOCK, 10);
+				timeRange.setDate(timeRange.getDate() + RANGE_DAY_MOVE_BLOCK);
+				if (timeRange <= new Date()) {
 					handleBlock.push(block);
 				}
 			}
 		});
-		// insert block to block-aggregate table
-		this.createJob(
-			'listblock.insert',
-			{
-				listBlock: handleBlock,
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
-				},
-			},
-		);
-		//delete block in block table
-		let listBulk: any[] = [];
-		listBulk = handleBlock.map((block) => {
-			return {
-				deleteOne: {
-					filter: {
-						//@ts-ignore
-						_id: new ObjectId(block._id.toString()),
-					},
-				},
-			};
-		});
-		let resultDeleteBlock = await this.adapter.bulkWrite(listBulk);
-		this.logger.info('Result delete block: ', resultDeleteBlock);
-
-		//create job move tx older
-		const handleBlockHeight = handleBlock.map((block: IBlock) => {
-			return block.block?.header?.height;
-		});
-		this.createJob(
-			'move.tx',
-			{
-				listBlockHeight: handleBlockHeight,
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
-				},
-			},
-		);
-
-		if (oldestBlock.length && handleBlock.length && oldestBlock.length == handleBlock.length) {
+		// Insert block to block-aggregate table
+		if (handleBlock.length > 0) {
 			this.createJob(
-				'move.block',
-				{},
+				'listblock.insert',
+				{
+					listBlock: handleBlock,
+				},
 				{
 					removeOnComplete: true,
 					removeOnFail: {
-						count: 3,
+						count: 10,
 					},
 				},
 			);
+
+			// Delete block in block table
+			let listBulk: any[] = [];
+			listBulk = handleBlock.map((block) => ({
+				deleteOne: {
+					filter: {
+						_id: new ObjectId(block?._id?.toString()),
+					},
+				},
+			}));
+			if (listBulk.length > 0) {
+				const resultDeleteBlock = await this.adapter.bulkWrite(listBulk);
+				this.logger.info('Result delete block: ', resultDeleteBlock);
+			}
+			// Create job move tx older
+			const handleBlockHeight = handleBlock.map(
+				(block: IBlock) => block.block?.header?.height,
+			);
+			this.createJob(
+				'move.tx',
+				{
+					listBlockHeight: handleBlockHeight,
+				},
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: 10,
+					},
+				},
+			);
+
+			if (
+				oldestBlock.length &&
+				handleBlock.length &&
+				oldestBlock.length === handleBlock.length
+			) {
+				this.createJob(
+					'move.block',
+					{},
+					{
+						removeOnComplete: true,
+						removeOnFail: {
+							count: 3,
+						},
+					},
+				);
+			}
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'move.block',
 			{},
@@ -117,6 +125,9 @@ export default class MoveBlockService extends Service {
 				removeOnComplete: true,
 				removeOnFail: {
 					count: 3,
+				},
+				repeat: {
+					cron: Config.CRON_JOB_MOVE_BLOCK,
 				},
 			},
 		);
@@ -129,6 +140,7 @@ export default class MoveBlockService extends Service {
 		this.getQueue('move.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

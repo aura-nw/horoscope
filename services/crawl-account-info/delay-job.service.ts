@@ -2,11 +2,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Service, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Context } from 'moleculer';
+import { JsonConvert } from 'json2typescript';
 import { MoleculerDBService, QueryDelayJobParams, QueryPendingDelayJobParams } from '../../types';
 import { DelayJobEntity, IDelayJob } from '../../entities';
 import { dbDelayJobMixin } from '../../mixins/dbMixinMongoose';
-import { Context } from 'moleculer';
-import { JsonConvert } from 'json2typescript';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -35,8 +35,9 @@ export default class DelayJobService extends MoleculerDBService<
 		},
 	})
 	async findOne(ctx: Context<QueryDelayJobParams>) {
-		let result = await this.adapter.findOne({
+		const result = await this.adapter.findOne({
 			'content.address': ctx.params.address,
+			// eslint-disable-next-line quote-props
 			type: ctx.params.type,
 			'custom_info.chain_id': ctx.params.chain_id,
 		});
@@ -50,7 +51,7 @@ export default class DelayJobService extends MoleculerDBService<
 		},
 	})
 	async findPendingJobs(ctx: Context<QueryPendingDelayJobParams>) {
-		let result = await this.adapter.find({
+		const result = await this.adapter.find({
 			query: {
 				'custom_info.chain_id': ctx.params.chain_id,
 			},
@@ -65,14 +66,16 @@ export default class DelayJobService extends MoleculerDBService<
 		},
 	})
 	async addNewJob(ctx: Context<any>) {
-		let delay_job = {} as DelayJobEntity;
-		delay_job.content = ctx.params.content;
-		delay_job.type = ctx.params.type;
-		delay_job.expire_time = ctx.params.expire_time;
-		delay_job.indexes = ctx.params.indexes;
-		delay_job.custom_info = ctx.params.custom_info;
-		const item: DelayJobEntity = new JsonConvert().deserializeObject(delay_job, DelayJobEntity);
-		let result = await this.adapter.insert(item);
+		const delayJob = {} as DelayJobEntity;
+		delayJob.content = ctx.params.content;
+		delayJob.type = ctx.params.type;
+		// eslint-disable-next-line camelcase
+		delayJob.expire_time = ctx.params.expire_time;
+		delayJob.indexes = ctx.params.indexes;
+		// eslint-disable-next-line camelcase
+		delayJob.custom_info = ctx.params.custom_info;
+		const item: DelayJobEntity = new JsonConvert().deserializeObject(delayJob, DelayJobEntity);
+		const result = await this.adapter.insert(item);
 		return result;
 	}
 
@@ -83,7 +86,8 @@ export default class DelayJobService extends MoleculerDBService<
 		},
 	})
 	async updateJob(ctx: Context<any>) {
-		let result = await this.adapter.updateById(ctx.params._id, ctx.params.update);
+		// eslint-disable-next-line no-underscore-dangle
+		const result = await this.adapter.updateById(ctx.params._id, ctx.params.update);
 		return result;
 	}
 
@@ -94,7 +98,8 @@ export default class DelayJobService extends MoleculerDBService<
 		},
 	})
 	async deleteFinishedJob(ctx: Context<any>) {
-		let result = await this.adapter.removeById(ctx.params._id);
+		// eslint-disable-next-line no-underscore-dangle
+		const result = await this.adapter.removeById(ctx.params._id);
 		return result;
 	}
 }

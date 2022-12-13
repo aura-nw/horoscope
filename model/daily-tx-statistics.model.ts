@@ -1,15 +1,16 @@
-import { IDailyTxStatistics } from "entities";
+/* eslint-disable camelcase */
+import { IDailyTxStatistics } from 'entities';
 import { model, models, Schema, Types } from 'mongoose';
-import { definitionType } from "types";
-import { customInfoModel } from "./custom-info.model";
+import { definitionType } from 'types';
+import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<IDailyTxStatistics> = (collection?: string) => ({
 	_id: Types.ObjectId,
-    daily_txs: Number,
-    daily_active_addresses: Number,
-    unique_addresses: Number,
+	daily_txs: Number,
+	daily_active_addresses: Number,
+	unique_addresses: Number,
 	unique_addresses_increase: Number,
-    date: Date,
+	date: Date,
 	custom_info: customInfoModel,
 });
 
@@ -18,10 +19,10 @@ export const dailyTxStatisticsMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema(definition(collection), {
 		autoIndex: true,
-		// strict: false,
-		collection: collection,
+		// Strict: false,
+		collection,
 	});
-    // @ts-ignore
-	schema.index({ 'date': 1, 'custom_info.chain_id': 1 }, { unique: true });
+	// @ts-ignore
+	schema.index({ date: 1, 'custom_info.chain_id': 1 }, { unique: true });
 	return models[collection] || model(collection, schema);
 };

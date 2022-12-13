@@ -1,8 +1,8 @@
-import { model, models, Types } from 'mongoose';
+/* eslint-disable camelcase */
+import { model, models, Types, Schema } from 'mongoose';
 import { definitionType } from 'types';
 import { IVote } from 'entities/vote.entity';
 import { customInfoModel } from './custom-info.model';
-const mongoose = require('mongoose');
 
 const definition: definitionType<IVote> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -19,9 +19,9 @@ const definition: definitionType<IVote> = (collection?: string) => ({
 export const voteMongoModel = (collection: string): unknown => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	const schema = new mongoose.Schema<IVote>(definition(collection), {
+	const schema = new Schema<IVote>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	schema.index({ 'custom_info.chain_id': 1, proposal_id: -1, answer: 1 });
 	schema.index({ 'custom_info.chain_id': 1, proposal_id: -1 });

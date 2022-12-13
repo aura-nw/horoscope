@@ -80,7 +80,7 @@
 	},
 	{
 		"chainName":"Aura Euphoria",
-		"chainId":"euphoria-1",
+		"chainId":"euphoria-2",
 		"RPC":[
 		   "https://rpc.euphoria.aura.network"
 		],	

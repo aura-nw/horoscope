@@ -1,6 +1,8 @@
+/* eslint-disable no-shadow */
+/* eslint-disable @typescript-eslint/naming-convention */
 import { INetworkInfo } from 'types';
 
-// export const networkFile:
+// Export const networkFile:
 
 export const URL_TYPE_CONSTANTS = {
 	LCD: 'LCD',
@@ -72,6 +74,7 @@ export const MSG_TYPE = {
 	MSG_EXEC: '/cosmos.authz.v1beta1.MsgExec',
 };
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const LIST_NETWORK: INetworkInfo[] = require('../network.json');
 export const LIST_VOTE_ANSWER: string[] = [
 	'VOTE_OPTION_YES',

@@ -1,14 +1,15 @@
+/* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
+import { ObjectId } from 'mongodb';
 import { ErrorCode, ErrorMessage, GetContractsRequest, MoleculerDBService } from '../../types';
 import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 import { dbSmartContractsMixin } from '../../mixins/dbMixinMongoose';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { ISmartContracts } from '../../model/smart-contracts.model';
-import { ObjectId } from 'mongodb';
 import { CodeIDStatus } from '../../model';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -49,7 +50,7 @@ export default class SmartContractsService extends MoleculerDBService<
 			contract_addresses: {
 				type: 'array',
 				items: 'string',
-				optional: true
+				optional: true,
 			},
 			limit: {
 				type: 'number',
@@ -66,18 +67,23 @@ export default class SmartContractsService extends MoleculerDBService<
 		},
 	})
 	async getContracts(ctx: Context<GetContractsRequest>) {
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
 		let query: any = {};
 		if (ctx.params.fromHeight && ctx.params.fromHeight !== 0) {
 			query = { height: { $gte: ctx.params.fromHeight } };
-			if (ctx.params.toHeight && ctx.params.toHeight !== 0)
+			if (ctx.params.toHeight && ctx.params.toHeight !== 0) {
 				query.height.$lte = ctx.params.toHeight;
-		} else if (ctx.params.contract_addresses && ctx.params.contract_addresses.length > 0)
+			}
+		} else if (ctx.params.contract_addresses && ctx.params.contract_addresses.length > 0) {
 			query = { contract_address: { $in: ctx.params.contract_addresses } };
-		if (ctx.params.nextKey && ctx.params.nextKey !== '') query._id = { $gte: new ObjectId(ctx.params.nextKey) };
+		}
+		if (ctx.params.nextKey && ctx.params.nextKey !== '') {
+			// eslint-disable-next-line no-underscore-dangle
+			query._id = { $gte: new ObjectId(ctx.params.nextKey) };
+		}
 		this.logger.info('query', query);
 		let data: any = await this.adapter.find({
 			query,
@@ -85,30 +91,34 @@ export default class SmartContractsService extends MoleculerDBService<
 			sort: '-_id',
 			limit: ctx.params.limit + 1,
 		});
-		let list_asset_queries: any = [];
+		const listAssetQueries: any = [];
 		data = data.map((d: any) => {
 			d = d.toObject();
-			list_asset_queries.push(this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
-				chain_id: ctx.params.chainId,
-				code_id: d.code_id,
-			}));
+			listAssetQueries.push(
+				this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
+					chain_id: ctx.params.chainId,
+					code_id: d.code_id,
+				}),
+			);
 			return d;
 		});
-		let result_asset = await Promise.all(list_asset_queries);
-		result_asset.map((ra: any, index: number) => {
+		const resultAsset = await Promise.all(listAssetQueries);
+		resultAsset.map((ra: any, index: number) => {
 			data[index].contract_type = {
 				status: ra.status,
 				type: ra.contractType,
 			};
 		});
 
-		let next_key = data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;
-		let response = {
+		const nextKey =
+			// eslint-disable-next-line no-underscore-dangle
+			data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;
+		const response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
 			data: {
 				smart_contracts: data.slice(0, ctx.params.limit - 1),
-				next_key
+				next_key: nextKey,
 			},
 		};
 		return response;

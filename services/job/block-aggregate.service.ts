@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
-import { Service, Context, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+import { Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
-import { dbBlockAggregateMixin } from '../../mixins/dbMixinMongoose';
 import { IBlock } from 'entities';
-import { QueueConfig } from '../../config/queue';
+import { dbBlockAggregateMixin } from '../../mixins/dbMixinMongoose';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class BlockAggregateService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -15,7 +15,7 @@ export default class BlockAggregateService extends Service {
 		this.parseServiceSchema({
 			name: 'blockAggregate',
 			version: 1,
-			mixins: [QueueService(QueueConfig.redis, QueueConfig.opts), dbBlockAggregateMixin],
+			mixins: [queueService(queueConfig.redis, queueConfig.opts), dbBlockAggregateMixin],
 			queues: {
 				'listblock.insert': {
 					concurrency: 10,
@@ -51,8 +51,10 @@ export default class BlockAggregateService extends Service {
 	}
 
 	async handleJob(listBlock: IBlock[]) {
-		let listBulk: any[] = [];
-		if (!listBlock) return;
+		const listBulk: any[] = [];
+		if (!listBlock) {
+			return;
+		}
 		listBlock.map(async (block: IBlock) => {
 			listBulk.push({
 				insertOne: {
@@ -60,11 +62,11 @@ export default class BlockAggregateService extends Service {
 				},
 			});
 		});
-		let result = await this.adapter.bulkWrite(listBulk);
+		const result = await this.adapter.bulkWrite(listBulk);
 		this.logger.info(`Update block: ${listBlock.length}`, result);
 	}
 
-	async _start() {
+	public async _start() {
 		this.getQueue('listblock.insert').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
@@ -74,6 +76,7 @@ export default class BlockAggregateService extends Service {
 		this.getQueue('listblock.insert').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }
