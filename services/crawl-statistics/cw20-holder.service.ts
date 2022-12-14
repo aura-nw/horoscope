@@ -3,7 +3,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Service, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { Context } from 'moleculer';
 import { MoleculerDBService } from '../../types';
 import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 import { ICW20Asset } from '../../model';
@@ -34,7 +33,7 @@ export default class Cw20HolderService extends MoleculerDBService<
 			ttl: 10,
 		},
 	})
-	async groupAndCount(ctx: Context) {
+	async groupAndCount() {
 		const result = await this.adapter.aggregate([
 			{
 				$group: {

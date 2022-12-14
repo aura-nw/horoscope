@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable camelcase */
 import { Service, ServiceBroker } from 'moleculer';
@@ -72,13 +73,22 @@ export default class CrawlSmartContractsService extends Service {
 						const instant_height = txs.tx_response.height;
 						const instant_creator_address = msg.sender;
 						const instant_tx_hash = txs.tx_response.txhash;
-						const instant_contract_addresses = txs.tx_response.logs[0].events
-							.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
-							// eslint-disable-next-line no-underscore-dangle
-							.attributes.filter((x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS);
-						const instant_code_ids = txs.tx_response.logs[0].events
-							.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
-							.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
+						let instant_contract_addresses;
+						let instant_code_ids;
+						try {
+							instant_contract_addresses = txs.tx_response.logs[0].events
+								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
+								// eslint-disable-next-line no-underscore-dangle
+								.attributes.filter(
+									(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
+								);
+							instant_code_ids = txs.tx_response.logs[0].events
+								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
+								.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
+						} catch (error) {
+							this.logger.error(`Error get attributes at TxHash ${instant_tx_hash}`);
+							this.logger.error(error);
+						}
 						const mess = msg.msg;
 						for (let i = 0; i < instant_contract_addresses.length; i++) {
 							const code_id = instant_code_ids[i].value;
@@ -124,13 +134,22 @@ export default class CrawlSmartContractsService extends Service {
 						await this._updateContractNumTokens(msg, chainId);
 						const tx_hash = txs.tx_response.txhash;
 						const height = txs.tx_response.height;
-						const contract_addresses = txs.tx_response.logs[0].events
-							.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
-							// eslint-disable-next-line no-underscore-dangle
-							.attributes.filter((x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS);
-						const code_ids = txs.tx_response.logs[0].events
-							.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
-							.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
+						let contract_addresses;
+						let code_ids;
+						try {
+							contract_addresses = txs.tx_response.logs[0].events
+								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
+								// eslint-disable-next-line no-underscore-dangle
+								.attributes.filter(
+									(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
+								);
+							code_ids = txs.tx_response.logs[0].events
+								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
+								.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
+						} catch (error) {
+							this.logger.error(`Error get attributes at TxHash ${instant_tx_hash}`);
+							this.logger.error(error);
+						}
 						const executeMess = msg.msg;
 						for (let i = 0; i < contract_addresses.length; i++) {
 							const code_id = code_ids[i].value;
