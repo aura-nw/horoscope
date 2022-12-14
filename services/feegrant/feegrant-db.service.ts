@@ -103,7 +103,6 @@ export default class FeegrantDB extends Service {
 
 				// @ts-ignore
 				const tmpStatus = mapUpdate?.get(e.origin_feegrant_txhash)?.status;
-				console.log(tmpAmount, tmpStatus);
 				// @ts-ignore
 				mapUpdate.set(e.origin_feegrant_txhash, {
 					amount: tmpAmount,
