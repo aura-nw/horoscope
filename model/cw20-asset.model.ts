@@ -32,7 +32,10 @@ const definition: definitionType<ICW20Asset> = (collection?: string) => ({
 			total_supply: String,
 		},
 	},
-	contract_address: String,
+	contract_address: {
+		type: String,
+		index: true,
+	},
 	token_id: String,
 	balance: String,
 	owner: {
