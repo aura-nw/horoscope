@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Service, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { Context } from 'moleculer';
 import { MoleculerDBService } from '../../types';
 import { IAccountInfo } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
@@ -33,7 +32,7 @@ export default class AccountStatsService extends MoleculerDBService<
 			ttl: 10,
 		},
 	})
-	async countTotal(ctx: Context<any>) {
+	async countTotal() {
 		const result = await this.adapter.count({
 			query: {},
 		});

@@ -82,7 +82,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					);
 					if (balanceInfo != null) {
 						const asset = Common.createCW20AssetObject(
-							codeId,
+							Number(codeId),
 							address,
 							owner,
 							tokenInfo,
