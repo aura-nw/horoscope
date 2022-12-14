@@ -63,7 +63,70 @@ export default class FeegrantTxHandler extends Service {
 			},
 		});
 	}
-
+	getOwnerMsg(message: any): string {
+		try {
+			switch (message['@type']) {
+				case MSG_TYPE.MSG_SEND:
+					return message.from_address;
+				case MSG_TYPE.MSG_DELEGATE:
+					return message.delegator_address;
+				case MSG_TYPE.MSG_REDELEGATE:
+					return message.delegator_address;
+				case MSG_TYPE.MSG_UNDELEGATE:
+					return message.delegator_address;
+				case MSG_TYPE.MSG_EXECUTE_CONTRACT:
+					return message.sender;
+				case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
+					return message.sender;
+				case MSG_TYPE.MSG_STORE_CODE:
+					return message.sender;
+				case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
+					return message.from_address;
+				case MSG_TYPE.MSG_DEPOSIT:
+					return message.depositor;
+				case MSG_TYPE.MSG_WITHDRAW_REWARDS:
+					return message.delegator_address;
+				case MSG_TYPE.MSG_SUBMIT_PROPOSAL:
+					return message.proposer;
+				case MSG_TYPE.MSG_VOTE:
+					return message.voter;
+				case MSG_TYPE.MSG_IBC_TRANSFER:
+					return message.sender;
+				case MSG_TYPE.MSG_FEEGRANT_GRANT:
+					return message.granter;
+				case MSG_TYPE.MSG_FEEGRANT_REVOKE:
+					return message.granter;
+			}
+		} catch (error) {
+			this.logger.error(`Error when get message type: ${error}`);
+		}
+		return '';
+	}
+	async getBlocksForProcessing(): Promise<[number, number]> {
+		// Latest block in transaction DB
+		const latestBlockTx = (await this.adapter.lean({
+			sort: '-tx_response.height',
+			limit: 1,
+			projection: {
+				'tx_response.height': 1,
+			},
+		})) as ITransaction[];
+		const latestBlock = latestBlockTx[0]
+			? latestBlockTx[0].tx_response.height.valueOf()
+			: this._currentBlock;
+		const fromBlock = this._currentBlock;
+		let toBlock =
+			this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
+				? this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
+				: latestBlock;
+		if (fromBlock >= toBlock) {
+			this.syncCatchUp = true;
+		}
+		if (this.syncCatchUp) {
+			toBlock = latestBlock;
+		}
+		return [fromBlock, toBlock];
+	}
 	async initEnv() {
 		// Get feegrant latest block which was unprocessing
 		const handledBlockRedis = await this.redisClient.get(
@@ -88,28 +151,7 @@ export default class FeegrantTxHandler extends Service {
 
 	async handleJob(chainId: string): Promise<any[]> {
 		const feegrantList: IFeegrantData[] = [];
-		// Latest block in transaction DB
-		const latestBlockTx = (await this.adapter.lean({
-			sort: '-tx_response.height',
-			limit: 1,
-			projection: {
-				'tx_response.height': 1,
-			},
-		})) as ITransaction[];
-		const latestBlock = latestBlockTx[0]
-			? latestBlockTx[0].tx_response.height.valueOf()
-			: this._currentBlock;
-		const fromBlock = this._currentBlock;
-		let toBlock =
-			this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
-				? this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
-				: latestBlock;
-		if (fromBlock >= toBlock) {
-			this.syncCatchUp = true;
-		}
-		if (this.syncCatchUp) {
-			toBlock = latestBlock;
-		}
+		const [fromBlock, toBlock] = await this.getBlocksForProcessing();
 		this.logger.info(`Feegrant from  ${fromBlock} to ${toBlock}`);
 		// Get all transactions in BLOCK_PER_BATCH sequence blocks, start from fromBlock: fromBlock+1, fromBlock+2,..., toBlock
 		const listTx = (await this.adapter.lean({
@@ -234,59 +276,7 @@ export default class FeegrantTxHandler extends Service {
 							feegrantList.push(feegrantRevoke);
 						} else {
 							// Get the owner of tx
-							let owner = '';
-							try {
-								switch (message['@type']) {
-									case MSG_TYPE.MSG_SEND:
-										owner = message.from_address;
-										break;
-									case MSG_TYPE.MSG_DELEGATE:
-										owner = message.delegator_address;
-										break;
-									case MSG_TYPE.MSG_REDELEGATE:
-										owner = message.delegator_address;
-										break;
-									case MSG_TYPE.MSG_UNDELEGATE:
-										owner = message.delegator_address;
-										break;
-									case MSG_TYPE.MSG_EXECUTE_CONTRACT:
-										owner = message.sender;
-										break;
-									case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
-										owner = message.sender;
-										break;
-									case MSG_TYPE.MSG_STORE_CODE:
-										owner = message.sender;
-										break;
-									case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
-										owner = message.from_address;
-										break;
-									case MSG_TYPE.MSG_DEPOSIT:
-										owner = message.depositor;
-										break;
-									case MSG_TYPE.MSG_WITHDRAW_REWARDS:
-										owner = message.delegator_address;
-										break;
-									case MSG_TYPE.MSG_SUBMIT_PROPOSAL:
-										owner = message.proposer;
-										break;
-									case MSG_TYPE.MSG_VOTE:
-										owner = message.voter;
-										break;
-									case MSG_TYPE.MSG_IBC_TRANSFER:
-										owner = message.sender;
-										break;
-									case MSG_TYPE.MSG_FEEGRANT_GRANT:
-										owner = message.granter;
-										break;
-									case MSG_TYPE.MSG_FEEGRANT_REVOKE:
-										owner = message.granter;
-										break;
-								}
-							} catch (error) {
-								this.logger.error(`Error when get message type: ${error}`);
-								return;
-							}
+							const owner: string = this.getOwnerMsg(message);
 							if (events.find((e) => e.type === 'revoke_feegrant')) {
 								// Use up
 								const feegrantUseup = {

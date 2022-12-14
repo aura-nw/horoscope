@@ -15,12 +15,15 @@ describe('Test feegrant-tx-handler service', () => {
     const mockFind = jest.fn(params =>
         Promise.resolve(listTx)
     );
-    service.adapter.lean = jest.fn(params =>
-        Promise.resolve([])
-    );
-    beforeAll(async () => await broker.start());
+    beforeAll(async () => {
+        await broker.start();
+        await service.getQueue('feegrant.tx-handle').empty()
+    });
     afterAll(async () => await broker.stop());
     describe("Test filter", () => {
+        service.adapter.lean = jest.fn(params =>
+            Promise.resolve([])
+        );
         it("Could filter create", async () => {
             const mockData: ITransaction[] = []
             //@ts-ignore
@@ -453,6 +456,35 @@ describe('Test feegrant-tx-handler service', () => {
                 expired: false
             }]);
         });
+    })
+    describe("Test block", () => {
+        it("Sync catch up = false", async () => {
+            service.adapter.lean = jest.fn(params => {
+                if (params["sort"] == 'tx_response.height') {
+                    return Promise.resolve([{ tx_response: { height: 10 } }])
+                }
+                return Promise.resolve([{ tx_response: { height: 1000 } }])
+            });
+            service.redisClient.get = jest.fn(params => Promise.resolve(10))
+            await service.initEnv()
+            const [fromBlock, toBlock] = await service.getBlocksForProcessing();
+            expect(fromBlock).toEqual(10)
+            expect(toBlock).toEqual(110)
+        })
+        it("Sync catch up = true", async () => {
+            service.adapter.lean = jest.fn(params => {
+                if (params["sort"] == 'tx_response.height') {
+                    return Promise.resolve([{ tx_response: { height: 10 } }])
+                }
+                return Promise.resolve([{ tx_response: { height: 1000 } }])
+            });
+            service.redisClient.get = jest.fn(params => Promise.resolve(10))
+            service.syncCatchUp = true
+            await service.initEnv()
+            const [fromBlock, toBlock] = await service.getBlocksForProcessing();
+            expect(fromBlock).toEqual(10)
+            expect(toBlock).toEqual(1000)
+        })
     })
 });
 
