@@ -439,8 +439,7 @@ export default class AssetService extends MoleculerDBService<
 				default: null,
 			},
 			contractAddress: {
-				type: 'array',
-				items: 'string',
+				type: 'string',
 				optional: false,
 				default: null,
 			},
@@ -537,7 +536,7 @@ export default class AssetService extends MoleculerDBService<
 				ctx.params.countTotal = false;
 			}
 			if (ctx.params.contractAddress) {
-				query.contract_address = { $in: ctx.params.contractAddress };
+				query.contract_address = ctx.params.contractAddress;
 			}
 
 			const [resultAsset, resultCount] = await Promise.all([
@@ -1334,12 +1333,10 @@ export default class AssetService extends MoleculerDBService<
 	 *            enum: ["CW721", "CW20", "CW4973"]
 	 *          description: "Contract type need to query"
 	 *        - in: query
-	 *          name: contractAddress[]
+	 *          name: contractAddress
 	 *          required: true
 	 *          schema:
-	 *            type: array
-	 *            items:
-	 *              type: string
+	 *            type: string
 	 *          description: "asset/contract address need to query"
 	 *        - in: query
 	 *          name: pageLimit

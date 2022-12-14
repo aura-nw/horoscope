@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
@@ -47,6 +48,7 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 	 *          description: "Chain Id of network need to query"
 	 *        - name: addresses[]
 	 *          in: query
+	 *          required: true
 	 *          schema:
 	 *            type: array
 	 *            items:
@@ -69,18 +71,12 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 	 *                  data:
 	 *                    type: object
 	 *                    properties:
-	 *                      code_id:
-	 *                        type: number
-	 *                        example: 19
 	 *                      contract_address:
 	 *                        type: string
 	 *                        example: aura1qppau370zs6xnduuv3jju4xw0kp2xww20wy75ye2hvy9cc99ehtqxlqnza
-	 *                      old_holders:
+	 *                      holders:
 	 *                        type: number
 	 *                        example: 50
-	 *                      new_holders:
-	 *                        type: number
-	 *                        example: 60
 	 *                      change_percent:
 	 *                        type: number
 	 *                        example: 20
@@ -132,7 +128,7 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 		restricted: ['api'],
 		params: {
 			chainId: 'string',
-			addresses: { type: 'array', items: 'string', optional: true },
+			addresses: { type: 'array', items: 'string', optional: false },
 		},
 	})
 	async getCw20HolderChangePercent(ctx: Context<any>) {
@@ -140,12 +136,36 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		const data = await this.adapter.lean({
+
+		let data = await this.adapter.lean({
 			query: {
 				// eslint-disable-next-line camelcase
 				contract_address: { $in: ctx.params.addresses },
 			},
 		});
+		const listQueryHolders: any = [];
+		ctx.params.addresses.map((addr: any) =>
+			listQueryHolders.push(
+				this.broker.call('v1.CW20-asset-manager.act-count', {
+					query: {
+						contract_address: addr,
+						'custom_info.chain_id': ctx.params.chainId,
+					},
+				}),
+			),
+		);
+		const holders = await Promise.all(listQueryHolders);
+		data = data.map((d: any) => {
+			const addrIndex = ctx.params.addresses.indexOf(
+				ctx.params.addresses.find((a: any) => a === d.contract_address),
+			);
+			return {
+				contract_address: d.contract_address,
+				holders: holders[addrIndex],
+				percentage: d.change_percent,
+			};
+		});
+
 		return {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
