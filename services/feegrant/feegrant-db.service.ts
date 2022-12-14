@@ -96,13 +96,14 @@ export default class FeegrantDB extends Service {
 			if (e.action === FEEGRANT_ACTION.USE) {
 				// @ts-ignore
 				const tmpAmount =
+					// @ts-ignore
 					// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-
-					mapUpdate.get(e.origin_feegrant_txhash?.toString() ?? null)?.amount ??
-					0 + parseInt(e.amount.amount.toString(), 10);
+					mapUpdate.get(e.origin_feegrant_txhash?.toString() ?? null)?.amount +
+					parseInt(e.amount.amount.toString(), 10);
 
 				// @ts-ignore
 				const tmpStatus = mapUpdate?.get(e.origin_feegrant_txhash)?.status;
+				console.log(tmpAmount, tmpStatus);
 				// @ts-ignore
 				mapUpdate.set(e.origin_feegrant_txhash, {
 					amount: tmpAmount,
