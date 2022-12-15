@@ -12,11 +12,15 @@ jobs:
         image: redis
         env:
           REDIS_USERNAME: default
+        ports:
+          - 6379:6379
       mongo:
         image: mongo
         env:
           MONGO_INITDB_ROOT_USERNAME: root
           MONGO_INITDB_ROOT_PASSWORD: 123456
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
