@@ -17,6 +17,7 @@ const definition: definitionType<ICW721Media> = (collection?: string) => ({
 		index: true,
 	},
 	media_link: String,
+	file_path: String,
 	status: {
 		type: String,
 		enum: MEDIA_STATUS,

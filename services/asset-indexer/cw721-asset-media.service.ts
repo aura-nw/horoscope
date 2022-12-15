@@ -211,6 +211,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							cw721.image = {
 								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
+								file_path: media[0].file_path,
 							};
 							this.broker.call('v1.CW721-asset-manager.act-update-by-id', {
 								obj: cw721,
@@ -219,6 +220,7 @@ export default class CrawlAssetService extends moleculer.Service {
 										image: {
 											link_s3: media[0].media_link,
 											content_type: media[0].content_type,
+											file_path: media[0].file_path,
 										},
 									},
 								},
@@ -228,6 +230,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							cw721.animation = {
 								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
+								file_path: media[0].file_path,
 							};
 
 							this.broker.call('v1.CW721-asset-manager.act-update-by-id', {
@@ -237,6 +240,7 @@ export default class CrawlAssetService extends moleculer.Service {
 										animation: {
 											link_s3: media[0].media_link,
 											content_type: media[0].content_type,
+											file_path: media[0].file_path,
 										},
 									},
 								},
