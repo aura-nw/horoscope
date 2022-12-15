@@ -280,6 +280,9 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 				key,
 				media_link: '',
 				status: MEDIA_STATUS.ERROR,
+				custom_info: {
+					chain_id: chainId,
+				},
 			});
 			this.logger.error(err);
 			throw err;
