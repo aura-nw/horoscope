@@ -49,57 +49,14 @@ const queueService = require('moleculer-bull');
 				const chainId = job.data.chainId;
 				const typeEnrich = job.data.typeEnrich;
 				// @ts-ignore
+				await this.broker.waitForServices(['v1.CW20-asset-manager']);
+				// @ts-ignore
 				await this.handleJobEnrichData(url, address, codeId, typeEnrich, chainId);
 			},
 		},
 	},
 })
 export default class CrawlAssetService extends moleculer.Service {
-	@Action({ name: 'enrichData' })
-	private async _enrichData(ctx: Context<[ITokenInfo, string]>) {
-		const url = ctx.params[0].url;
-		const address = ctx.params[0].address;
-		const codeId = ctx.params[0].codeId;
-		const typeEnrich = ctx.params[1];
-		const chainId = ctx.params[0].chainId;
-		const urlGetTokenInfo = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_TOKEN_INFO}`;
-		const tokenInfo = await this.callApiFromDomain(url, urlGetTokenInfo);
-
-		const listOwnerAddress: any = await this.broker.call(
-			CW20_ACTION.GET_OWNER_LIST,
-			{ url, codeId, address },
-			opts,
-		);
-		this.logger.debug(`Cw20 listOwnerAddress ${JSON.stringify(listOwnerAddress)}`);
-		if (listOwnerAddress != null) {
-			await Promise.all(
-				listOwnerAddress.map(async (owner: string) => {
-					const balanceInfo: any = await this.broker.call(
-						CW20_ACTION.GET_BALANCE,
-						{ url, codeId, address, owner },
-						opts,
-					);
-					if (balanceInfo != null) {
-						const asset = Common.createCW20AssetObject(
-							codeId.toString(),
-							address,
-							owner,
-							tokenInfo,
-							balanceInfo,
-							chainId,
-						);
-						await this.broker.call(
-							`v1.CW20-asset-manager.act-${typeEnrich}`,
-							asset,
-							opts,
-						);
-						this.logger.debug(`Asset ${JSON.stringify(asset)} created`);
-					}
-				}),
-			);
-		}
-	}
-
 	@Action({ name: 'getOwnerList' })
 	private async _getOwnerList(ctx: Context<ITokenInfo>) {
 		const url = ctx.params.url;
