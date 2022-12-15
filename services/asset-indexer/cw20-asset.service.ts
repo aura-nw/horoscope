@@ -255,7 +255,7 @@ export default class CrawlAssetService extends moleculer.Service {
 				'Check if cw20 interface implemented',
 				cw20flag == null ? CodeIDStatus.TBD : cw20flag,
 			);
-			const condition = { codeId, 'custom_info.chainId': chainId };
+			const condition = { codeId, 'custom_info.chain_id': chainId };
 			switch (cw20flag) {
 				case null: {
 					this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {

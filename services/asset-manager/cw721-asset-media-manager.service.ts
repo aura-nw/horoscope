@@ -236,13 +236,6 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 									},
 								},
 							});
-							// This.broker.call('v1.CW721-asset-manager.update', {
-							// 	_id: CW721._id,
-							// 	Image: {
-							// 		Link_s3: result.linkS3,
-							// 		Content_type: result.contentType,
-							// 	},
-							// });
 						}
 						if (cw721?.metadata?.animation_url === sourceUri) {
 							cw721.animation = {
@@ -260,13 +253,6 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 									},
 								},
 							});
-							// This.broker.call('v1.CW721-asset-manager.update', {
-							// 	_id: CW721._id,
-							// 	Animation: {
-							// 		Link_s3: result.linkS3,
-							// 		Content_type: result.contentType,
-							// 	},
-							// });
 						}
 						this.broker.call(CW721_MANAGER_ACTION.UPSERT, cw721);
 						this.logger.info(cw721);

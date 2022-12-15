@@ -171,7 +171,7 @@ export default class CrawlAssetService extends moleculer.Service {
 	) {
 		this.logger.info('getMediaLink', uri, fileName, key);
 		// eslint-disable-next-line quote-props
-		const query: QueryOptions = { source: sourceUri, 'custom_info.chainId': chainId };
+		const query: QueryOptions = { source: sourceUri, 'custom_info.chain_id': chainId };
 		const media: any[] = await this.broker.call(CW721_MEDIA_MANAGER_ACTION.FIND, { query });
 		this.logger.debug('media', media);
 
