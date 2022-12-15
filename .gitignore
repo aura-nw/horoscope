@@ -69,3 +69,5 @@ dist/
 .dccache
 
 network.json
+
+.vscode/settings.json
