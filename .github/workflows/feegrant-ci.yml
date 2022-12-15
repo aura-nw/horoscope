@@ -30,11 +30,5 @@ jobs:
         run: npm ci
       - name: Run build
         run: npm run build --if-present
-      - name: Override env
-        run: |
-          echo "DB_GENERIC_HOST=mongo" >> $GITHUB_ENV
-          echo "DB_GENERIC_PORT=5432" >> $GITHUB_ENV
-          echo "REDIS_HOST=redis"  >> $GITHUB_ENV
-          echo "REDIS_PORT=6379" >> $GITHUB_ENV
       - name: Run test
         run: npm run test
