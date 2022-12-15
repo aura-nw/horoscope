@@ -43,6 +43,7 @@ const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 			index: true,
 		},
 		content_type: String,
+		file_path: String,
 	},
 	animation: {
 		link_s3: {
@@ -50,6 +51,7 @@ const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 			index: true,
 		},
 		content_type: String,
+		file_path: String,
 	},
 });
 
