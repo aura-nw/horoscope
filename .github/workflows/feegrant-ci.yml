@@ -12,7 +12,6 @@ jobs:
         image: redis
         env:
           REDIS_USERNAME: default
-          NODE_ENV: test
       mongo:
         image: mongo
         env:
@@ -29,3 +28,8 @@ jobs:
         run: npm run build --if-present
       - name: Run test
         run: npm run test
+        env:
+          DB_GENERIC_HOST: mongo
+          DB_GENERIC_PORT: 5432
+          REDIS_HOST: redis
+          REDIS_PORT: 6379
