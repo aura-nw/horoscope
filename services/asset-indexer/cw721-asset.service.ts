@@ -261,7 +261,7 @@ export default class CrawlAssetService extends moleculer.Service {
 
 			// Create a record to save cw721
 			const asset = Common.createCW721AssetObject(
-				codeId,
+				codeId.toString(),
 				address,
 				tokenId,
 				mediaLinkKey,
