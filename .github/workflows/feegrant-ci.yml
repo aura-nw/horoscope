@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, test]
     services:
       redis:
         image: redis
@@ -20,7 +20,7 @@ jobs:
           MONGO_INITDB_ROOT_USERNAME: root
           MONGO_INITDB_ROOT_PASSWORD: 123456
         ports:
-          - 5432:5432
+          - 27017:27017
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
