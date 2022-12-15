@@ -16,6 +16,8 @@ describe('Test feegrant-tx-handler service', () => {
         Promise.resolve(listTx)
     );
     beforeAll(async () => {
+        console.log(process.env["DB_GENERIC_HOST"]);
+        
         await broker.start();
         await service.getQueue('feegrant.tx-handle').empty()
     });

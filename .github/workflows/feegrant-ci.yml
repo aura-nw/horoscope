@@ -28,6 +28,10 @@ jobs:
           node-version: 16
       - name: Install dependencies
         run: npm ci
+      - name: Dotenv Action
+        uses: c-py/action-dotenv-to-setenv@v2
+        with:
+          env-file: ci/.env.ci
       - name: Run build
         run: npm run build --if-present
       - name: Run test
