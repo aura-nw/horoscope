@@ -199,7 +199,7 @@ export class Common {
 		/* eslint-enable camelcase */
 	}
 	public static createCW20AssetObject(
-		codeId: number,
+		codeId: string,
 		address: string,
 		owner: string,
 		tokenInfo: ICW20AssetInfo,

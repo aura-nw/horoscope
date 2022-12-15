@@ -128,7 +128,7 @@ export default class SmartContractsService extends MoleculerDBService<
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
 			data: {
-				smart_contracts: data.slice(0, ctx.params.limit - 1),
+				smart_contracts: data.slice(0, ctx.params.limit),
 				next_key: nextKey,
 			},
 		};
