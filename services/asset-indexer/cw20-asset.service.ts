@@ -311,23 +311,6 @@ export default class CrawlAssetService extends moleculer.Service {
 	}
 
 	async _start(): Promise<void> {
-		this.createJob(
-			'CW20.enrich',
-			{
-				url: ['https://lcd.serenity.aura.network'],
-				address: 'aura1c0s4p3lf87c5x3u4zgqfvamkqrl47ucxcyfudfzauwtg5g3ra3lsv0tnzd',
-				codeId: '756',
-				typeEnrich: 'upsert',
-				chainId: 'serenity-testnet-001',
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 3,
-				},
-			},
-		);
-
 		this.getQueue('CW20.enrich').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
