@@ -138,7 +138,7 @@ export class Common {
 	}
 
 	public static createCW4973AssetObject(
-		codeId: number,
+		codeId: string,
 		address: string,
 		id: string,
 		mediaLinkKey: string,
@@ -152,7 +152,7 @@ export class Common {
 			_id: Types.ObjectId(),
 
 			asset_id: `${address}_${id}`,
-			codeId,
+			code_id: codeId,
 			asset_info: tokenInfo,
 			contract_address: address,
 			token_id: id,
@@ -169,7 +169,7 @@ export class Common {
 		/* eslint-enable camelcase */
 	}
 	public static createCW721AssetObject(
-		codeId: number,
+		codeId: string,
 		address: string,
 		id: string,
 		mediaLinkKey: string,
@@ -182,7 +182,7 @@ export class Common {
 		return {
 			_id: Types.ObjectId(),
 			asset_id: `${address}_${id}`,
-			codeId: codeId.toString(),
+			code_id: codeId,
 			asset_info: tokenInfo,
 			contract_address: address,
 			token_id: id,
@@ -211,7 +211,7 @@ export class Common {
 		return {
 			_id: Types.ObjectId(),
 			asset_id: `${address}_${owner}`,
-			codeId,
+			code_id: codeId,
 			asset_info: tokenInfo,
 			contract_address: address,
 			owner,
