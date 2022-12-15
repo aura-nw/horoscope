@@ -209,7 +209,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						this.logger.debug('CW721 update: ', JSON.stringify(cw721));
 						if (cw721?.metadata?.image === sourceUri) {
 							cw721.image = {
-								link_s3: media[0].mediaLink,
+								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
 							};
 							this.broker.call('v1.CW721-asset-manager.act-update-by-id', {
@@ -217,7 +217,7 @@ export default class CrawlAssetService extends moleculer.Service {
 								updateOperator: {
 									$set: {
 										image: {
-											link_s3: media[0].mediaLink,
+											link_s3: media[0].media_link,
 											content_type: media[0].content_type,
 										},
 									},
@@ -226,7 +226,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						}
 						if (cw721?.metadata?.animation_url === sourceUri) {
 							cw721.animation = {
-								link_s3: media[0].mediaLink,
+								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
 							};
 
@@ -235,7 +235,7 @@ export default class CrawlAssetService extends moleculer.Service {
 								updateOperator: {
 									$set: {
 										animation: {
-											link_s3: media[0].mediaLink,
+											link_s3: media[0].media_link,
 											content_type: media[0].content_type,
 										},
 									},
@@ -264,8 +264,8 @@ export default class CrawlAssetService extends moleculer.Service {
 					{
 						query: {
 							'custom_info.chain_id': chainId,
-							// eslint-disable-next-line quote-props
-							mediaLink: media.key,
+							// eslint-disable-next-line quote-props, camelcase
+							media_link: media.key,
 						},
 					},
 					{ timeout: 0 },
