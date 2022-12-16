@@ -48,7 +48,7 @@
     "@types/swagger-ui-dist": "^3.30.1",
     "apollo-datasource-mongodb": "^0.5.4",
     "apollo-server": "^3.10.0",
-    "aws-sdk": "^2.1177.0",
+    "aws-sdk": "^2.1276.0",
     "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",
     "bignumber.js": "^9.1.0",
