@@ -134,8 +134,13 @@ export default class CrawlAccountInfoService extends Service {
 												{
 													removeOnComplete: true,
 													removeOnFail: {
-														count: 3,
+														count: parseInt(
+															Config.BULL_JOB_REMOVE_ON_FAIL_COUNT,
+															10,
+														),
 													},
+													attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+													backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
 												},
 											);
 										}
@@ -157,8 +162,13 @@ export default class CrawlAccountInfoService extends Service {
 												{
 													removeOnComplete: true,
 													removeOnFail: {
-														count: 3,
+														count: parseInt(
+															Config.BULL_JOB_REMOVE_ON_FAIL_COUNT,
+															10,
+														),
 													},
+													attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+													backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
 												},
 											);
 										}
@@ -180,8 +190,13 @@ export default class CrawlAccountInfoService extends Service {
 												{
 													removeOnComplete: true,
 													removeOnFail: {
-														count: 3,
+														count: parseInt(
+															Config.BULL_JOB_REMOVE_ON_FAIL_COUNT,
+															10,
+														),
 													},
+													attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+													backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
 												},
 											);
 										}

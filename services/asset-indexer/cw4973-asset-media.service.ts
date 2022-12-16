@@ -168,10 +168,10 @@ const queueService = require('moleculer-bull');
 								{
 									removeOnComplete: true,
 									removeOnFail: {
-										count: 3,
+										count: parseInt(Config.BULL_JOB_REMOVE_ON_FAIL_COUNT, 10),
 									},
-									attempts: 5,
-									backoff: 5000,
+									attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+									backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
 								},
 							);
 						} catch (error) {
