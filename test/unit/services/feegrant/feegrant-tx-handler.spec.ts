@@ -16,6 +16,7 @@ describe('Test feegrant-tx-handler service', () => {
         Promise.resolve(listTx)
     );
     beforeAll(async () => {
+        
         await broker.start();
         await service.getQueue('feegrant.tx-handle').empty()
     });
