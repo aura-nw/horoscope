@@ -123,7 +123,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						if (listTokenIDs?.data?.tokens !== undefined) {
 							if (listTokenIDs.data.tokens.length > 0) {
 								const id = listTokenIDs.data.tokens[0];
-								const str = `{"all_nft_info":{"tokenId":"${id}"}}`;
+								const str = `{"all_nft_info":{"token_id":"${id}"}}`;
 								const stringEncode64bytes = Buffer.from(str).toString('base64');
 								const urlGetOwner = `${CONTRACT_URI}${address}/smart/${stringEncode64bytes}`;
 								this.logger.debug(url, urlGetOwner);
