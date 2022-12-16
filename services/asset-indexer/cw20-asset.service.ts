@@ -251,10 +251,21 @@ export default class CrawlAssetService extends moleculer.Service {
 			);
 			await Promise.all(
 				contractList.map(async (address: string) => {
-					await this.broker.call(
-						CW20_ACTION.ENRICH_DATA,
-						[{ url, chainId, codeId, address }, ENRICH_TYPE.INSERT],
-						opts,
+					this.createJob(
+						'CW20.enrich',
+						{
+							url,
+							address,
+							codeId,
+							typeEnrich: ENRICH_TYPE.UPSERT,
+							chainId,
+						},
+						{
+							removeOnComplete: true,
+							removeOnFail: {
+								count: 3,
+							},
+						},
 					);
 				}),
 			);
