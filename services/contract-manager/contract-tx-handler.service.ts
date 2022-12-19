@@ -89,44 +89,46 @@ export default class CrawlSmartContractsService extends Service {
 							this.logger.error(`Error get attributes at TxHash ${instant_tx_hash}`);
 							this.logger.error(error);
 						}
-						const mess = msg.msg;
-						for (let i = 0; i < instant_contract_addresses.length; i++) {
-							const code_id = instant_code_ids[i].value;
-							const contract_address = instant_contract_addresses[i].value;
-							const [token_info, marketing_info, contract_info] =
-								await this.queryContractInfo(
-									chainId,
-									instant_contract_addresses[i].value,
-								);
-							let contract_hash;
-							try {
-								const param = `${Config.GET_DATA_HASH}${code_id}`;
-								const url = Utils.getUrlByChainIdAndType(
-									chainId,
-									URL_TYPE_CONSTANTS.LCD,
-								);
-								contract_hash = (
-									await this.callApiFromDomain(url, param)
-								).code_info.data_hash.toLowerCase();
-							} catch (error) {
-								this.logger.error(error);
+						if (instant_code_ids && instant_contract_addresses) {
+							const mess = msg.msg;
+							for (let i = 0; i < instant_contract_addresses.length; i++) {
+								const code_id = instant_code_ids[i].value;
+								const contract_address = instant_contract_addresses[i].value;
+								const [token_info, marketing_info, contract_info] =
+									await this.queryContractInfo(
+										chainId,
+										instant_contract_addresses[i].value,
+									);
+								let contract_hash;
+								try {
+									const param = `${Config.GET_DATA_HASH}${code_id}`;
+									const url = Utils.getUrlByChainIdAndType(
+										chainId,
+										URL_TYPE_CONSTANTS.LCD,
+									);
+									contract_hash = (
+										await this.callApiFromDomain(url, param)
+									).code_info.data_hash.toLowerCase();
+								} catch (error) {
+									this.logger.error(error);
+								}
+								const smartContract = {
+									_id: new Types.ObjectId(),
+									contract_name: instant_contract_name,
+									contract_address,
+									contract_hash,
+									creator_address: instant_creator_address,
+									tx_hash: instant_tx_hash,
+									height: instant_height,
+									code_id,
+									num_tokens: 0,
+									token_info,
+									marketing_info,
+									contract_info,
+									msg: mess,
+								} as ISmartContracts;
+								smartContracts.push(smartContract);
 							}
-							const smartContract = {
-								_id: new Types.ObjectId(),
-								contract_name: instant_contract_name,
-								contract_address,
-								contract_hash,
-								creator_address: instant_creator_address,
-								tx_hash: instant_tx_hash,
-								height: instant_height,
-								code_id,
-								num_tokens: 0,
-								token_info,
-								marketing_info,
-								contract_info,
-								msg: mess,
-							} as ISmartContracts;
-							smartContracts.push(smartContract);
 						}
 						break;
 					case MSG_TYPE.MSG_EXECUTE_CONTRACT:
@@ -147,60 +149,62 @@ export default class CrawlSmartContractsService extends Service {
 								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
 								.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
 						} catch (error) {
-							this.logger.error(`Error get attributes at TxHash ${instant_tx_hash}`);
+							this.logger.error(`Error get attributes at TxHash ${tx_hash}`);
 							this.logger.error(error);
 						}
-						const executeMess = msg.msg;
-						for (let i = 0; i < contract_addresses.length; i++) {
-							const code_id = code_ids[i].value;
-							const contract_address = contract_addresses[i].value;
-							const creator_address = txs.tx_response.logs[0].events
-								.find((x: any) => x.type === CONST_CHAR.EXECUTE)
-								.attributes.find(
-									// eslint-disable-next-line no-underscore-dangle
-									(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
-								).value;
-							const url = Utils.getUrlByChainIdAndType(
-								chainId,
-								URL_TYPE_CONSTANTS.LCD,
-							);
-							let contract_hash;
-							let cosmwasm_contract;
-							const [token_info, marketing_info, contract_info] =
-								await this.queryContractInfo(chainId, contract_address);
-							try {
-								// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-								const param = `${Config.GET_DATA_HASH}${code_id}`;
-								contract_hash = (
-									await this.callApiFromDomain(url, param)
-								).code_info.data_hash.toLowerCase();
-								[contract_hash, cosmwasm_contract] = await Promise.all([
-									this.callApiFromDomain(url, param),
-									this.callApiFromDomain(
-										url,
-										`${PATH_COSMOS_SDK.COSMWASM_CONTRACT_PARAM}${contract_address}`,
-									),
-								]);
-							} catch (error) {
-								this.logger.error(error);
+						if (code_ids && contract_addresses) {
+							const executeMess = msg.msg;
+							for (let i = 0; i < contract_addresses.length; i++) {
+								const code_id = code_ids[i].value;
+								const contract_address = contract_addresses[i].value;
+								const creator_address = txs.tx_response.logs[0].events
+									.find((x: any) => x.type === CONST_CHAR.EXECUTE)
+									.attributes.find(
+										// eslint-disable-next-line no-underscore-dangle
+										(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
+									).value;
+								const url = Utils.getUrlByChainIdAndType(
+									chainId,
+									URL_TYPE_CONSTANTS.LCD,
+								);
+								let contract_hash;
+								let cosmwasm_contract;
+								const [token_info, marketing_info, contract_info] =
+									await this.queryContractInfo(chainId, contract_address);
+								try {
+									// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+									const param = `${Config.GET_DATA_HASH}${code_id}`;
+									contract_hash = (
+										await this.callApiFromDomain(url, param)
+									).code_info.data_hash.toLowerCase();
+									[contract_hash, cosmwasm_contract] = await Promise.all([
+										this.callApiFromDomain(url, param),
+										this.callApiFromDomain(
+											url,
+											`${PATH_COSMOS_SDK.COSMWASM_CONTRACT_PARAM}${contract_address}`,
+										),
+									]);
+								} catch (error) {
+									this.logger.error(error);
+								}
+								contract_hash = contract_hash.code_info.data_hash.toLowerCase();
+								const smartContract = {
+									_id: new Types.ObjectId(),
+									contract_name: cosmwasm_contract.contract_info.label,
+									contract_address,
+									contract_hash,
+									creator_address,
+									tx_hash,
+									height,
+									code_id,
+									num_tokens: 0,
+									token_info,
+									marketing_info,
+									contract_info,
+									msg: executeMess,
+								} as ISmartContracts;
+								smartContracts.push(smartContract);
 							}
-							contract_hash = contract_hash.code_info.data_hash.toLowerCase();
-							const smartContract = {
-								_id: new Types.ObjectId(),
-								contract_name: cosmwasm_contract.contract_info.label,
-								contract_address,
-								contract_hash,
-								creator_address,
-								tx_hash,
-								height,
-								code_id,
-								num_tokens: 0,
-								token_info,
-								marketing_info,
-								contract_info,
-								msg: executeMess,
-							} as ISmartContracts;
-							smartContracts.push(smartContract);
 						}
 						break;
 				}
