@@ -32,7 +32,6 @@ const opts: CallingOptions = { timeout: 0, retries: MAX_RETRY_REQ };
 const ASSET_INDEXER_TOKEN_ID_LIMIT = Config.ASSET_INDEXER_TOKEN_ID_LIMIT;
 const VALIDATE_CODEID_PREFIX = 'validate_codeid';
 const HANDLE_CODEID_PREFIX = 'handle_codeid';
-
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
 
@@ -114,7 +113,7 @@ const queueService = require('moleculer-bull');
 				const processingFlag = await this.broker.cacher?.get(cacheKey);
 				if (!processingFlag) {
 					// @ts-ignore
-					await this.broker.cacher?.set(cacheKey, true);
+					await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
 					// @ts-ignore
 					this.logger.debug('Asset handler registered', chainId, codeId);
 					// @ts-ignore

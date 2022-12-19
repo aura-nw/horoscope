@@ -24,6 +24,7 @@ import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
 const CONTRACT_URI = Config.CONTRACT_URI;
+const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
 
 export default class CrawlAccountInfoService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -95,6 +96,7 @@ export default class CrawlAccountInfoService extends Service {
 							await this.broker.cacher?.set(
 								`contract_${chainId}_${contractAddress}`,
 								true,
+								CACHER_INDEXER_TTL,
 							);
 							const contractInfo = await this.verifyAddressByCodeID(
 								url,

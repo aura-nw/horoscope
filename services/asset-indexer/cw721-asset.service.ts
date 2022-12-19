@@ -30,7 +30,7 @@ const opts: CallingOptions = { timeout: 0, retries: MAX_RETRY_REQ };
 const ASSET_INDEXER_TOKEN_ID_LIMIT = Config.ASSET_INDEXER_TOKEN_ID_LIMIT;
 const VALIDATE_CODEID_PREFIX = 'validate_codeid';
 const HANDLE_CODEID_PREFIX = 'handle_codeid';
-
+const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
 /**
@@ -96,7 +96,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		// @ts-ignore
 		const processingFlag = await this.broker.cacher?.get(cacheKey);
 		if (!processingFlag) {
-			await this.broker.cacher?.set(cacheKey, true);
+			await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
 			this.logger.debug('Asset handler registered', chainId, codeId);
 			this.handleJob(url, chainId, codeId);
 			await this.broker.cacher?.del(cacheKey);
