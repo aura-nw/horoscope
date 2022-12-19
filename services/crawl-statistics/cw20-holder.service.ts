@@ -36,6 +36,11 @@ export default class Cw20HolderService extends MoleculerDBService<
 	async groupAndCount() {
 		const result = await this.adapter.aggregate([
 			{
+				$match: {
+					balance: { $ne: '0' },
+				},
+			},
+			{
 				$group: {
 					_id: {
 						code_id: '$code_id',
