@@ -149,6 +149,7 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 				this.broker.call('v1.CW20-asset-manager.act-count', {
 					query: {
 						contract_address: addr,
+						balance: { $ne: '0' },
 						'custom_info.chain_id': ctx.params.chainId,
 					},
 				}),
