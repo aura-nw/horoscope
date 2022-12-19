@@ -192,7 +192,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 			this.logger.info(result);
 			this.logger.debug('result handle uri:', JSON.stringify(result));
 			if (result) {
-				this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
+				await this.broker.call(CW721_MEDIA_MANAGER_ACTION.UPSERT, {
 					key,
 					media_link: result.linkS3,
 					content_type: result.contentType,
@@ -203,6 +203,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 					file_path: result.key,
 				});
 				const query: any = {
+					'custom_info.chain_id': chainId,
 					$or: [
 						{ 'metadata.image': sourceUri },
 						{ 'metadata.animation_url': sourceUri },
@@ -259,7 +260,7 @@ export default class CW721AssetMediaManagerService extends moleculer.Service {
 								},
 							});
 						}
-						this.broker.call(CW721_MANAGER_ACTION.UPSERT, cw721);
+						// This.broker.call(CW721_MANAGER_ACTION.UPSERT, cw721);
 						this.logger.info(cw721);
 					});
 				}
