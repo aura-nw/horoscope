@@ -83,7 +83,7 @@ export default class SmartContractsService extends MoleculerDBService<
 		}
 		if (ctx.params.nextKey && ctx.params.nextKey !== '') {
 			// eslint-disable-next-line no-underscore-dangle
-			query._id = { $gte: new ObjectId(ctx.params.nextKey) };
+			query._id = { $lte: new ObjectId(ctx.params.nextKey) };
 		}
 		this.logger.info('query', query);
 		let data: any = await this.adapter.find({
@@ -123,7 +123,7 @@ export default class SmartContractsService extends MoleculerDBService<
 
 		const nextKey =
 			// eslint-disable-next-line no-underscore-dangle
-			data.length === ctx.params.limit + 1 ? data[ctx.params.limit - 1]._id : null;
+			data.length === ctx.params.limit + 1 ? data[ctx.params.limit]._id : null;
 		const response = {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
