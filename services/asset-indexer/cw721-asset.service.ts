@@ -102,7 +102,7 @@ export default class CrawlAssetService extends moleculer.Service {
 			await this.broker.cacher?.del(cacheKey);
 		}
 	}
-	async checkIfContractImplementInterface(url: string, chainId: string, codeId: number) {
+	async checkIfContractImplementInterface(url: any, chainId: string, codeId: number) {
 		try {
 			let cw721flag: any = null;
 			const urlGetContractList = `${CODE_ID_URI}${codeId}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&`;
@@ -275,7 +275,8 @@ export default class CrawlAssetService extends moleculer.Service {
 				asset,
 			);
 			this.logger.debug('insert new asset: ', JSON.stringify(resultInsert));
-			// Const assetId = resultInsert._id.toString();
+			// eslint-disable-next-line no-underscore-dangle
+			const cw721Id = resultInsert._id ?? resultInsert;
 			try {
 				if (animationLink) {
 					[uri, type, fileName, mediaLinkKey] = Common.getKeyFromUri(animationLink);
@@ -287,7 +288,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						mediaLinkKey,
 						chainId,
 						field: CW721_FIELD.ANIMATION,
-						cw721Id: resultInsert,
+						cw721Id,
 					};
 					this.logger.debug('param emit get-media-link: ', JSON.stringify(paramEmit));
 					this.broker.emit('CW721-media.get-media-link', paramEmit);
@@ -302,7 +303,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						mediaLinkKey,
 						chainId,
 						field: CW721_FIELD.IMAGE,
-						cw721Id: resultInsert,
+						cw721Id,
 					};
 					this.logger.debug('param emit get-media-link: ', JSON.stringify(paramEmit));
 					this.broker.emit('CW721-media.get-media-link', paramEmit);
@@ -509,6 +510,12 @@ export default class CrawlAssetService extends moleculer.Service {
 		}
 	}
 	public async _start(): Promise<void> {
+		// This.checkIfContractImplementInterface(
+		// 	['https://lcd.euphoria.aura.network'],
+		// 	'euphoria-2',
+		// 	349,
+		// );
+
 		// @ts-ignore
 		// This.createJob(
 		// 	'CW721.migrate-old-data',
