@@ -208,7 +208,7 @@ export class Common {
 	) {
 		const network = LIST_NETWORK.find((item) => item.chainId === chainId);
 		/* eslint-disable camelcase */
-		return {
+		const cw20 = {
 			_id: Types.ObjectId(),
 			asset_id: `${address}_${owner}`,
 			code_id: codeId,
@@ -230,6 +230,10 @@ export class Common {
 				.dividedBy(tokenInfo?.data?.total_supply)
 				.multipliedBy(100),
 		};
+		if (tokenInfo?.data?.total_supply === '0') {
+			cw20.percent_hold = BigNumber('0');
+		}
+		return cw20;
 		/* eslint-enable camelcase */
 	}
 	public static checkFileTypeInvalid(type: string) {
