@@ -72,7 +72,7 @@ export const smartContractsMongoModel = (collection: string): unknown => {
 	});
 	// @ts-ignore
 	schema.index(
-		{ 'custom_info.chain_id': 1, code_id: 1, contract_address: 1 },
+		{ code_id: 1, contract_address: 1 },
 		// @ts-ignore
 		{ unique: true, name: 'unique_contract' },
 	);

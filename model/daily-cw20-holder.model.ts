@@ -31,6 +31,6 @@ export const dailyCw20HolderMongoModel = (collection: string): unknown => {
 		collection,
 	});
 	// @ts-ignore
-	schema.index({ code_id: 1, contract_address: 1, 'custom_info.chain_id': 1 }, { unique: true });
+	schema.index({ code_id: 1, contract_address: 1 }, { unique: true });
 	return models[collection] || model(collection, schema);
 };

@@ -10,7 +10,11 @@ const definition: definitionType<IDailyTxStatistics> = (collection?: string) => 
 	daily_active_addresses: Number,
 	unique_addresses: Number,
 	unique_addresses_increase: Number,
-	date: Date,
+	date: {
+		type: Date,
+		index: true,
+		unique: true,
+	},
 	custom_info: customInfoModel,
 });
 
@@ -22,7 +26,5 @@ export const dailyTxStatisticsMongoModel = (collection: string): unknown => {
 		// Strict: false,
 		collection,
 	});
-	// @ts-ignore
-	schema.index({ date: 1, 'custom_info.chain_id': 1 }, { unique: true });
 	return models[collection] || model(collection, schema);
 };

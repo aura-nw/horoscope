@@ -5,7 +5,11 @@ import { definitionType } from 'types';
 
 const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	address: String,
+	address: {
+		type: String,
+		unique: true,
+		index: true,
+	},
 	account_auth: {
 		account: Object,
 	},
@@ -102,7 +106,6 @@ export const accountInfoMongoModel = (collection: string): unknown => {
 		collection,
 	});
 	// @ts-ignore
-	schema.index({ address: 1, 'custom_info.chain_id': 1 }, { unique: true });
 	schema.index({ 'account_auth.result.type': 1 });
 	return models[collection] || model(collection, schema);
 };
