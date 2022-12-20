@@ -226,6 +226,22 @@ const brokerConfig: BrokerOptions = {
 				width: Config.TRACING_WIDTH || 100,
 				// Gauge width in the row
 				gaugeWidth: Config.TRACING_GUAGEWIDTH || 40,
+
+				// Jaeger
+				host: Config.JAEGER_HOST,
+				port: Config.JAEGER_PORT,
+				sampler: {
+					// Sampler type. More info: https://www.jaegertracing.io/docs/1.14/sampling/#client-sampling-configuration
+					type: 'Const',
+					// Sampler specific options.
+					options: {},
+				},
+				// Additional options for `Jaeger.Tracer`
+				tracerOptions: {},
+				// Default tags. They will be added into all span tags.
+				defaultTags: Config.JAEGER_DEFAULT_TAG
+					? JSON.parse(Config.JAEGER_DEFAULT_TAG)
+					: null,
 			},
 		},
 	},

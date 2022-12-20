@@ -428,6 +428,10 @@ export default class CrawlAssetService extends moleculer.Service {
 				$set: {
 					is_burned: true,
 				},
+				$unset: {
+					image: '',
+					animation: '',
+				},
 			});
 		}
 		/* eslint-enable quote-props  */
