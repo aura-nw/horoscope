@@ -158,8 +158,8 @@ export default class CrawlProposalService extends Service {
 			`${Config.GET_TX_API_EVENTS}?events=submit_proposal.proposal_id=${proposalId}`,
 		);
 		try {
-			const initialDeposit = resultCallApi.txs[0].body.messages[0].initial_deposit;
-			const proposerAddress = resultCallApi.txs[0].body.messages[0].proposer;
+			const initialDeposit = resultCallApi?.txs[0]?.body?.messages[0]?.initial_deposit;
+			const proposerAddress = resultCallApi?.txs[0]?.body?.messages[0]?.proposer;
 			const result: any = await this.broker.call('v1.crawlValidator.find', {
 				query: {
 					'custom_info.chain_id': Config.CHAIN_ID,
