@@ -107,17 +107,11 @@ export default class SmartContractsService extends MoleculerDBService<
 			listCodeIdCreators.push(this.callApiFromDomain(url, param));
 			return d;
 		});
-		const [resultAsset, resultCreator] = await Promise.all([
-			Promise.all(listAssetQueries),
-			Promise.all(listCodeIdCreators),
-		]);
+		const resultAsset = await Promise.all(listAssetQueries);
 		resultAsset.map((ra: any, index: number) => {
 			data[index].contract_type = {
 				status: ra.status,
 				type: ra.contractType,
-				creator: resultCreator.find(
-					(rc: any) => Number(rc.code_info.code_id) === data[index].code_id,
-				).code_info.creator,
 			};
 		});
 

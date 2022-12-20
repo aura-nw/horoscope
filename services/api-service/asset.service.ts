@@ -240,6 +240,7 @@ export default class AssetService extends MoleculerDBService<
 					nextKey: ctx.params.nextKey,
 				});
 			} else {
+				query.balance = { $ne: '0' };
 				asset = await this.broker.call(`v1.${contractType}-asset-manager.act-find`, {
 					query,
 					sort: '-updatedAt',

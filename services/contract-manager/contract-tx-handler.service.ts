@@ -92,25 +92,26 @@ export default class CrawlSmartContractsService extends Service {
 						if (instant_code_ids && instant_contract_addresses) {
 							const mess = msg.msg;
 							for (let i = 0; i < instant_contract_addresses.length; i++) {
-								const code_id = instant_code_ids[i].value;
+								const code_id = {
+									id: instant_code_ids[i].value,
+									creator: '',
+								};
 								const contract_address = instant_contract_addresses[i].value;
-								const [token_info, marketing_info, contract_info] =
-									await this.queryContractInfo(
-										chainId,
-										instant_contract_addresses[i].value,
-									);
+								const [
+									token_info,
+									marketing_info,
+									contract_info,
+									cosmwasm_code_id,
+								] = await this.queryContractInfo(
+									chainId,
+									instant_contract_addresses[i].value,
+									instant_code_ids[i].value,
+								);
 								let contract_hash;
-								try {
-									const param = `${Config.GET_DATA_HASH}${code_id}`;
-									const url = Utils.getUrlByChainIdAndType(
-										chainId,
-										URL_TYPE_CONSTANTS.LCD,
-									);
-									contract_hash = (
-										await this.callApiFromDomain(url, param)
-									).code_info.data_hash.toLowerCase();
-								} catch (error) {
-									this.logger.error(error);
+								if (cosmwasm_code_id.code_info) {
+									contract_hash =
+										cosmwasm_code_id.code_info.data_hash.toLowerCase();
+									code_id.creator = cosmwasm_code_id.code_info.creator;
 								}
 								const smartContract = {
 									_id: new Types.ObjectId(),
@@ -155,7 +156,10 @@ export default class CrawlSmartContractsService extends Service {
 						if (code_ids && contract_addresses) {
 							const executeMess = msg.msg;
 							for (let i = 0; i < contract_addresses.length; i++) {
-								const code_id = code_ids[i].value;
+								const code_id = {
+									id: code_ids[i].value,
+									creator: '',
+								};
 								const contract_address = contract_addresses[i].value;
 								const creator_address = txs.tx_response.logs[0].events
 									.find((x: any) => x.type === CONST_CHAR.EXECUTE)
@@ -167,27 +171,31 @@ export default class CrawlSmartContractsService extends Service {
 									chainId,
 									URL_TYPE_CONSTANTS.LCD,
 								);
-								let contract_hash;
+								const [
+									token_info,
+									marketing_info,
+									contract_info,
+									cosmwasm_code_id,
+								] = await this.queryContractInfo(
+									chainId,
+									contract_address,
+									code_ids[i].value,
+								);
 								let cosmwasm_contract;
-								const [token_info, marketing_info, contract_info] =
-									await this.queryContractInfo(chainId, contract_address);
 								try {
-									// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-									const param = `${Config.GET_DATA_HASH}${code_id}`;
-									contract_hash = (
-										await this.callApiFromDomain(url, param)
-									).code_info.data_hash.toLowerCase();
-									[contract_hash, cosmwasm_contract] = await Promise.all([
-										this.callApiFromDomain(url, param),
-										this.callApiFromDomain(
-											url,
-											`${PATH_COSMOS_SDK.COSMWASM_CONTRACT_PARAM}${contract_address}`,
-										),
-									]);
+									cosmwasm_contract = await this.callApiFromDomain(
+										url,
+										`${PATH_COSMOS_SDK.COSMWASM_CONTRACT_PARAM}${contract_address}`,
+									);
 								} catch (error) {
 									this.logger.error(error);
 								}
-								contract_hash = contract_hash.code_info.data_hash.toLowerCase();
+								let contract_hash;
+								if (cosmwasm_code_id.code_info) {
+									contract_hash =
+										cosmwasm_code_id.code_info.data_hash.toLowerCase();
+									code_id.creator = cosmwasm_code_id.code_info.creator;
+								}
 								const smartContract = {
 									_id: new Types.ObjectId(),
 									contract_name: cosmwasm_contract.contract_info.label,
@@ -235,11 +243,10 @@ export default class CrawlSmartContractsService extends Service {
 					$set: { num_tokens: Number(result.data.count) },
 				});
 			}
-			/* eslint-enable camelcase, no-underscore-dangle */
 		}
 	}
 
-	public async queryContractInfo(chainId: string, contractAddress: string) {
+	public async queryContractInfo(chainId: string, contractAddress: string, codeId: string) {
 		const base64RequestTokenInfo = Buffer.from('{ "token_info": {} }').toString('base64');
 		const base64RequestMarketingInfo = Buffer.from('{ "marketing_info": {} }').toString(
 			'base64',
@@ -251,17 +258,20 @@ export default class CrawlSmartContractsService extends Service {
 			Config.CONTRACT_URI + `${contractAddress}/smart/${base64RequestMarketingInfo}`;
 		const paramContractInfo =
 			Config.CONTRACT_URI + `${contractAddress}/smart/${base64RequestContractInfo}`;
+		const paramCosmWasmCodeId = `${Config.GET_DATA_HASH}${codeId}`;
 		const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-		const [tokenInfo, marketingInfo, contractInfo] = await Promise.all([
+		const [tokenInfo, marketingInfo, contractInfo, cosmwasmCodeId] = await Promise.all([
 			this.callApiFromDomain(url, paramTokenInfo),
 			this.callApiFromDomain(url, paramMarketingInfo),
 			this.callApiFromDomain(url, paramContractInfo),
+			this.callApiFromDomain(url, paramCosmWasmCodeId),
 		]);
 
 		return [
 			tokenInfo.data ? tokenInfo.data : {},
 			marketingInfo.data ? marketingInfo.data : {},
 			contractInfo.data ? contractInfo.data : {},
+			cosmwasmCodeId ? cosmwasmCodeId : {},
 		];
 	}
 
