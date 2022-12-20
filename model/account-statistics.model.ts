@@ -6,7 +6,11 @@ import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<IAccountStatistics> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	address: String,
+	address: {
+		type: String,
+		unique: true,
+		index: true,
+	},
 	per_day: [
 		{
 			total_sent_tx: {
@@ -92,7 +96,5 @@ export const accountStatisticsMongoModel = (collection: string): unknown => {
 		// Strict: false,
 		collection,
 	});
-	// @ts-ignore
-	schema.index({ address: 1, 'custom_info.chain_id': 1 }, { unique: true });
 	return models[collection] || model(collection, schema);
 };

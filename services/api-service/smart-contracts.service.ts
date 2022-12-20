@@ -6,12 +6,10 @@ import { Context } from 'moleculer';
 import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
 import { ObjectId } from 'mongodb';
 import { ErrorCode, ErrorMessage, GetContractsRequest, MoleculerDBService } from '../../types';
-import { CODEID_MANAGER_ACTION, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { CODEID_MANAGER_ACTION, LIST_NETWORK } from '../../common/constant';
 import { dbSmartContractsMixin } from '../../mixins/dbMixinMongoose';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { ISmartContracts } from '../../model/smart-contracts.model';
-import { Utils } from '../../utils/utils';
-import { Config } from '../../common';
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
@@ -93,18 +91,14 @@ export default class SmartContractsService extends MoleculerDBService<
 			limit: ctx.params.limit + 1,
 		});
 		const listAssetQueries: any = [];
-		const listCodeIdCreators: any = [];
-		const url = Utils.getUrlByChainIdAndType(ctx.params.chainId, URL_TYPE_CONSTANTS.LCD);
 		data = data.map((d: any) => {
 			d = d.toObject();
-			const param = `${Config.GET_DATA_HASH}${d.code_id}`;
 			listAssetQueries.push(
 				this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
 					chain_id: ctx.params.chainId,
 					code_id: d.code_id,
 				}),
 			);
-			listCodeIdCreators.push(this.callApiFromDomain(url, param));
 			return d;
 		});
 		const resultAsset = await Promise.all(listAssetQueries);
