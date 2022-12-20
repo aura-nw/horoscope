@@ -96,7 +96,7 @@ export default class SmartContractsService extends MoleculerDBService<
 			listAssetQueries.push(
 				this.broker.call(CODEID_MANAGER_ACTION.CHECK_STATUS, {
 					chain_id: ctx.params.chainId,
-					code_id: d.code_id,
+					code_id: d.code_id.id ? d.code_id.id : d.code_id,
 				}),
 			);
 			return d;
