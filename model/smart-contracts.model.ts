@@ -4,10 +4,15 @@ import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
+export interface ICodeId {
+	id: number;
+	creator: string;
+}
+
 export interface ISmartContracts {
 	_id: ObjectIdNull;
 	height: number;
-	code_id: number;
+	code_id: ICodeId;
 	contract_name: string;
 	contract_address: string;
 	creator_address: string;
@@ -26,7 +31,10 @@ const definition: definitionType<ISmartContracts> = (collection?: string) => ({
 		type: Number,
 		index: true,
 	},
-	code_id: Number,
+	code_id: {
+		id: Number,
+		creator: String,
+	},
 	contract_name: String,
 	contract_address: {
 		type: String,
