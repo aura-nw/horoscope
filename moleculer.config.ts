@@ -239,9 +239,7 @@ const brokerConfig: BrokerOptions = {
 				// Additional options for `Jaeger.Tracer`
 				tracerOptions: {},
 				// Default tags. They will be added into all span tags.
-				defaultTags: Config.JAEGER_DEFAULT_TAG
-					? JSON.parse(Config.JAEGER_DEFAULT_TAG)
-					: null,
+				defaultTags: Config.JAEGER_DEFAULT_TAG,
 			},
 		},
 	},

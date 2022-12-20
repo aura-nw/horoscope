@@ -6,6 +6,7 @@ import moleculer, { CallingOptions, Context } from 'moleculer';
 import { Action, Event, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
 import { Job } from 'bull';
+import { Utils } from '../../utils/utils';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { CodeIDStatus } from '../../model/codeid.model';
 import { Config } from '../../common';
@@ -15,6 +16,7 @@ import {
 	CONTRACT_TYPE,
 	CW20_ACTION,
 	ENRICH_TYPE,
+	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
 import { queueConfig } from '../../config/queue';
 import { Common, ITokenInfo } from './common.service';
@@ -325,6 +327,25 @@ export default class CrawlAssetService extends moleculer.Service {
 	}
 
 	async _start(): Promise<void> {
+		const url = Utils.getUrlByChainIdAndType('serenity-testnet-001', URL_TYPE_CONSTANTS.LCD);
+		this.createJob(
+			'CW20.enrich',
+			{
+				url,
+				address: 'aura10e8j2j4hhj26kx6jzrz93k4gchjhj2dr5ynnazmauxh42t4jhuysljgezd',
+				codeId: '891',
+				typeEnrich: ENRICH_TYPE.UPSERT,
+				chainId: 'serenity-testnet-001',
+			},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: parseInt(Config.BULL_JOB_REMOVE_ON_FAIL_COUNT, 10),
+				},
+				attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+				backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
+			},
+		);
 		this.getQueue('CW20.enrich').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
