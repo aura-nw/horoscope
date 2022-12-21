@@ -3,7 +3,7 @@
 'use strict';
 
 import moleculer, { CallingOptions, Context } from 'moleculer';
-import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { Action, Event, Service } from '@ourparentcenter/moleculer-decorators-extended';
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
 import { AddBurnedToAsset } from 'types';
 import { Job } from 'bull';
@@ -25,7 +25,6 @@ import { Common, ITokenInfo } from './common.service';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
-const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
 const opts: CallingOptions = { timeout: 0, retries: MAX_RETRY_REQ };
@@ -78,57 +77,34 @@ const queueService = require('moleculer-bull');
 			},
 		},
 	},
-	events: {
-		'CW4973.validate': {
-			async handler(ctx: Context<any>) {
-				const codeId = ctx.params.codeId;
-				const chainId = ctx.params.chainId;
-				// Const contract_type = ctx.params.contract_type;
-				const url = ctx.params.url;
-				const cacheKey = `${VALIDATE_CODEID_PREFIX}_${chainId}_${codeId}`;
-				// @ts-ignore
-				this.logger.info('ctx.params', codeId, chainId, CONTRACT_TYPE.CW4973);
-
-				// @ts-ignore
-				await this.checkIfContractImplementInterface(url, chainId, codeId);
-				// @ts-ignore
-				// Const processingFlag = await this.broker.cacher?.get(cacheKey);
-				// If (!processingFlag) {
-				// 	// @ts-ignore
-				// 	Await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
-				// 	// @ts-ignore
-				// 	Await this.checkIfContractImplementInterface(url, chainId, codeId);
-				// 	// @ts-ignore
-				// 	Await this.broker.cacher?.del(cacheKey);
-				// }
-			},
-		},
-		'CW4973.handle': {
-			async handler(ctx: Context<any>) {
-				const chainId = ctx.params.chainId;
-				const codeId = ctx.params.codeId;
-				const url = ctx.params.url;
-				const cacheKey = `${HANDLE_CODEID_PREFIX}_${chainId}_${codeId}`;
-				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(cacheKey);
-				if (!processingFlag) {
-					// @ts-ignore
-					await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
-					// @ts-ignore
-					this.logger.debug('Asset handler registered', chainId, codeId);
-					// @ts-ignore
-					this.handleJob(url, chainId, codeId);
-					// @ts-ignore
-					await this.broker.cacher?.del(cacheKey);
-					// TODO emit event index history of the NFT.
-				}
-				// TODO subcribe the event index the history of the NFT
-			},
-		},
-	},
 })
 export default class CrawlAssetService extends moleculer.Service {
-	async checkIfContractImplementInterface(url: string, chainId: string, codeId: number) {
+	@Event({ name: 'CW4973.validate' })
+	async cw4973Validate(ctx: Context<any>) {
+		const codeId = ctx.params.codeId;
+		const chainId = ctx.params.chainId;
+		const url = ctx.params.url;
+		this.logger.info('ctx.params', codeId, chainId, CONTRACT_TYPE.CW721);
+		await this.checkIfContractImplementInterface(url, chainId, codeId);
+	}
+
+	@Event({ name: 'CW4973.handle' })
+	async cw4973Handle(ctx: Context<any>) {
+		const chainId = ctx.params.chainId;
+		const codeId = ctx.params.codeId;
+		const url = ctx.params.url;
+		const cacheKey = `${HANDLE_CODEID_PREFIX}_${chainId}_${codeId}`;
+		// @ts-ignore
+		const processingFlag = await this.broker.cacher?.get(cacheKey);
+		if (!processingFlag) {
+			await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
+			this.logger.debug('Asset handler registered', chainId, codeId);
+			this.handleJob(url, chainId, codeId);
+			await this.broker.cacher?.del(cacheKey);
+		}
+	}
+
+	async checkIfContractImplementInterface(url: any, chainId: string, codeId: number) {
 		try {
 			let cw4973flag: any = null;
 			const urlGetContractList = `${CODE_ID_URI}${codeId}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&`;
@@ -414,8 +390,8 @@ export default class CrawlAssetService extends moleculer.Service {
 		return null;
 	}
 
-	@Action({ name: 'getITokenInfor' })
-	private async _getITokenInfor(ctx: Context<ITokenInfo>) {
+	@Action({ name: 'getTokenInfor' })
+	private async _getTokenInfor(ctx: Context<ITokenInfo>) {
 		const url = ctx.params.url;
 		try {
 			const str = `{"all_nft_info":{"token_id":"${ctx.params.tokenId}"}}`;

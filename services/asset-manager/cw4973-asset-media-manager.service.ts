@@ -193,6 +193,7 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 					},
 				});
 				const query: any = {
+					'custom_info.chain_id': chainId,
 					$or: [
 						{ 'metadata.image': sourceUri },
 						{ 'metadata.animation_url': sourceUri },
@@ -201,11 +202,6 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 						},
 					],
 				};
-				// If (field == CW4973_FIELD.IMAGE) {
-				// 	Query['metadata.image'] = sourceUri;
-				// } else if (field == CW4973_FIELD.ANIMATION) {
-				// 	Query['metadata.animation_url'] = sourceUri;
-				// }
 
 				const listFoundCW4973: CW4973AssetEntity[] = await this.broker.call(
 					CW4973_MANAGER_ACTION.FIND,
@@ -220,6 +216,7 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 							cw4973.image = {
 								link_s3: result.linkS3,
 								content_type: result.contentType,
+								file_path: result.key,
 							};
 							this.broker.call('v1.CW4973-asset-manager.act-update-by-id', {
 								obj: cw4973,
@@ -228,6 +225,7 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 										image: {
 											link_s3: result.linkS3,
 											content_type: result.contentType,
+											file_path: result.key,
 										},
 									},
 								},
@@ -237,6 +235,7 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 							cw4973.animation = {
 								link_s3: result.linkS3,
 								content_type: result.contentType,
+								file_path: result.key,
 							};
 							this.broker.call('v1.CW4973-asset-manager.act-update-by-id', {
 								obj: cw4973,
@@ -245,6 +244,7 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 										animation: {
 											link_s3: result.linkS3,
 											content_type: result.contentType,
+											file_path: result.key,
 										},
 									},
 								},
