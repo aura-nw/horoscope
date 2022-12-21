@@ -159,11 +159,11 @@ export const CW721_ACTION = {
 };
 
 export const CW4973_MANAGER_ACTION = {
-	FIND: 'v1.cw4973-asset-manager.act-find',
-	COUNT: 'v1.cw4973-asset-manager.act-count',
-	INSERT: 'v1.cw4973-asset-manager.act-insert',
-	LIST: 'v1.cw4973-asset-manager.act-list',
-	UPSERT: 'v1.cw4973-asset-manager.act-upsert',
+	FIND: 'v1.CW4973-asset-manager.act-find',
+	COUNT: 'v1.CW4973-asset-manager.act-count',
+	INSERT: 'v1.CW4973-asset-manager.act-insert',
+	LIST: 'v1.CW4973-asset-manager.act-list',
+	UPSERT: 'v1.CW4973-asset-manager.act-upsert',
 };
 
 export const CW4973_MEDIA_MANAGER_ACTION = {
