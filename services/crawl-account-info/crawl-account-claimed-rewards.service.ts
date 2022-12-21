@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Job } from 'bull';
 import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
@@ -124,7 +125,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 												index,
 												tx.tx_response.logs,
 												userAddress,
-												chainId,
 											);
 											if (insertAcc) {
 												listAccounts.push(insertAcc);
@@ -137,7 +137,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 										index,
 										tx.tx_response.logs,
 										userAddress,
-										chainId,
 									);
 									if (insertAcc) {
 										listAccounts.push(insertAcc);
@@ -171,7 +170,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 						};
 						listUpdateQueries.push(this.adapter.insert(item));
 					}
-					/* eslint-enable no-underscore-dangle, camelcase */
 				});
 				await Promise.all(listUpdateQueries);
 			} catch (error) {
@@ -181,13 +179,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		}
 	}
 
-	public async handleStakeRewards(
-		msg: any,
-		index: any,
-		logs: any,
-		userAddress: string,
-		chainId: string,
-	) {
+	public async handleStakeRewards(msg: any, index: any, logs: any, userAddress: string) {
 		if (!userAddress) {
 			userAddress = msg.delegator_address;
 		}
@@ -310,7 +302,7 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				);
 				if (undelegateReward) {
 					try {
-						undelegateAmount = delegateReward.attributes
+						undelegateAmount = undelegateReward.attributes
 							.find((x: any) => x.key === CONST_CHAR.AMOUNT)
 							.value.match(/\d+/g)[0];
 					} catch (error) {
@@ -369,7 +361,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 				}
 				break;
 		}
-		/* eslint-enable no-underscore-dangle, camelcase */
 		return account;
 	}
 

@@ -1,9 +1,8 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable camelcase */
 import { Job } from 'bull';
-import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { fromBech32 } from '@cosmjs/encoding';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
@@ -72,9 +71,12 @@ export default class CrawlAccountAuthInfoService extends Service {
 		const listAccounts: AccountInfoEntity[] = [];
 		let listUpdateQueries: any[] = [];
 		const listDelayJobs: DelayJobEntity[] = [];
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter((addr: string) => fromBech32(addr).data.length === 20);
+
+		const network = LIST_NETWORK.find((x) => x.chainId === chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+
 		if (listAddresses.length > 0) {
 			for (const address of listAddresses) {
 				this.logger.info(`Handle address: ${address}`);
@@ -84,20 +86,12 @@ export default class CrawlAccountAuthInfoService extends Service {
 
 				let accountInfo: AccountInfoEntity;
 				try {
-					const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-					if (network && network.databaseName) {
-						this.adapter.useDb(network.databaseName);
-					}
 					accountInfo = await this.adapter.findOne({
 						address,
 					});
 				} catch (error) {
 					this.logger.error(error);
 					throw error;
-				}
-				if (!accountInfo) {
-					accountInfo = {} as AccountInfoEntity;
-					accountInfo.address = address;
 				}
 
 				let resultCallApi;
@@ -109,11 +103,11 @@ export default class CrawlAccountAuthInfoService extends Service {
 				}
 
 				if (
-					(resultCallApi &&
-						resultCallApi.account &&
-						resultCallApi.account['@type'] &&
-						resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.PERIODIC) ||
-					resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED
+					resultCallApi &&
+					resultCallApi.account &&
+					resultCallApi.account['@type'] &&
+					(resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.PERIODIC ||
+						resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED)
 				) {
 					let existsJob;
 					try {
@@ -123,8 +117,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 								resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.PERIODIC
 									? DELAY_JOB_TYPE.PERIODIC_VESTING
 									: DELAY_JOB_TYPE.DELAYED_VESTING,
-							// eslint-disable-next-line camelcase
-							chain_id: chainId,
 						} as QueryDelayJobParams);
 					} catch (error) {
 						this.logger.error(error);
@@ -171,10 +163,10 @@ export default class CrawlAccountAuthInfoService extends Service {
 						}
 						newDelayJob.indexes = `${address}${
 							newDelayJob.type
-						}${newDelayJob?.expire_time!.getTime()}${chainId}`;
+						}${newDelayJob?.expire_time?.getTime()}${chainId}`;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
-							chain_name: chain ? chain.chainName : '',
+							chain_name: network ? network.chainName : '',
 						};
 						listDelayJobs.push(newDelayJob);
 					}
@@ -199,31 +191,14 @@ export default class CrawlAccountAuthInfoService extends Service {
 				listAccounts.push(accountInfo);
 			}
 		}
+
 		try {
-			const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-			if (network && network.databaseName) {
-				this.adapter.useDb(network.databaseName);
-			}
 			listAccounts.map((element) => {
-				// eslint-disable-next-line no-underscore-dangle
-				if (element._id) {
-					listUpdateQueries.push(
-						// eslint-disable-next-line no-underscore-dangle
-						this.adapter.updateById(element._id, {
-							$set: { account_auth: element.account_auth },
-						}),
-					);
-				} else {
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-						element,
-						AccountInfoEntity,
-					);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: chain ? chain.chainName : '',
-					};
-					listUpdateQueries.push(this.adapter.insert(item));
-				}
+				listUpdateQueries.push(
+					this.adapter.updateById(element._id, {
+						$set: { account_auth: element.account_auth },
+					}),
+				);
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {

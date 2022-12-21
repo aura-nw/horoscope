@@ -1,7 +1,5 @@
 import { Job } from 'bull';
-import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { fromBech32 } from '@cosmjs/encoding';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
@@ -63,9 +61,12 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 	public async handleJob(listAddresses: string[], chainId: string) {
 		const listAccounts: AccountInfoEntity[] = [];
 		const listUpdateQueries: any[] = [];
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
+
 		const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter((addr: string) => fromBech32(addr).data.length === 20);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+
 		if (listAddresses.length > 0) {
 			for (const address of listAddresses) {
 				this.logger.info(`Handle address: ${address}`);
@@ -76,9 +77,6 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 					Config.GET_PARAMS_SPENDABLE_BALANCE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
-				if (network && network.databaseName) {
-					this.adapter.useDb(network.databaseName);
-				}
 				let accountInfo: AccountInfoEntity;
 				try {
 					accountInfo = await this.adapter.findOne({
@@ -87,10 +85,6 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 				} catch (error) {
 					this.logger.error(error);
 					throw error;
-				}
-				if (!accountInfo) {
-					accountInfo = {} as AccountInfoEntity;
-					accountInfo.address = address;
 				}
 
 				let urlToCall = param;
@@ -116,65 +110,50 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 					}
 				}
 				/* eslint-disable camelcase, no-underscore-dangle */
-				if (listSpendableBalances) {
-					if (listSpendableBalances.length > 1) {
-						await Promise.all(
-							listSpendableBalances.map(async (balance) => {
-								if (balance.denom.startsWith('ibc/')) {
-									const hash = balance.denom.split('/')[1];
-									const ibcDenom: IBCDenomEntity = await this.broker.call(
-										'v1.ibc-denom.getByHash',
-										{ hash: balance.denom, denom: '' },
+				if (listSpendableBalances.length > 1) {
+					await Promise.all(
+						listSpendableBalances.map(async (balance) => {
+							if (balance.denom.startsWith('ibc/')) {
+								const hash = balance.denom.split('/')[1];
+								const ibcDenom: IBCDenomEntity = await this.broker.call(
+									'v1.ibc-denom.getByHash',
+									{ hash: balance.denom, denom: '' },
+								);
+								if (ibcDenom) {
+									balance.denom = ibcDenom.denom;
+									balance.minimal_denom = ibcDenom.hash;
+								} else {
+									const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
+									const denomResult = await this.callApiFromDomain(
+										url,
+										hashParam,
 									);
-									if (ibcDenom) {
-										balance.denom = ibcDenom.denom;
-										balance.minimal_denom = ibcDenom.hash;
-									} else {
-										const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
-										const denomResult = await this.callApiFromDomain(
-											url,
-											hashParam,
-										);
-										balance.minimal_denom = balance.denom;
-										balance.denom = denomResult.denom_trace.base_denom;
-										this.broker.call('v1.ibc-denom.addNewDenom', {
-											hash: `ibc/${hash}`,
-											denom: balance.denom,
-										});
-									}
+									balance.minimal_denom = balance.denom;
+									balance.denom = denomResult.denom_trace.base_denom;
+									this.broker.call('v1.ibc-denom.addNewDenom', {
+										hash: `ibc/${hash}`,
+										denom: balance.denom,
+									});
 								}
-							}),
-						);
-					}
-					accountInfo.account_spendable_balances = listSpendableBalances;
+							}
+						}),
+					);
 				}
+				accountInfo.account_spendable_balances = listSpendableBalances;
 
 				listAccounts.push(accountInfo);
 			}
 		}
 		try {
 			listAccounts.map((element) => {
-				if (element._id) {
-					listUpdateQueries.push(
-						this.adapter.updateById(element._id, {
-							$set: {
-								account_spendable_balances: element.account_spendable_balances,
-							},
-						}),
-					);
-				} else {
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-						element,
-						AccountInfoEntity,
-					);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: network ? network.chainName : '',
-					};
-					listUpdateQueries.push(this.adapter.insert(item));
-				}
+				listUpdateQueries.push(
+					this.adapter.updateById(element._id, {
+						$set: {
+							account_spendable_balances: element.account_spendable_balances,
+						},
+					}),
+				);
 			});
-			/* eslint-enable camelcase, no-underscore-dangle */
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);
