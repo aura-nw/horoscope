@@ -1,7 +1,6 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Job } from 'bull';
-import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { fromBech32 } from '@cosmjs/encoding';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
@@ -21,7 +20,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 			version: 1,
 			mixins: [
 				queueService(queueConfig.redis, queueConfig.opts),
-				// This.redisMixin,
 				dbAccountInfoMixin,
 				new CallApiMixin().start(),
 			],
@@ -65,9 +63,12 @@ export default class CrawlAccountRedelegatesService extends Service {
 		const listAccounts: AccountInfoEntity[] = [];
 		let listUpdateQueries: any[] = [];
 		const listDelayJobs: DelayJobEntity[] = [];
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter((addr: string) => fromBech32(addr).data.length === 20);
+
+		const network = LIST_NETWORK.find((x) => x.chainId === chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+
 		if (listAddresses.length > 0) {
 			for (const address of listAddresses) {
 				this.logger.info(`Handle address: ${address}`);
@@ -78,10 +79,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 					Config.GET_PARAMS_DELEGATOR + `/${address}/redelegations?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 
-				const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-				if (network && network.databaseName) {
-					this.adapter.useDb(network.databaseName);
-				}
 				let accountInfo: AccountInfoEntity;
 				try {
 					accountInfo = await this.adapter.findOne({
@@ -90,10 +87,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 				} catch (error) {
 					this.logger.error(error);
 					throw error;
-				}
-				if (!accountInfo) {
-					accountInfo = {} as AccountInfoEntity;
-					accountInfo.address = address;
 				}
 
 				let urlToCall = param;
@@ -119,10 +112,8 @@ export default class CrawlAccountRedelegatesService extends Service {
 					}
 				}
 				/* eslint-disable camelcase, no-underscore-dangle */
-
-				if (listRedelegates) {
-					accountInfo.account_redelegations = listRedelegates;
-					listRedelegates.map(async (redelegate: RedelegationResponse) => {
+				if (listRedelegates.length > 0) {
+					listRedelegates.map((redelegate: RedelegationResponse) => {
 						const newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.REDELEGATE;
@@ -134,40 +125,24 @@ export default class CrawlAccountRedelegatesService extends Service {
 						}${newDelayJob?.expire_time.getTime()}${chainId}`;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
-							chain_name: chain ? chain.chainName : '',
+							chain_name: network ? network.chainName : '',
 						};
 						listDelayJobs.push(newDelayJob);
 					});
 				}
+				accountInfo.account_redelegations = listRedelegates;
 
 				listAccounts.push(accountInfo);
 			}
 		}
 		try {
-			const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-			if (network && network.databaseName) {
-				this.adapter.useDb(network.databaseName);
-			}
 			listAccounts.map((element) => {
-				if (element._id) {
-					listUpdateQueries.push(
-						this.adapter.updateById(element._id, {
-							$set: { account_redelegations: element.account_redelegations },
-						}),
-					);
-				} else {
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-						element,
-						AccountInfoEntity,
-					);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: chain ? chain.chainName : '',
-					};
-					listUpdateQueries.push(this.adapter.insert(item));
-				}
+				listUpdateQueries.push(
+					this.adapter.updateById(element._id, {
+						$set: { account_redelegations: element.account_redelegations },
+					}),
+				);
 			});
-			/* eslint-enable camelcase, no-underscore-dangle */
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);

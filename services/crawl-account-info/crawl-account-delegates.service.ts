@@ -1,7 +1,5 @@
 import { Job } from 'bull';
-import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { fromBech32 } from '@cosmjs/encoding';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
@@ -21,7 +19,6 @@ export default class CrawlAccountDelegatesService extends Service {
 			version: 1,
 			mixins: [
 				queueService(queueConfig.redis, queueConfig.opts),
-				// This.redisMixin,
 				dbAccountInfoMixin,
 				new CallApiMixin().start(),
 			],
@@ -64,9 +61,12 @@ export default class CrawlAccountDelegatesService extends Service {
 	public async handleJob(listAddresses: string[], chainId: string) {
 		const listAccounts: AccountInfoEntity[] = [];
 		const listUpdateQueries: any[] = [];
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
+
 		const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter((addr: string) => fromBech32(addr).data.length === 20);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+
 		if (listAddresses.length > 0) {
 			for (const address of listAddresses) {
 				this.logger.info(`Handle address: ${address}`);
@@ -75,9 +75,7 @@ export default class CrawlAccountDelegatesService extends Service {
 
 				const param = Config.GET_PARAMS_DELEGATE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-				if (network && network.databaseName) {
-					this.adapter.useDb(network.databaseName);
-				}
+
 				let accountInfo: AccountInfoEntity;
 				try {
 					accountInfo = await this.adapter.findOne({
@@ -86,10 +84,6 @@ export default class CrawlAccountDelegatesService extends Service {
 				} catch (error) {
 					this.logger.error(error);
 					throw error;
-				}
-				if (!accountInfo) {
-					accountInfo = {} as AccountInfoEntity;
-					accountInfo.address = address;
 				}
 
 				let urlToCall = param;
@@ -115,10 +109,8 @@ export default class CrawlAccountDelegatesService extends Service {
 					}
 				}
 
-				if (listDelegates) {
-					// eslint-disable-next-line camelcase
-					accountInfo.account_delegations = listDelegates;
-				}
+				// eslint-disable-next-line camelcase
+				accountInfo.account_delegations = listDelegates;
 
 				listAccounts.push(accountInfo);
 			}
@@ -128,26 +120,13 @@ export default class CrawlAccountDelegatesService extends Service {
 		}
 		try {
 			/* eslint-disable camelcase, no-underscore-dangle */
-
 			listAccounts.map((element) => {
-				if (element._id) {
-					listUpdateQueries.push(
-						this.adapter.updateById(element._id, {
-							$set: { account_delegations: element.account_delegations },
-						}),
-					);
-				} else {
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-						element,
-						AccountInfoEntity,
-					);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: network ? network.chainName : '',
-					};
-					listUpdateQueries.push(this.adapter.insert(item));
-				}
-			}); /* eslint-enable camelcase, no-underscore-dangle */
+				listUpdateQueries.push(
+					this.adapter.updateById(element._id, {
+						$set: { account_delegations: element.account_delegations },
+					}),
+				);
+			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);

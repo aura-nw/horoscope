@@ -1,7 +1,5 @@
 import { Job } from 'bull';
-import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { fromBech32 } from '@cosmjs/encoding';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
@@ -63,9 +61,12 @@ export default class CrawlAccountBalancesService extends Service {
 	public async handleJob(listAddresses: string[], chainId: string) {
 		const listAccounts: AccountInfoEntity[] = [];
 		const listUpdateQueries: any[] = [];
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter((addr: string) => fromBech32(addr).data.length === 20);
+
+		const network = LIST_NETWORK.find((x) => x.chainId === chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+
 		/* eslint-disable camelcase, no-underscore-dangle */
 		if (listAddresses.length > 0) {
 			for (const address of listAddresses) {
@@ -75,10 +76,6 @@ export default class CrawlAccountBalancesService extends Service {
 
 				const param = Config.GET_PARAMS_BALANCE + `/${address}?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-				const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-				if (network && network.databaseName) {
-					this.adapter.useDb(network.databaseName);
-				}
 				let accountInfo: AccountInfoEntity;
 				try {
 					accountInfo = await this.adapter.findOne({
@@ -87,10 +84,6 @@ export default class CrawlAccountBalancesService extends Service {
 				} catch (error) {
 					this.logger.error(error);
 					throw error;
-				}
-				if (!accountInfo) {
-					accountInfo = {} as AccountInfoEntity;
-					accountInfo.address = address;
 				}
 
 				let urlToCall = param;
@@ -116,84 +109,62 @@ export default class CrawlAccountBalancesService extends Service {
 					}
 				}
 
-				if (listBalances) {
-					if (listBalances.length > 1) {
-						await Promise.all(
-							listBalances.map(async (balance) => {
-								if (balance.denom.startsWith('ibc/')) {
-									const hash = balance.denom.split('/')[1];
-									let ibcDenom: IBCDenomEntity;
+				if (listBalances.length > 1) {
+					await Promise.all(
+						listBalances.map(async (balance) => {
+							if (balance.denom.startsWith('ibc/')) {
+								const hash = balance.denom.split('/')[1];
+								let ibcDenom: IBCDenomEntity;
+								try {
+									ibcDenom = await this.broker.call('v1.ibc-denom.getByHash', {
+										hash: balance.denom,
+										denom: '',
+									});
+								} catch (error) {
+									this.logger.error(error);
+									throw error;
+								}
+								if (ibcDenom) {
+									balance.denom = ibcDenom.denom;
+									balance.minimal_denom = ibcDenom.hash;
+								} else {
+									const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
+									let denomResult;
 									try {
-										ibcDenom = await this.broker.call(
-											'v1.ibc-denom.getByHash',
-											{ hash: balance.denom, denom: '' },
-										);
+										denomResult = await this.callApiFromDomain(url, hashParam);
 									} catch (error) {
 										this.logger.error(error);
 										throw error;
 									}
-									if (ibcDenom) {
-										balance.denom = ibcDenom.denom;
-										balance.minimal_denom = ibcDenom.hash;
-									} else {
-										const hashParam = Config.GET_PARAMS_IBC_DENOM + `/${hash}`;
-										let denomResult;
-										try {
-											denomResult = await this.callApiFromDomain(
-												url,
-												hashParam,
-											);
-										} catch (error) {
-											this.logger.error(error);
-											throw error;
-										}
-										balance.minimal_denom = balance.denom;
-										balance.denom = denomResult.denom_trace.base_denom;
-										try {
-											this.broker.call('v1.ibc-denom.addNewDenom', {
-												hash: `ibc/${hash}`,
-												denom: balance.denom,
-											});
-										} catch (error) {
-											this.logger.error(error);
-											throw error;
-										}
+									balance.minimal_denom = balance.denom;
+									balance.denom = denomResult.denom_trace.base_denom;
+									try {
+										this.broker.call('v1.ibc-denom.addNewDenom', {
+											hash: `ibc/${hash}`,
+											denom: balance.denom,
+										});
+									} catch (error) {
+										this.logger.error(error);
+										throw error;
 									}
 								}
-							}),
-						);
-					}
-					accountInfo.account_balances = listBalances;
+							}
+						}),
+					);
 				}
+				accountInfo.account_balances = listBalances;
 
 				listAccounts.push(accountInfo);
 			}
 		}
 		try {
-			const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-			if (network && network.databaseName) {
-				this.adapter.useDb(network.databaseName);
-			}
 			listAccounts.map((element) => {
-				if (element._id) {
-					listUpdateQueries.push(
-						this.adapter.updateById(element._id, {
-							$set: { account_balances: element.account_balances },
-						}),
-					);
-				} else {
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-						element,
-						AccountInfoEntity,
-					);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: chain ? chain.chainName : '',
-					};
-					listUpdateQueries.push(this.adapter.insert(item));
-				}
+				listUpdateQueries.push(
+					this.adapter.updateById(element._id, {
+						$set: { account_balances: element.account_balances },
+					}),
+				);
 			});
-			/* eslint-enable camelcase, no-underscore-dangle */
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
 			this.logger.error(error);

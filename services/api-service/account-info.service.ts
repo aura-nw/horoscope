@@ -317,15 +317,6 @@ export default class AccountInfoService extends MoleculerDBService<
 		]);
 
 		if (accountInfo) {
-			this.broker
-				.call('v1.handleAddress.accountinfoupsert', {
-					listTx: [{ address: ctx.params.address, message: '' }],
-					source: CONST_CHAR.API,
-					chainId: ctx.params.chainId,
-				})
-				.catch((error) => {
-					this.logger.error(error);
-				});
 			accountInfo = accountInfo.toObject();
 			// eslint-disable-next-line camelcase
 			accountInfo.account_delegate_rewards = accountRewards;
@@ -547,15 +538,6 @@ export default class AccountInfoService extends MoleculerDBService<
 		/* eslint-enabled camelcase */
 		let result: ResponseDto;
 		if (accountInfo.length > 0) {
-			this.broker
-				.call('v1.handleAddress.accountinfoupsert', {
-					listTx: [{ address: ctx.params.address, message: '' }],
-					source: CONST_CHAR.API,
-					chainId: ctx.params.chainId,
-				})
-				.catch((error) => {
-					this.logger.error(error);
-				});
 			const data = Object.assign({}, accountInfo[0]);
 			data.account_delegate_rewards = accountRewards;
 			result = {
