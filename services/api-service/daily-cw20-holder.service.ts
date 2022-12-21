@@ -137,7 +137,7 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 			this.adapter.useDb(network.databaseName);
 		}
 
-		let data = await this.adapter.lean({
+		const cw20Holders = await this.adapter.lean({
 			query: {
 				// eslint-disable-next-line camelcase
 				contract_address: { $in: ctx.params.addresses },
@@ -156,14 +156,14 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 			),
 		);
 		const holders = await Promise.all(listQueryHolders);
-		data = data.map((d: any) => {
-			const addrIndex = ctx.params.addresses.indexOf(
-				ctx.params.addresses.find((a: any) => a === d.contract_address),
+		const data = holders.map((hold: any, index: any) => {
+			const percent = cw20Holders.find(
+				(d: any) => d.contract_address === ctx.params.addresses[index],
 			);
 			return {
-				contract_address: d.contract_address,
-				holders: holders[addrIndex],
-				percentage: d.change_percent,
+				contract_address: ctx.params.addresses[index],
+				holders: hold,
+				percentage: percent ? percent.change_percent : 0,
 			};
 		});
 
