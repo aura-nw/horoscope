@@ -1,8 +1,8 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable camelcase */
 import { Job } from 'bull';
-import { JsonConvert } from 'json2typescript';
 import { Context, Service, ServiceBroker } from 'moleculer';
-import { fromBech32 } from '@cosmjs/encoding';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
@@ -10,7 +10,6 @@ import { DELAY_JOB_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/c
 import { UnbondingResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
 import { CrawlAccountInfoParams } from '../../types';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
@@ -66,9 +65,12 @@ export default class CrawlAccountUnbondsService extends Service {
 		const listAccounts: AccountInfoEntity[] = [];
 		let listUpdateQueries: any[] = [];
 		const listDelayJobs: DelayJobEntity[] = [];
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
-		listAddresses = listAddresses.filter((addr: string) => fromBech32(addr).data.length === 20);
+
+		const network = LIST_NETWORK.find((x) => x.chainId === chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
+
 		if (listAddresses.length > 0) {
 			for (const address of listAddresses) {
 				this.logger.info(`Handle address: ${address}`);
@@ -79,10 +81,7 @@ export default class CrawlAccountUnbondsService extends Service {
 					Config.GET_PARAMS_DELEGATOR +
 					`/${address}/unbonding_delegations?pagination.limit=100`;
 				const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-				const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-				if (network && network.databaseName) {
-					this.adapter.useDb(network.databaseName);
-				}
+
 				let accountInfo: AccountInfoEntity;
 				try {
 					accountInfo = await this.adapter.findOne({
@@ -91,10 +90,6 @@ export default class CrawlAccountUnbondsService extends Service {
 				} catch (error) {
 					this.logger.error(error);
 					throw error;
-				}
-				if (!accountInfo) {
-					accountInfo = {} as AccountInfoEntity;
-					accountInfo.address = address;
 				}
 
 				let urlToCall = param;
@@ -120,8 +115,7 @@ export default class CrawlAccountUnbondsService extends Service {
 					}
 				}
 
-				if (listUnbonds) {
-					accountInfo.account_unbonding = listUnbonds;
+				if (listUnbonds.length > 0) {
 					listUnbonds.map((unbond: UnbondingResponse) => {
 						const newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
@@ -133,40 +127,23 @@ export default class CrawlAccountUnbondsService extends Service {
 
 						newDelayJob.custom_info = {
 							chain_id: chainId,
-							chain_name: chain ? chain.chainName : '',
+							chain_name: network ? network.chainName : '',
 						};
 						listDelayJobs.push(newDelayJob);
 					});
 				}
+				accountInfo.account_unbonding = listUnbonds;
 
 				listAccounts.push(accountInfo);
 			}
 		}
 		try {
-			const network = LIST_NETWORK.find((x) => x.chainId === chainId);
-			if (network && network.databaseName) {
-				this.adapter.useDb(network.databaseName);
-			}
 			listAccounts.forEach((element) => {
-				// eslint-disable-next-line no-underscore-dangle
-				if (element._id) {
-					listUpdateQueries.push(
-						// eslint-disable-next-line no-underscore-dangle
-						this.adapter.updateById(element._id, {
-							$set: { account_unbonding: element.account_unbonding },
-						}),
-					);
-				} else {
-					const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-						element,
-						AccountInfoEntity,
-					);
-					item.custom_info = {
-						chain_id: chainId,
-						chain_name: chain ? chain.chainName : '',
-					};
-					listUpdateQueries.push(this.adapter.insert(item));
-				}
+				listUpdateQueries.push(
+					this.adapter.updateById(element._id, {
+						$set: { account_unbonding: element.account_unbonding },
+					}),
+				);
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
@@ -194,7 +171,6 @@ export default class CrawlAccountUnbondsService extends Service {
 		this.getQueue('crawl.account-unbonds').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }
