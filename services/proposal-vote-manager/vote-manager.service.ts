@@ -43,6 +43,8 @@ export default class VoteHandlerService extends Service {
 							existVote[0].answer = newVote.answer;
 							existVote[0].txhash = newVote.txhash;
 							existVote[0].timestamp = newVote.timestamp;
+							existVote[0].height = newVote.height;
+							existVote[0].code = newVote.code;
 							// eslint-disable-next-line no-underscore-dangle
 							result = await this.adapter.updateById(existVote[0]._id, existVote[0]);
 							this.logger.debug(`updatedVote ${JSON.stringify(result)}`);
