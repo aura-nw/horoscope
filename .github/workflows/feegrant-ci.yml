@@ -38,7 +38,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Log files modified
-        run: echo "${{ github.event }}"
+        run: echo "${{ github.event.head_commit.modified }}"
       - name: Install dependencies
         run: npm ci
       - name: Setup env
