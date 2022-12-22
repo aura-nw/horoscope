@@ -26,6 +26,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+      - name: Log files modified
+        run: echo ${{ github.event.commits.modified }}
       - name: Install dependencies
         run: npm ci
       - name: Setup env
