@@ -68,6 +68,7 @@ export default class CronjobUpdateOriginalGrant extends Service {
 					grantee: e.grantee,
 				});
 			});
+
 			query.$or = queryOr;
 			query.status = FEEGRANT_STATUS.AVAILABLE;
 			query.result = true;
