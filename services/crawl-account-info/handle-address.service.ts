@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
-import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
+import { ListTxCreatedParams } from 'types';
 import { JsonConvert } from 'json2typescript';
 import { fromBech32 } from '@cosmjs/encoding';
 import { CONST_CHAR, LIST_NETWORK } from '../../common/constant';
@@ -69,12 +69,12 @@ export default class HandleAddressService extends Service {
 	public async handleJob(listTx: any[], source: string, chainId: string) {
 		const listAddresses: any[] = [];
 		const listUpdateInfo = [
-			'account-info.upsert-auth',
-			'account-info.upsert-balances',
-			'account-info.upsert-delegates',
-			'account-info.upsert-redelegates',
-			'account-info.upsert-spendable-balances',
-			'account-info.upsert-unbonds',
+			'crawl.account-auth-info',
+			'crawl.account-balances',
+			'crawl.account-delegates',
+			'crawl.account-redelegates',
+			'crawl.account-spendable-balances',
+			'crawl.account-unbonds',
 		];
 		const listInsert: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
@@ -148,14 +148,29 @@ export default class HandleAddressService extends Service {
 					this.logger.error('Account(s) already exists');
 				}
 				listUpdateInfo.map((item) => {
-					this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });
+					this.createJob(
+						item,
+						{ listAddresses: listUniqueAddresses, chainId },
+						{
+							removeOnComplete: true,
+							removeOnFail: {
+								count: 10,
+							},
+						},
+					);
 				});
 			}
 			if (source !== CONST_CHAR.API) {
-				this.broker.emit('account-info.upsert-claimed-rewards', {
-					listTx,
-					chainId,
-				} as CrawlAccountClaimedRewardsParams);
+				this.createJob(
+					'crawl.account-claimed-rewards',
+					{ listTx },
+					{
+						removeOnComplete: true,
+						removeOnFail: {
+							count: 10,
+						},
+					},
+				);
 			}
 		}
 	}

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
@@ -50,10 +51,19 @@ export default class HandleDelayJobService extends Service {
 			if (job.expire_time!.getTime() <= new Date().getTime()) {
 				switch (job.type) {
 					case DELAY_JOB_TYPE.REDELEGATE:
-						this.broker.emit('account-info.upsert-redelegates', {
-							listAddresses: [job.content.address],
-							chainId: Config.CHAIN_ID,
-						});
+						this.createJob(
+							'crawl.account-redelegates',
+							{
+								listAddresses: [job.content.address],
+								chainId: Config.CHAIN_ID,
+							},
+							{
+								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
+							},
+						);
 
 						listUpdateQueries.push(
 							this.broker.call('v1.delay-job.deleteFinishedJob', {
@@ -62,18 +72,45 @@ export default class HandleDelayJobService extends Service {
 						);
 						break;
 					case DELAY_JOB_TYPE.UNBOND:
-						this.broker.emit('account-info.upsert-balances', {
-							listAddresses: [job.content.address],
-							chainId: Config.CHAIN_ID,
-						});
-						this.broker.emit('account-info.upsert-spendable-balances', {
-							listAddresses: [job.content.address],
-							chainId: Config.CHAIN_ID,
-						});
-						this.broker.emit('account-info.upsert-unbonds', {
-							listAddresses: [job.content.address],
-							chainId: Config.CHAIN_ID,
-						});
+						this.createJob(
+							'crawl.account-balances',
+							{
+								listAddresses: [job.content.address],
+								chainId: Config.CHAIN_ID,
+							},
+							{
+								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
+							},
+						);
+						this.createJob(
+							'crawl.account-spendable-balances',
+							{
+								listAddresses: [job.content.address],
+								chainId: Config.CHAIN_ID,
+							},
+							{
+								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
+							},
+						);
+						this.createJob(
+							'crawl.account-unbonds',
+							{
+								listAddresses: [job.content.address],
+								chainId: Config.CHAIN_ID,
+							},
+							{
+								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
+							},
+						);
 
 						listUpdateQueries.push(
 							this.broker.call('v1.delay-job.deleteFinishedJob', {
@@ -82,10 +119,19 @@ export default class HandleDelayJobService extends Service {
 						);
 						break;
 					case DELAY_JOB_TYPE.DELAYED_VESTING:
-						this.broker.emit('account-info.upsert-spendable-balances', {
-							listAddresses: [job.content.address],
-							chainId: Config.CHAIN_ID,
-						});
+						this.createJob(
+							'crawl.account-spendable-balances',
+							{
+								listAddresses: [job.content.address],
+								chainId: Config.CHAIN_ID,
+							},
+							{
+								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
+							},
+						);
 
 						listUpdateQueries.push(
 							this.broker.call('v1.delay-job.deleteFinishedJob', {
@@ -94,10 +140,19 @@ export default class HandleDelayJobService extends Service {
 						);
 						break;
 					case DELAY_JOB_TYPE.PERIODIC_VESTING:
-						this.broker.emit('account-info.upsert-spendable-balances', {
-							listAddresses: [job.content.address],
-							chainId: Config.CHAIN_ID,
-						});
+						this.createJob(
+							'crawl.account-spendable-balances',
+							{
+								listAddresses: [job.content.address],
+								chainId: Config.CHAIN_ID,
+							},
+							{
+								removeOnComplete: true,
+								removeOnFail: {
+									count: 10,
+								},
+							},
+						);
 
 						const updateInfo = await this.adapter.findOne({
 							address: job.content.address,
@@ -109,7 +164,7 @@ export default class HandleDelayJobService extends Service {
 									updateInfo.account_auth.account.vesting_periods[0].length,
 									10,
 								)) *
-								1000,
+							1000,
 						);
 						if (
 							newJobExpireTime.getTime() >=

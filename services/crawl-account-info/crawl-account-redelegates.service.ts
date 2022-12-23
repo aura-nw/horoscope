@@ -1,13 +1,13 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Job } from 'bull';
-import { Context, Service, ServiceBroker } from 'moleculer';
+import { Service, ServiceBroker } from 'moleculer';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { DELAY_JOB_TYPE, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { RedelegationResponse, DelayJobEntity, AccountInfoEntity } from '../../entities';
 import { Utils } from '../../utils/utils';
-import { CrawlAccountInfoParams } from '../../types';
 import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
@@ -32,27 +32,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 						await this.handleJob(job.data.listAddresses, job.data.chainId);
 						job.progress(100);
 						return true;
-					},
-				},
-			},
-			events: {
-				'account-info.upsert-redelegates': {
-					handler: (ctx: Context<CrawlAccountInfoParams>) => {
-						this.logger.debug('Crawl account redelegates');
-						this.createJob(
-							'crawl.account-redelegates',
-							{
-								listAddresses: ctx.params.listAddresses,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 10,
-								},
-							},
-						);
-						return;
 					},
 				},
 			},
@@ -120,9 +99,8 @@ export default class CrawlAccountRedelegatesService extends Service {
 						newDelayJob.expire_time = new Date(
 							redelegate.entries[0].redelegation_entry.completion_time!,
 						);
-						newDelayJob.indexes = `${address}${
-							newDelayJob.type
-						}${newDelayJob?.expire_time.getTime()}${chainId}`;
+						newDelayJob.indexes = `${address}${newDelayJob.type
+							}${newDelayJob?.expire_time.getTime()}${chainId}`;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: network ? network.chainName : '',
