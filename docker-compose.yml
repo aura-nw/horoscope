@@ -2,13 +2,17 @@ version: '3.3'
 
 services:
     mongo:
-        image: mongo:4
-        volumes:
-            - data:/data/db
-        networks:
-            - internal
+        image: mongo
+        restart: always
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: example
+        ports:
+            - '27017:27017'
 
     redis:
         image: redis:alpine
-        networks:
-            - internal
+        environment:
+            - ALLOW_EMPTY_PASSWORD=yes
+        ports:
+            - '6379:6379'

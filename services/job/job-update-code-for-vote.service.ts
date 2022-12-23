@@ -48,7 +48,7 @@ export default class InitVotingData extends Service {
 			},
 		})) as IVote[];
 		const queryIn_txhash = unprocessedVotes.map((vote) => vote.txhash) as string[];
-		const listDataVote = (await this.broker.call('v1.handletransaction.find', {
+		const listDataVote = (await this.broker.call('v1.handle-transaction.find', {
 			query: {
 				'tx_response.txhash': {
 					$in: queryIn_txhash,

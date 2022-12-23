@@ -29,7 +29,7 @@ export default class HandleTransactionService extends Service {
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
-			name: 'handletransaction',
+			name: 'handle-transaction',
 			version: 1,
 			mixins: [
 				queueService(queueConfig.redis, queueConfig.opts),
@@ -332,15 +332,15 @@ export default class HandleTransactionService extends Service {
 				},
 			},
 		);
-		this.getQueue('handle.transaction').on('completed', (job: Job) => {
-			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
-		});
-		this.getQueue('handle.transaction').on('failed', (job: Job) => {
-			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
-		});
-		this.getQueue('handle.transaction').on('progress', (job: Job) => {
-			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
-		});
+		// This.getQueue('handle.transaction').on('completed', (job: Job) => {
+		// 	This.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
+		// });
+		// This.getQueue('handle.transaction').on('failed', (job: Job) => {
+		// 	This.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
+		// });
+		// This.getQueue('handle.transaction').on('progress', (job: Job) => {
+		// 	This.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
+		// });
 		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}

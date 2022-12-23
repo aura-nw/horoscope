@@ -138,7 +138,7 @@ export default class WebsocketService extends Service {
 
 			this.logger.info('ListTx: ', syncTx);
 
-			const txHadCrawl: any[] = await this.broker?.call('v1.handletransaction.find', {
+			const txHadCrawl: any[] = await this.broker?.call('v1.handle-transaction.find', {
 				query: {
 					'tx_response.txhash': { $in: syncTx },
 				},

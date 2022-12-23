@@ -150,6 +150,7 @@ export default class FeegrantDB extends Service {
 				amount: 1,
 			},
 		})) as FeegrantEntity[];
+
 		listOriginalRecords.forEach((e) => {
 			if (!_.isEmpty(e.amount)) {
 				this.logger.info(JSON.stringify(e.amount));
