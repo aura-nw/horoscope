@@ -5,7 +5,11 @@ on:
     branches: [main, develop, staging, test-performance, feature/multiple-database, feature/migrate-artaverse]
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
   build:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
