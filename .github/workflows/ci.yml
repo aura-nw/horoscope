@@ -2,7 +2,7 @@ name: Continuous integration
 
 on:
   push:
-    branches: [main, develop, staging, test-performance, feature/multiple-database, feature/migrate-artaverse]
+    branches: [main, develop, staging, test-performance]
 
 jobs:
   test:
@@ -34,11 +34,8 @@ jobs:
           echo REPO_MANIFEST_BRANCH=master >> $GITHUB_ENV
           echo REPO_MANIFEST_ENV_DEV=./clusters/k8s-dev/horoscope/horoscope-crawl-auratestnet >> $GITHUB_ENV
           echo REPO_MANIFEST_ENV_TEST_PERFORMANCE=./clusters/k8s-dev/indexer-load-test >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_STAGING=./clusters/k8s-prod/indexer >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_MAIN=./clusters/k8s-main/indexer >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_EUPHORIA=./clusters/k8s-testnet-euphoria/indexer >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_SERENITY=./clusters/k8s-testnet-serenity/indexer >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_HALO=./clusters/k8s-testnet-halo/indexer >> $GITHUB_ENV
+          echo REPO_MANIFEST_ENV_STAGING=./clusters/k8s-testnet-euphoria/horoscope/horoscope-crawl-serenity >> $GITHUB_ENV
+          echo REPO_MANIFEST_ENV_MAIN=./clusters/k8s-prod/horoscope/horoscope-crawl-euphoria >> $GITHUB_ENV
           echo REPO_MANIFEST_TAG_IMAGE=image_aura_indexer_crawl >> $GITHUB_ENV
       - name: Build the Docker image and push it to the registry
         env:
