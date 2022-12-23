@@ -39,12 +39,7 @@ export default class IBCDenomService extends MoleculerDBService<
 		return result;
 	}
 
-	@Action({
-		name: 'addNewDenom',
-		cache: {
-			ttl: 10,
-		},
-	})
+	@Action()
 	async addNewDenom(ctx: Context<QueryIBCDenomParams>) {
 		const ibcDenom = {} as IBCDenomEntity;
 		const item: IBCDenomEntity = new JsonConvert().deserializeObject(ibcDenom, IBCDenomEntity);

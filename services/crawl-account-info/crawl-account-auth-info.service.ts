@@ -1,8 +1,9 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable camelcase */
 import { Job } from 'bull';
-import { Context, Service, ServiceBroker } from 'moleculer';
+import { Service, ServiceBroker } from 'moleculer';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
@@ -14,7 +15,7 @@ import {
 	VESTING_ACCOUNT_TYPE,
 } from '../../common/constant';
 import { Utils } from '../../utils/utils';
-import { CrawlAccountInfoParams, QueryDelayJobParams } from '../../types';
+import { QueryDelayJobParams } from '../../types';
 import { AccountInfoEntity, DelayJobEntity } from '../../entities';
 import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -40,27 +41,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 						await this.handleJob(job.data.listAddresses, job.data.chainId);
 						job.progress(100);
 						return true;
-					},
-				},
-			},
-			events: {
-				'account-info.upsert-auth': {
-					handler: (ctx: Context<CrawlAccountInfoParams>) => {
-						this.logger.debug('Crawl account auth info');
-						this.createJob(
-							'crawl.account-auth-info',
-							{
-								listAddresses: ctx.params.listAddresses,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 10,
-								},
-							},
-						);
-						return;
 					},
 				},
 			},
@@ -146,11 +126,11 @@ export default class CrawlAccountAuthInfoService extends Service {
 								let expire_time =
 									start_time +
 									number_of_periods *
-										parseInt(
-											resultCallApi.account.vesting_periods[0].length,
-											10,
-										) *
-										1000;
+									parseInt(
+										resultCallApi.account.vesting_periods[0].length,
+										10,
+									) *
+									1000;
 								if (expire_time < new Date().getTime()) {
 									expire_time +=
 										parseInt(
@@ -161,9 +141,8 @@ export default class CrawlAccountAuthInfoService extends Service {
 								newDelayJob.expire_time = new Date(expire_time);
 								break;
 						}
-						newDelayJob.indexes = `${address}${
-							newDelayJob.type
-						}${newDelayJob?.expire_time?.getTime()}${chainId}`;
+						newDelayJob.indexes = `${address}${newDelayJob.type
+							}${newDelayJob?.expire_time?.getTime()}${chainId}`;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: network ? network.chainName : '',

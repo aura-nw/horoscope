@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Job } from 'bull';
-import { JsonConvert } from 'json2typescript';
-import { Context, Service, ServiceBroker } from 'moleculer';
+import { Service, ServiceBroker } from 'moleculer';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
+import { CONST_CHAR, MSG_TYPE } from '../../common/constant';
 import { AccountInfoEntity, ITransaction, Rewards } from '../../entities';
 import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -35,17 +34,6 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 					concurrency: parseInt(Config.CONCURRENCY_ACCOUNT_CLAIMED_REWARDS, 10),
 					async process(job: Job) {
 						job.progress(10);
-						// @ts-ignore
-						await this.handleJob(job.data.listTx, job.data.chainId);
-						job.progress(100);
-						return true;
-					},
-				},
-			},
-			events: {
-				'account-info.upsert-claimed-rewards': {
-					handler: (ctx: Context<CrawlAccountClaimedRewardsService>) => {
-						this.logger.debug('Crawl account total claimed rewards');
 						const checkValidClaimRewardsTx = (tx: ITransaction) => {
 							const listMsg = tx.tx.body.messages;
 							const listMsgType = listMsg.map((msg: any) => msg['@type']);
@@ -67,109 +55,81 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 							}
 							return false;
 						};
-						const listTx = ctx.params.listTx.filter((tx: ITransaction) => {
+						const listTx = job.data.listTx.filter((tx: ITransaction) => {
 							if (checkValidClaimRewardsTx(tx)) {
 								return true;
 							}
 							return false;
 						});
-						this.createJob(
-							'crawl.account-claimed-rewards',
-							{
-								listTx,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 10,
-								},
-							},
-						);
-						return;
+						// @ts-ignore
+						await this.handleJob(listTx);
+						job.progress(100);
+						return true;
 					},
 				},
 			},
 		});
 	}
 
-	public async handleJob(listTx: any[], chainId: string) {
+	public async handleJob(listTx: any[]) {
 		this.logger.info(`Handle Txs: ${JSON.stringify(listTx)}`);
 		if (listTx.length > 0) {
 			const listAccounts: AccountInfoEntity[] = [];
 			const listUpdateQueries: any[] = [];
-			chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
-			const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 			for (const tx of listTx) {
 				if (tx.tx_response.code !== 0) {
 					continue;
 				}
 
-				await Promise.all(
-					tx.tx.body.messages
-						.filter(
-							(msg: any) =>
-								// eslint-disable-next-line no-underscore-dangle
-								this._listMessageAction.includes(msg['@type']) &&
-								tx.tx_response.code === 0,
-						)
-						.map(async (msg: any, index: any) => {
-							const userAddress = msg.delegator_address;
-
-							try {
-								if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
-									await Promise.all(
-										msg.msgs.map(async (m: any) => {
-											const insertAcc = await this.handleStakeRewards(
-												m,
-												index,
-												tx.tx_response.logs,
-												userAddress,
-											);
-											if (insertAcc) {
-												listAccounts.push(insertAcc);
-											}
-										}),
-									);
-								} else {
-									const insertAcc = await this.handleStakeRewards(
-										msg,
-										index,
-										tx.tx_response.logs,
-										userAddress,
-									);
-									if (insertAcc) {
-										listAccounts.push(insertAcc);
-									}
-								}
-							} catch (error) {
-								this.logger.error(error);
-								throw error;
-							}
-						}),
+				const messages = tx.tx.body.messages.filter(
+					(msg: any) =>
+						// eslint-disable-next-line no-underscore-dangle
+						this._listMessageAction.includes(msg['@type']) && tx.tx_response.code === 0,
 				);
+				for (let index = 0; index < messages.length; index++) {
+					const userAddress = messages[index].delegator_address;
+
+					try {
+						if (messages[index]['@type'] === MSG_TYPE.MSG_EXEC) {
+							for (const m of messages[index]) {
+								const acc = await this.handleStakeRewards(
+									m,
+									index,
+									tx.tx_response.logs,
+									userAddress,
+									listAccounts,
+								);
+								if (acc) {
+									listAccounts.push(acc);
+								}
+							}
+						} else {
+							const acc = await this.handleStakeRewards(
+								messages[index],
+								index,
+								tx.tx_response.logs,
+								userAddress,
+								listAccounts,
+							);
+							if (acc) {
+								listAccounts.push(acc);
+							}
+						}
+					} catch (error) {
+						this.logger.error(error);
+						throw error;
+					}
+				}
 			}
 
 			try {
 				listAccounts.map((element) => {
 					/* eslint-disable no-underscore-dangle, camelcase */
-					if (element._id) {
-						listUpdateQueries.push(
-							this.adapter.updateById(element._id, {
-								$set: { account_claimed_rewards: element.account_claimed_rewards },
-							}),
-						);
-					} else {
-						const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-							element,
-							AccountInfoEntity,
-						);
-						item.custom_info = {
-							chain_id: chainId,
-							chain_name: chain ? chain.chainName : '',
-						};
-						listUpdateQueries.push(this.adapter.insert(item));
-					}
+					listUpdateQueries.push(
+						this.adapter.updateById(element._id, {
+							$set: { account_claimed_rewards: element.account_claimed_rewards },
+						}),
+					);
 				});
 				await Promise.all(listUpdateQueries);
 			} catch (error) {
@@ -179,25 +139,26 @@ export default class CrawlAccountClaimedRewardsService extends Service {
 		}
 	}
 
-	public async handleStakeRewards(msg: any, index: any, logs: any, userAddress: string) {
+	public async handleStakeRewards(
+		msg: any,
+		index: any,
+		logs: any,
+		userAddress: string,
+		listAccounts: any,
+	) {
 		if (!userAddress) {
 			userAddress = msg.delegator_address;
 		}
-		let account: AccountInfoEntity;
-		try {
-			account = await this.adapter.findOne({
-				address: userAddress,
-			});
-		} catch (error) {
-			this.logger.error(error);
-			throw error;
-		}
-
-		/* eslint-disable no-underscore-dangle, camelcase */
+		let account = listAccounts.find((acc: any) => acc.address === userAddress);
 		if (!account) {
-			account = {} as AccountInfoEntity;
-			account.address = userAddress;
-			account.account_claimed_rewards = [] as Rewards[];
+			try {
+				account = await this.adapter.findOne({
+					address: userAddress,
+				});
+			} catch (error) {
+				this.logger.error(error);
+				throw error;
+			}
 		}
 
 		switch (msg['@type']) {
