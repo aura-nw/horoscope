@@ -41,28 +41,28 @@ export default class HandleAddressService extends Service {
 					},
 				},
 			},
-			events: {
-				'list-tx.upsert': {
-					handler: (ctx: Context<ListTxCreatedParams>) => {
-						this.logger.debug('Handle address');
-						this.createJob(
-							'handle.address',
-							{
-								listTx: ctx.params.listTx,
-								source: ctx.params.source,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 10,
-								},
-							},
-						);
-						return;
-					},
-				},
-			},
+			// Events: {
+			// 	'list-tx.upsert': {
+			// 		Handler: (ctx: Context<ListTxCreatedParams>) => {
+			// 			This.logger.debug('Handle address');
+			// 			This.createJob(
+			// 				'handle.address',
+			// 				{
+			// 					ListTx: ctx.params.listTx,
+			// 					Source: ctx.params.source,
+			// 					ChainId: ctx.params.chainId,
+			// 				},
+			// 				{
+			// 					RemoveOnComplete: true,
+			// 					RemoveOnFail: {
+			// 						Count: 10,
+			// 					},
+			// 				},
+			// 			);
+			// 			Return;
+			// 		},
+			// 	},
+			// },
 		});
 	}
 
@@ -94,11 +94,13 @@ export default class HandleAddressService extends Service {
 								)
 								.map((e: any) => e.attributes)
 								.map((e: any) =>
-									e.filter(
-										(x: any) =>
-											x.key === CONST_CHAR.RECEIVER ||
-											x.key === CONST_CHAR.SPENDER,
-									).map((x: any) => x.value),
+									e
+										.filter(
+											(x: any) =>
+												x.key === CONST_CHAR.RECEIVER ||
+												x.key === CONST_CHAR.SPENDER,
+										)
+										.map((x: any) => x.value),
 								)
 								.flat();
 							event = event.filter((e: string) => fromBech32(e).data.length === 20);
@@ -116,7 +118,9 @@ export default class HandleAddressService extends Service {
 			}
 
 			// eslint-disable-next-line no-underscore-dangle
-			const listUniqueAddresses = listAddresses.filter(this._onlyUnique)
+			const listUniqueAddresses = listAddresses
+				// eslint-disable-next-line no-underscore-dangle
+				.filter(this._onlyUnique)
 				.filter((addr: string) => fromBech32(addr).data.length === 20);
 			if (listUniqueAddresses.length > 0) {
 				try {

@@ -42,28 +42,28 @@ export default class VoteHandlerService extends Service {
 					},
 				},
 			},
-			events: {
-				// Listen to event from tx-handler
-				'list-tx.upsert': {
-					handler: (ctx: any) => {
-						// Create job to handle vote
-						this.createJob(
-							'proposal.vote',
-							{
-								listTx: ctx.params.listTx,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 3,
-								},
-							},
-						);
-						return;
-					},
-				},
-			},
+			// Events: {
+			// 	// Listen to event from tx-handler
+			// 	'list-tx.upsert': {
+			// 		Handler: (ctx: any) => {
+			// 			// Create job to handle vote
+			// 			This.createJob(
+			// 				'proposal.vote',
+			// 				{
+			// 					ListTx: ctx.params.listTx,
+			// 					ChainId: ctx.params.chainId,
+			// 				},
+			// 				{
+			// 					RemoveOnComplete: true,
+			// 					RemoveOnFail: {
+			// 						Count: 3,
+			// 					},
+			// 				},
+			// 			);
+			// 			Return;
+			// 		},
+			// 	},
+			// },
 			actions: {
 				// Action to take vote from tx
 				'act-take-vote': {
