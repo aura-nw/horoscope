@@ -1,7 +1,7 @@
 #!/bin/sh
 set -xe
 
-apk add bash && apk add git && apk add --update curl && rm -rf /var/cache/apk/*
+apk add bash && apk add git && rm -rf /var/cache/apk/*
 
 # clone repo manifest
 git clone "https://${PERSONAL_ACCESS_TOKEN}@${REPO_MANIFEST_URL}"
@@ -28,10 +28,7 @@ else
   exit
 fi
 
-# kustomize
-curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-./kustomize edit set image ${REPO_MANIFEST_TAG_IMAGE}=${CONTAINER_RELEASE_IMAGE}
-rm kustomize
+kustomize edit set image ${REPO_MANIFEST_TAG_IMAGE}=${CONTAINER_RELEASE_IMAGE}
 
 git config --global user.name "${GITHUB_ACTOR}"
 git config --global user.email "user@aura.network"
