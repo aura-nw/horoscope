@@ -1,13 +1,13 @@
 export interface IMessage {
-	source?: String;
-	element: String;
+	source?: string;
+	element: string;
 }
 
 export interface IRedisStreamData {
-	id: String;
+	id: string;
 	message: IMessage;
 }
 export interface IRedisStreamResponse {
-	name: String;
+	name: string;
 	messages: IRedisStreamData[];
 }

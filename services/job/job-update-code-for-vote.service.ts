@@ -1,26 +1,27 @@
-import { Config } from '../../common';
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable camelcase */
 import { Service, ServiceBroker } from 'moleculer';
+import { Job } from 'bull';
+import { IVote } from 'entities/vote.entity';
+import { Config } from '../../common';
 import { dbVoteMixin } from '../../mixins/dbMixinMongoose/db-vote.mixin';
 import RedisMixin from '../../mixins/redis/redis.mixin';
-import { Job } from 'bull';
-import { ObjectId } from 'mongodb';
-import { ITransaction } from '../../entities';
-import { IVote } from 'entities/vote.entity';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class InitVotingData extends Service {
-	private redisMixin = new RedisMixin().start();
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'job-update-code-for-vote',
 			version: 1,
 			mixins: [
-				QueueService(
+				queueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 				),
 				dbVoteMixin,
-				this.redisMixin,
+				new RedisMixin().start(),
 			],
 			queues: {
 				'update.code.vote': {
@@ -38,7 +39,7 @@ export default class InitVotingData extends Service {
 		});
 	}
 
-	async handleJob() {
+	public async handleJob() {
 		const unprocessedVotes = (await this.adapter.lean({
 			query: {
 				code: {
@@ -46,8 +47,8 @@ export default class InitVotingData extends Service {
 				},
 			},
 		})) as IVote[];
-		const queryIn_txhash = unprocessedVotes.map((vote) => vote['txhash']) as string[];
-		const listDataVote = (await this.broker.call('v1.handletransaction.find', {
+		const queryIn_txhash = unprocessedVotes.map((vote) => vote.txhash) as string[];
+		const listDataVote = (await this.broker.call('v1.handle-transaction.find', {
 			query: {
 				'tx_response.txhash': {
 					$in: queryIn_txhash,
@@ -55,24 +56,23 @@ export default class InitVotingData extends Service {
 			},
 			fields: ['tx_response.txhash', 'tx_response.code'],
 		})) as [];
-		const mapTxCode: Map<String, String> = new Map();
-		listDataVote.forEach((e) => {
-			mapTxCode.set(e['tx_response']['txhash'], e['tx_response']['code']);
+		const mapTxCode: Map<string, string> = new Map();
+		listDataVote.forEach((e: any) => {
+			mapTxCode.set(e.tx_response.txhash, e.tx_response.code);
 		});
 		unprocessedVotes.forEach((vote) => {
-			//@ts-ignore
-			vote['code'] = mapTxCode.get(vote['txhash']);
+			// @ts-ignore
+			vote.code = mapTxCode.get(vote.txhash);
 		});
-		const queryIn_id = unprocessedVotes.map((vote) => vote['_id']) as string[];
 
-		// await this.adapter.removeMany({
+		// Await this.adapter.removeMany({
 		// 	_id: {
 		// 		$in: queryIn_id,
 		// 	},
 		// });
-		// await this.adapter.insertMany(unprocessedVotes);
+		// Await this.adapter.insertMany(unprocessedVotes);
 
-		let listBulk: any[] = [];
+		const listBulk: any[] = [];
 		unprocessedVotes.map((vote: IVote) => {
 			listBulk.push({
 				updateOne: {
@@ -87,10 +87,10 @@ export default class InitVotingData extends Service {
 		});
 		const resultUpdate = await this.adapter.bulkWrite(listBulk);
 		this.logger.info('result update: ', resultUpdate);
-		// this.logger.info([...mapTxCode.entries()]);
+		// This.logger.info([...mapTxCode.entries()]);
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'update.code.vote',
 			{},
@@ -107,6 +107,7 @@ export default class InitVotingData extends Service {
 		this.getQueue('update.code.vote').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

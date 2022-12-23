@@ -2,14 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import {
-	Put,
-	Method,
-	Service,
-	Get,
-	Action,
-	Post,
-} from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get, Post } from '@ourparentcenter/moleculer-decorators-extended';
 import { Types } from 'mongoose';
 import { QueryOptions } from 'moleculer-db';
 import { ObjectId } from 'mongodb';
@@ -23,7 +16,6 @@ import {
 	ResponseDto,
 	RestOptions,
 } from '../../types';
-import { IBlock } from '../../entities';
 import { AssetIndexParams } from '../../types/asset';
 // Import rateLimit from 'micro-ratelimit';
 import { CodeIDStatus } from '../../model/codeid.model';
@@ -42,11 +34,11 @@ import { Utils } from '../../utils/utils';
 	name: 'asset',
 	version: 1,
 })
-export default class BlockService extends MoleculerDBService<
+export default class AssetService extends MoleculerDBService<
 	{
 		rest: 'v1/asset';
 	},
-	{}
+	unknown
 > {
 	@Post<RestOptions>('/index', {
 		name: 'index',
@@ -57,35 +49,39 @@ export default class BlockService extends MoleculerDBService<
 			chainId: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map(function (e) {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 		},
 	})
 	async index(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
 		let registed = false;
-		const code_id = ctx.params.codeId;
-		const chain_id = ctx.params.chainId;
-		const contract_type = ctx.params.contractType;
+		const codeId = ctx.params.codeId;
+		const chainId = ctx.params.chainId;
+		const contractType = ctx.params.contractType;
 		return await this.broker
 			.call(CODEID_MANAGER_ACTION.FIND, {
-				query: { code_id, 'custom_info.chain_id': chain_id },
+				// eslint-disable-next-line camelcase
+				query: { code_id: codeId, 'custom_info.chain_id': chainId },
 			})
 			.then(async (res: any) => {
+				/* eslint-disable camelcase */
 				this.logger.info('codeid-manager.find res', res);
 				if (res.length > 0) {
 					switch (res[0].status) {
 						case CodeIDStatus.REJECTED:
-							if (res[0].contract_type !== contract_type) {
+							if (res[0].contract_type !== contractType) {
 								const condition = {
-									code_id,
-									'custom_info.chain_id': chain_id,
+									// eslint-disable-next-line quote-props
+									code_id: codeId,
+									'custom_info.chain_id': chainId,
 								};
 								this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
 									condition,
-									update: { status: CodeIDStatus.WAITING, contract_type },
+									update: {
+										status: CodeIDStatus.WAITING,
+										contract_type: contractType,
+									},
 								});
 								registed = true;
 							}
@@ -100,29 +96,28 @@ export default class BlockService extends MoleculerDBService<
 				} else {
 					this.broker.call(CODEID_MANAGER_ACTION.INSERT, {
 						_id: new Types.ObjectId(),
-						code_id,
+						code_id: codeId,
 						status: CodeIDStatus.WAITING,
-						contract_type,
+						contract_type: contractType,
 						custom_info: {
-							chain_id,
-							chain_name: LIST_NETWORK.find((x) => x.chainId == chain_id)?.chainName,
+							// eslint-disable-next-line quote-props
+							chain_id: chainId,
+							chain_name: LIST_NETWORK.find((x) => x.chainId === chainId)?.chainName,
 						},
 					});
 					registed = true;
 				}
 				this.logger.debug('codeid-manager.registed:', registed);
 				if (registed) {
-					const URL = await Utils.getUrlByChainIdAndType(
-						chain_id,
-						URL_TYPE_CONSTANTS.LCD,
-					);
-					this.broker.emit(`${contract_type}.validate`, { URL, chain_id, code_id });
+					const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
+					this.broker.emit(`${contractType}.validate`, { url, chainId, codeId });
 				}
 				return (response = {
 					code: ErrorCode.SUCCESSFUL,
 					message: ErrorMessage.SUCCESSFUL,
 					data: { registed },
 				});
+				/* eslint-enable camelcase */
 			})
 			.catch((error) => {
 				this.logger.error('call code_id.checkStatus error', error);
@@ -141,9 +136,7 @@ export default class BlockService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: true,
-				enum: LIST_NETWORK.map(function (e) {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			tokenName: { type: 'string', optional: true },
 			tokenId: { type: 'string', optional: true },
@@ -205,25 +198,25 @@ export default class BlockService extends MoleculerDBService<
 			});
 		}
 		try {
-			let query: QueryOptions = {};
-
+			const query: QueryOptions = {};
+			/* eslint-disable camelcase */
 			if (ctx.params.owner) {
-				query['owner'] = ctx.params.owner;
+				query.owner = ctx.params.owner;
 			}
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
 			if (ctx.params.tokenId) {
-				query['token_id'] = ctx.params.tokenId;
+				query.token_id = ctx.params.tokenId;
 			}
 			if (ctx.params.contractAddress) {
-				query['contract_address'] = ctx.params.contractAddress;
+				query.contract_address = ctx.params.contractAddress;
 			}
 			if (ctx.params.isBurned != null) {
-				query['is_burned'] = ctx.params.isBurned;
+				query.is_burned = ctx.params.isBurned;
 			}
 			if (ctx.params.tokenName) {
-				query['$or'] = [
+				query.$or = [
 					{
 						token_id: ctx.params.tokenName,
 					},
@@ -237,10 +230,10 @@ export default class BlockService extends MoleculerDBService<
 				ctx.params.countTotal = false;
 			}
 			this.logger.debug('query', query);
-			let contract_type = ctx.params.contractType;
+			const contractType = ctx.params.contractType;
 			let asset: any[];
-			if (contract_type == CONTRACT_TYPE.CW721 || contract_type == CONTRACT_TYPE.CW4973) {
-				asset = await this.broker.call(`v1.${contract_type}-asset-manager.act-find`, {
+			if (contractType === CONTRACT_TYPE.CW721 || contractType === CONTRACT_TYPE.CW4973) {
+				asset = await this.broker.call(`v1.${contractType}-asset-manager.act-find`, {
 					query,
 					sort: '-updatedAt',
 					limit: ctx.params.pageLimit + 1,
@@ -248,7 +241,8 @@ export default class BlockService extends MoleculerDBService<
 					nextKey: ctx.params.nextKey,
 				});
 			} else {
-				asset = await this.broker.call(`v1.${contract_type}-asset-manager.act-find`, {
+				query.balance = { $ne: '0' };
+				asset = await this.broker.call(`v1.${contractType}-asset-manager.act-find`, {
 					query,
 					sort: '-updatedAt',
 					limit: ctx.params.pageLimit + 1,
@@ -258,9 +252,11 @@ export default class BlockService extends MoleculerDBService<
 			}
 			let nextKey = null;
 			if (asset.length > 0) {
-				if (asset.length == 1) {
+				if (asset.length === 1) {
+					// eslint-disable-next-line no-underscore-dangle
 					nextKey = asset[asset.length - 1]?._id;
 				} else {
+					// eslint-disable-next-line no-underscore-dangle
 					nextKey = asset[asset.length - 2]?._id;
 				}
 				if (asset.length <= ctx.params.pageLimit) {
@@ -273,22 +269,15 @@ export default class BlockService extends MoleculerDBService<
 			this.logger.debug(`asset: ${JSON.stringify(asset)}`);
 			let count = 0;
 			if (ctx.params.countTotal === true) {
-				count = await this.broker.call(`v1.${contract_type}-asset-manager.act-count`, {
+				count = await this.broker.call(`v1.${contractType}-asset-manager.act-count`, {
 					query,
 					skip: 0,
 					limit: ctx.params.pageLimit * 5,
 				});
 			}
-			let assetsMap: Map<any, any> = new Map();
-			assetsMap.set(contract_type, { asset, count });
+			const assetsMap: Map<any, any> = new Map();
+			assetsMap.set(contractType, { asset, count });
 
-			// const getData = Promise.all(
-			// 	contractMap.map(async (contract_type: string) => {
-			// 		let asset: any[];
-
-			// 	}),
-			// );
-			// await getData;
 			const assetObj = Object.fromEntries(assetsMap);
 			this.logger.debug(`assetObj: ${JSON.stringify(assetObj)}`);
 
@@ -297,7 +286,7 @@ export default class BlockService extends MoleculerDBService<
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					assets: assetObj,
-					nextKey: nextKey,
+					nextKey,
 				},
 			};
 		} catch (error) {
@@ -319,9 +308,7 @@ export default class BlockService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: true,
-				enum: LIST_NETWORK.map(function (e) {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			pageLimit: {
 				type: 'number',
@@ -375,12 +362,13 @@ export default class BlockService extends MoleculerDBService<
 			}
 		}
 		try {
-			let query: QueryOptions = {};
+			const query: QueryOptions = {};
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
-			let needNextKey = true;
+			const needNextKey = true;
 			if (ctx.params.nextKey) {
+				// eslint-disable-next-line no-underscore-dangle
 				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
@@ -389,7 +377,7 @@ export default class BlockService extends MoleculerDBService<
 			this.logger.info('query', query);
 
 			let assets: any[];
-			if (ctx.params.contractType == CONTRACT_TYPE.CW20) {
+			if (ctx.params.contractType === CONTRACT_TYPE.CW20) {
 				assets = await this.broker.call(
 					`v1.${ctx.params.contractType}-asset-manager.act-find`,
 					{
@@ -427,6 +415,7 @@ export default class BlockService extends MoleculerDBService<
 				data: {
 					assets,
 					count,
+					// eslint-disable-next-line no-underscore-dangle
 					nextKey: needNextKey ? assets[assets.length - 1]?._id : null,
 				},
 			};
@@ -459,9 +448,7 @@ export default class BlockService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map(function (e) {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			pageLimit: {
 				type: 'number',
@@ -520,7 +507,7 @@ export default class BlockService extends MoleculerDBService<
 		}
 
 		try {
-			let query: QueryOptions = {};
+			const query: QueryOptions = {};
 			let sort = {};
 			switch (ctx.params.contractType) {
 				case CONTRACT_TYPE.CW4973:
@@ -528,13 +515,13 @@ export default class BlockService extends MoleculerDBService<
 					sort = ctx.params.reverse
 						? { quantity: 1, updatedAt: 1 }
 						: { quantity: -1, updatedAt: -1 };
-					query['is_burned'] = false;
+					query.is_burned = false;
 					break;
 				case CONTRACT_TYPE.CW20:
 					sort = ctx.params.reverse
 						? ['percent_hold', 'updatedAt']
 						: ['-percent_hold', '-updatedAt'];
-					query['balance'] = {
+					query.balance = {
 						$ne: '0',
 					};
 					break;
@@ -544,29 +531,29 @@ export default class BlockService extends MoleculerDBService<
 			if (ctx.params.chainid) {
 				query['custom_info.chain_id'] = ctx.params.chainid;
 			}
-			let needNextKey = true;
 			if (ctx.params.nextKey) {
+				// eslint-disable-next-line no-underscore-dangle
 				query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
 			}
 			if (ctx.params.contractAddress) {
-				query['contract_address'] = ctx.params.contractAddress;
+				query.contract_address = ctx.params.contractAddress;
 			}
 
-			let [resultAsset, resultCount] = await Promise.all([
+			const [resultAsset, resultCount] = await Promise.all([
 				this.broker.call(`v1.${ctx.params.contractType}-asset-manager.getHolderByAddress`, {
-					query: query,
+					query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
-					sort: sort,
+					sort,
 					nextKey: ctx.params.nextKey,
 				}),
 				ctx.params.countTotal === true
 					? this.broker.call(
 							`v1.${ctx.params.contractType}-asset-manager.countHolderByAddress`,
 							{
-								query: query,
+								query,
 							},
 					  )
 					: 0,

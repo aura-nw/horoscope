@@ -1,20 +1,19 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 export class MapperProfile {
 	private mapValue: any = {};
 	private arrPros: any = [];
 
 	/**
-	 * mapProperties
+	 * MapProperties
 	 * @param f
 	 * @returns
 	 */
 	public mapProperties(f: (x: any) => any) {
 		this.mapValue = [];
-		let express = new Proxy(
+		const express = new Proxy(
 			{},
 			{
-				get(target, prop) {
-					return prop;
-				},
+				get: (target, prop) => prop,
 			},
 		);
 
@@ -26,17 +25,15 @@ export class MapperProfile {
 	}
 
 	/**
-	 * fromProperties
+	 * FromProperties
 	 * @param f
 	 * @returns
 	 */
 	public fromProperties(f: (x: any) => any): any {
-		let express = new Proxy(
+		const express = new Proxy(
 			{},
 			{
-				get(target, prop) {
-					return prop;
-				},
+				get: (target, prop) => prop,
 			},
 		);
 		const pros = f(express);

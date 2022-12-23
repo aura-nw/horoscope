@@ -1,19 +1,13 @@
+/* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import {
-	Put,
-	Method,
-	Service,
-	Get,
-	Action,
-	Post,
-} from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
+import { IDailyCw20Holder } from '../../model';
 import { dbDailyCw20HolderMixin } from '../../mixins/dbMixinMongoose';
 import { ErrorCode, ErrorMessage, MoleculerDBService } from '../../types';
 import { LIST_NETWORK } from '../../common/constant';
-import { IDailyCw20Holder } from '@Model';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -54,6 +48,7 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 	 *          description: "Chain Id of network need to query"
 	 *        - name: addresses[]
 	 *          in: query
+	 *          required: true
 	 *          schema:
 	 *            type: array
 	 *            items:
@@ -76,18 +71,12 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 	 *                  data:
 	 *                    type: object
 	 *                    properties:
-	 *                      code_id:
-	 *                        type: number
-	 *                        example: 19
 	 *                      contract_address:
 	 *                        type: string
 	 *                        example: aura1qppau370zs6xnduuv3jju4xw0kp2xww20wy75ye2hvy9cc99ehtqxlqnza
-	 *                      old_holders:
+	 *                      holders:
 	 *                        type: number
 	 *                        example: 50
-	 *                      new_holders:
-	 *                        type: number
-	 *                        example: 60
 	 *                      change_percent:
 	 *                        type: number
 	 *                        example: 20
@@ -139,19 +128,45 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 		restricted: ['api'],
 		params: {
 			chainId: 'string',
-			addresses: { type: 'array', items: 'string', optional: true },
+			addresses: { type: 'array', items: 'string', optional: false },
 		},
 	})
 	async getCw20HolderChangePercent(ctx: Context<any>) {
-		const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainId);
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
-		let data = await this.adapter.lean({
+
+		const cw20Holders = await this.adapter.lean({
 			query: {
+				// eslint-disable-next-line camelcase
 				contract_address: { $in: ctx.params.addresses },
 			},
 		});
+		const listQueryHolders: any = [];
+		ctx.params.addresses.map((addr: any) =>
+			listQueryHolders.push(
+				this.broker.call('v1.CW20-asset-manager.act-count', {
+					query: {
+						contract_address: addr,
+						balance: { $ne: '0' },
+						'custom_info.chain_id': ctx.params.chainId,
+					},
+				}),
+			),
+		);
+		const holders = await Promise.all(listQueryHolders);
+		const data = holders.map((hold: any, index: any) => {
+			const percent = cw20Holders.find(
+				(d: any) => d.contract_address === ctx.params.addresses[index],
+			);
+			return {
+				contract_address: ctx.params.addresses[index],
+				holders: hold,
+				percentage: percent ? percent.change_percent : 0,
+			};
+		});
+
 		return {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,

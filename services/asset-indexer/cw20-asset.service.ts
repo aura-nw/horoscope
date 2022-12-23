@@ -2,9 +2,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import moleculer, { CallingOptions, Context } from 'moleculer';
-import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { Action, Event, Service } from '@ourparentcenter/moleculer-decorators-extended';
+import { toBase64, toUtf8 } from '@cosmjs/encoding';
+import { Job } from 'bull';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { CodeIDStatus } from '../../model/codeid.model';
 import { Config } from '../../common';
 import {
@@ -13,79 +15,29 @@ import {
 	CONTRACT_TYPE,
 	CW20_ACTION,
 	ENRICH_TYPE,
-	URL_TYPE_CONSTANTS,
 } from '../../common/constant';
-import { Common, TokenInfo } from './common.service';
-import { toBase64, toUtf8 } from '@cosmjs/encoding';
-import { Utils } from '../../utils/utils';
-import { debug } from 'console';
-import { Job } from 'bull';
-import { QueueConfig } from '../../config/queue';
+import { queueConfig } from '../../config/queue';
+import { Common, ITokenInfo } from './common.service';
 const CODE_ID_URI = Config.CODE_ID_URI;
 const CONTRACT_URI = Config.CONTRACT_URI;
 const CONTRACT_URI_LIMIT = Config.ASSET_INDEXER_CONTRACT_URI_LIMIT;
 const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
 const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
 const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
-const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
+const opts: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 
 const VALIDATE_CODEID_PREFIX = 'validate_codeid';
 const HANDLE_CODEID_PREFIX = 'handle_codeid';
 
-const QueueService = require('moleculer-bull');
-const callApiMixin = new CallApiMixin().start();
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 @Service({
 	name: 'CW20',
 	version: 1,
-	mixins: [callApiMixin, QueueService(QueueConfig.redis, QueueConfig.opts)],
-	events: {
-		'CW20.validate': {
-			async handler(ctx: Context<any>) {
-				const code_id = ctx.params.code_id;
-				const chain_id = ctx.params.chain_id;
-				// const contract_type = ctx.params.contract_type;
-				const URL = ctx.params.URL;
-				const cacheKey = `${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`;
-				// @ts-ignore
-				this.logger.debug('ctx.params', code_id, chain_id, CONTRACT_TYPE.CW20);
-				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(cacheKey);
-				if (!processingFlag) {
-					// @ts-ignore
-					await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
-					// @ts-ignore
-					this.checkIfContractImplementInterface(URL, chain_id, code_id);
-					// @ts-ignore
-					await this.broker.cacher?.del(cacheKey);
-				}
-			},
-		},
-		'CW20.handle': {
-			async handler(ctx: Context<any>) {
-				const chain_id = ctx.params.chain_id;
-				const code_id = ctx.params.code_id;
-				const URL = ctx.params.URL;
-				const cacheKey = `${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`;
-				// @ts-ignore
-				const processingFlag = await this.broker.cacher?.get(cacheKey);
-				if (!processingFlag) {
-					// @ts-ignore
-					await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
-					// @ts-ignore
-					this.logger.debug('Asset handler registered', chain_id, code_id);
-					// @ts-ignore
-					await this.handleJob(URL, chain_id, code_id);
-					// @ts-ignore
-					await this.broker.cacher?.del(cacheKey);
-				}
-				//TODO emit event index history of the NFT.
-			},
-			//TODO subcribe the event index the history of the NFT
-		},
-	},
+	mixins: [new CallApiMixin().start(), queueService(queueConfig.redis, queueConfig.opts)],
 	queues: {
 		'CW20.enrich': {
 			concurrency: parseInt(Config.CONCURRENCY_ENRICH_CW20, 10),
@@ -93,32 +45,130 @@ const callApiMixin = new CallApiMixin().start();
 				job.progress(10);
 				const url = job.data.url;
 				const address = job.data.address;
-				const codeId = job.data.code_id;
-				const chainId = job.data.chain_id;
-				const typeEnrich = job.data.type_enrich;
-
+				const codeId = job.data.codeId;
+				const chainId = job.data.chainId;
+				const typeEnrich = job.data.typeEnrich;
+				// @ts-ignore
+				await this.broker.waitForServices(['v1.CW20-asset-manager']);
 				// @ts-ignore
 				await this.handleJobEnrichData(url, address, codeId, typeEnrich, chainId);
-				job.progress(100);
 			},
 		},
 	},
 })
 export default class CrawlAssetService extends moleculer.Service {
-	async checkIfContractImplementInterface(URL: string, chain_id: string, code_id: number) {
+	@Action({ name: 'getOwnerList' })
+	private async _getOwnerList(ctx: Context<ITokenInfo>) {
+		const url = ctx.params.url;
+		const address = ctx.params.address;
+		try {
+			let doneLoop = false;
+			const listOwnerAddress = [];
+			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
+				toUtf8('{"all_accounts": {"limit":100}}'),
+			)}`;
+
+			while (!doneLoop) {
+				this.logger.debug('param call lcd: ', JSON.stringify(urlGetListToken));
+				const resultCallApi = await this.callApiFromDomain(url, urlGetListToken);
+				if (resultCallApi?.data?.accounts?.length > 0) {
+					listOwnerAddress.push(...resultCallApi.data.accounts);
+					const lastAddress =
+						resultCallApi.data.accounts[resultCallApi.data.accounts.length - 1];
+
+					urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
+						toUtf8(`{"all_accounts": {"limit":100, "start_after":"${lastAddress}"}}`),
+					)}`;
+				} else {
+					doneLoop = true;
+				}
+			}
+			this.logger.debug('url: ', JSON.stringify(url));
+			this.logger.debug('address: ', address);
+			this.logger.debug('listOwner: ', JSON.stringify(listOwnerAddress));
+			if (listOwnerAddress.length > 0) {
+				return listOwnerAddress;
+			} else {
+				return null;
+			}
+		} catch (error) {
+			this.logger.error('getOwnerList error', error);
+		}
+		return null;
+	}
+
+	@Action({ name: 'getBalance' })
+	private async _getBalance(ctx: Context<ITokenInfo>) {
+		const url = ctx.params.url;
+		try {
+			const str = `{"balance":{"address": "${ctx.params.owner}"}}`;
+			const stringEncode64bytes = Buffer.from(str).toString('base64');
+			const urlGetBalance = `${CONTRACT_URI}${ctx.params.address}/smart/${stringEncode64bytes}`;
+			this.logger.debug('path get balance: ', urlGetBalance);
+			const balanceInfo = await this.callApiFromDomain(url, urlGetBalance);
+			if (balanceInfo?.data?.balance !== undefined) {
+				return balanceInfo;
+			} else {
+				return null;
+			}
+		} catch (error) {
+			this.logger.error('getBalance error', error);
+		}
+	}
+
+	@Event({ name: 'CW20.validate' })
+	private async _handleCW20Validate(ctx: Context<any>) {
+		const codeId = ctx.params.codeId;
+		const chainId = ctx.params.chainId;
+		// Const contract_type = ctx.params.contract_type;
+		const url = ctx.params.url;
+		const cacheKey = `${VALIDATE_CODEID_PREFIX}_${chainId}_${codeId}`;
+
+		this.logger.debug('ctx.params', codeId, chainId, CONTRACT_TYPE.CW20);
+
+		const processingFlag = await this.broker.cacher?.get(cacheKey);
+		if (!processingFlag) {
+			await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
+			// eslint-disable-next-line no-underscore-dangle
+			this._checkIfContractImplementInterface(url, chainId, codeId);
+			await this.broker.cacher?.del(cacheKey);
+		}
+	}
+
+	@Event({ name: 'CW20.handle' })
+	private async _handleCW20(ctx: Context<any>) {
+		const chainId = ctx.params.chainId;
+		const codeId = ctx.params.codeId;
+		const url = ctx.params.url;
+		const cacheKey = `${HANDLE_CODEID_PREFIX}_${chainId}_${codeId}`;
+
+		const processingFlag = await this.broker.cacher?.get(cacheKey);
+		if (!processingFlag) {
+			await this.broker.cacher?.set(cacheKey, true, CACHER_INDEXER_TTL);
+
+			this.logger.debug('Asset handler registered', chainId, codeId);
+
+			// eslint-disable-next-line no-underscore-dangle
+			await this._handleJob(url, chainId, codeId);
+
+			await this.broker.cacher?.del(cacheKey);
+		}
+	}
+
+	private async _checkIfContractImplementInterface(url: string, chainId: string, codeId: number) {
 		try {
 			let cw20flag: any = null;
-			const urlGetContractList = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
-			let path = `${CODE_ID_URI}${code_id}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
-			let next_key = null;
+			const urlGetContractList = `${CODE_ID_URI}${codeId}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
+			let path = `${CODE_ID_URI}${codeId}/contracts?pagination.limit=${CONTRACT_URI_LIMIT}&pagination.countTotal=true&`;
+			let nextKey = null;
 			do {
-				let resultCallApi = await this.callApiFromDomain(URL, path);
+				const resultCallApi = await this.callApiFromDomain(url, path);
 				if (resultCallApi?.contracts?.length > 0) {
 					let i = 0;
 					while (i < resultCallApi.contracts.length) {
-						let address = resultCallApi.contracts[i];
-						let urlGetTokenInfo = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_TOKEN_INFO}`;
-						let tokenInfo = await this.callApiFromDomain(URL, urlGetTokenInfo);
+						const address = resultCallApi.contracts[i];
+						const urlGetTokenInfo = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_TOKEN_INFO}`;
+						const tokenInfo = await this.callApiFromDomain(url, urlGetTokenInfo);
 						if (
 							tokenInfo?.data?.name === undefined ||
 							tokenInfo?.data?.symbol === undefined ||
@@ -128,15 +178,18 @@ export default class CrawlAssetService extends moleculer.Service {
 							cw20flag = false;
 							break;
 						}
-						let urlGetListOwner = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_OWNER_LIST}`;
-						let listOwnerAddress = await this.callApiFromDomain(URL, urlGetListOwner);
+						const urlGetListOwner = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_OWNER_LIST}`;
+						const listOwnerAddress = await this.callApiFromDomain(url, urlGetListOwner);
 						if (listOwnerAddress?.data?.accounts !== undefined) {
 							if (listOwnerAddress.data.accounts.length > 0) {
 								const owner = listOwnerAddress.data.accounts[0];
 								const str = `{"balance":{"address": "${owner}"}}`;
 								const stringEncode64bytes = Buffer.from(str).toString('base64');
-								let urlGetBalance = `${CONTRACT_URI}${address}/smart/${stringEncode64bytes}`;
-								let balanceInfo = await this.callApiFromDomain(URL, urlGetBalance);
+								const urlGetBalance = `${CONTRACT_URI}${address}/smart/${stringEncode64bytes}`;
+								const balanceInfo = await this.callApiFromDomain(
+									url,
+									urlGetBalance,
+								);
 								cw20flag = balanceInfo?.data?.balance !== undefined;
 								break;
 							}
@@ -146,20 +199,21 @@ export default class CrawlAssetService extends moleculer.Service {
 						}
 						i++;
 					}
-					next_key = resultCallApi.pagination.next_key;
-					if (next_key === null) {
+					nextKey = resultCallApi.pagination.next_key;
+					if (nextKey === null) {
 						break;
 					}
-					path = `${urlGetContractList}pagination.key=${encodeURIComponent(next_key)}`;
+					path = `${urlGetContractList}pagination.key=${encodeURIComponent(nextKey)}`;
 				} else {
-					this.logger.warn('Call urlGetContractList unsatisfactory return', URL, path);
+					this.logger.warn('Call urlGetContractList unsatisfactory return', url, path);
 				}
-			} while (next_key != null && cw20flag === null);
+			} while (nextKey != null && cw20flag === null);
 			this.logger.debug(
 				'Check if cw20 interface implemented',
 				cw20flag == null ? CodeIDStatus.TBD : cw20flag,
 			);
-			const condition = { code_id: code_id, 'custom_info.chain_id': chain_id };
+			// eslint-disable-next-line camelcase
+			const condition = { code_id: codeId, 'custom_info.chain_id': chainId };
 			switch (cw20flag) {
 				case null: {
 					this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
@@ -173,7 +227,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						condition,
 						update: { status: CodeIDStatus.COMPLETED },
 					});
-					this.broker.emit('CW20.handle', { URL, chain_id, code_id });
+					this.broker.emit('CW20.handle', { url, chainId, codeId });
 					break;
 				}
 				case false: {
@@ -186,136 +240,49 @@ export default class CrawlAssetService extends moleculer.Service {
 			}
 		} catch (err) {
 			this.logger.error(err);
-			await this.broker.cacher?.del(`${VALIDATE_CODEID_PREFIX}_${chain_id}_${code_id}`);
+			await this.broker.cacher?.del(`${VALIDATE_CODEID_PREFIX}_${chainId}_${codeId}`);
 		}
 	}
-
-	async handleJob(URL: any, chain_id: string, code_id: Number) {
+	private async _handleJob(url: any, chainId: string, codeId: number) {
 		try {
 			const contractList: any = await this.broker.call(
 				COMMON_ACTION.GET_CONTRACT_LIST,
-				{ URL, code_id },
-				OPTs,
+				{ url, codeId },
+				opts,
 			);
 			await Promise.all(
-				contractList.map(async (address: String) => {
-					await this.broker.call(
-						CW20_ACTION.ENRICH_DATA,
-						[{ URL, chain_id, code_id, address }, ENRICH_TYPE.INSERT],
-						OPTs,
+				contractList.map(async (address: string) => {
+					this.createJob(
+						'CW20.enrich',
+						{
+							url,
+							address,
+							codeId,
+							typeEnrich: ENRICH_TYPE.UPSERT,
+							chainId,
+						},
+						{
+							removeOnComplete: true,
+							removeOnFail: {
+								count: parseInt(Config.BULL_JOB_REMOVE_ON_FAIL_COUNT, 10),
+							},
+							attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+							backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
+						},
 					);
 				}),
 			);
 			this.logger.debug('Asset handler DONE!', contractList.length);
 		} catch (err) {
 			this.logger.error(err);
-			await this.broker.cacher?.del(`${HANDLE_CODEID_PREFIX}_${chain_id}_${code_id}`);
+			await this.broker.cacher?.del(`${HANDLE_CODEID_PREFIX}_${chainId}_${codeId}`);
 		}
 	}
 
-	@Action()
-	private async enrichData(ctx: Context<[TokenInfo, string]>) {
-		const URL = ctx.params[0].URL;
-		const address = ctx.params[0].address;
-		const code_id = ctx.params[0].code_id;
-		const typeEnrich = ctx.params[1];
-		const chain_id = ctx.params[0].chain_id;
-		const urlGetTokenInfo = `${CONTRACT_URI}${address}/smart/${CW20_ACTION.URL_GET_TOKEN_INFO}`;
-		const tokenInfo = await this.callApiFromDomain(URL, urlGetTokenInfo);
-
-		const listOwnerAddress: any = await this.broker.call(
-			CW20_ACTION.GET_OWNER_LIST,
-			{ URL, code_id, address },
-			OPTs,
-		);
-		this.logger.debug(`Cw20 listOwnerAddress ${JSON.stringify(listOwnerAddress)}`);
-		if (listOwnerAddress != null) {
-			await Promise.all(
-				listOwnerAddress.map(async (owner: String) => {
-					let balanceInfo: any = await this.broker.call(
-						CW20_ACTION.GET_BALANCE,
-						{ URL, code_id, address, owner },
-						OPTs,
-					);
-					if (balanceInfo != null) {
-						const asset = await Common.createCW20AssetObject(
-							code_id,
-							address,
-							owner,
-							tokenInfo,
-							balanceInfo,
-							chain_id,
-						);
-						await this.broker.call(
-							`v1.CW20-asset-manager.act-${typeEnrich}`,
-							asset,
-							OPTs,
-						);
-						this.logger.debug(`Asset ${JSON.stringify(asset)} created`);
-					}
-				}),
-			);
-		}
-	}
-
-	@Action()
-	private async getOwnerList(ctx: Context<TokenInfo>) {
-		const URL = ctx.params.URL;
-		const address = ctx.params.address;
-		try {
-			let doneLoop = false;
-			let listOwnerAddress = [];
-			let urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
-				toUtf8(`{"all_accounts": {"limit":100}}`),
-			)}`;
-
-			while (!doneLoop) {
-				this.logger.debug('param call lcd: ', JSON.stringify(urlGetListToken));
-				let resultCallApi = await this.callApiFromDomain(URL, urlGetListToken);
-				if (resultCallApi?.data?.accounts?.length > 0) {
-					listOwnerAddress.push(...resultCallApi.data.accounts);
-					const lastAddress =
-						resultCallApi.data.accounts[resultCallApi.data.accounts.length - 1];
-
-					urlGetListToken = `${CONTRACT_URI}${address}/smart/${toBase64(
-						toUtf8(`{"all_accounts": {"limit":100, "start_after":"${lastAddress}"}}`),
-					)}`;
-				} else {
-					doneLoop = true;
-				}
-			}
-			this.logger.debug('URL: ', JSON.stringify(URL));
-			this.logger.debug('address: ', address);
-			this.logger.debug('listOwner: ', JSON.stringify(listOwnerAddress));
-			if (listOwnerAddress.length > 0) {
-				return listOwnerAddress;
-			} else return null;
-		} catch (error) {
-			this.logger.error('getOwnerList error', error);
-		}
-		return null;
-	}
-
-	@Action()
-	private async getBalance(ctx: Context<TokenInfo>) {
-		const URL = ctx.params.URL;
-		try {
-			const str = `{"balance":{"address": "${ctx.params.owner}"}}`;
-			const stringEncode64bytes = Buffer.from(str).toString('base64');
-			let urlGetBalance = `${CONTRACT_URI}${ctx.params.address}/smart/${stringEncode64bytes}`;
-			let balanceInfo = await this.callApiFromDomain(URL, urlGetBalance);
-			if (balanceInfo?.data?.balance !== undefined) {
-				return balanceInfo;
-			} else return null;
-		} catch (error) {
-			this.logger.error('getBalance error', error);
-		}
-	}
-
-	private async handleJobEnrichData(
+	public async handleJobEnrichData(
 		url: any,
 		address: string,
-		code_id: string,
+		codeId: string,
 		typeEnrich: string,
 		chainId: string,
 	) {
@@ -324,21 +291,21 @@ export default class CrawlAssetService extends moleculer.Service {
 
 		const listOwnerAddress: any = await this.broker.call(
 			CW20_ACTION.GET_OWNER_LIST,
-			{ URL: url, code_id, address },
-			OPTs,
+			{ url, codeId, address },
+			opts,
 		);
 		this.logger.debug(`Cw20 listOwnerAddress ${JSON.stringify(listOwnerAddress)}`);
 		if (listOwnerAddress != null) {
 			await Promise.all(
-				listOwnerAddress.map(async (owner: String) => {
-					let balanceInfo: any = await this.broker.call(
+				listOwnerAddress.map(async (owner: string) => {
+					const balanceInfo: any = await this.broker.call(
 						CW20_ACTION.GET_BALANCE,
-						{ URL: url, code_id, address, owner },
-						OPTs,
+						{ url, codeId, address, owner },
+						opts,
 					);
 					if (balanceInfo != null) {
-						const asset = await Common.createCW20AssetObject(
-							Number(code_id),
+						const asset = Common.createCW20AssetObject(
+							codeId,
 							address,
 							owner,
 							tokenInfo,
@@ -348,7 +315,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						await this.broker.call(
 							`v1.CW20-asset-manager.act-${typeEnrich}`,
 							asset,
-							OPTs,
+							opts,
 						);
 						this.logger.debug(`Asset ${JSON.stringify(asset)} created`);
 					}
@@ -367,6 +334,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		this.getQueue('CW20.enrich').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable camelcase */
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
@@ -5,52 +8,43 @@
 import { Job } from 'bull';
 import { ITransaction } from 'entities';
 import { Coin } from 'entities/coin.entity';
-import * as _ from 'lodash';
-import { CallingOptions, Service, ServiceBroker } from 'moleculer';
-import { JsonConvert, OperationMode } from 'json2typescript';
+import { Service, ServiceBroker } from 'moleculer';
+import { CustomInfo } from 'entities/custom-info.entity';
 import { Config } from '../../common';
-import { ALLOWANCE_TYPE, FEEGRANT_ACTION, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
-import { Utils } from '../../utils/utils';
-const QueueService = require('moleculer-bull');
-const CONTRACT_URI = Config.CONTRACT_URI;
+import { ALLOWANCE_TYPE, FEEGRANT_ACTION, MSG_TYPE } from '../../common/constant';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import RedisMixin from '../../mixins/redis/redis.mixin';
-import { RedisClientType } from '@redis/client';
-import { CustomInfo } from 'entities/custom-info.entity';
-import { QueueConfig } from '../../config/queue';
-const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
-const ACTION_TIMEOUT = Config.ASSET_INDEXER_ACTION_TIMEOUT;
-const OPTs: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
-const util = require('util');
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export interface IFeegrantData {
-	action: String,
-	payer: String,
-	grantee: String,
-	granter: String,
-	result: Boolean,
-	timestamp: Date | null,
-	amount: Coin,
-	tx_hash: String,
-	expiration: String | null,
-	type: String,
-	spend_limit: Coin,
-	expired: Boolean,
-	custom_info: CustomInfo
+	action: string;
+	payer: string;
+	grantee: string;
+	granter: string;
+	result: boolean;
+	timestamp: Date | null;
+	amount: Coin;
+	tx_hash: string;
+	expiration: string | null;
+	type: string;
+	spend_limit: Coin;
+	expired: boolean;
+	custom_info: CustomInfo;
 }
 export default class FeegrantTxHandler extends Service {
-	private redisMixin = new RedisMixin().start();
-	private dbTransactionMixin = dbTransactionMixin;
-	private currentBlock = 0
+	private _currentBlock = 0;
+	private syncCatchUp = false;
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'feegrantTxHandler',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.dbTransactionMixin,
-				this.redisMixin
+				queueService(queueConfig.redis, queueConfig.opts),
+				dbTransactionMixin,
+				new RedisMixin().start(),
 			],
 			queues: {
 				'feegrant.tx-handle': {
@@ -58,318 +52,330 @@ export default class FeegrantTxHandler extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.initEnv()
+						await this.initEnv();
 						// @ts-ignore
-						const list: any[] = await this.handleJob(job.data.chainId);
+						await this.handleJob(job.data.chainId);
 
 						job.progress(100);
 						return true;
 					},
 				},
-			}
+			},
 		});
 	}
-
-	async initEnv() {
-		//get feegrant latest block which was unprocessing
-		let handledBlockRedis = await this.redisClient.get(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK);
-		this.currentBlock = 0
-		// oldest block in Tx DB
-		const oldestBlockTx = await this.adapter.lean({
-			sort: "tx_response.height",
+	getOwnerMsg(message: any): string {
+		try {
+			switch (message['@type']) {
+				case MSG_TYPE.MSG_SEND:
+					return message.from_address;
+				case MSG_TYPE.MSG_DELEGATE:
+					return message.delegator_address;
+				case MSG_TYPE.MSG_REDELEGATE:
+					return message.delegator_address;
+				case MSG_TYPE.MSG_UNDELEGATE:
+					return message.delegator_address;
+				case MSG_TYPE.MSG_EXECUTE_CONTRACT:
+					return message.sender;
+				case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
+					return message.sender;
+				case MSG_TYPE.MSG_STORE_CODE:
+					return message.sender;
+				case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
+					return message.from_address;
+				case MSG_TYPE.MSG_DEPOSIT:
+					return message.depositor;
+				case MSG_TYPE.MSG_WITHDRAW_REWARDS:
+					return message.delegator_address;
+				case MSG_TYPE.MSG_SUBMIT_PROPOSAL:
+					return message.proposer;
+				case MSG_TYPE.MSG_VOTE:
+					return message.voter;
+				case MSG_TYPE.MSG_IBC_TRANSFER:
+					return message.sender;
+				case MSG_TYPE.MSG_FEEGRANT_GRANT:
+					return message.granter;
+				case MSG_TYPE.MSG_FEEGRANT_REVOKE:
+					return message.granter;
+			}
+		} catch (error) {
+			this.logger.error(`Error when get message type: ${error}`);
+		}
+		return '';
+	}
+	async getBlocksForProcessing(): Promise<[number, number]> {
+		// Latest block in transaction DB
+		const latestBlockTx = (await this.adapter.lean({
+			sort: '-tx_response.height',
 			limit: 1,
 			projection: {
-				"tx_response.height": 1
+				'tx_response.height': 1,
 			},
-		}) as ITransaction[]
-		this.currentBlock = oldestBlockTx[0] ? oldestBlockTx[0].tx_response.height.valueOf() - 1 : -1
-		this.currentBlock = handledBlockRedis ? parseInt(handledBlockRedis) : this.currentBlock;
+		})) as ITransaction[];
+		const latestBlock = latestBlockTx[0]
+			? latestBlockTx[0].tx_response.height.valueOf()
+			: this._currentBlock;
+		const fromBlock = this._currentBlock;
+		let toBlock =
+			this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10) < latestBlock
+				? this._currentBlock + parseInt(Config.BLOCK_PER_BATCH, 10)
+				: latestBlock;
+		if (fromBlock >= toBlock) {
+			this.syncCatchUp = true;
+		}
+		if (this.syncCatchUp) {
+			toBlock = latestBlock;
+		}
+		return [fromBlock, toBlock];
+	}
+	async initEnv() {
+		// Get feegrant latest block which was unprocessing
+		const handledBlockRedis = await this.redisClient.get(
+			Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK,
+		);
+		this._currentBlock = 0;
+		// Oldest block in Tx DB
+		const oldestBlockTx = (await this.adapter.lean({
+			sort: 'tx_response.height',
+			limit: 1,
+			projection: {
+				'tx_response.height': 1,
+			},
+		})) as ITransaction[];
+		this._currentBlock = oldestBlockTx[0]
+			? oldestBlockTx[0].tx_response.height.valueOf() - 1
+			: -1;
+		this._currentBlock = handledBlockRedis
+			? parseInt(handledBlockRedis, 10)
+			: this._currentBlock;
 	}
 
 	async handleJob(chainId: string): Promise<any[]> {
-		let feegrantList: IFeegrantData[] = [];
-		// latest block in transaction DB
-		const latestBlockTx = await this.adapter.lean({
-			sort: "-tx_response.height",
-			limit: 1,
-			projection: {
-				"tx_response.height": 1
-			},
-		}) as ITransaction[]
-		const latestBlock = latestBlockTx[0] ? latestBlockTx[0].tx_response.height.valueOf() : this.currentBlock
-		this.logger.info(`Feegrant from  ${this.currentBlock + 1} to ${(this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock)}`)
-		// get all transactions in BLOCK_PER_BATCH sequence blocks, start from currentBlock
-		const listTx = await this.adapter.lean({
+		const feegrantList: IFeegrantData[] = [];
+		const [fromBlock, toBlock] = await this.getBlocksForProcessing();
+		this.logger.info(`Feegrant from  ${fromBlock} to ${toBlock}`);
+		// Get all transactions in BLOCK_PER_BATCH sequence blocks, start from fromBlock: fromBlock+1, fromBlock+2,..., toBlock
+		const listTx = (await this.adapter.lean({
 			query: {
-				"tx_response.height": {
-					$gt: this.currentBlock,
-					$lte: this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
-				}
+				'tx_response.height': {
+					$gt: fromBlock,
+					$lte: toBlock,
+				},
 			},
 			projection: {
-				"tx.body.messages": 1,
-				"tx.auth_info": 1,
-				"tx_response.events": 1,
-				"tx_response.code": 1,
-				"tx_response.timestamp": 1,
-				"tx_response.txhash": 1,
-			}
-		}) as ITransaction[]
-		// filter feegrant transactions
+				'tx.body.messages': 1,
+				'tx.auth_info': 1,
+				'tx_response.events': 1,
+				'tx_response.code': 1,
+				'tx_response.timestamp': 1,
+				'tx_response.txhash': 1,
+			},
+		})) as ITransaction[];
+		// Filter feegrant transactions
 		if (listTx.length > 0) {
 			for (const tx of listTx) {
-				let payer = tx.tx.auth_info.fee.granter
+				const payer = tx.tx.auth_info.fee.granter.toString();
 				tx.tx.body.messages.forEach((message: any) => {
-					// if tx is feegrant tx
+					// If tx is feegrant tx
 					if (payer) {
-						let events = tx.tx_response.events
-						// check case
+						const events = tx.tx_response.events;
+						// Check case
 						if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_GRANT) {
-							// set feegrant + use another fee grant
-							let spend_limit = {} as Coin
-							let basic_allowance = message["allowance"]
-							while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE && basic_allowance["@type"] != ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
-								basic_allowance = basic_allowance["allowance"]
+							// Set feegrant + use another fee grant
+							let spend_limit = {} as Coin;
+							let basic_allowance = message.allowance;
+							while (
+								basic_allowance['@type'] !== ALLOWANCE_TYPE.BASIC_ALLOWANCE &&
+								basic_allowance['@type'] !== ALLOWANCE_TYPE.PERIODIC_ALLOWANCE
+							) {
+								basic_allowance = basic_allowance.allowance;
 							}
-							const type = basic_allowance["@type"]
-							if (basic_allowance["@type"] == ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
-								basic_allowance = basic_allowance["basic"]
+							const type = basic_allowance['@type'];
+							if (basic_allowance['@type'] === ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
+								basic_allowance = basic_allowance.basic;
 							}
-							if (basic_allowance["spend_limit"].length > 0) {
-								spend_limit = basic_allowance["spend_limit"][0] as Coin
+							if (basic_allowance.spend_limit.length > 0) {
+								spend_limit = basic_allowance.spend_limit[0] as Coin;
 							}
-							let feegrantCreate = {
+							const feegrantCreate = {
 								action: FEEGRANT_ACTION.CREATE_WITH_FEEGRANT,
-								granter: message["granter"] as String,
-								grantee: message["grantee"] as String,
+								granter: message.granter as string,
+								grantee: message.grantee as string,
 								payer,
-								result: tx.tx_response.code.toString() === "0",
+								result: tx.tx_response.code.toString() === '0',
 								timestamp: tx.tx_response.timestamp,
 								amount: tx.tx.auth_info.fee.amount[0],
-								tx_hash: tx.tx_response.txhash,
-								expiration: basic_allowance["expiration"],
-								type: type,
+								tx_hash: tx.tx_response.txhash.toString(),
+								expiration: basic_allowance.expiration,
+								type,
 								spend_limit,
 								custom_info: tx.custom_info,
-								expired: false
-							}
-							if (events.find(e => e.type === "revoke_feegrant")) {
-								// use up
-								let feegrantUseup = {
+								expired: false,
+							};
+							if (events.find((e) => e.type === 'revoke_feegrant')) {
+								// Use up
+								const feegrantUseup = {
 									action: FEEGRANT_ACTION.USE_UP,
 									granter: payer,
-									grantee: message["granter"] as String,
-									result: tx.tx_response.code.toString() === "0",
+									grantee: message.granter,
+									result: tx.tx_response.code.toString() === '0',
 									timestamp: tx.tx_response.timestamp,
 									amount: {
-										amount: "0",
-										denom: ""
+										amount: '0',
+										denom: '',
 									},
 									payer,
-									tx_hash: tx.tx_response.txhash,
+									tx_hash: tx.tx_response.txhash.toString(),
 									expiration: null,
-									type: "",
+									type: '',
 									spend_limit: {} as Coin,
 									custom_info: tx.custom_info,
-									expired: false
-								}
-								feegrantList.push(feegrantUseup)
+									expired: false,
+								};
+								feegrantList.push(feegrantUseup);
 							}
-							feegrantList.push(feegrantCreate)
+							feegrantList.push(feegrantCreate);
 						} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_REVOKE) {
-							// revoke feegrant  + use another fee grant
-							let feegrantRevoke = {
+							// Revoke feegrant  + use another fee grant
+							const feegrantRevoke = {
 								action: FEEGRANT_ACTION.REVOKE_WITH_FEEGRANT,
-								granter: message["granter"] as String,
-								grantee: message["grantee"] as String,
+								granter: message.granter as string,
+								grantee: message.grantee as string,
 								payer,
-								result: tx.tx_response.code.toString() === "0",
+								result: tx.tx_response.code.toString() === '0',
 								timestamp: tx.tx_response.timestamp,
 								amount: tx.tx.auth_info.fee.amount[0],
-								tx_hash: tx.tx_response.txhash,
+								tx_hash: tx.tx_response.txhash.toString(),
 								expiration: null,
-								type: "",
+								type: '',
 								spend_limit: {} as Coin,
 								custom_info: tx.custom_info,
-								expired: false
-							}
-							if (events[0]["type"] === "revoke_feegrant") {
-								// use up
-								let feegrantUseup = {
+								expired: false,
+							};
+							if (events[0].type === 'revoke_feegrant') {
+								// Use up
+								const feegrantUseup = {
 									action: FEEGRANT_ACTION.USE_UP,
 									granter: payer,
-									grantee: message["granter"] as String,
-									result: tx.tx_response.code.toString() === "0",
+									grantee: message.granter as string,
+									result: tx.tx_response.code.toString() === '0',
 									timestamp: tx.tx_response.timestamp,
 									amount: {
-										amount: "0",
-										denom: ""
+										amount: '0',
+										denom: '',
 									},
 									payer,
-									tx_hash: tx.tx_response.txhash,
+									tx_hash: tx.tx_response.txhash.toString(),
 									expiration: null,
-									type: "",
+									type: '',
 									spend_limit: {} as Coin,
 									custom_info: tx.custom_info,
-									expired: false
-								}
-								feegrantList.push(feegrantUseup)
+									expired: false,
+								};
+								feegrantList.push(feegrantUseup);
 							}
-							feegrantList.push(feegrantRevoke)
+							feegrantList.push(feegrantRevoke);
 						} else {
-							// get the owner of tx
-							let owner = ""
-							try {
-								switch (message['@type']) {
-									case MSG_TYPE.MSG_SEND:
-										owner =
-											message.from_address
-										break;
-									case MSG_TYPE.MSG_DELEGATE:
-										owner = message.delegator_address;
-										break;
-									case MSG_TYPE.MSG_REDELEGATE:
-										owner = message.delegator_address
-										break;
-									case MSG_TYPE.MSG_UNDELEGATE:
-										owner = message.delegator_address;
-										break;
-									case MSG_TYPE.MSG_EXECUTE_CONTRACT:
-										owner = message.sender;
-										break;
-									case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
-										owner = message.sender;
-										break;
-									case MSG_TYPE.MSG_STORE_CODE:
-										owner = message.sender;
-										break;
-									case MSG_TYPE.MSG_CREATE_VESTING_ACCOUNT:
-										owner = message.from_address;
-										break;
-									case MSG_TYPE.MSG_DEPOSIT:
-										owner = message.depositor;
-										break;
-									case MSG_TYPE.MSG_WITHDRAW_REWARDS:
-										owner = message.delegator_address;
-										break;
-									case MSG_TYPE.MSG_SUBMIT_PROPOSAL:
-										owner = message.proposer;
-										break;
-									case MSG_TYPE.MSG_VOTE:
-										owner = message.voter;
-										break;
-									case MSG_TYPE.MSG_IBC_TRANSFER:
-										owner = message.sender;
-										break;
-									case MSG_TYPE.MSG_FEEGRANT_GRANT:
-										owner = message.granter;
-										break;
-									case MSG_TYPE.MSG_FEEGRANT_REVOKE:
-										owner = message.granter;
-										break;
-								}
-							} catch (error) {
-								this.logger.error(`Error when get message type: ${error}`);
-								return
-							}
-							if (events.find(e => e.type === "revoke_feegrant")) {
-								// use up
-								let feegrantUseup = {
+							// Get the owner of tx
+							const owner: string = this.getOwnerMsg(message);
+							if (events.find((e) => e.type === 'revoke_feegrant')) {
+								// Use up
+								const feegrantUseup = {
 									action: FEEGRANT_ACTION.USE_UP,
 									granter: payer,
 									grantee: owner,
-									result: tx.tx_response.code.toString() === "0",
+									result: tx.tx_response.code.toString() === '0',
 									timestamp: tx.tx_response.timestamp,
 									amount: tx.tx.auth_info.fee.amount[0],
 									payer,
-									tx_hash: tx.tx_response.txhash,
+									tx_hash: tx.tx_response.txhash.toString(),
 									expiration: null,
-									type: "",
+									type: '',
 									spend_limit: {} as Coin,
 									custom_info: tx.custom_info,
-									expired: false
-								}
-								feegrantList.push(feegrantUseup)
+									expired: false,
+								};
+								feegrantList.push(feegrantUseup);
 							} else {
-								// default: just use
-								let feegrantUpdate = {
+								// Default: just use
+								const feegrantUpdate = {
 									action: FEEGRANT_ACTION.USE,
 									payer,
 									grantee: owner,
 									granter: payer,
-									result: tx.tx_response.code.toString() === "0",
+									result: tx.tx_response.code.toString() === '0',
 									timestamp: tx.tx_response.timestamp,
 									amount: tx.tx.auth_info.fee.amount[0] as Coin,
-									tx_hash: tx.tx_response.txhash,
+									tx_hash: tx.tx_response.txhash.toString(),
 									expiration: null,
-									type: "",
+									type: '',
 									spend_limit: {} as Coin,
 									custom_info: tx.custom_info,
-									expired: false
-								}
-								feegrantList.push(feegrantUpdate)
+									expired: false,
+								};
+								feegrantList.push(feegrantUpdate);
 							}
 						}
-
 					} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_GRANT) {
-						// normal create grant
-						let spend_limit = {} as Coin
-						let basic_allowance = message["allowance"]
-						while (basic_allowance["@type"] != ALLOWANCE_TYPE.BASIC_ALLOWANCE && basic_allowance["@type"] != ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
-							basic_allowance = basic_allowance["allowance"]
+						// Normal create grant
+						let spend_limit = {} as Coin;
+						let basic_allowance = message.allowance;
+						while (
+							basic_allowance['@type'] !== ALLOWANCE_TYPE.BASIC_ALLOWANCE &&
+							basic_allowance['@type'] !== ALLOWANCE_TYPE.PERIODIC_ALLOWANCE
+						) {
+							basic_allowance = basic_allowance.allowance;
 						}
-						const type = basic_allowance["@type"]
-						if (basic_allowance["@type"] == ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
-							basic_allowance = basic_allowance["basic"]
+						const type = basic_allowance['@type'];
+						if (basic_allowance['@type'] === ALLOWANCE_TYPE.PERIODIC_ALLOWANCE) {
+							basic_allowance = basic_allowance.basic;
 						}
-						if (basic_allowance["spend_limit"].length > 0) {
-							spend_limit = basic_allowance["spend_limit"][0] as Coin
+						if (basic_allowance.spend_limit.length > 0) {
+							spend_limit = basic_allowance.spend_limit[0] as Coin;
 						}
-						let feegrantCreate = {
+						const feegrantCreate = {
 							action: FEEGRANT_ACTION.CREATE,
-							granter: message["granter"],
-							grantee: message["grantee"],
-							result: tx.tx_response.code.toString() === "0",
+							granter: message.granter,
+							grantee: message.grantee,
+							result: tx.tx_response.code.toString() === '0',
 							timestamp: tx.tx_response.timestamp,
 							amount: tx.tx.auth_info.fee.amount[0] as Coin,
 							payer,
-							tx_hash: tx.tx_response.txhash,
-							expiration: basic_allowance["expiration"],
-							type: type,
-							spend_limit: spend_limit,
+							tx_hash: tx.tx_response.txhash.toString(),
+							expiration: basic_allowance.expiration,
+							type,
+							spend_limit,
 							custom_info: tx.custom_info,
-							expired: false
-						}
-						feegrantList.push(feegrantCreate)
+							expired: false,
+						};
+						feegrantList.push(feegrantCreate);
 					} else if (message['@type'] === MSG_TYPE.MSG_FEEGRANT_REVOKE) {
-						let feegrantRevoke = {
+						const feegrantRevoke = {
 							action: FEEGRANT_ACTION.REVOKE,
-							granter: message["granter"],
-							grantee: message["grantee"],
-							result: tx.tx_response.code.toString() === "0",
+							granter: message.granter,
+							grantee: message.grantee,
+							result: tx.tx_response.code.toString() === '0',
 							timestamp: tx.tx_response.timestamp,
 							amount: tx.tx.auth_info.fee.amount[0] as Coin,
 							payer,
-							tx_hash: tx.tx_response.txhash,
+							tx_hash: tx.tx_response.txhash.toString(),
 							expiration: null,
-							type: "",
+							type: '',
 							spend_limit: {} as Coin,
 							custom_info: tx.custom_info,
-							expired: false
-						}
-						feegrantList.push(feegrantRevoke)
+							expired: false,
+						};
+						feegrantList.push(feegrantRevoke);
 					}
-				})
-
+				});
 			}
 		}
-		// forward to feegrant history db service
-		if (process.env["NODE_ENV"] != "test") {
+		// Forward to feegrant history db service
+		if (process.env.NODE_ENV !== 'test') {
 			this.createJob(
 				'feegrant.history-db',
 				{
 					feegrantList,
-					chainId
+					chainId,
 				},
 				{
 					removeOnComplete: true,
@@ -379,21 +385,20 @@ export default class FeegrantTxHandler extends Service {
 				},
 			);
 		}
-		// update feegrant latest block
-		this.currentBlock = this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) < latestBlock ? this.currentBlock + parseInt(Config.BLOCK_PER_BATCH) : latestBlock
-		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this.currentBlock);
-		this.logger.info(JSON.stringify(feegrantList))
+		// Update feegrant latest block
+		this._currentBlock = toBlock;
+		this.redisClient.set(Config.REDIS_KEY_CURRENT_FEEGRANT_BLOCK, this._currentBlock);
+		this.logger.info(JSON.stringify(feegrantList));
 		return feegrantList;
 	}
 
-
-	async _start() {
+	public async _start() {
 		this.redisClient = await this.getRedisClient();
-		if (process.env["NODE_ENV"] != "test") {
+		if (process.env.NODE_ENV !== 'test') {
 			this.createJob(
 				'feegrant.tx-handle',
 				{
-					chainId: Config.CHAIN_ID
+					chainId: Config.CHAIN_ID,
 				},
 				{
 					removeOnComplete: true,
@@ -415,6 +420,7 @@ export default class FeegrantTxHandler extends Service {
 		this.getQueue('feegrant.tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

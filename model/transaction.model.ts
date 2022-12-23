@@ -1,8 +1,8 @@
+/* eslint-disable camelcase */
 // @ts-nocheck
-
-import { ITransaction } from '../entities';
 import { model, models, Schema, Types } from 'mongoose';
-import { definitionType, ObjectIdNull } from '../types';
+import { ITransaction } from '../entities';
+import { definitionType } from '../types';
 import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<ITransaction> = (collection?: string) => ({
@@ -99,8 +99,8 @@ export const transactionMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema(definition(collection), {
 		autoIndex: true,
-		// strict: false,
-		collection: collection,
+		// Strict: false,
+		collection,
 	});
 	schema.index({ 'tx_response.height': 1, 'custom_info.chain_id': 1 });
 	schema.index({ 'tx_response.height': -1, 'custom_info.chain_id': 1 });
@@ -183,6 +183,9 @@ export const transactionMongoModel = (collection: string): unknown => {
 		{ 'indexes.withdraw_rewards_validator': 1 },
 		{ name: 'withdraw_rewards_validator_asc', sparse: true },
 	);
+
+	schema.index({ 'indexes.addresses': 1 }, { sparse: true });
+	schema.index({ 'indexes.timestamp': -1 });
 
 	return models[collection] || model(collection, schema);
 };

@@ -3,9 +3,9 @@
 'use strict';
 import moleculer, { Context } from 'moleculer';
 import { Action, Service } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CursorOptions, QueryOptions } from 'moleculer-db';
 import { ObjectID } from 'bson';
+import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 import { LIST_NETWORK } from '../../common/constant';
 
 @Service({
@@ -55,7 +55,8 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw20-asset-manager find ${JSON.stringify(ctx.params)}`,
 				);
 				if (ctx.params.nextKey) {
-					ctx.params.query['_id'] = { $lt: new ObjectID(ctx.params.nextKey) };
+					// eslint-disable-next-line no-underscore-dangle
+					ctx.params.query._id = { $lt: new ObjectID(ctx.params.nextKey) };
 				}
 				// @ts-ignore
 				this.actions.useDb({
@@ -91,14 +92,14 @@ import { LIST_NETWORK } from '../../common/constant';
 					`ctx.params cw20-asset-manager upsert ${JSON.stringify(ctx.params)}`,
 				);
 				// @ts-ignore
-				return await this.upsert_handler(ctx.params);
+				return await this.upsertHandler(ctx.params);
 			},
 		},
 		useDb: {
 			async handler(ctx: Context) {
-				//@ts-ignore
-				const chainId = ctx.params.query['chainId'];
-				const network = LIST_NETWORK.find((x) => x.chainId == chainId);
+				// @ts-ignore
+				const chainId = ctx.params.query.chainId;
+				const network = LIST_NETWORK.find((x) => x.chainId === chainId);
 				if (network && network.databaseName) {
 					// @ts-ignore
 					this.adapter.useDb(network.databaseName);
@@ -108,29 +109,33 @@ import { LIST_NETWORK } from '../../common/constant';
 	},
 })
 export default class CW20AssetManagerService extends moleculer.Service {
-	async upsert_handler(asset: any) {
-		this.logger.debug(`asset `, asset);
+	async upsertHandler(asset: any) {
+		this.logger.debug('asset ', asset);
 		// @ts-ignore
 		this.actions.useDb({ query: { chainId: asset.custom_info.chain_id } });
-		let item = await this.adapter.findOne({ asset_id: asset.asset_id });
+		// eslint-disable-next-line camelcase
+		const item = await this.adapter.findOne({ asset_id: asset.asset_id });
 		if (item) {
-			// this.logger.debug(`rs `, item._id);
+			// This.logger.debug(`rs `, item._id);
+			// eslint-disable-next-line no-underscore-dangle
 			asset._id = item._id;
 			if (
-				asset.balance != item.balance ||
-				asset.owner != item.owner ||
-				asset.code_id != item.code_id ||
-				asset.contract_address != item.contract_address ||
-				asset.asset_info.data.total_supply != item.asset_info.data.total_supply ||
-				asset.asset_info.data.decimals != item.asset_info.data.decimals ||
-				asset.asset_info.data.symbol != item.asset_info.data.symbol ||
-				asset.asset_info.data.name != item.asset_info.data.name
+				asset.balance !== item.balance ||
+				asset.owner !== item.owner ||
+				asset.code_id !== item.code_id ||
+				asset.contract_address !== item.contract_address ||
+				asset.asset_info.data.total_supply !== item.asset_info.data.total_supply ||
+				asset.asset_info.data.decimals !== item.asset_info.data.decimals ||
+				asset.asset_info.data.symbol !== item.asset_info.data.symbol ||
+				asset.asset_info.data.name !== item.asset_info.data.name
 			) {
+				// eslint-disable-next-line no-underscore-dangle
 				await this.adapter.updateById(item._id, asset);
 			}
 		} else {
 			await this.adapter.insert(asset);
 		}
+		// eslint-disable-next-line no-underscore-dangle
 		return asset._id;
 	}
 
@@ -138,7 +143,7 @@ export default class CW20AssetManagerService extends moleculer.Service {
 	async getHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
 		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
-		//@ts-ignore
+		// @ts-ignore
 		delete ctx.params.query['custom_info.chain_id'];
 		return await this.adapter.lean(ctx.params);
 	}
@@ -147,7 +152,7 @@ export default class CW20AssetManagerService extends moleculer.Service {
 	async countHolderByAddress(ctx: Context<CursorOptions, Record<string, unknown>>) {
 		// @ts-ignore
 		this.actions.useDb({ query: { chainId: ctx.params.query['custom_info.chain_id'] } });
-		//@ts-ignore
+		// @ts-ignore
 		delete ctx.params.query['custom_info.chain_id'];
 		return await this.adapter.count(ctx.params);
 	}

@@ -20,9 +20,9 @@ const MoleculerServerError = Errors.MoleculerServerError;
  * @typedef {import('moleculer').Context} Context Moleculer's Context
  */
 
-let listLCD: any[] = [];
+const listLCD: any[] = [];
 LIST_NETWORK.map((e) => {
-	let listlcd = e.LCD;
+	const listlcd = e.LCD;
 	listlcd.map((lcd) => {
 		listLCD.push({ url: lcd, description: `${e.chainName} LCD` });
 	});
@@ -70,7 +70,7 @@ export const openAPIMixin = (mixinOptions?: any) => {
 					const swaggerDefinition = {
 						openapi: '3.0.0',
 						info: {
-							title: `Horoscope API Documentation`, // Title of the documentation
+							title: 'Horoscope API Documentation', // Title of the documentation
 							version: pkg.version, // Version of the app
 							description: `## Indexer for multiple Cosmos Network \n
 ### How to use\n
@@ -79,19 +79,17 @@ Select server LCD if use Legacy API`,
 							// eslint-disable-next-line max-len
 							// 'Indexer for multiple Cosmos Network',
 						},
-						// host: `${Config.SWAGGER_HOST}:${Config.SWAGGER_PORT}`, // The host or url of the app
-						// basePath: `${Config.SWAGGER_BASEPATH}`, // The basepath of your endpoint
+						// Host: `${Config.SWAGGER_HOST}:${Config.SWAGGER_PORT}`, // The host or url of the app
+						// BasePath: `${Config.SWAGGER_BASEPATH}`, // The basepath of your endpoint
 						servers: [
 							{
-								url: url,
+								url,
 								description: 'Horoscope ',
 							},
-							...listLCD.map((e) => {
-								return {
-									url: e.url,
-									description: e.description,
-								};
-							}),
+							...listLCD.map((e) => ({
+								url: e.url,
+								description: e.description,
+							})),
 						],
 					};
 					// Options for the swagger docs
@@ -124,16 +122,16 @@ Select server LCD if use Legacy API`,
 		async created() {
 			const pathToSwaggerUi = SwaggerUI.absolutePath();
 
-			let SwaggerUrl = `${Config.BASE_URL}`;
+			let swaggerUrl = `${Config.BASE_URL}`;
 			if (Config.BASE_PORT) {
-				SwaggerUrl += `:${Config.BASE_PORT}`;
+				swaggerUrl += `:${Config.BASE_PORT}`;
 			}
 
-			let swaggerUIInitialized = readFileSync(`${pathToSwaggerUi}/swagger-initializer.js`)
+			const swaggerUIInitialized = readFileSync(`${pathToSwaggerUi}/swagger-initializer.js`)
 				.toString()
 				.replace(
 					'https://petstore.swagger.io/v2/swagger.json',
-					`${SwaggerUrl}/openapi/swagger.json`,
+					`${swaggerUrl}/openapi/swagger.json`,
 				);
 			writeFileSync(`${pathToSwaggerUi}/swagger-initializer.js`, swaggerUIInitialized);
 
@@ -142,7 +140,7 @@ Select server LCD if use Legacy API`,
 				.replace(
 					// eslint-disable-next-line max-len
 					/(?:(?:https?|undefined):(\/\/|undefined?)|www\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/gim,
-					`${SwaggerUrl}/openapi/swagger.json`,
+					`${swaggerUrl}/openapi/swagger.json`,
 				)
 				.replace('layout: "StandaloneLayout"', '');
 			writeFileSync(`${pathToSwaggerUi}/index.html`, indexContent);
@@ -177,8 +175,8 @@ Select server LCD if use Legacy API`,
 										'utf8',
 									);
 								}
-								//  else {
-								// 	schema = readFileSync('./swagger.json');
+								//  Else {
+								// 	Schema = readFileSync('./swagger.json');
 								// }
 							} catch (err) {
 								// eslint-disable-next-line @typescript-eslint/ban-ts-comment

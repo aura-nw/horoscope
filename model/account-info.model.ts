@@ -1,10 +1,15 @@
+/* eslint-disable camelcase */
 import { IAccountInfo } from 'entities/account-info.entity';
 import { model, models, Types, Schema } from 'mongoose';
 import { definitionType } from 'types';
 
 const definition: definitionType<IAccountInfo> = (collection?: string) => ({
 	_id: Types.ObjectId,
-	address: String,
+	address: {
+		type: String,
+		unique: true,
+		index: true,
+	},
 	account_auth: {
 		account: Object,
 	},
@@ -98,10 +103,9 @@ export const accountInfoMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema<IAccountInfo>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	// @ts-ignore
-	schema.index({ address: 1, 'custom_info.chain_id': 1 }, { unique: true });
 	schema.index({ 'account_auth.result.type': 1 });
 	return models[collection] || model(collection, schema);
 };

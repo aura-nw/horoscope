@@ -6,7 +6,6 @@ import { ObjectId } from 'bson';
 import { IFeegrant } from 'entities';
 import { Context } from 'moleculer';
 import { QueryOptions } from 'moleculer-db';
-import { Config } from '../../common';
 import { FEEGRANT_STATUS, LIST_NETWORK } from '../../common/constant';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { dbFeegrantMixin } from '../../mixins/dbMixinMongoose';
@@ -44,9 +43,7 @@ export default class FeegrantService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			granter: { type: 'string', optional: true },
 			grantee: { type: 'string', optional: true },
@@ -58,7 +55,6 @@ export default class FeegrantService extends MoleculerDBService<
 			expired: {
 				type: 'boolean',
 				optional: true,
-				default: false,
 				convert: true,
 			},
 			pageLimit: {
@@ -102,11 +98,11 @@ export default class FeegrantService extends MoleculerDBService<
 			}
 		}
 		try {
-			let query: QueryOptions = {};
-			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
-			if (network && network.databaseName && process.env['NODE_ENV'] != 'test') {
+			const query: QueryOptions = {};
+			const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainid);
+			if (network && network.databaseName && process.env.NODE_ENV !== 'test') {
 				this.adapter.useDb(network.databaseName);
-			}
+			} /* eslint-disable camelcase, no-underscore-dangle */
 			if (ctx.params.nextKey) {
 				if (ctx.params.reverse) {
 					query._id = { $gt: new ObjectId(ctx.params.nextKey) };
@@ -117,36 +113,38 @@ export default class FeegrantService extends MoleculerDBService<
 				ctx.params.countTotal = false;
 			}
 			if (ctx.params.granter) {
-				query['granter'] = ctx.params.granter;
+				query.granter = ctx.params.granter;
 			}
 			if (ctx.params.grantee) {
-				query['grantee'] = ctx.params.grantee;
+				query.grantee = ctx.params.grantee;
 			}
 			if (ctx.params.txhash) {
-				query['tx_hash'] = ctx.params.txhash;
+				query.tx_hash = ctx.params.txhash;
 			}
 			const queryIn = [] as any;
 			if (ctx.params.status) {
 				ctx.params.status.split(',').forEach((e) => queryIn.push(e));
-				query['status'] = { $in: queryIn };
+				query.status = { $in: queryIn };
 			}
-			query['expired'] = ctx.params.expired;
+			if (ctx.params.expired !== undefined) {
+				query.expired = ctx.params.expired;
+			}
 			this.logger.info(query);
-			let [result, count]: [any[], number] = await Promise.all([
+			const [result, count]: [any[], number] = await Promise.all([
 				this.adapter.lean({
-					query: query,
+					query,
 					limit: ctx.params.pageLimit + 1,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
 					sort: '-timestamp',
 				}),
 				this.adapter.count({
-					query: query,
+					query,
 				}),
 			]);
 			let nextKey = null;
 			if (result.length > 0) {
-				if (result.length == 1) {
+				if (result.length === 1) {
 					nextKey = result[result.length - 1]?._id;
 				} else {
 					nextKey = result[result.length - 2]?._id;
@@ -158,12 +156,13 @@ export default class FeegrantService extends MoleculerDBService<
 					result.pop();
 				}
 			}
+			/* eslint-enable camelcase, no-underscore-dangle */
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					grants: result,
-					count: count,
+					count,
 					nextKey,
 				},
 			};
@@ -186,12 +185,11 @@ export default class FeegrantService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			granter: { type: 'string', optional: true },
 			grantee: { type: 'string', optional: true },
+			txhash: { type: 'string', optional: true },
 			pageLimit: {
 				type: 'number',
 				optional: true,
@@ -233,11 +231,11 @@ export default class FeegrantService extends MoleculerDBService<
 			}
 		}
 		try {
-			let query: QueryOptions = {};
-			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
-			if (network && network.databaseName && process.env['NODE_ENV'] != 'test') {
+			const query: QueryOptions = {};
+			const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainid);
+			if (network && network.databaseName && process.env.NODE_ENV !== 'test') {
 				this.adapter.useDb(network.databaseName);
-			}
+			} /* eslint-disable camelcase, no-underscore-dangle */
 			if (ctx.params.nextKey) {
 				if (ctx.params.reverse) {
 					query._id = { $gt: new ObjectId(ctx.params.nextKey) };
@@ -248,12 +246,15 @@ export default class FeegrantService extends MoleculerDBService<
 				ctx.params.countTotal = false;
 			}
 			if (ctx.params.granter) {
-				query['granter'] = ctx.params.granter;
+				query.granter = ctx.params.granter;
 			}
 			if (ctx.params.grantee) {
-				query['grantee'] = ctx.params.grantee;
+				query.grantee = ctx.params.grantee;
 			}
-			query['$or'] = [
+			if (ctx.params.txhash) {
+				query.tx_hash = ctx.params.txhash;
+			}
+			query.$or = [
 				{
 					status: {
 						$ne: FEEGRANT_STATUS.AVAILABLE,
@@ -264,21 +265,21 @@ export default class FeegrantService extends MoleculerDBService<
 				},
 			];
 			this.logger.info(query);
-			let [result, count]: [any[], number] = await Promise.all([
+			const [result, count]: [any[], number] = await Promise.all([
 				this.adapter.lean({
-					query: query,
+					query,
 					limit: ctx.params.pageLimit + 1,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
 					sort: '-timestamp',
 				}),
 				this.adapter.count({
-					query: query,
+					query,
 				}),
 			]);
 			let nextKey = null;
 			if (result.length > 0) {
-				if (result.length == 1) {
+				if (result.length === 1) {
 					nextKey = result[result.length - 1]?._id;
 				} else {
 					nextKey = result[result.length - 2]?._id;
@@ -290,12 +291,13 @@ export default class FeegrantService extends MoleculerDBService<
 					result.pop();
 				}
 			}
+			/* eslint-enable camelcase, no-underscore-dangle */
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					grants: result,
-					count: count,
+					count,
 					nextKey,
 				},
 			};
@@ -521,6 +523,12 @@ export default class FeegrantService extends MoleculerDBService<
  *          schema:
  *            type: string
  *          description: "Grantee of feegrant"
+ *        - in: query
+ *          name: txhash
+ *          required: false
+ *          schema:
+ *            type: string
+ *          description: "Original Txhash of feegrant"
  *        - in: query
  *          name: pageOffset
  *          required: false

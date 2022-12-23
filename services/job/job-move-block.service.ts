@@ -1,14 +1,17 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Config } from '../../common';
 import { Service, Context, ServiceBroker } from 'moleculer';
 
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Job } from 'bull';
+import { ObjectId } from 'bson';
 import { IBlock } from '../../entities';
 import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
-import { ObjectId } from 'bson';
+import { Config } from '../../common';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class MoveBlockService extends Service {
 	public constructor(public broker: ServiceBroker) {
@@ -17,7 +20,7 @@ export default class MoveBlockService extends Service {
 			name: 'moveblock',
 			version: 1,
 			mixins: [
-				QueueService(
+				queueService(
 					`redis://${Config.REDIS_USERNAME}:${Config.REDIS_PASSWORD}@${Config.REDIS_HOST}:${Config.REDIS_PORT}/${Config.REDIS_DB_NUMBER}`,
 					{
 						prefix: 'move.block',
@@ -42,7 +45,7 @@ export default class MoveBlockService extends Service {
 
 	async handleJob(lastId: string) {
 		let blockLastId: any = null;
-		if (lastId == '0') {
+		if (lastId === '0') {
 			const lastestBlockAggregate: IBlock[] = await this.adapter.find({
 				sort: '_id',
 				limit: 1,
@@ -50,11 +53,11 @@ export default class MoveBlockService extends Service {
 			});
 			if (lastestBlockAggregate.length && lastestBlockAggregate[0]._id) {
 				blockLastId = lastestBlockAggregate[0];
-				let timestampObjectId = new ObjectId(
+				const timestampObjectId = new ObjectId(
 					lastestBlockAggregate[0]._id.toString(),
 				).getTimestamp();
 
-				let timeRange = new Date();
+				const timeRange = new Date();
 				timeRange.setDate(
 					timestampObjectId.getDate() + parseInt(Config.RANGE_DAY_MOVE_BLOCK, 10),
 				);
@@ -62,7 +65,7 @@ export default class MoveBlockService extends Service {
 					this.createJob(
 						'move.block',
 						{
-							lastId: lastId,
+							lastId,
 						},
 						{
 							removeOnComplete: true,
@@ -78,9 +81,9 @@ export default class MoveBlockService extends Service {
 				lastId = lastestBlockAggregate[0]._id.toString();
 			}
 		} else {
-			let timestampObjectId = new ObjectId(lastId).getTimestamp();
+			const timestampObjectId = new ObjectId(lastId).getTimestamp();
 
-			let timeRange = new Date();
+			const timeRange = new Date();
 			timeRange.setDate(
 				timestampObjectId.getDate() + parseInt(Config.RANGE_DAY_MOVE_BLOCK, 10),
 			);
@@ -88,7 +91,7 @@ export default class MoveBlockService extends Service {
 				this.createJob(
 					'move.block',
 					{
-						lastId: lastId,
+						lastId,
 					},
 					{
 						removeOnComplete: true,
@@ -102,7 +105,7 @@ export default class MoveBlockService extends Service {
 			}
 		}
 
-		let listBlock: IBlock[] = await this.adapter.find({
+		const listBlock: IBlock[] = await this.adapter.find({
 			query: {
 				_id: { $gt: new ObjectId(lastId) },
 			},
@@ -118,7 +121,7 @@ export default class MoveBlockService extends Service {
 				this.createJob(
 					'move.block',
 					{
-						//@ts-ignore
+						// @ts-ignore
 						lastId: listBlock[listBlock.length - 1]._id.toString(),
 					},
 					{
@@ -129,25 +132,23 @@ export default class MoveBlockService extends Service {
 					},
 				);
 
-				this.broker.emit('job.moveblock', { listBlock: listBlock });
+				this.broker.emit('job.moveblock', { listBlock });
 				let listBulk: any[] = [];
-				listBulk = listBlock.map((block: IBlock) => {
-					return {
-						deleteOne: {
-							filter: {
-								_id: block._id,
-							},
+				listBulk = listBlock.map((block: IBlock) => ({
+					deleteOne: {
+						filter: {
+							_id: block._id,
 						},
-					};
-				});
-				let result = await this.adapter.bulkWrite(listBulk);
+					},
+				}));
+				const result = await this.adapter.bulkWrite(listBulk);
 				this.logger.debug(result);
 				if (listBlock) {
-					//@ts-ignore
+					// @ts-ignore
 					this.lastId = listBlock[listBlock.length - 1]._id.toString();
 				}
 				this.broker.emit('move.block.success', {
-					listBlock: listBlock,
+					listBlock,
 				});
 			} catch (error) {
 				this.logger.error(`error: ${error}`);
@@ -155,7 +156,7 @@ export default class MoveBlockService extends Service {
 		}
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'move.block',
 			{
@@ -177,6 +178,7 @@ export default class MoveBlockService extends Service {
 		this.getQueue('move.block').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

@@ -2,7 +2,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
+import { QueryOptions } from 'moleculer-db';
+import { ObjectId } from 'bson';
 import { dbParamMixin } from '../../mixins/dbMixinMongoose';
 import {
 	ErrorCode,
@@ -11,10 +13,8 @@ import {
 	MoleculerDBService,
 	ResponseDto,
 } from '../../types';
-import { QueryOptions } from 'moleculer-db';
 import { IParam } from '../../entities';
 import { LIST_NETWORK, MODULE_PARAM } from '../../common/constant';
-import { ObjectId } from 'bson';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -36,9 +36,7 @@ export default class ParamService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			module: {
 				type: 'string',
@@ -92,42 +90,43 @@ export default class ParamService extends MoleculerDBService<
 		try {
 			const module = ctx.params.module;
 			let needNextKey = true;
-			let query: QueryOptions = {};
+			const query: QueryOptions = {};
 			if (module) {
-				query['module'] = module;
+				query.module = module;
 				needNextKey = false;
 			}
-
+			/* eslint-disable camelcase, no-underscore-dangle */
 			if (ctx.params.nextKey) {
 				query._id = { $gt: new ObjectId(ctx.params.nextKey) };
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
 			}
-			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+			const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainid);
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
 			}
-			let [result, count]: [any[], number] = await Promise.all([
+			const [result, count]: [any[], number] = await Promise.all([
 				this.adapter.find({
-					query: query,
+					query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
 					sort: '_id',
 				}),
 				this.adapter.count({
-					query: query,
+					query,
 				}),
 			]);
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
-					result: result,
-					count: count,
+					result,
+					count,
 					nextKey: needNextKey && result.length ? result[result.length - 1]._id : null,
 				},
 			};
+			/* eslint-enable camelcase, no-underscore-dangle */
 		} catch (error) {
 			response = {
 				code: ErrorCode.WRONG,

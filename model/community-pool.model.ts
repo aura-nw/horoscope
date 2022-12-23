@@ -1,5 +1,6 @@
-import { ICommunityPool } from '../entities';
+/* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
+import { ICommunityPool } from '../entities';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
@@ -19,7 +20,7 @@ export const communityPoolMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 	});
 	return models[collection] || model(collection, schema);
 };

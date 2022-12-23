@@ -2,9 +2,6 @@
 import { inspect } from 'util';
 import { BrokerOptions, Errors, MetricRegistry } from 'moleculer';
 import 'reflect-metadata';
-import pick from 'lodash/pick';
-// import ServiceGuard = require('./middlewares/ServiceGuard');
-import HotReloadMiddleware from './middlewares/HotReloadCHokidar';
 import { Config } from './common';
 import MoleculerRetryableError = Errors.MoleculerRetryableError;
 
@@ -229,15 +226,31 @@ const brokerConfig: BrokerOptions = {
 				width: Config.TRACING_WIDTH || 100,
 				// Gauge width in the row
 				gaugeWidth: Config.TRACING_GUAGEWIDTH || 40,
+
+				// Jaeger
+				host: Config.JAEGER_HOST,
+				port: Config.JAEGER_PORT,
+				sampler: {
+					// Sampler type. More info: https://www.jaegertracing.io/docs/1.14/sampling/#client-sampling-configuration
+					type: 'Const',
+					// Sampler specific options.
+					options: {},
+				},
+				// Additional options for `Jaeger.Tracer`
+				tracerOptions: {},
+				// Default tags. They will be added into all span tags.
+				defaultTags: Config.JAEGER_DEFAULT_TAG
+					? JSON.parse(Config.JAEGER_DEFAULT_TAG)
+					: null,
 			},
 		},
 	},
 
 	// Register custom middlewares
-	// middlewares: [HotReloadMiddleware, ServiceGuard],
+	// Middlewares: [HotReloadMiddleware, ServiceGuard],
 
 	// Register custom REPL commands.
-	// replCommands: undefined,
+	// ReplCommands: undefined,
 	/*
 	// Called after broker created.
 	created : (broker: ServiceBroker): void => {},

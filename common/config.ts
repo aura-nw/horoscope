@@ -4,6 +4,7 @@ import { LogLevels } from 'moleculer';
 import _ from 'lodash';
 import { DBDialog, DBInfo } from '../types';
 import { PATH_COSMOS_SDK } from './constant';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 
 const processEnv = process.env;
@@ -38,7 +39,7 @@ const getDbInfo = (where: string, what: string, defaultValue: string) => {
 
 const genericDbInfo = (where: string): DBInfo => ({
 	dialect:
-		process.env['NODE_ENV'] != 'test'
+		process.env.NODE_ENV !== 'test'
 			? (getDbInfo(where, 'DIALECT', 'local') as DBDialog)
 			: (getDbInfo(where, 'TEST_DIALECT', 'local') as DBDialog),
 	user: getDbInfo(where, 'USER', ''),
@@ -46,7 +47,7 @@ const genericDbInfo = (where: string): DBInfo => ({
 	host: getDbInfo(where, 'HOST', ''),
 	port: +getDbInfo(where, 'PORT', '0'),
 	dbname:
-		process.env['NODE_ENV'] != 'test'
+		process.env.NODE_ENV !== 'test'
 			? getDbInfo(where, 'DBNAME', '')
 			: getDbInfo(where, 'DBNAME_TEST', ''),
 	collection: getDbInfo(where, 'COLLECTION', where.toLowerCase()),
@@ -81,8 +82,7 @@ export default class ConfigClass {
 	public static RATE_LIMIT_WINDOW = +(process.env.RATE_LIMIT_WINDOW || 10000);
 	public static STRATEGY = process.env.STRATEGY || 'RoundRobin'; // "RoundRobin", "Random", "CpuUsage", "Latency", "Shard"
 	// public static JWT_SECRET = process.env.JWT_SECRET || 'dummy-secret';
-	public static DB_USER: any;
-	public static DB_PRODUCT: any;
+
 	public static DB_TRANSACTION: any;
 	public static DB_CW721_ASSET: any;
 	public static DB_CW721_MEDIA_LINK: any;
@@ -113,6 +113,8 @@ export default class ConfigClass {
 	public static DB_ACCOUNT_STATISTICS: any;
 	public static DB_SMART_CONTRACTS: any;
 	public static DB_DAILY_CW20_HOLDER: any;
+	public static DB_EPOCH: any;
+	public static DB_GAMM_POOL: any;
 
 	public ENABLE_LOADBALANCER = process.env.ENABLE_LOADBALANCER || 'true';
 
@@ -217,5 +219,7 @@ export default class ConfigClass {
 		this.DB_ACCOUNT_STATISTICS = genericDbInfo('ACCOUNT_STATISTICS');
 		this.DB_SMART_CONTRACTS = genericDbInfo('SMART_CONTRACTS');
 		this.DB_DAILY_CW20_HOLDER = genericDbInfo('DAILY_CW20_HOLDER');
+		this.DB_EPOCH = genericDbInfo('EPOCH');
+		this.DB_GAMM_POOL = genericDbInfo('GAMM_POOL');
 	}
 }

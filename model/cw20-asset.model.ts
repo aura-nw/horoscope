@@ -1,17 +1,19 @@
+/* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
 export interface ICW20Asset {
 	_id: ObjectIdNull;
-	asset_id: String;
-	code_id: String;
+	asset_id: string;
+	code_id: string;
+	// eslint-disable-next-line @typescript-eslint/ban-types
 	asset_info: Object;
-	contract_address: String;
-	token_id: String;
-	owner: String;
-	balance: String;
-	history: String[];
+	contract_address: string;
+	token_id: string;
+	owner: string;
+	balance: string;
+	history: string[];
 }
 
 const definition: definitionType<ICW20Asset> = (collection?: string) => ({
@@ -30,7 +32,10 @@ const definition: definitionType<ICW20Asset> = (collection?: string) => ({
 			total_supply: String,
 		},
 	},
-	contract_address: String,
+	contract_address: {
+		type: String,
+		index: true,
+	},
 	token_id: String,
 	balance: String,
 	owner: {
@@ -51,12 +56,12 @@ export const cw20AssetMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema<ICW20Asset>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 		timestamps: {
 			createdAt: true,
 			updatedAt: true,
 		},
-		// strict: true
+		// Strict: true
 	});
 	schema.index({ 'custom_info.chain_id': 1, asset_id: 1 });
 	schema.index({ updatedAt: -1 });

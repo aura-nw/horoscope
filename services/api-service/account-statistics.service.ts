@@ -2,16 +2,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
 import { dbAccountStatisticsMixin } from '../../mixins/dbMixinMongoose';
-import {
-	ErrorCode,
-	ErrorMessage,
-	MoleculerDBService,
-	TopAccountsRequest,
-} from '../../types';
+import { ErrorCode, ErrorMessage, MoleculerDBService, TopAccountsRequest } from '../../types';
 import { IAccountStatistics } from '../../entities';
-import { LIST_NETWORK, TOP_ACCOUNT_STATS_FIELD } from '../../common/constant';
+import { LIST_NETWORK } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -47,56 +42,59 @@ export default class AccountStatisticsService extends MoleculerDBService<
 	})
 	async getTopAccounts(ctx: Context<TopAccountsRequest>) {
 		const params = await this.sanitizeParams(ctx, ctx.params);
-		const network = LIST_NETWORK.find((x) => x.chainId == params.chainId);
+		const network = LIST_NETWORK.find((x) => x.chainId === params.chainId);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
 
-		let day_range: string = '';
+		let dayRange = '';
 		switch (params.dayRange) {
 			case 1:
-				day_range = 'one_day';
+				dayRange = 'one_day';
 				break;
 			case 3:
-				day_range = 'three_days';
+				dayRange = 'three_days';
 				break;
 			case 7:
-				day_range = 'seven_days';
+				dayRange = 'seven_days';
 				break;
 		}
 
-		let projectionTxSent: any = {}, projectionTxReceived: any = {},
-			projectionAmountSent: any = {}, projectionAmountReceived: any = {};
+		const projectionTxSent: any = {};
+		const projectionTxReceived: any = {};
+		const projectionAmountSent: any = {};
+		const projectionAmountReceived: any = {};
 		projectionTxSent.address = 1;
-		projectionTxSent[`${day_range}.total_sent_tx`] = 1;
+		projectionTxSent[`${dayRange}.total_sent_tx`] = 1;
 		projectionTxReceived.address = 1;
-		projectionTxReceived[`${day_range}.total_received_tx`] = 1;
+		projectionTxReceived[`${dayRange}.total_received_tx`] = 1;
 		projectionAmountSent.address = 1;
-		projectionAmountSent[`${day_range}.total_sent_amount`] = 1;
+		projectionAmountSent[`${dayRange}.total_sent_amount`] = 1;
 		projectionAmountReceived.address = 1;
-		projectionAmountReceived[`${day_range}.total_received_amount`] = 1;
-		let [dataTxSent, dataTxReceived, dataAmountSent, dataAmountReceived] = await Promise.all([
+		projectionAmountReceived[`${dayRange}.total_received_amount`] = 1;
+		const [dataTxSent, dataTxReceived, dataAmountSent, dataAmountReceived] = await Promise.all([
 			this.adapter.lean({
 				projection: projectionTxSent,
-				sort: `-${day_range}.total_sent_tx.percentage -${day_range}.total_sent_amount.percentage`,
+				sort: `-${dayRange}.total_sent_tx.percentage -${dayRange}.total_sent_amount.percentage`,
 				limit: params.limit,
 			}),
 			this.adapter.lean({
 				projection: projectionTxReceived,
-				sort: `-${day_range}.total_received_tx.percentage -${day_range}.total_received_amount.percentage`,
+				sort: `-${dayRange}.total_received_tx.percentage -${dayRange}.total_received_amount.percentage`,
 				limit: params.limit,
 			}),
 			this.adapter.lean({
 				projection: projectionAmountSent,
-				sort: `-${day_range}.total_sent_amount.percentage -${day_range}.total_sent_tx.percentage`,
+				sort: `-${dayRange}.total_sent_amount.percentage -${dayRange}.total_sent_tx.percentage`,
 				limit: params.limit,
 			}),
 			this.adapter.lean({
 				projection: projectionAmountReceived,
-				sort: `-${day_range}.total_received_amount.percentage -${day_range}.total_received_tx.percentage`,
+				sort: `-${dayRange}.total_received_amount.percentage -${dayRange}.total_received_tx.percentage`,
 				limit: params.limit,
 			}),
 		]);
+		/* eslint-disable camelcase */
 		return {
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
@@ -107,6 +105,7 @@ export default class AccountStatisticsService extends MoleculerDBService<
 				top_txn_count_received: dataAmountReceived,
 			},
 		};
+		/* eslint-enable camelcase */
 	}
 
 	/**

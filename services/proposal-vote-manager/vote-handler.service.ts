@@ -1,22 +1,24 @@
-import CallApiMixin from './../../mixins/callApi/call-api.mixin';
-import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable camelcase */
 import { Job } from 'bull';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import { JsonConvert } from 'json2typescript';
+import { Context, Service, ServiceBroker } from 'moleculer';
 import { Config } from '../../common';
 import { LIST_NETWORK, VOTE_MANAGER_ACTION } from '../../common/constant';
 import { ITransaction } from '../../entities';
 import { CustomInfo } from '../../entities/custom-info.entity';
 import { VoteEntity } from '../../entities/vote.entity';
-import { JsonConvert } from 'json2typescript';
-import { Context, Service, ServiceBroker } from 'moleculer';
-import { QueueConfig } from '../../config/queue';
+import { queueConfig } from '../../config/queue';
+import { dbVoteMixin } from './../../mixins/dbMixinMongoose/db-vote.mixin';
+import CallApiMixin from './../../mixins/callApi/call-api.mixin';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
-interface TakeVoteRequest {
+interface ITakeVoteRequest {
 	listTx: ITransaction[];
 }
 export default class VoteHandlerService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -24,8 +26,8 @@ export default class VoteHandlerService extends Service {
 			version: 1,
 			mixins: [
 				dbVoteMixin,
-				this.callApiMixin,
-				QueueService(QueueConfig.redis, QueueConfig.opts),
+				new CallApiMixin().start(),
+				queueService(queueConfig.redis, queueConfig.opts),
 			],
 			queues: {
 				'proposal.vote': {
@@ -40,32 +42,32 @@ export default class VoteHandlerService extends Service {
 					},
 				},
 			},
-			events: {
-				// listen to event from tx-handler
-				'list-tx.upsert': {
-					handler: (ctx: any) => {
-						// create job to handle vote
-						this.createJob(
-							'proposal.vote',
-							{
-								listTx: ctx.params.listTx,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 3,
-								},
-							},
-						);
-						return;
-					},
-				},
-			},
+			// Events: {
+			// 	// Listen to event from tx-handler
+			// 	'list-tx.upsert': {
+			// 		Handler: (ctx: any) => {
+			// 			// Create job to handle vote
+			// 			This.createJob(
+			// 				'proposal.vote',
+			// 				{
+			// 					ListTx: ctx.params.listTx,
+			// 					ChainId: ctx.params.chainId,
+			// 				},
+			// 				{
+			// 					RemoveOnComplete: true,
+			// 					RemoveOnFail: {
+			// 						Count: 3,
+			// 					},
+			// 				},
+			// 			);
+			// 			Return;
+			// 		},
+			// 	},
+			// },
 			actions: {
-				// action to take vote from tx
+				// Action to take vote from tx
 				'act-take-vote': {
-					async handler(ctx: Context<TakeVoteRequest>): Promise<any> {
+					async handler(ctx: Context<ITakeVoteRequest>): Promise<any> {
 						const { listTx } = ctx.params;
 						await this.handleJob(listTx);
 						return;
@@ -75,19 +77,23 @@ export default class VoteHandlerService extends Service {
 		});
 	}
 
-	async handleJob(listTx: any, chainId?: string) {
+	public async handleJob(listTx: any, chainId?: string) {
 		for (const tx of listTx) {
-			// continue if tx is not vote
+			// Continue if tx is not vote
 			const voteMsg = tx.tx.body.messages.find(
 				(msg: any) => msg['@type'] === '/cosmos.gov.v1beta1.MsgVote',
 			);
-			if (!voteMsg) continue;
+			if (!voteMsg) {
+				continue;
+			}
 
-			// continue if chainId is not found
+			// Continue if chainId is not found
 			const chain = chainId || tx.custom_info.chain_id || Config.CHAIN_ID;
-			if (!chain) throw new Error('ChainId is not found');
+			if (!chain) {
+				throw new Error('ChainId is not found');
+			}
 
-			// create vote entity
+			// Create vote entity
 			const proposal_id = Number(voteMsg.proposal_id);
 			const answer = voteMsg.option;
 			const voter_address = voteMsg.voter;
@@ -99,7 +105,7 @@ export default class VoteHandlerService extends Service {
 				chain_id: chain,
 				chain_name: LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
 			};
-			if (code != '0') {
+			if (code !== '0') {
 				continue;
 			}
 			const vote = {
@@ -114,11 +120,11 @@ export default class VoteHandlerService extends Service {
 			};
 			const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
 			this.logger.info('voteEntity', JSON.stringify(voteEntity));
-			// call action to save votes
+			// Call action to save votes
 			this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
 		}
 	}
-	async _start() {
+	public async _start() {
 		this.getQueue('proposal.vote').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
@@ -128,6 +134,7 @@ export default class VoteHandlerService extends Service {
 		this.getQueue('proposal.vote').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

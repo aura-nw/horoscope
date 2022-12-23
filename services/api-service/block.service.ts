@@ -2,24 +2,18 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
+import { QueryOptions } from 'moleculer-db';
 import { dbBlockMixin } from '../../mixins/dbMixinMongoose';
 import {
-	ChainIdParams,
 	ErrorCode,
 	ErrorMessage,
-	getActionConfig,
 	GetBlockRequest,
 	MoleculerDBService,
 	ResponseDto,
-	RestOptions,
 } from '../../types';
 import { IBlock, IValidator } from '../../entities';
-import { QueryOptions } from 'moleculer-db';
-import { ObjectId } from 'mongodb';
 import { LIST_NETWORK } from '../../common/constant';
-import { redisMixin } from '../../mixins/redis/redis.mixin';
-const { performance } = require('perf_hooks');
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -27,7 +21,7 @@ const { performance } = require('perf_hooks');
 @Service({
 	name: 'block',
 	version: 1,
-	mixins: [dbBlockMixin, redisMixin],
+	mixins: [dbBlockMixin],
 })
 export default class BlockService extends MoleculerDBService<
 	{
@@ -41,9 +35,7 @@ export default class BlockService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			blockHeight: { type: 'number', optional: true, convert: true },
 			blockHash: { type: 'string', optional: true },
@@ -92,45 +84,29 @@ export default class BlockService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<GetBlockRequest, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
-		let blockFindNextKey = null;
-		// if (ctx.params.nextKey) {
-		// 	try {
-		// 		new ObjectId(ctx.params.nextKey);
-		// 		// blockFindNextKey = await this.adapter.findById(ctx.params.nextKey);
-		// 	} catch (error) {
-		// 		return (response = {
-		// 			code: ErrorCode.WRONG,
-		// 			message: ErrorMessage.VALIDATION_ERROR,
-		// 			data: {
-		// 				message: 'The nextKey is not a valid ObjectId',
-		// 			},
-		// 		});
-		// 	}
-		// }
+
 		try {
-			let query: QueryOptions = {};
-			const chainId = ctx.params.chainid;
+			const query: QueryOptions = {};
 			const blockHeight = ctx.params.blockHeight;
 			const blockHash = ctx.params.blockHash;
 			const operatorAddress = ctx.params.operatorAddress;
 			const consensusHexAddress = ctx.params.consensusHexAddress;
 
-			// const sort = ctx.params.reverse ? '_id' : '-_id';
-			const sort = '-block.header.height';
+			const sort = ctx.params.reverse ? '_id' : '-_id';
+			// Const sort = '-block.header.height';
 
 			let needNextKey = true;
 			if (blockHeight) {
 				query['block.header.height'] = blockHeight;
 			}
-			// if (chainId) {
-			// 	query['custom_info.chain_id'] = ctx.params.chainid;
-			// }
+
 			if (operatorAddress) {
-				let operatorList: IValidator[] = await this.broker.call(
+				const operatorList: IValidator[] = await this.broker.call(
 					'v1.validator.getByCondition',
 					{
 						query: {
 							'custom_info.chain_id': ctx.params.chainid,
+							// eslint-disable-next-line camelcase, quote-props
 							operator_address: operatorAddress,
 						},
 					},
@@ -147,33 +123,34 @@ export default class BlockService extends MoleculerDBService<
 				query['block_id.hash'] = blockHash;
 				needNextKey = false;
 			}
-			let projection: any = { custom_info: 0 };
+			// eslint-disable-next-line camelcase
+			const projection: any = { custom_info: 0 };
 			if (!blockHash && !blockHeight) {
 				projection['block.last_commit'] = 0;
 				projection['block.evidence'] = 0;
 			}
 
 			if (ctx.params.nextKey) {
-				// query._id = { $lt: new ObjectId(ctx.params.nextKey) };
+				// Query._id = { $lt: new ObjectId(ctx.params.nextKey) };
 				query['block.header.height'] = { $lt: Number(ctx.params.nextKey) };
 			}
-			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+			const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainid);
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
 			}
-			let [resultBlock, resultCount]: [any[], any] = await Promise.all([
+			const [resultBlock, resultCount]: [any[], any] = await Promise.all([
 				this.adapter.lean({
-					query: query,
-					projection: projection,
+					query,
+					projection,
 					limit: ctx.params.pageLimit + 1,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					// sort: '-block.header.height',
-					sort: sort,
+					// Sort: '-block.header.height',
+					sort,
 				}),
 				ctx.params.countTotal === true
 					? this.adapter.countWithSkipLimit({
-							query: query,
+							query,
 							skip: 0,
 							limit: ctx.params.pageLimit * 5,
 					  })
@@ -182,7 +159,7 @@ export default class BlockService extends MoleculerDBService<
 
 			let nextKey = null;
 			if (resultBlock.length > 0) {
-				if (resultBlock.length == 1) {
+				if (resultBlock.length === 1) {
 					if (needNextKey) {
 						nextKey = resultBlock[resultBlock.length - 1]?.block.header.height;
 					}
@@ -206,7 +183,7 @@ export default class BlockService extends MoleculerDBService<
 				data: {
 					blocks: resultBlock,
 					count: resultCount,
-					nextKey: nextKey,
+					nextKey,
 				},
 			};
 		} catch (error) {
@@ -403,7 +380,7 @@ export default class BlockService extends MoleculerDBService<
 	 *                                  type: array
 	 *                                  items:
 	 *                                    type: string
-	 *                                    example: "Cr4CCpwBCjcvY29zbW9zLmRpc3RyaWJ1dGlvbi52MWJldGExLk1zZ1dpdGhkcmF3RGVsZWdhdG9yUmV3YXJkEmEKK2F1cmExZ3lwdDJ3N3hnNXQ5eXI3Nmh4NnplbXdkNHh2NzJqY2trMDNyNnQSMmF1cmF2YWxvcGVyMWQzbjB2NWYyM3NxemtobGNuZXdoa3NhajhsM3g3amV5dTkzOGd4CpwBCjcvY29zbW9zLmRpc3RyaWJ1dGlvbi52MWJldGExLk1zZ1dpdGhkcmF3RGVsZWdhdG9yUmV3YXJkEmEKK2F1cmExZ3lwdDJ3N3hnNXQ5eXI3Nmh4NnplbXdkNHh2NzJqY2trMDNyNnQSMmF1cmF2YWxvcGVyMWVkdzRsd2N6M2VzbmxnemN3NjByYThtMzhrM3p5Z3oyeHRsMnFoEmkKUgpGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOpI9dkWS6LMKVUiDKO+l6Cj42RgpHPB6zsDR5g+T9EoBIECgIIARjc/g0SEwoNCgZ1dGF1cmESAzIwMBDAmgwaQCbAXZBszJbxJBkFDQ34+gO1S0eSG8uHMa//hZ4RNjYnIhHVZfhQtdsAP+tVumfrCKifITaDFaZIiEORBlgmZSk="
+	 *                                    example: "CqY2trMDNyNnQECgIIARjc/ghZ4RNjYnIhHVZfhQtdsAP+tVumfrCKifITaDFaZIiEORBlgmZSk="
 	 *                            evidence:
 	 *                               type: object
 	 *                               properties:

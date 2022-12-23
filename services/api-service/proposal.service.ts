@@ -2,23 +2,19 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
+import { Service, Get } from '@ourparentcenter/moleculer-decorators-extended';
+import { QueryOptions } from 'moleculer-db';
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import {
 	CountVoteParams,
 	ErrorCode,
 	ErrorMessage,
-	getActionConfig,
 	GetProposalRequest,
 	MoleculerDBService,
 	ResponseDto,
-	RestOptions,
 } from '../../types';
-import { DbContextParameters, QueryOptions } from 'moleculer-db';
-import { IProposal, ProposalEntity } from '../../entities';
+import { IProposal } from '../../entities';
 import { LIST_NETWORK, PROPOSAL_STATUS } from '../../common/constant';
-import { ObjectId } from 'bson';
-import { Config } from '../../common';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -40,9 +36,7 @@ export default class ProposalService extends MoleculerDBService<
 			chainid: {
 				type: 'string',
 				optional: false,
-				enum: LIST_NETWORK.map((e) => {
-					return e.chainId;
-				}),
+				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 			proposalId: { type: 'string', optional: true, default: null },
 			pageLimit: {
@@ -85,50 +79,51 @@ export default class ProposalService extends MoleculerDBService<
 		try {
 			const proposalId = ctx.params.proposalId;
 			const sort = ctx.params.reverse ? 'proposal_id' : '-proposal_id';
-			let query: QueryOptions = {};
+			const query: QueryOptions = {};
 			let needNextKey = true;
+			/* eslint-disable camelcase, no-underscore-dangle*/
 			if (proposalId) {
-				query['proposal_id'] = { $eq: Number(proposalId) };
+				query.proposal_id = { $eq: Number(proposalId) };
 				needNextKey = false;
 			} else {
-				query['status'] = { $ne: PROPOSAL_STATUS.PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT };
+				query.status = { $ne: PROPOSAL_STATUS.PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT };
 			}
 			if (ctx.params.nextKey) {
 				if (ctx.params.reverse) {
-					if (query['proposal_id']) {
-						query['proposal_id'].push({ $gt: Number(ctx.params.nextKey) });
+					if (query.proposal_id) {
+						query.proposal_id.push({ $gt: Number(ctx.params.nextKey) });
 					} else {
-						query['proposal_id'] = { $gt: Number(ctx.params.nextKey) };
+						query.proposal_id = { $gt: Number(ctx.params.nextKey) };
 					}
 				} else {
-					if (query['proposal_id']) {
-						query['proposal_id'].push({ $lt: Number(ctx.params.nextKey) });
+					if (query.proposal_id) {
+						query.proposal_id.push({ $lt: Number(ctx.params.nextKey) });
 					} else {
-						query['proposal_id'] = { $lt: Number(ctx.params.nextKey) };
+						query.proposal_id = { $lt: Number(ctx.params.nextKey) };
 					}
 				}
 
 				ctx.params.pageOffset = 0;
 				ctx.params.countTotal = false;
 			}
-			const network = LIST_NETWORK.find((x) => x.chainId == ctx.params.chainid);
+			const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainid);
 			if (network && network.databaseName) {
 				this.adapter.useDb(network.databaseName);
 			}
-			let [result, count]: [any[], number] = await Promise.all([
+			const [result, count]: [any[], number] = await Promise.all([
 				this.adapter.lean({
-					query: query,
+					query,
 					limit: ctx.params.pageLimit,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
-					sort: sort,
+					sort,
 				}),
 				this.adapter.count({
-					query: query,
+					query,
 				}),
 			]);
 
-			// count votes
+			// Count votes
 			if (proposalId && result.length > 0) {
 				const countVoteParams: CountVoteParams = {
 					chain_id: ctx.params.chainid,
@@ -139,16 +134,17 @@ export default class ProposalService extends MoleculerDBService<
 					countVoteParams,
 				);
 				const data = Object.assign({}, result[0]);
-				// result[0] = result[0].toObject();
+				// Result[0] = result[0].toObject();
 				data.total_vote = countVoteResponse;
 				result[0] = data;
 			}
+			/* eslint-enable camelcase, no-underscore-dangle*/
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					proposals: result,
-					count: count,
+					count,
 					nextKey:
 						needNextKey && result.length ? result[result.length - 1].proposal_id : null,
 				},

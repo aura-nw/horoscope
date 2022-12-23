@@ -1,5 +1,6 @@
-import { ICW721Asset } from '../entities/cw721-asset.entity';
+/* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
+import { ICW721Asset } from '../entities/cw721-asset.entity';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
 
@@ -42,6 +43,7 @@ const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 			index: true,
 		},
 		content_type: String,
+		file_path: String,
 	},
 	animation: {
 		link_s3: {
@@ -49,6 +51,7 @@ const definition: definitionType<ICW721Asset> = (collection?: string) => ({
 			index: true,
 		},
 		content_type: String,
+		file_path: String,
 	},
 });
 
@@ -57,12 +60,12 @@ export const cw721AssetMongoModel = (collection: string): unknown => {
 	// @ts-ignore
 	const schema = new Schema<ICW721Asset>(definition(collection), {
 		autoIndex: true,
-		collection: collection,
+		collection,
 		timestamps: {
 			createdAt: true,
 			updatedAt: true,
 		},
-		// strict: true
+		// Strict: true
 	});
 	schema.index({ 'custom_info.chain_id': 1, asset_id: 1 });
 	schema.index({ updatedAt: -1 });

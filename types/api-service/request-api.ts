@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { DELAY_JOB_TYPE } from 'common/constant';
 
 export interface PageLimit {
@@ -146,6 +147,7 @@ export interface GetFeegrantRequest extends ChainIdParams, PageLimit {
 export interface GetFeegrantInactiveRequest extends ChainIdParams, PageLimit {
 	granter: string;
 	grantee: string;
+	txhash: string;
 }
 export interface QueryDelayJobParams {
 	address: string;
@@ -161,7 +163,6 @@ export interface QueryTransactionStatsParams {
 	query: Object;
 	sort: string;
 	limit: number;
-	offset: number;
 }
 
 export interface BlockchainDataRequest {
@@ -179,7 +180,9 @@ export interface TopAccountsRequest {
 
 export interface GetContractsRequest {
 	chainId: string;
-	height: number;
+	fromHeight: number;
+	toHeight: number;
+	contract_addresses: string[];
 	limit: number;
-	offset: number;
+	nextKey: string;
 }

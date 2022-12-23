@@ -2,13 +2,11 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context } from 'moleculer';
-import { Put, Method, Service, Get, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { dbInflationMixin } from '../../mixins/dbMixinMongoose';
-import { Config } from '../../common';
-import { getActionConfig, MoleculerDBService, RestOptions } from '../../types';
-import { IInflation } from '../../entities';
+import { Service, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { DbContextParameters } from 'moleculer-db';
-import { ChainIdParams } from '../../types';
+import { dbInflationMixin } from '../../mixins/dbMixinMongoose';
+import { MoleculerDBService } from '../../types';
+import { IInflation } from '../../entities';
 import { LIST_NETWORK } from '../../common/constant';
 
 /**
@@ -39,12 +37,12 @@ export default class InflationService extends MoleculerDBService<
 	})
 	async getByChain(ctx: Context<DbContextParameters>) {
 		const params = await this.sanitizeParams(ctx, ctx.params);
-		const network = LIST_NETWORK.find((x) => x.chainId == params.chainid);
+		const network = LIST_NETWORK.find((x) => x.chainId === params.chainid);
 		if (network && network.databaseName) {
 			this.adapter.useDb(network.databaseName);
 		}
 
-		let result = await this.adapter.findOne({});
+		const result = await this.adapter.findOne({});
 		return result;
 	}
 }

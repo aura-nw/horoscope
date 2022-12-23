@@ -1,13 +1,17 @@
-import { Config } from '../common';
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/explicit-member-accessibility */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable max-classes-per-file */
 import { JsonObject, JsonProperty } from 'json2typescript';
 import { Types } from 'mongoose';
 import { ObjectIdNull } from 'types';
-import { ICoin, Coin } from './coin.entity';
 import { FEEGRANT_ACTION, FEEGRANT_STATUS } from 'common/constant';
+import { Config } from '../common';
+import { ICoin, Coin } from './coin.entity';
 import { CustomInfo } from './custom-info.entity';
 export interface IFeegrant {
 	_id: ObjectIdNull;
-	tx_hash: String,
+	tx_hash: String;
 	origin_feegrant_txhash: String | null;
 	granter: String;
 	grantee: String;
@@ -18,9 +22,9 @@ export interface IFeegrant {
 	spend_limit: ICoin;
 	expiration: Date | null;
 	amount: ICoin;
-	status: FEEGRANT_STATUS | null
-	action: FEEGRANT_ACTION | ""
-	custom_info: CustomInfo
+	status: FEEGRANT_STATUS | null;
+	action: FEEGRANT_ACTION | '';
+	custom_info: CustomInfo;
 }
 @JsonObject('Feegrant')
 export class FeegrantEntity implements IFeegrant {
@@ -49,7 +53,7 @@ export class FeegrantEntity implements IFeegrant {
 	@JsonProperty('status', String)
 	status: FEEGRANT_STATUS | null = null;
 	@JsonProperty('action', String)
-	action: FEEGRANT_ACTION | "" = "";
+	action: FEEGRANT_ACTION | '' = '';
 	@JsonProperty('expired', Boolean)
 	expired: Boolean = false;
 	custom_info: CustomInfo = {} as CustomInfo;

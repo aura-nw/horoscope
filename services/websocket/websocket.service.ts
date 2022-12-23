@@ -1,17 +1,19 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Context, Service, ServiceBroker } from 'moleculer';
 import SocketIOMixin from 'moleculer-io';
 import ApiGatewayService from 'moleculer-web';
-import { Config } from '../../common';
 import { Job } from 'bull';
 import { ListTxInBlockParams, TransactionArrayParam } from 'types';
-import RedisMixin from '../../mixins/redis/redis.mixin';
 import { RedisClientType } from 'redis';
 import { ITransaction } from 'entities';
 import { MSG_TYPE } from 'common/constant';
-import { QueueConfig } from '../../config/queue';
+import RedisMixin from '../../mixins/redis/redis.mixin';
+import { Config } from '../../common';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -30,18 +32,16 @@ const listSafeTxAction = [
 ];
 
 export default class WebsocketService extends Service {
-	private redisMixin = new RedisMixin().start();
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'io',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
+				queueService(queueConfig.redis, queueConfig.opts),
 				ApiGatewayService,
 				SocketIOMixin,
-				this.redisMixin,
+				new RedisMixin().start(),
 			],
 			queues: {
 				'websocket.tx-handle': {
@@ -66,7 +66,7 @@ export default class WebsocketService extends Service {
 			settings: {
 				port: 3000,
 				io: {
-					options: {}, //socket.io options
+					options: {}, // Socket.io options
 					namespaces: {
 						'/register': {
 							events: {
@@ -105,47 +105,46 @@ export default class WebsocketService extends Service {
 					},
 				},
 				'safe-register': {
-					async handler() {
+					handler: () =>
 						// @ts-ignore
-						return true;
-					},
+						true,
 				},
 				// 'broadcast-message': {
-				// 	async handler(ctx: Context) {
+				// 	Async handler(ctx: Context) {
 				// 		// @ts-ignore
-				// 		await this.broker?.call("v1.io.broadcast", ctx.params.args);
+				// 		Await this.broker?.call("v1.io.broadcast", ctx.params.args);
 				// 		// return ctx.params?.args;
 				// 	},
 				// },
 			},
 		});
 	}
-	//@ts-ignore
+	// @ts-ignore
 	// More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
 	async clientRegister(ctx: Context<TransactionArrayParam>) {
-		let redisClient: RedisClientType = await this.getRedisClient();
+		const redisClient: RedisClientType = await this.getRedisClient();
 
-		this.logger.info('Tx need to crawl' + ctx.params.txHashArr);
+		this.logger.info('Tx need to crawl: ', ctx.params.txHashArr);
 
 		await redisClient.SADD(SORTEDSET, ctx.params.txHashArr);
 	}
 
 	async handleNewBlock(listTx: ITransaction[]): Promise<any[]> {
 		try {
-			let redisClient: RedisClientType = await this.getRedisClient();
+			const redisClient: RedisClientType = await this.getRedisClient();
 
-			//Get all member of set Transactions
-			let syncTx = await redisClient.SMEMBERS(SORTEDSET);
+			// Get all member of set Transactions
+			const syncTx = await redisClient.SMEMBERS(SORTEDSET);
 
-			this.logger.info('ListTx ' + syncTx);
+			this.logger.info('ListTx: ', syncTx);
 
-			let txHadCrawl: any[] = await this.broker?.call('v1.handletransaction.find', {
+			const txHadCrawl: any[] = await this.broker?.call('v1.handle-transaction.find', {
 				query: {
 					'tx_response.txhash': { $in: syncTx },
 				},
 			});
 
-			//Broadcast message to websocket channel using broker call io service what is defined in constructor
+			// Broadcast message to websocket channel using broker call io service what is defined in constructor
 			if (txHadCrawl.length > 0) {
 				await this.broker?.call('v1.io.broadcast', {
 					namespace: '/register',
@@ -187,11 +186,11 @@ export default class WebsocketService extends Service {
 		return [];
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'websocket.tx-handle',
 			{
-				param: `param`,
+				param: 'param',
 			},
 			{
 				removeOnComplete: true,
@@ -222,6 +221,7 @@ export default class WebsocketService extends Service {
 		this.getQueue('websocket.safe-tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

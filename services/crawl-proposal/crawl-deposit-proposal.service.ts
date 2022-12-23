@@ -1,31 +1,30 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { Service, ServiceBroker } from 'moleculer';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import { Job } from 'bull';
+import { IDepositProposalResponseFromLCD } from 'types';
+import { IDeposit } from 'entities';
 import { dbProposalMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
-import { Job } from 'bull';
 import { Utils } from '../../utils/utils';
-import { IDepositProposalResponseFromLCD } from 'types';
-import { IDeposit } from 'entities';
-import { QueueConfig } from '../../config/queue';
+import CallApiMixin from '../../mixins/callApi/call-api.mixin';
+import { queueConfig } from '../../config/queue';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlProposalService extends Service {
-	private callApiMixin = new CallApiMixin().start();
-	private dbProposalMixin = dbProposalMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlDepositProposal',
 			version: 1,
 			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.callApiMixin,
-				this.dbProposalMixin,
+				queueService(queueConfig.redis, queueConfig.opts),
+				new CallApiMixin().start(),
+				dbProposalMixin,
 			],
 			queues: {
 				'crawl.deposit.proposal': {
@@ -38,16 +37,6 @@ export default class CrawlProposalService extends Service {
 						return true;
 					},
 				},
-				// 'crawl.deposit.tx': {
-				// 	concurrency: 1,
-				// 	async process(job: Job) {
-				// 		job.progress(10);
-				// 		// @ts-ignore
-				// 		await this.handleJobDepositTx(job.data.listTx);
-				// 		job.progress(100);
-				// 		return true;
-				// 	},
-				// },
 			},
 			events: {
 				'proposal.depositing': {
@@ -73,13 +62,13 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async handleJobDeposit(proposalId: String) {
+	async handleJobDeposit(proposalId: string) {
 		let path = `${Config.GET_ALL_PROPOSAL}/${proposalId}/deposits`;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		let done = false;
 		let resultCallApi: IDepositProposalResponseFromLCD;
-		let listDeposit: IDeposit[] = [];
+		const listDeposit: IDeposit[] = [];
 		while (!done) {
 			resultCallApi = await this.callApiFromDomain(url, path);
 
@@ -92,22 +81,24 @@ export default class CrawlProposalService extends Service {
 				)}`;
 			}
 		}
-		if (listDeposit.length == 0) {
+		if (listDeposit.length === 0) {
 			return;
 		}
 		this.logger.debug(listDeposit);
-		let deposit = listDeposit.map((item: any) => ({
+		const deposit = listDeposit.map((item: any) => ({
 			depositor: item.depositor,
 			amount: item.amount,
 		}));
 
-		let foundProposal = await this.adapter.findOne({
+		const foundProposal = await this.adapter.findOne({
+			// eslint-disable-next-line camelcase
 			proposal_id: `${proposalId}`,
 		});
 		if (foundProposal) {
 			try {
-				let res = await this.adapter.updateById(foundProposal._id, {
-					$set: { deposit: deposit },
+				// eslint-disable-next-line no-underscore-dangle
+				const res = await this.adapter.updateById(foundProposal._id, {
+					$set: { deposit },
 				});
 				this.logger.debug(res);
 			} catch (error) {
@@ -115,7 +106,7 @@ export default class CrawlProposalService extends Service {
 			}
 		}
 	}
-	async _start() {
+	public async _start() {
 		this.getQueue('crawl.deposit.proposal').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
@@ -125,6 +116,7 @@ export default class CrawlProposalService extends Service {
 		this.getQueue('crawl.deposit.proposal').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress is ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

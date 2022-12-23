@@ -1,35 +1,34 @@
+/* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Service, ServiceBroker } from 'moleculer';
-import { dbAccountStatisticsMixin } from '../../mixins/dbMixinMongoose';
 import { Job } from 'bull';
+import { JsonConvert } from 'json2typescript';
+import { ObjectId } from 'mongodb';
+import { dbAccountStatisticsMixin } from '../../mixins/dbMixinMongoose';
 import { MSG_TYPE } from '../../common/constant';
 import { AccountStatistics, DailyStats } from '../../entities';
-import { JsonConvert } from 'json2typescript';
-import { QueueConfig } from '../../config/queue';
+
+import { queueConfig } from '../../config/queue';
 import { Config } from '../../common';
-const QueueService = require('moleculer-bull');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const queueService = require('moleculer-bull');
 
 export default class CrawlAccountStatsService extends Service {
-	private dbAccountStatisticsMixin = dbAccountStatisticsMixin;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
 			name: 'crawlAccountStats',
 			version: 1,
-			mixins: [
-				QueueService(QueueConfig.redis, QueueConfig.opts),
-				this.dbAccountStatisticsMixin,
-			],
+			mixins: [queueService(queueConfig.redis, queueConfig.opts), dbAccountStatisticsMixin],
 			queues: {
 				'crawl.account-stats': {
 					concurrency: parseInt(Config.CONCURRENCY_DAILY_TX_STATISTICS, 10),
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.offset, job.data.listData);
+						await this.handleJob(job.data.id, job.data.listData);
 						job.progress(100);
 						return true;
 					},
@@ -38,37 +37,46 @@ export default class CrawlAccountStatsService extends Service {
 		});
 	}
 
-	async handleJob(offset: number, listData: any[]) {
-		let listAddresses: any[] = [],
-			listUpdateQueries: any[] = [];
+	async handleJob(id: any, listData: any[]) {
+		const listAddresses: any[] = [];
+		const listUpdateQueries: any[] = [];
 
 		const syncDate = new Date();
+		const endTime = syncDate.setUTCHours(0, 0, 0, 0);
 		syncDate.setDate(syncDate.getDate() - 1);
 		const startTime = syncDate.setUTCHours(0, 0, 0, 0);
-		const endTime = syncDate.setUTCHours(23, 59, 59, 999);
+		this.logger.info(`Get txs from _id ${id} for day ${new Date(startTime)}`);
 
-		let query: any = {
+		const query: any = {
 			'indexes.message_action': {
 				$in: [MSG_TYPE.MSG_SEND, MSG_TYPE.MSG_MULTI_SEND],
 			},
 			'indexes.timestamp': {
 				$gte: new Date(startTime),
-				$lte: new Date(endTime),
+				$lt: new Date(endTime),
 			},
 		};
+		if (id) {
+			// eslint-disable-next-line no-underscore-dangle
+			query._id = { $gt: new ObjectId(id) };
+		}
+		this.logger.info(`Query ${JSON.stringify(query)}`);
 
-		const dailyTxs: any = await this.broker.call('v1.transaction-stats.act-find', {
-			query,
-			sort: '_id',
-			limit: 100,
-			offset: offset * 100,
-		});
-		this.logger.info(`Number of Txs retrieved at page ${offset + 1}: ${dailyTxs.length}`);
+		const dailyTxs: any = await this.broker.call(
+			'v1.transaction-stats.act-find',
+			{
+				query,
+				sort: '_id',
+				limit: 100,
+			},
+			{ meta: { $cache: false }, timeout: 0 },
+		);
+		this.logger.info(`Number of Txs retrieved from _id ${id}: ${dailyTxs.length}`);
 
 		if (dailyTxs.length > 0) {
 			try {
-				for (let txs of dailyTxs) {
-					for (let message of txs.tx.body.messages) {
+				for (const txs of dailyTxs) {
+					for (const message of txs.tx.body.messages) {
 						switch (message['@type']) {
 							case MSG_TYPE.MSG_SEND:
 								listAddresses.push(message.from_address, message.to_address);
@@ -82,13 +90,13 @@ export default class CrawlAccountStatsService extends Service {
 									).sent_txs += 1;
 									listData.find(
 										(item: any) => item.address === message.from_address,
-									).sent_amount += parseInt(message.amount[0].amount);
+									).sent_amount += parseInt(message.amount[0].amount, 10);
 								} else {
 									listData.push({
 										address: message.from_address,
 										sent_txs: 1,
 										received_txs: 0,
-										sent_amount: parseInt(message.amount[0].amount),
+										sent_amount: parseInt(message.amount[0].amount, 10),
 										received_amount: 0,
 									});
 								}
@@ -102,14 +110,14 @@ export default class CrawlAccountStatsService extends Service {
 									).received_txs += 1;
 									listData.find(
 										(item: any) => item.address === message.to_address,
-									).received_amount += parseInt(message.amount[0].amount);
+									).received_amount += parseInt(message.amount[0].amount, 10);
 								} else {
 									listData.push({
 										address: message.to_address,
 										sent_txs: 0,
 										received_txs: 1,
 										sent_amount: 0,
-										received_amount: parseInt(message.amount[0].amount),
+										received_amount: parseInt(message.amount[0].amount, 10),
 									});
 								}
 								break;
@@ -125,13 +133,19 @@ export default class CrawlAccountStatsService extends Service {
 									).sent_txs += 1;
 									listData.find(
 										(item: any) => item.address === message.inputs[0].address,
-									).sent_amount += parseInt(message.inputs[0].coins[0].amount);
+									).sent_amount += parseInt(
+										message.inputs[0].coins[0].amount,
+										10,
+									);
 								} else {
 									listData.push({
 										address: message.inputs[0].address,
 										sent_txs: 1,
 										received_txs: 0,
-										sent_amount: parseInt(message.inputs[0].coins[0].amount),
+										sent_amount: parseInt(
+											message.inputs[0].coins[0].amount,
+											10,
+										),
 										received_amount: 0,
 									});
 								}
@@ -147,14 +161,14 @@ export default class CrawlAccountStatsService extends Service {
 										).received_txs += 1;
 										listData.find(
 											(item: any) => item.address === output.address,
-										).received_amount += parseInt(output.coins[0].amount);
+										).received_amount += parseInt(output.coins[0].amount, 10);
 									} else {
 										listData.push({
 											address: output.address,
 											sent_txs: 0,
 											received_txs: 1,
 											sent_amount: 0,
-											received_amount: parseInt(output.coins[0].amount),
+											received_amount: parseInt(output.coins[0].amount, 10),
 										});
 									}
 								});
@@ -166,12 +180,12 @@ export default class CrawlAccountStatsService extends Service {
 				this.logger.error(error);
 			}
 
-			const newOffset = offset + 1;
-			this.logger.info(`Next paging: ${newOffset + 1}`);
+			// eslint-disable-next-line no-underscore-dangle
+			const newId = dailyTxs[dailyTxs.length - 1]._id;
 			this.createJob(
 				'crawl.account-stats',
 				{
-					offset: newOffset,
+					id: newId,
 					listData,
 				},
 				{
@@ -182,17 +196,19 @@ export default class CrawlAccountStatsService extends Service {
 				},
 			);
 		} else {
-			let listAccountStats: AccountStatistics[] = await this.adapter.find({
+			const listAccountStats: AccountStatistics[] = await this.adapter.find({
 				query: {
 					'custom_info.chain_id': Config.CHAIN_ID,
 				},
 			});
 			listData.map((item: any) => {
-				let account = listAccountStats.find(
-					(account: AccountStatistics) => item.address === account.address,
+				const account = listAccountStats.find(
+					(accountInList: AccountStatistics) => item.address === accountInList.address,
 				);
 				if (account) {
-					if (account.per_day.length === 7) account.per_day.shift();
+					if (account.per_day.length === 7) {
+						account.per_day.shift();
+					}
 					account.per_day.push({
 						total_sent_tx: {
 							amount: item.sent_txs,
@@ -229,32 +245,33 @@ export default class CrawlAccountStatsService extends Service {
 							percentage: 0,
 						},
 					};
-					const last_three_days =
+					const lastThreeDays =
 						account.per_day.length > 3 ? account.per_day.slice(-3) : account.per_day;
 					account.three_days = {
 						total_sent_tx: {
-							amount: last_three_days.reduce(
+							amount: lastThreeDays.reduce(
+								/* eslint-disable @typescript-eslint/restrict-plus-operands */
 								(a: any, b: any) => a + b.total_sent_tx.amount,
 								0,
 							),
 							percentage: 0,
 						},
 						total_received_tx: {
-							amount: last_three_days.reduce(
+							amount: lastThreeDays.reduce(
 								(a: any, b: any) => a + b.total_received_tx.amount,
 								0,
 							),
 							percentage: 0,
 						},
 						total_sent_amount: {
-							amount: last_three_days.reduce(
+							amount: lastThreeDays.reduce(
 								(a: any, b: any) => a + b.total_sent_amount.amount,
 								0,
 							),
 							percentage: 0,
 						},
 						total_received_amount: {
-							amount: last_three_days.reduce(
+							amount: lastThreeDays.reduce(
 								(a: any, b: any) => a + b.total_sent_amount.amount,
 								0,
 							),
@@ -290,9 +307,10 @@ export default class CrawlAccountStatsService extends Service {
 							),
 							percentage: 0,
 						},
+						/* eslint-enable @typescript-eslint/restrict-plus-operands */
 					};
 				} else {
-					let accountStatistics: AccountStatistics = {} as AccountStatistics;
+					const accountStatistics: AccountStatistics = {} as AccountStatistics;
 					accountStatistics.address = item.address;
 					accountStatistics.per_day = [] as DailyStats[];
 					accountStatistics.per_day.push({
@@ -371,8 +389,10 @@ export default class CrawlAccountStatsService extends Service {
 				}
 			});
 			listAccountStats.map((account: any) => {
-				if (!listData.find((item) => item.address == account.address)) {
-					if (account.per_day.length === 7) account.per_day.shift();
+				if (!listData.find((item) => item.address === account.address)) {
+					if (account.per_day.length === 7) {
+						account.per_day.shift();
+					}
 					account.per_day.push({
 						total_sent_tx: {
 							amount: 0,
@@ -409,32 +429,33 @@ export default class CrawlAccountStatsService extends Service {
 							percentage: 0,
 						},
 					};
-					const last_three_days =
+					const lastThreeDays =
 						account.per_day.length > 3 ? account.per_day.slice(-3) : account.per_day;
 					account.three_days = {
 						total_sent_tx: {
-							amount: last_three_days.reduce(
+							amount: lastThreeDays.reduce(
+								/* eslint-disable @typescript-eslint/restrict-plus-operands */
 								(a: any, b: any) => a + b.total_sent_tx.amount,
 								0,
 							),
 							percentage: 0,
 						},
 						total_received_tx: {
-							amount: last_three_days.reduce(
+							amount: lastThreeDays.reduce(
 								(a: any, b: any) => a + b.total_received_tx.amount,
 								0,
 							),
 							percentage: 0,
 						},
 						total_sent_amount: {
-							amount: last_three_days.reduce(
+							amount: lastThreeDays.reduce(
 								(a: any, b: any) => a + b.total_sent_amount.amount,
 								0,
 							),
 							percentage: 0,
 						},
 						total_received_amount: {
-							amount: last_three_days.reduce(
+							amount: lastThreeDays.reduce(
 								(a: any, b: any) => a + b.total_received_amount.amount,
 								0,
 							),
@@ -476,7 +497,7 @@ export default class CrawlAccountStatsService extends Service {
 
 			try {
 				listAccountStats.map((element) => {
-					// total sent tx percentage
+					// Total sent tx percentage
 					element.one_day.total_sent_tx.percentage =
 						(Number(element.one_day.total_sent_tx.amount) * 100) /
 						listAccountStats.reduce(
@@ -496,7 +517,7 @@ export default class CrawlAccountStatsService extends Service {
 							0,
 						);
 
-					// total received tx percentage
+					// Total received tx percentage
 					element.one_day.total_received_tx.percentage =
 						(Number(element.one_day.total_received_tx.amount) * 100) /
 						listAccountStats.reduce(
@@ -516,7 +537,7 @@ export default class CrawlAccountStatsService extends Service {
 							0,
 						);
 
-					// total sent amount percentage
+					// Total sent amount percentage
 					element.one_day.total_sent_amount.percentage =
 						(Number(element.one_day.total_sent_amount.amount) * 100) /
 						listAccountStats.reduce(
@@ -536,7 +557,7 @@ export default class CrawlAccountStatsService extends Service {
 							0,
 						);
 
-					// total received amount percentage
+					// Total received amount percentage
 					element.one_day.total_received_amount.percentage =
 						(Number(element.one_day.total_received_amount.amount) * 100) /
 						listAccountStats.reduce(
@@ -556,9 +577,11 @@ export default class CrawlAccountStatsService extends Service {
 							0,
 						);
 
-					if (element._id)
+					// eslint-disable-next-line no-underscore-dangle
+					if (element._id) {
+						// eslint-disable-next-line no-underscore-dangle
 						listUpdateQueries.push(this.adapter.updateById(element._id, element));
-					else {
+					} else {
 						const item: AccountStatistics = new JsonConvert().deserializeObject(
 							element,
 							AccountStatistics,
@@ -571,17 +594,18 @@ export default class CrawlAccountStatsService extends Service {
 				this.logger.error(error);
 			}
 		}
+		/* eslint-enable @typescript-eslint/restrict-plus-operands */
 	}
 
 	onlyUnique(value: any, index: any, self: any) {
 		return self.indexOf(value) === index;
 	}
 
-	async _start() {
+	public async _start() {
 		this.createJob(
 			'crawl.account-stats',
 			{
-				offset: 0,
+				id: null,
 				listData: [],
 			},
 			{
@@ -590,7 +614,7 @@ export default class CrawlAccountStatsService extends Service {
 					count: 3,
 				},
 				repeat: {
-					cron: '0 0 0 * * ?'
+					cron: '0 0 0 * * ?',
 				},
 			},
 		);
@@ -604,6 +628,7 @@ export default class CrawlAccountStatsService extends Service {
 		this.getQueue('crawl.account-stats').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
+		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }
