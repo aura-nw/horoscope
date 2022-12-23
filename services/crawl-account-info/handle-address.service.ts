@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { Context, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
-import { CrawlAccountClaimedRewardsParams, ListTxCreatedParams } from 'types';
+import { ListTxCreatedParams } from 'types';
 import { JsonConvert } from 'json2typescript';
 import { fromBech32 } from '@cosmjs/encoding';
 import { CONST_CHAR, LIST_NETWORK } from '../../common/constant';
@@ -41,40 +41,40 @@ export default class HandleAddressService extends Service {
 					},
 				},
 			},
-			events: {
-				'list-tx.upsert': {
-					handler: (ctx: Context<ListTxCreatedParams>) => {
-						this.logger.debug('Handle address');
-						this.createJob(
-							'handle.address',
-							{
-								listTx: ctx.params.listTx,
-								source: ctx.params.source,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 10,
-								},
-							},
-						);
-						return;
-					},
-				},
-			},
+			// Events: {
+			// 	'list-tx.upsert': {
+			// 		Handler: (ctx: Context<ListTxCreatedParams>) => {
+			// 			This.logger.debug('Handle address');
+			// 			This.createJob(
+			// 				'handle.address',
+			// 				{
+			// 					ListTx: ctx.params.listTx,
+			// 					Source: ctx.params.source,
+			// 					ChainId: ctx.params.chainId,
+			// 				},
+			// 				{
+			// 					RemoveOnComplete: true,
+			// 					RemoveOnFail: {
+			// 						Count: 10,
+			// 					},
+			// 				},
+			// 			);
+			// 			Return;
+			// 		},
+			// 	},
+			// },
 		});
 	}
 
 	public async handleJob(listTx: any[], source: string, chainId: string) {
 		const listAddresses: any[] = [];
 		const listUpdateInfo = [
-			'account-info.upsert-auth',
-			'account-info.upsert-balances',
-			'account-info.upsert-delegates',
-			'account-info.upsert-redelegates',
-			'account-info.upsert-spendable-balances',
-			'account-info.upsert-unbonds',
+			'crawl.account-auth-info',
+			'crawl.account-balances',
+			'crawl.account-delegates',
+			'crawl.account-redelegates',
+			'crawl.account-spendable-balances',
+			'crawl.account-unbonds',
 		];
 		const listInsert: any[] = [];
 		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
@@ -94,11 +94,13 @@ export default class HandleAddressService extends Service {
 								)
 								.map((e: any) => e.attributes)
 								.map((e: any) =>
-									e.filter(
-										(x: any) =>
-											x.key === CONST_CHAR.RECEIVER ||
-											x.key === CONST_CHAR.SPENDER,
-									).map((x: any) => x.value),
+									e
+										.filter(
+											(x: any) =>
+												x.key === CONST_CHAR.RECEIVER ||
+												x.key === CONST_CHAR.SPENDER,
+										)
+										.map((x: any) => x.value),
 								)
 								.flat();
 							event = event.filter((e: string) => fromBech32(e).data.length === 20);
@@ -116,7 +118,9 @@ export default class HandleAddressService extends Service {
 			}
 
 			// eslint-disable-next-line no-underscore-dangle
-			const listUniqueAddresses = listAddresses.filter(this._onlyUnique)
+			const listUniqueAddresses = listAddresses
+				// eslint-disable-next-line no-underscore-dangle
+				.filter(this._onlyUnique)
 				.filter((addr: string) => fromBech32(addr).data.length === 20);
 			if (listUniqueAddresses.length > 0) {
 				try {
@@ -144,14 +148,29 @@ export default class HandleAddressService extends Service {
 					this.logger.error('Account(s) already exists');
 				}
 				listUpdateInfo.map((item) => {
-					this.broker.emit(item, { listAddresses: listUniqueAddresses, chainId });
+					this.createJob(
+						item,
+						{ listAddresses: listUniqueAddresses, chainId },
+						{
+							removeOnComplete: true,
+							removeOnFail: {
+								count: 10,
+							},
+						},
+					);
 				});
 			}
 			if (source !== CONST_CHAR.API) {
-				this.broker.emit('account-info.upsert-claimed-rewards', {
-					listTx,
-					chainId,
-				} as CrawlAccountClaimedRewardsParams);
+				this.createJob(
+					'crawl.account-claimed-rewards',
+					{ listTx },
+					{
+						removeOnComplete: true,
+						removeOnFail: {
+							count: 10,
+						},
+					},
+				);
 			}
 		}
 	}

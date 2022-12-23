@@ -1,3 +1,6 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable camelcase */
+/* eslint-disable no-underscore-dangle */
 import { Job } from 'bull';
 import { Service, ServiceBroker } from 'moleculer';
 import { Coin } from 'entities/coin.entity';
@@ -49,48 +52,58 @@ export default class HandleAccountVestingService extends Service {
 			this.logger.error(error);
 			throw error;
 		}
-		continuousVestingAccounts.map(async (account: any) => {
-			this.logger.info(`Handle address: ${account.address}`);
+		await Promise.all(
+			continuousVestingAccounts.map(async (account: any) => {
+				this.logger.info(`Handle address: ${account.address}`);
 
-			if (
-				new Date(
-					parseInt(account.account_auth.account.base_vesting_account.end_time, 10) * 1000,
-				).getTime() >= new Date().getTime()
-			) {
-				const listSpendableBalances: Coin[] = [];
-				const param =
-					Config.GET_PARAMS_SPENDABLE_BALANCE +
-					`/${account.address}?pagination.limit=100`;
-				const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+				if (
+					new Date(
+						parseInt(account.account_auth.account.base_vesting_account.end_time, 10) *
+						1000,
+					).getTime() >= new Date().getTime()
+				) {
+					const listSpendableBalances: Coin[] = [];
+					const param =
+						Config.GET_PARAMS_SPENDABLE_BALANCE +
+						`/${account.address}?pagination.limit=100`;
+					const url = Utils.getUrlByChainIdAndType(
+						Config.CHAIN_ID,
+						URL_TYPE_CONSTANTS.LCD,
+					);
 
-				let urlToCall = param;
-				let done = false;
-				let resultCallApi;
-				while (!done) {
-					try {
-						resultCallApi = await this.callApiFromDomain(url, urlToCall);
-					} catch (error) {
-						this.logger.error(error);
-						throw error;
-					}
+					let urlToCall = param;
+					let done = false;
+					let resultCallApi;
+					while (!done) {
+						try {
+							resultCallApi = await this.callApiFromDomain(url, urlToCall);
+						} catch (error) {
+							this.logger.error(error);
+							throw error;
+						}
 
-					if (resultCallApi.balances.length > 0) {
-						listSpendableBalances.push(...resultCallApi.balances);
+						if (resultCallApi.balances.length > 0) {
+							listSpendableBalances.push(...resultCallApi.balances);
+						}
+						if (resultCallApi.pagination.next_key === null) {
+							done = true;
+						} else {
+							urlToCall = `${param}&pagination.key=${encodeURIComponent(
+								resultCallApi.pagination.next_key,
+							)}`;
+						}
 					}
-					if (resultCallApi.pagination.next_key === null) {
-						done = true;
-					} else {
-						urlToCall = `${param}&pagination.key=${encodeURIComponent(
-							resultCallApi.pagination.next_key,
-						)}`;
-					}
+					// eslint-disable-next-line no-underscore-dangle
+					listUpdateQueries.push(
+						this.adapter.updateById(account._id, {
+							$set: {
+								account_spendable_balances: listSpendableBalances,
+							},
+						}),
+					);
 				}
-				// eslint-disable-next-line camelcase
-				account.account_spendable_balances = listSpendableBalances;
-				// eslint-disable-next-line no-underscore-dangle
-				listUpdateQueries.push(this.adapter.updateById(account._id, account));
-			}
-		});
+			}),
+		);
 
 		try {
 			await Promise.all(listUpdateQueries);

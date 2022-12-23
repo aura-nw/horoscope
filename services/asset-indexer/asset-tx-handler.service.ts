@@ -57,26 +57,26 @@ export default class CrawlAccountInfoService extends Service {
 					},
 				},
 			},
-			events: {
-				'list-tx.upsert': {
-					handler: (ctx: any) => {
-						this.createJob(
-							'asset.tx-handle',
-							{
-								listTx: ctx.params.listTx,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 10,
-								},
-							},
-						);
-						return;
-					},
-				},
-			},
+			// Events: {
+			// 	'list-tx.upsert': {
+			// 		Handler: (ctx: any) => {
+			// 			This.createJob(
+			// 				'asset.tx-handle',
+			// 				{
+			// 					ListTx: ctx.params.listTx,
+			// 					ChainId: ctx.params.chainId,
+			// 				},
+			// 				{
+			// 					RemoveOnComplete: true,
+			// 					RemoveOnFail: {
+			// 						Count: 10,
+			// 					},
+			// 				},
+			// 			);
+			// 			Return;
+			// 		},
+			// 	},
+			// },
 		});
 	}
 

@@ -1,11 +1,10 @@
 import { Job } from 'bull';
-import { Context, Service, ServiceBroker } from 'moleculer';
+import { Service, ServiceBroker } from 'moleculer';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Utils } from '../../utils/utils';
-import { CrawlAccountInfoParams } from '../../types';
 import { AccountInfoEntity, IBCDenomEntity } from '../../entities';
 import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -31,27 +30,6 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 						await this.handleJob(job.data.listAddresses, job.data.chainId);
 						job.progress(100);
 						return true;
-					},
-				},
-			},
-			events: {
-				'account-info.upsert-spendable-balances': {
-					handler: (ctx: Context<CrawlAccountInfoParams>) => {
-						this.logger.debug('Crawl account spendable balances');
-						this.createJob(
-							'crawl.account-spendable-balances',
-							{
-								listAddresses: ctx.params.listAddresses,
-								chainId: ctx.params.chainId,
-							},
-							{
-								removeOnComplete: true,
-								removeOnFail: {
-									count: 10,
-								},
-							},
-						);
-						return;
 					},
 				},
 			},
