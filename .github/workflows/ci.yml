@@ -29,14 +29,6 @@ jobs:
         run: |
           SHORT_SHA_COMMIT=$(git rev-parse --short HEAD)
           echo CONTAINER_RELEASE_IMAGE=ghcr.io/aura-nw/aura-indexer-crawl:${GITHUB_REF_NAME}_${SHORT_SHA_COMMIT} >> $GITHUB_ENV
-          echo REPO_MANIFEST_NAME=gitops >> $GITHUB_ENV
-          echo REPO_MANIFEST_URL=github.com/aura-nw/gitops.git >> $GITHUB_ENV
-          echo REPO_MANIFEST_BRANCH=master >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_DEV=./clusters/k8s-dev/horoscope/horoscope-crawl-auratestnet >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_TEST_PERFORMANCE=./clusters/k8s-dev/indexer-load-test >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_STAGING=./clusters/k8s-testnet-euphoria/horoscope/horoscope-crawl-serenity >> $GITHUB_ENV
-          echo REPO_MANIFEST_ENV_MAIN=./clusters/k8s-prod/horoscope/horoscope-crawl-euphoria >> $GITHUB_ENV
-          echo REPO_MANIFEST_TAG_IMAGE=image_aura_indexer_crawl >> $GITHUB_ENV
       - name: Build the Docker image and push it to the registry
         env:
           GITHUB_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
@@ -50,6 +42,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: imranismail/setup-kustomize@v2
+      - name: Set environment variable
+        run: |
+          SHORT_SHA_COMMIT=$(git rev-parse --short HEAD)
+          echo CONTAINER_RELEASE_IMAGE=ghcr.io/aura-nw/aura-indexer-crawl:${GITHUB_REF_NAME}_${SHORT_SHA_COMMIT} >> $GITHUB_ENV
+          echo REPO_MANIFEST_NAME=gitops >> $GITHUB_ENV
+          echo REPO_MANIFEST_URL=github.com/aura-nw/gitops.git >> $GITHUB_ENV
+          echo REPO_MANIFEST_BRANCH=master >> $GITHUB_ENV
+          echo REPO_MANIFEST_ENV_DEV=./clusters/k8s-dev/horoscope/horoscope-crawl-auratestnet >> $GITHUB_ENV
+          echo REPO_MANIFEST_ENV_TEST_PERFORMANCE=./clusters/k8s-dev/indexer-load-test >> $GITHUB_ENV
+          echo REPO_MANIFEST_ENV_STAGING=./clusters/k8s-testnet-euphoria/horoscope/horoscope-crawl-serenity >> $GITHUB_ENV
+          echo REPO_MANIFEST_ENV_MAIN=./clusters/k8s-prod/horoscope/horoscope-crawl-euphoria >> $GITHUB_ENV
+          echo REPO_MANIFEST_TAG_IMAGE=image_aura_indexer_crawl >> $GITHUB_ENV
       - name: Update manifest
         env:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.GITOPS_PASSWORD }}

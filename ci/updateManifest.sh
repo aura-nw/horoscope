@@ -1,8 +1,6 @@
 #!/bin/sh
 set -xe
 
-apk add bash && apk add git && rm -rf /var/cache/apk/*
-
 # clone repo manifest
 git clone "https://${PERSONAL_ACCESS_TOKEN}@${REPO_MANIFEST_URL}"
 cd ./${REPO_MANIFEST_NAME}
