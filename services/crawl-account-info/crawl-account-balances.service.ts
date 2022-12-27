@@ -122,7 +122,7 @@ export default class CrawlAccountBalancesService extends Service {
 											denom: balance.denom,
 										});
 									} catch (error) {
-										this.logger.info('IBC denom already exist!');
+										this.logger.error('IBC denom hash already exists!');
 									}
 								}
 							}

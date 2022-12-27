@@ -108,10 +108,14 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 									);
 									balance.minimal_denom = balance.denom;
 									balance.denom = denomResult.denom_trace.base_denom;
-									this.broker.call('v1.ibc-denom.addNewDenom', {
-										hash: `ibc/${hash}`,
-										denom: balance.denom,
-									});
+									try {
+										await this.broker.call('v1.ibc-denom.addNewDenom', {
+											hash: `ibc/${hash}`,
+											denom: balance.denom,
+										});
+									} catch (error) {
+										this.logger.error('IBC denom hash already exists!');
+									}
 								}
 							}
 						}),
