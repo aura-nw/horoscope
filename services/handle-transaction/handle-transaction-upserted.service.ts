@@ -4,6 +4,7 @@
 'use strict';
 import { Service, ServiceBroker } from 'moleculer';
 import { ITransaction } from 'entities';
+import { Config } from '../../common';
 import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
@@ -33,71 +34,86 @@ export default class HandleTransactionUpsertedService extends Service {
 
 	private _createJobFromEvent(listTx: ITransaction[], chainId: string, source: string) {
 		// Create job handle asset
-		this.createJob(
-			'asset.tx-handle',
-			{
-				listTx,
-				chainId,
-				source,
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
+		if (Config.CREATE_JOB_ASSET_TX_HANDLE === 'true') {
+			this.createJob(
+				'asset.tx-handle',
+				{
+					listTx,
+					chainId,
+					source,
 				},
-			},
-		);
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: parseInt(Config.BULL_JOB_REMOVE_ON_FAIL_COUNT, 10),
+					},
+					attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+					backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
+				},
+			);
+		}
 
 		// Create job handle contract
-		this.createJob(
-			'contract.tx-handle',
-			{
-				listTx,
-				chainId,
-				source,
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
+		if (Config.CREATE_JOB_CONTRACT_TX_HANDLE === 'true') {
+			this.createJob(
+				'contract.tx-handle',
+				{
+					listTx,
+					chainId,
+					source,
 				},
-			},
-		);
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: parseInt(Config.BULL_JOB_REMOVE_ON_FAIL_COUNT, 10),
+					},
+					attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+					backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
+				},
+			);
+		}
 
 		// Create job crawl account information
-		this.createJob(
-			'handle.address',
-			{
-				listTx,
-				chainId,
-				source,
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
+		if (Config.CREATE_JOB_HANDLE_ADDRESS === 'true') {
+			this.createJob(
+				'handle.address',
+				{
+					listTx,
+					chainId,
+					source,
 				},
-			},
-		);
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: parseInt(Config.BULL_JOB_REMOVE_ON_FAIL_COUNT, 10),
+					},
+					attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+					backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
+				},
+			);
+		}
 
 		// Create job vote handle
-		this.createJob(
-			'proposal.vote',
-			{
-				listTx,
-				chainId,
-			},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 10,
+		if (Config.CREATE_JOB_PROPOSAL_VOTE === 'true') {
+			this.createJob(
+				'proposal.vote',
+				{
+					listTx,
+					chainId,
 				},
-			},
-		);
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: parseInt(Config.BULL_JOB_REMOVE_ON_FAIL_COUNT, 10),
+					},
+					attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+					backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
+				},
+			);
+		}
 	}
 
 	public async _start() {
-		await this.broker.waitForServices(['v1.handle-transaction']);
 		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}

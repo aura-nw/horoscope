@@ -10,8 +10,6 @@ export * from './signing-info.entity';
 export * from './inflation.entity';
 export * from './supply.entity';
 export * from './param.entity';
-export * from './aurascan/proposal_votes.entity';
-export * from './aurascan/validators.entity';
 export * from './delay-job.entity';
 export * from './account-info.entity';
 export * from './ibc-denom.entity';
