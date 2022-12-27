@@ -48,7 +48,7 @@ export default class HandleDelayJobService extends Service {
 			throw error;
 		}
 		for (const job of currentJobs) {
-			if (job.expire_time!.getTime() <= new Date().getTime()) {
+			if (job.expire_time.getTime() <= new Date().getTime()) {
 				switch (job.type) {
 					case DELAY_JOB_TYPE.REDELEGATE:
 						this.createJob(
@@ -194,10 +194,10 @@ export default class HandleDelayJobService extends Service {
 						}
 						break;
 				}
-				const result = await Promise.all(listUpdateQueries);
-				this.logger.info(result);
 			}
 		}
+		const result = await Promise.all(listUpdateQueries);
+		this.logger.info(result);
 	}
 
 	public async _start() {

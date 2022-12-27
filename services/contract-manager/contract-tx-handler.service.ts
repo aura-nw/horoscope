@@ -134,7 +134,7 @@ export default class CrawlSmartContractsService extends Service {
 						break;
 					case MSG_TYPE.MSG_EXECUTE_CONTRACT:
 						// eslint-disable-next-line no-underscore-dangle
-						await this._updateContractNumTokens(msg, chainId);
+						await this._updateContractOnchainInfo(msg, chainId);
 						const tx_hash = txs.tx_response.txhash;
 						const height = txs.tx_response.height;
 						let contract_addresses;
@@ -226,23 +226,54 @@ export default class CrawlSmartContractsService extends Service {
 		}
 	}
 
-	private async _updateContractNumTokens(msg: any, chainId: string) {
-		const burnOrMintMessages = !!msg.msg?.mint?.token_id || !!msg.msg?.burn?.token_id;
-		if (burnOrMintMessages) {
-			this.logger.info(
-				`Call contract lcd api to query num_tokens with parameter: {contract_address: ${msg.contract}}`,
-			);
-			const base64RequestNumToken = Buffer.from('{ "num_tokens": {} }').toString('base64');
-			const param = Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestNumToken}`;
-			const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-			const result = await this.callApiFromDomain(url, param);
-			/* eslint-disable camelcase, no-underscore-dangle */
-			const executeContract = await this.adapter.findOne({ contract_address: msg.contract });
-			if (result?.data !== 0 && executeContract) {
-				await this.adapter.updateById(executeContract._id, {
-					$set: { num_tokens: Number(result.data.count) },
-				});
+	private async _updateContractOnchainInfo(msg: any, chainId: string) {
+		const base64RequestNumToken = Buffer.from('{ "num_tokens": {} }').toString('base64');
+		const base64RequestTokenInfo = Buffer.from('{ "token_info": {} }').toString('base64');
+		const base64RequestMarketingInfo = Buffer.from('{ "marketing_info": {} }').toString(
+			'base64',
+		);
+		const base64RequestContractInfo = Buffer.from('{ "contract_info": {} }').toString('base64');
+		const param = Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestNumToken}`;
+		const paramTokenInfo =
+			Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestTokenInfo}`;
+		const paramMarketingInfo =
+			Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestMarketingInfo}`;
+		const paramContractInfo =
+			Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestContractInfo}`;
+		const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
+		const [result, tokenInfo, marketingInfo, contractInfo] = await Promise.all([
+			this.callApiFromDomain(url, param),
+			this.callApiFromDomain(url, paramTokenInfo),
+			this.callApiFromDomain(url, paramMarketingInfo),
+			this.callApiFromDomain(url, paramContractInfo),
+		]);
+		/* eslint-disable camelcase, no-underscore-dangle */
+		const executeContract = await this.adapter.findOne({ contract_address: msg.contract });
+		if (executeContract) {
+			let num_tokens;
+			let token_info;
+			let contract_info;
+			let marketing_info;
+			if (result?.data) {
+				num_tokens = Number(result.data.count);
 			}
+			if (tokenInfo?.data) {
+				token_info = tokenInfo.data;
+			}
+			if (marketingInfo?.data) {
+				marketing_info = marketingInfo.data;
+			}
+			if (contractInfo?.data) {
+				contract_info = contractInfo.data;
+			}
+			await this.adapter.updateById(executeContract._id, {
+				$set: {
+					num_tokens,
+					token_info,
+					contract_info,
+					marketing_info,
+				},
+			});
 		}
 	}
 
