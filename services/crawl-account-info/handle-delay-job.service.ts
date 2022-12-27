@@ -194,10 +194,10 @@ export default class HandleDelayJobService extends Service {
 						}
 						break;
 				}
-				const result = await Promise.all(listUpdateQueries);
-				this.logger.info(result);
 			}
 		}
+		const result = await Promise.all(listUpdateQueries);
+		this.logger.info(result);
 	}
 
 	public async _start() {
