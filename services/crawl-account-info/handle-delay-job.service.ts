@@ -201,6 +201,8 @@ export default class HandleDelayJobService extends Service {
 	}
 
 	public async _start() {
+		await this.broker.waitForServices(['v1.delay-job']);
+
 		this.createJob(
 			'handle.delay-job',
 			{},

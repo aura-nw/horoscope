@@ -88,6 +88,8 @@ export default class CrawlDailyCw20HolderService extends Service {
 	}
 
 	public async _start() {
+		await this.broker.waitForServices(['v1.cw20-holder']);
+
 		this.createJob(
 			'crawl.daily-cw20-holder',
 			{},

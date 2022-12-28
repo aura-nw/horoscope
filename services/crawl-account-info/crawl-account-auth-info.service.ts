@@ -196,6 +196,8 @@ export default class CrawlAccountAuthInfoService extends Service {
 	}
 
 	public async _start() {
+		await this.broker.waitForServices(['v1.delay-job']);
+
 		this.getQueue('crawl.account-auth-info').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});
