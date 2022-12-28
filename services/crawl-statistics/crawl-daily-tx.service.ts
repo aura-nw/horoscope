@@ -171,6 +171,8 @@ export default class CrawlDailyTxService extends Service {
 	}
 
 	public async _start() {
+		await this.broker.waitForServices(['v1.transaction-stats', 'v1.account-stats']);
+
 		this.createJob(
 			'crawl.daily-tx',
 			{

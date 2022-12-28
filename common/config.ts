@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable capitalized-comments */
 import os from 'os';
 import { LogLevels } from 'moleculer';
@@ -181,7 +182,7 @@ export default class ConfigClass {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			this.NODE_ENV
-		}`;
+			}`;
 		this.DB_USER = genericDbInfo('USER');
 		this.DB_PRODUCT = genericDbInfo('PRODUCT');
 		this.DB_PROPOSAL = genericDbInfo('PROPOSAL');

@@ -114,7 +114,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 											denom: balance.denom,
 										});
 									} catch (error) {
-										this.logger.error('IBC denom hash already exists!');
+										this.logger.warn('IBC denom hash already exists!');
 									}
 								}
 							}
@@ -144,6 +144,8 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 	}
 
 	public async _start() {
+		await this.broker.waitForServices(['v1.ibc-denom']);
+
 		this.getQueue('crawl.account-spendable-balances').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);
 		});

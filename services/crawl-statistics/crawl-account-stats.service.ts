@@ -594,7 +594,6 @@ export default class CrawlAccountStatsService extends Service {
 				this.logger.error(error);
 			}
 		}
-		/* eslint-enable @typescript-eslint/restrict-plus-operands */
 	}
 
 	onlyUnique(value: any, index: any, self: any) {
@@ -602,6 +601,8 @@ export default class CrawlAccountStatsService extends Service {
 	}
 
 	public async _start() {
+		await this.broker.waitForServices(['v1.transaction-stats']);
+
 		this.createJob(
 			'crawl.account-stats',
 			{
