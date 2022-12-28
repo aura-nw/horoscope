@@ -44,6 +44,8 @@ export default class DelayJobService extends MoleculerDBService<
 		let offset = 0;
 		while (!done) {
 			const jobs = await this.adapter.find({
+				// @ts-ignore
+				sort: 'expire_time',
 				limit: 100,
 				offset,
 			});
@@ -51,6 +53,9 @@ export default class DelayJobService extends MoleculerDBService<
 				result.push(...jobs);
 				offset += 100;
 			} else {
+				done = true;
+			}
+			if (result.length >= 1000) {
 				done = true;
 			}
 		}
