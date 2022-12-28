@@ -49,7 +49,7 @@ export default class HandleDelayJobService extends Service {
 		}
 		for (const job of currentJobs) {
 			try {
-				if (job.expire_time.getTime() <= new Date().getTime()) {
+				if (new Date(job.expire_time).getTime() <= new Date().getTime()) {
 					switch (job.type) {
 						case DELAY_JOB_TYPE.REDELEGATE:
 							this.createJob(
