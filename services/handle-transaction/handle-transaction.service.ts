@@ -11,12 +11,7 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../entities';
 import { CONST_CHAR, MSG_TYPE } from '../../common/constant';
-import {
-	IRedisStreamData,
-	IRedisStreamResponse,
-	ListTxCreatedParams,
-	TransactionHashParam,
-} from '../../types';
+import { ListTxCreatedParams, TransactionHashParam } from '../../types';
 import { Config } from '../../common';
 import { queueConfig } from '../../config/queue';
 import { Utils } from '../../utils/utils';
@@ -42,8 +37,7 @@ export default class HandleTransactionService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						// Await this.handleJob();
-						await this.handleTransaction(job.data.tx);
+						await this.handleJob(job.data.tx);
 						job.progress(100);
 						return true;
 					},
@@ -51,114 +45,28 @@ export default class HandleTransactionService extends Service {
 			},
 		});
 	}
-	async handleTransaction(tx: ITransaction) {
-		const transaction: TransactionEntity = new JsonConvert().deserializeObject(
-			tx,
-			TransactionEntity,
-		);
-		await this.handleListTransaction([transaction]);
+	async handleJob(tx: ITransaction) {
+		try {
+			const transaction: TransactionEntity = new JsonConvert().deserializeObject(
+				tx,
+				TransactionEntity,
+			);
+			this.broker.emit('list-tx.upsert', {
+				listTx: [transaction],
+				source: CONST_CHAR.CRAWL,
+				chainId: Config.CHAIN_ID,
+			} as ListTxCreatedParams);
+			await this.handleListTransaction([transaction]);
+		} catch (error) {
+			this.logger.error('Error when handling tx hash: ', tx.tx_response.txhash);
+			if (tx.tx_response.txhash) {
+				this.broker.emit('crawl-transaction-hash.retry', {
+					txHash: tx.tx_response.txhash,
+				} as TransactionHashParam);
+			}
+			this.logger.error(error);
+		}
 	}
-	// Async initEnv() {
-	// 	This.logger.info('initEnv');
-	// 	This.redisClient = await this.getRedisClient();
-	// 	Try {
-	// 		Await this.redisClient.xGroupCreate(
-	// 			Config.REDIS_STREAM_TRANSACTION_NAME,
-	// 			Config.REDIS_STREAM_TRANSACTION_GROUP,
-	// 			'0-0',
-	// 			{ MKSTREAM: true },
-	// 		);
-	// 		Await this.redisClient.xGroupCreateConsumer(
-	// 			Config.REDIS_STREAM_TRANSACTION_NAME,
-	// 			Config.REDIS_STREAM_TRANSACTION_GROUP,
-	// 			This._consumer,
-	// 		);
-	// 	} catch (error) {
-	// 		This.logger.error(error);
-	// 	}
-	// }
-	// Private _hasRemainingMessage = true;
-	// Private _lastId = '0-0';
-	// Async handleJob() {
-	// 	Const xAutoClaimResult: IRedisStreamResponse = await this.redisClient.xAutoClaim(
-	// 		Config.REDIS_STREAM_TRANSACTION_NAME,
-	// 		Config.REDIS_STREAM_TRANSACTION_GROUP,
-	// 		This._consumer,
-	// 		Config.REDIS_MIN_IDLE_TIME_HANDLE_TRANSACTION,
-	// 		'0-0',
-	// 		{ COUNT: Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_TRANSACTION },
-	// 	);
-	// 	If (xAutoClaimResult.messages.length === 0) {
-	// 		This._hasRemainingMessage = false;
-	// 	}
-
-	// 	Let idXReadGroup = '';
-	// 	If (this._hasRemainingMessage) {
-	// 		IdXReadGroup = this._lastId;
-	// 	} else {
-	// 		IdXReadGroup = '>';
-	// 	}
-	// 	Const result: IRedisStreamResponse[] = await this.redisClient.xReadGroup(
-	// 		Config.REDIS_STREAM_TRANSACTION_GROUP,
-	// 		This._consumer,
-	// 		[{ key: Config.REDIS_STREAM_TRANSACTION_NAME, id: idXReadGroup }],
-	// 	);
-
-	// 	If (result) {
-	// 		Result.forEach(async (element: IRedisStreamResponse) => {
-	// 			Const listTransactionNeedSaveToDb: ITransaction[] = [];
-	// 			Const listMessageNeedAck: string[] = [];
-	// 			Try {
-	// 				Element.messages.forEach(async (item: IRedisStreamData) => {
-	// 					This.logger.info(
-	// 						`Handling message ID: ${item.id}, txhash: ${item.message.source}`,
-	// 					);
-	// 					Try {
-	// 						Const transaction: TransactionEntity =
-	// 							New JsonConvert().deserializeObject(
-	// 								JSON.parse(item.message.element.toString()),
-	// 								TransactionEntity,
-	// 							);
-	// 						ListTransactionNeedSaveToDb.push(transaction);
-	// 						ListMessageNeedAck.push(item.id.toString());
-	// 						This._lastId = item.id.toString();
-	// 					} catch (error) {
-	// 						This.logger.error('Error when handling message id: ', item.id);
-	// 						This.logger.error(JSON.stringify(item));
-	// 						If (item.message.source) {
-	// 							This.broker.emit('crawl-transaction-hash.retry', {
-	// 								TxHash: item.message.source,
-	// 							} as TransactionHashParam);
-	// 							ListMessageNeedAck.push(item.id.toString());
-	// 						}
-	// 						This.logger.error(error);
-	// 					}
-	// 				});
-
-	// 				This.broker.emit('list-tx.upsert', {
-	// 					ListTx: listTransactionNeedSaveToDb,
-	// 					Source: CONST_CHAR.CRAWL,
-	// 					ChainId: Config.CHAIN_ID,
-	// 				} as ListTxCreatedParams);
-
-	// 				Await this.handleListTransaction(listTransactionNeedSaveToDb);
-	// 				If (listMessageNeedAck.length > 0) {
-	// 					This.redisClient.xAck(
-	// 						Config.REDIS_STREAM_TRANSACTION_NAME,
-	// 						Config.REDIS_STREAM_TRANSACTION_GROUP,
-	// 						ListMessageNeedAck,
-	// 					);
-	// 					This.redisClient.xDel(
-	// 						Config.REDIS_STREAM_TRANSACTION_NAME,
-	// 						ListMessageNeedAck,
-	// 					);
-	// 				}
-	// 			} catch (error) {
-	// 				This.logger.error(error);
-	// 			}
-	// 		});
-	// 	}
-	// }
 
 	async handleListTransaction(listTransaction: ITransaction[]) {
 		const jsonConvert = new JsonConvert();
@@ -311,21 +219,6 @@ export default class HandleTransactionService extends Service {
 
 	public async _start() {
 		await this.broker.waitForServices(['v1.handle-transaction-upserted']);
-		// This.redisClient = await this.getRedisClient();
-		// Await this.initEnv();
-		// This.createJob(
-		// 	'handle.transaction',
-		// 	{},
-		// 	{
-		// 		RemoveOnComplete: true,
-		// 		RemoveOnFail: {
-		// 			Count: 3,
-		// 		},
-		// 		Repeat: {
-		// 			Every: parseInt(Config.MILISECOND_HANDLE_TRANSACTION, 10),
-		// 		},
-		// 	},
-		// );
 		this.getQueue('handle.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

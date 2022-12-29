@@ -7,7 +7,6 @@ import { fromBase64, toHex } from '@cosmjs/encoding';
 import { sha256 } from '@cosmjs/crypto';
 import { Job } from 'bull';
 import { ListTxInBlockParams, TransactionHashParam } from 'types';
-import RedisMixin from '../../mixins/redis/redis.mixin';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { URL_TYPE_CONSTANTS } from '../../common/constant';
 import { Utils } from '../../utils/utils';
@@ -23,11 +22,7 @@ export default class CrawlTransactionService extends Service {
 		this.parseServiceSchema({
 			name: 'crawltransaction',
 			version: 1,
-			mixins: [
-				queueService(queueConfig.redis, queueConfig.opts),
-				new RedisMixin().start(),
-				new CallApiMixin().start(),
-			],
+			mixins: [queueService(queueConfig.redis, queueConfig.opts), new CallApiMixin().start()],
 			queues: {
 				'crawl.transaction': {
 					concurrency: 1,
@@ -112,10 +107,6 @@ export default class CrawlTransactionService extends Service {
 		const result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
 
 		if (result) {
-			// This.redisClient.xAdd(Config.REDIS_STREAM_TRANSACTION_NAME, '*', {
-			// 	Source: txHash,
-			// 	Element: JSON.stringify(result),
-			// });
 			this.createJob(
 				'handle.transaction',
 				{
@@ -133,7 +124,6 @@ export default class CrawlTransactionService extends Service {
 		}
 	}
 	public async _start() {
-		this.redisClient = await this.getRedisClient();
 		this.getQueue('crawl.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
