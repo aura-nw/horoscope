@@ -32,7 +32,7 @@ export default class CrawlProposalService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.url);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -41,7 +41,8 @@ export default class CrawlProposalService extends Service {
 		});
 	}
 
-	async handleJob(path: string) {
+	async handleJob() {
+		const path = `${Config.GET_ALL_PROPOSAL}?pagination.limit=${Config.NUMBER_OF_PROPOSAL_PER_CALL}&pagination.countTotal=true`;
 		const listProposal: IProposal[] = [];
 
 		let param = path;
@@ -188,9 +189,7 @@ export default class CrawlProposalService extends Service {
 	public async _start() {
 		this.createJob(
 			'crawl.proposal',
-			{
-				url: `${Config.GET_ALL_PROPOSAL}?pagination.limit=${Config.NUMBER_OF_PROPOSAL_PER_CALL}&pagination.countTotal=true`,
-			},
+			{},
 			{
 				removeOnComplete: true,
 				removeOnFail: {
