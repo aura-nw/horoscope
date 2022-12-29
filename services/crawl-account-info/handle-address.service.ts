@@ -77,7 +77,6 @@ export default class HandleAddressService extends Service {
 			'crawl.account-unbonds',
 		];
 		const listInsert: any[] = [];
-		chainId = chainId !== '' ? chainId : Config.CHAIN_ID;
 		const chain = LIST_NETWORK.find((x) => x.chainId === chainId);
 		if (listTx.length > 0) {
 			this.logger.info(`Handle Txs: ${JSON.stringify(listTx)}`);
@@ -145,7 +144,7 @@ export default class HandleAddressService extends Service {
 					const result = await this.adapter.bulkWrite(listInsert);
 					this.logger.info(`${JSON.stringify(result)}`);
 				} catch (error) {
-					this.logger.error('Account(s) already exists');
+					this.logger.warn('Account(s) already exists');
 				}
 				listUpdateInfo.map((item) => {
 					this.createJob(

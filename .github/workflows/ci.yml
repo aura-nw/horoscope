@@ -31,8 +31,8 @@ jobs:
           echo CONTAINER_RELEASE_IMAGE=ghcr.io/aura-nw/aura-indexer-crawl:${GITHUB_REF_NAME}_${SHORT_SHA_COMMIT} >> $GITHUB_ENV
       - name: Build the Docker image and push it to the registry
         env:
-          GITHUB_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-          GITHUB_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           chmod 777 -R ./ci
           ./ci/build.sh
@@ -56,7 +56,7 @@ jobs:
           echo REPO_MANIFEST_TAG_IMAGE=image_aura_indexer_crawl >> $GITHUB_ENV
       - name: Update manifest
         env:
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.GITOPS_PASSWORD }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.REGISTRY_PASSWORD }}
         run: |
           chmod 777 -R ./ci
           ./ci/updateManifest.sh

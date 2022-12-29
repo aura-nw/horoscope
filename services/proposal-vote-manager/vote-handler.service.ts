@@ -79,49 +79,49 @@ export default class VoteHandlerService extends Service {
 
 	public async handleJob(listTx: any, chainId?: string) {
 		for (const tx of listTx) {
-			// Continue if tx is not vote
-			const voteMsg = tx.tx.body.messages.find(
-				(msg: any) => msg['@type'] === '/cosmos.gov.v1beta1.MsgVote',
-			);
-			if (!voteMsg) {
-				continue;
-			}
+			const listMsg = tx.tx.body.messages;
+			listMsg.map((msg: any) => {
+				if (msg['@type'] === '/cosmos.gov.v1beta1.MsgVote') {
+					const chain = chainId || tx.custom_info.chain_id || Config.CHAIN_ID;
+					if (!chain) {
+						throw new Error('ChainId is not found');
+					}
 
-			// Continue if chainId is not found
-			const chain = chainId || tx.custom_info.chain_id || Config.CHAIN_ID;
-			if (!chain) {
-				throw new Error('ChainId is not found');
-			}
-
-			// Create vote entity
-			const proposal_id = Number(voteMsg.proposal_id);
-			const answer = voteMsg.option;
-			const voter_address = voteMsg.voter;
-			const txhash = tx.tx_response.txhash;
-			const timestamp = tx.tx_response.timestamp;
-			const height = Number(tx.tx_response.height);
-			const code = tx.tx_response.code.toString();
-			const chainInfo: CustomInfo = {
-				chain_id: chain,
-				chain_name: LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
-			};
-			if (code !== '0') {
-				continue;
-			}
-			const vote = {
-				voter_address,
-				proposal_id,
-				answer,
-				txhash,
-				timestamp,
-				height,
-				custom_info: chainInfo,
-				code,
-			};
-			const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
-			this.logger.info('voteEntity', JSON.stringify(voteEntity));
-			// Call action to save votes
-			this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
+					// Create vote entity
+					const proposal_id = Number(msg.proposal_id);
+					const answer = msg.option;
+					const voter_address = msg.voter;
+					const txhash = tx.tx_response.txhash;
+					const timestamp = tx.tx_response.timestamp;
+					const height = Number(tx.tx_response.height);
+					const code = tx.tx_response.code.toString();
+					const chainInfo: CustomInfo = {
+						chain_id: chain,
+						chain_name:
+							LIST_NETWORK.find((x) => x.chainId === chain)?.chainName || 'unknown',
+					};
+					if (code !== '0') {
+						return;
+					}
+					const vote = {
+						voter_address,
+						proposal_id,
+						answer,
+						txhash,
+						timestamp,
+						height,
+						custom_info: chainInfo,
+						code,
+					};
+					const voteEntity: VoteEntity = new JsonConvert().deserializeObject(
+						vote,
+						VoteEntity,
+					);
+					this.logger.info('voteEntity', JSON.stringify(voteEntity));
+					// Call action to save votes
+					this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
+				}
+			});
 		}
 	}
 	public async _start() {
