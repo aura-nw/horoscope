@@ -31,7 +31,7 @@ export default class CrawlParamService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.param);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -125,21 +125,10 @@ export default class CrawlParamService extends Service {
 		}
 	}
 
-	async createParamFromApi(type: string, path: string) {
-		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
-
-		return {
-			type,
-			params: (await this.callApiFromDomain(url, path)).params,
-		};
-	}
-
 	public async _start() {
 		this.createJob(
 			'crawl.param',
-			{
-				param: 'param',
-			},
+			{},
 			{
 				removeOnComplete: true,
 				removeOnFail: {

@@ -131,7 +131,7 @@ export default class CrawlAccountUnbondsService extends Service {
 		try {
 			listUpdateQueries = [];
 			listDelayJobs.map((element) => {
-				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', element));
+				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', { ...element, chainId }));
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {

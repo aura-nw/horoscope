@@ -33,7 +33,7 @@ export default class CrawlCommunityPoolService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.url);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -42,12 +42,12 @@ export default class CrawlCommunityPoolService extends Service {
 		});
 	}
 
-	async handleJob(path: string) {
+	async handleJob() {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		const resultCallApi: ICommunityPoolResponseFromLCD = await this.callApiFromDomain(
 			url,
-			path,
+			Config.GET_COMMUNITY_POOL,
 		);
 		const jsonConvert = new JsonConvert();
 		// JsonConvert.operationMode = OperationMode.LOGGING;
@@ -73,9 +73,7 @@ export default class CrawlCommunityPoolService extends Service {
 	public async _start() {
 		this.createJob(
 			'crawl.community-pool',
-			{
-				url: `${Config.GET_COMMUNITY_POOL}`,
-			},
+			{},
 			{
 				removeOnComplete: true,
 				removeOnFail: {
