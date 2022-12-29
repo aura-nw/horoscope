@@ -160,7 +160,7 @@ export default class HandleDelayJobService extends Service {
 							});
 							const newJobExpireTime = new Date(
 								// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-								(job.expire_time.getTime() +
+								(new Date(job.expire_time).getTime() +
 									parseInt(
 										updateInfo.account_auth.account.vesting_periods[0].length,
 										10,
