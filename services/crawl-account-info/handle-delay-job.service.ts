@@ -47,6 +47,7 @@ export default class HandleDelayJobService extends Service {
 			this.logger.error(error);
 			throw error;
 		}
+		this.logger.info(`Current Jobs ${currentJobs}`);
 		for (const job of currentJobs) {
 			try {
 				if (new Date(job.expire_time).getTime() <= new Date().getTime()) {
@@ -167,8 +168,8 @@ export default class HandleDelayJobService extends Service {
 									parseInt(
 										updateInfo.account_auth.account.vesting_periods[0].length,
 										10,
-									)) *
-								1000,
+									) * 1000)
+								,
 							);
 							if (
 								newJobExpireTime.getTime() >=
