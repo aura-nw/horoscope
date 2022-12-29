@@ -96,31 +96,9 @@ export default class CrawlTransactionService extends Service {
 					},
 				},
 			},
-			// Actions: {
-			// 	WriteHeapDump: {
-			// 		Async handler(ctx: Context) {
-			// 			This.writeHeapDump();
-			// 		},
-			// 	},
-			// },
 		});
 	}
 
-	// Async writeHeapDump() {
-	// 	Try {
-	// 		If (Config.PATH_HEAP_DUMP) {
-	// 			Let path =
-	// 				Config.PATH_HEAP_DUMP +
-	// 				New Date().toISOString().split('T')[0] +
-	// 				'.heapsnapshot';
-	// 			This.logger.info('write to heap log: ', path);
-
-	// 			Heapdump.writeSnapshot(path);
-	// 		}
-	// 	} catch (error) {
-	// 		This.logger.error(error);
-	// 	}
-	// }
 	async handleJob(listTx: string[]) {
 		listTx.map((tx: string) => {
 			const txHash = toHex(sha256(fromBase64(tx))).toUpperCase();
@@ -134,10 +112,23 @@ export default class CrawlTransactionService extends Service {
 		const result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
 
 		if (result) {
-			this.redisClient.xAdd(Config.REDIS_STREAM_TRANSACTION_NAME, '*', {
-				source: txHash,
-				element: JSON.stringify(result),
-			});
+			// This.redisClient.xAdd(Config.REDIS_STREAM_TRANSACTION_NAME, '*', {
+			// 	Source: txHash,
+			// 	Element: JSON.stringify(result),
+			// });
+			this.createJob(
+				'handle.transaction',
+				{
+					source: txHash,
+					tx: result,
+				},
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						Count: 3,
+					},
+				},
+			);
 			this.logger.debug(`result: ${JSON.stringify(result)}`);
 		}
 	}
