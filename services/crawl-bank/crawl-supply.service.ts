@@ -35,7 +35,7 @@ export default class CrawlSupplyService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.url);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -44,10 +44,10 @@ export default class CrawlSupplyService extends Service {
 		});
 	}
 
-	async handleJob(path: string) {
+	async handleJob() {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
-		let urlToCall = `${path}`;
+		let urlToCall = `${Config.GET_SUPPLY}`;
 		let done = false;
 		let resultCallApi: ISupplyResponseFromLCD;
 		const listSupplies: Coin[] = [];
@@ -58,7 +58,7 @@ export default class CrawlSupplyService extends Service {
 			if (resultCallApi.pagination.next_key === null) {
 				done = true;
 			} else {
-				urlToCall = `${path}?pagination.key=${encodeURIComponent(
+				urlToCall = `${Config.GET_SUPPLY}?pagination.key=${encodeURIComponent(
 					resultCallApi.pagination.next_key.toString(),
 				)}`;
 			}
@@ -86,9 +86,7 @@ export default class CrawlSupplyService extends Service {
 	public async _start() {
 		this.createJob(
 			'crawl.supply',
-			{
-				url: `${Config.GET_SUPPLY}`,
-			},
+			{},
 			{
 				removeOnComplete: true,
 				removeOnFail: {
