@@ -95,7 +95,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 								const hash = balance.denom.split('/')[1];
 								const ibcDenom: IBCDenomEntity = await this.broker.call(
 									'v1.ibc-denom.getByHash',
-									{ hash: balance.denom, denom: '' },
+									{ hash: balance.denom, denom: '', chainId },
 								);
 								if (ibcDenom) {
 									balance.denom = ibcDenom.denom;
@@ -112,6 +112,7 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 										await this.broker.call('v1.ibc-denom.addNewDenom', {
 											hash: `ibc/${hash}`,
 											denom: balance.denom,
+											chainId,
 										});
 									} catch (error) {
 										this.logger.warn('IBC denom hash already exists!');
