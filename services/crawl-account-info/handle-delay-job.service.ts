@@ -42,7 +42,7 @@ export default class HandleDelayJobService extends Service {
 
 		let currentJobs: any[];
 		try {
-			currentJobs = await this.broker.call('v1.delay-job.findPendingJobs', {});
+			currentJobs = await this.broker.call('v1.delay-job.findPendingJobs', { chainId: Config.CHAIN_ID });
 		} catch (error) {
 			this.logger.error(error);
 			throw error;
@@ -69,6 +69,7 @@ export default class HandleDelayJobService extends Service {
 							listUpdateQueries.push(
 								this.broker.call('v1.delay-job.deleteFinishedJob', {
 									_id: job._id,
+									chainId: Config.CHAIN_ID,
 								}),
 							);
 							break;
@@ -116,6 +117,7 @@ export default class HandleDelayJobService extends Service {
 							listUpdateQueries.push(
 								this.broker.call('v1.delay-job.deleteFinishedJob', {
 									_id: job._id,
+									chainId: Config.CHAIN_ID,
 								}),
 							);
 							break;
@@ -137,6 +139,7 @@ export default class HandleDelayJobService extends Service {
 							listUpdateQueries.push(
 								this.broker.call('v1.delay-job.deleteFinishedJob', {
 									_id: job._id,
+									chainId: Config.CHAIN_ID,
 								}),
 							);
 							break;
@@ -179,6 +182,7 @@ export default class HandleDelayJobService extends Service {
 								listUpdateQueries.push(
 									this.broker.call('v1.delay-job.deleteFinishedJob', {
 										_id: job._id,
+										chainId: Config.CHAIN_ID,
 									}),
 								);
 							} else {
@@ -190,6 +194,7 @@ export default class HandleDelayJobService extends Service {
 												expire_time: newJobExpireTime,
 											},
 										},
+										chainId: Config.CHAIN_ID,
 									}),
 								);
 							}

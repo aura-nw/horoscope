@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
@@ -34,7 +35,7 @@ export default class CrawlValidatorService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.url);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -43,7 +44,8 @@ export default class CrawlValidatorService extends Service {
 		});
 	}
 
-	async handleJob(path: string) {
+	async handleJob() {
+		const path = `${Config.GET_ALL_VALIDATOR}?pagination.limit=${Config.NUMBER_OF_VALIDATOR_PER_CALL}`;
 		let listValidator: IValidator[] = [];
 
 		let param = path;
@@ -135,9 +137,8 @@ export default class CrawlValidatorService extends Service {
 			// eslint-disable-next-line camelcase
 			validator.account_address = address;
 
-			const pathSelfDelegation = `${
-				Config.GET_ALL_VALIDATOR
-			}/${validator.operator_address.toString()}/delegations/${address}`;
+			const pathSelfDelegation = `${Config.GET_ALL_VALIDATOR
+				}/${validator.operator_address.toString()}/delegations/${address}`;
 
 			const resultSelfBonded: IDelegationResponseFromLCD = await this.callApiFromDomain(
 				url,
@@ -166,7 +167,7 @@ export default class CrawlValidatorService extends Service {
 				const percentVotingPower =
 					Number(
 						(BigInt(validator.tokens.toString()) * BigInt(100000000)) /
-							BigInt(poolResult[0].bonded_tokens),
+						BigInt(poolResult[0].bonded_tokens),
 					) / 1000000;
 				// eslint-disable-next-line camelcase
 				validator.percent_voting_power = percentVotingPower;
@@ -182,9 +183,7 @@ export default class CrawlValidatorService extends Service {
 	public async _start() {
 		this.createJob(
 			'crawl.staking.validator',
-			{
-				url: `${Config.GET_ALL_VALIDATOR}?pagination.limit=${Config.NUMBER_OF_VALIDATOR_PER_CALL}`,
-			},
+			{},
 			{
 				removeOnComplete: true,
 				removeOnFail: {

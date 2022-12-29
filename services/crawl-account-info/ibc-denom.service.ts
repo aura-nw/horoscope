@@ -7,6 +7,7 @@ import { JsonConvert } from 'json2typescript';
 import { MoleculerDBService, QueryIBCDenomParams } from '../../types';
 import { IBCDenomEntity, IIBCDenom } from '../../entities';
 import { dbIBCDenomMixin } from '../../mixins/dbMixinMongoose';
+import { LIST_NETWORK } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -35,12 +36,20 @@ export default class IBCDenomService extends MoleculerDBService<
 		},
 	})
 	async getByHash(ctx: Context<QueryIBCDenomParams>) {
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		const result = await this.adapter.findOne({ hash: ctx.params.hash });
 		return result;
 	}
 
 	@Action()
 	async addNewDenom(ctx: Context<QueryIBCDenomParams>) {
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		const ibcDenom = {} as IBCDenomEntity;
 		const item: IBCDenomEntity = new JsonConvert().deserializeObject(ibcDenom, IBCDenomEntity);
 		item.denom = ctx.params.denom;

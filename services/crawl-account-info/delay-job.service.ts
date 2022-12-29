@@ -7,6 +7,7 @@ import { JsonConvert } from 'json2typescript';
 import { MoleculerDBService, QueryDelayJobParams } from '../../types';
 import { DelayJobEntity, IDelayJob } from '../../entities';
 import { dbDelayJobMixin } from '../../mixins/dbMixinMongoose';
+import { LIST_NETWORK } from '../../common/constant';
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -30,6 +31,10 @@ export default class DelayJobService extends MoleculerDBService<
 > {
 	@Action()
 	async findOne(ctx: Context<QueryDelayJobParams>) {
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		const result = await this.adapter.findOne({
 			'content.address': ctx.params.address,
 			type: ctx.params.type,
@@ -38,10 +43,14 @@ export default class DelayJobService extends MoleculerDBService<
 	}
 
 	@Action()
-	async findPendingJobs() {
+	async findPendingJobs(ctx: Context<any>) {
 		const result = [];
 		let done = false;
 		let offset = 0;
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		while (!done) {
 			const jobs = await this.adapter.find({
 				// @ts-ignore
@@ -64,6 +73,10 @@ export default class DelayJobService extends MoleculerDBService<
 
 	@Action()
 	async addNewJob(ctx: Context<any>) {
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		const delayJob = {} as DelayJobEntity;
 		delayJob.content = ctx.params.content;
 		delayJob.type = ctx.params.type;
@@ -79,6 +92,10 @@ export default class DelayJobService extends MoleculerDBService<
 
 	@Action()
 	async updateJob(ctx: Context<any>) {
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		// eslint-disable-next-line no-underscore-dangle
 		const result = await this.adapter.updateById(ctx.params._id, ctx.params.update);
 		return result;
@@ -86,6 +103,10 @@ export default class DelayJobService extends MoleculerDBService<
 
 	@Action()
 	async deleteFinishedJob(ctx: Context<any>) {
+		const network = LIST_NETWORK.find((x) => x.chainId === ctx.params.chainId);
+		if (network && network.databaseName) {
+			this.adapter.useDb(network.databaseName);
+		}
 		// eslint-disable-next-line no-underscore-dangle
 		const result = await this.adapter.removeById(ctx.params._id);
 		return result;
