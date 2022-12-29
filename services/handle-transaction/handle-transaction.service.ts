@@ -170,7 +170,7 @@ export default class HandleTransactionService extends Service {
 			);
 			const listHash = listTransaction.map((item: ITransaction) => item.tx_response.txhash);
 			const listFoundTransaction: ITransaction[] = await this.adapter.find({
-				Query: {
+				query: {
 					'tx_response.txhash': {
 						$in: listHash,
 					},
