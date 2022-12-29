@@ -1,10 +1,11 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 
 import { Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
-import { JsonConvert } from 'json2typescript';
+import { Types } from 'mongoose';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbSupplyMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
@@ -74,9 +75,8 @@ export default class CrawlSupplyService extends Service {
 				// eslint-disable-next-line no-underscore-dangle
 				await this.adapter.updateById(foundSupply._id, crawlSupply);
 			} else {
-				const jsonConvert = new JsonConvert();
-				const item: SupplyEntity = jsonConvert.deserializeObject(crawlSupply, SupplyEntity);
-				await this.adapter.insert(item);
+				crawlSupply._id = new Types.ObjectId();
+				await this.adapter.insert(crawlSupply);
 			}
 		} catch (error) {
 			this.logger.error(error);
