@@ -294,7 +294,6 @@ export enum FEEGRANT_ACTION {
 export enum DELAY_JOB_TYPE {
 	REDELEGATE = 'redelegate',
 	UNBOND = 'unbond',
-	PERIODIC_VESTING = 'periodic_vesting',
 	DELAYED_VESTING = 'delayed_vesting',
 }
 

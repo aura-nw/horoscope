@@ -4,6 +4,7 @@
 import { Job } from 'bull';
 import { Service, ServiceBroker } from 'moleculer';
 import { Coin } from 'entities/coin.entity';
+import { ObjectId } from 'mongodb';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import { URL_TYPE_CONSTANTS, VESTING_ACCOUNT_TYPE } from '../../common/constant';
@@ -25,12 +26,12 @@ export default class HandleAccountVestingService extends Service {
 				new CallApiMixin().start(),
 			],
 			queues: {
-				'handle.account-continuous-vesting': {
+				'handle.account-vesting': {
 					concurrency: parseInt(Config.CONCURRENCY_HANDLE_ACCOUNT_VESTING, 10),
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleContinuousVestingJob();
+						await this.handleVestingJob(job.data._id);
 						job.progress(100);
 						return true;
 					},
@@ -39,15 +40,41 @@ export default class HandleAccountVestingService extends Service {
 		});
 	}
 
-	public async handleContinuousVestingJob() {
+	public async handleVestingJob(_id: any) {
 		const listUpdateQueries: any[] = [];
-		let continuousVestingAccounts;
+		const continuousVestingAccounts: any[] = [];
 		try {
-			continuousVestingAccounts = await this.adapter.find({
-				query: {
-					'account_auth.account.@type': VESTING_ACCOUNT_TYPE.CONTINUOUS,
-				},
-			});
+			let done = false;
+			while (!done) {
+				const query: any = {
+					'account_auth.account.@type': [VESTING_ACCOUNT_TYPE.CONTINUOUS, VESTING_ACCOUNT_TYPE.PERIODIC],
+				};
+				if (_id !== null) { query._id = { $gt: new ObjectId(_id) }; }
+				const accounts = await this.adapter.find({
+					query,
+					limit: 100,
+				});
+				if (accounts.length > 0) {
+					continuousVestingAccounts.push(...accounts);
+					_id = accounts[accounts.length - 1]._id;
+				} else {
+					done = true;
+				}
+				if (continuousVestingAccounts.length >= 1000) {
+					done = true;
+					this.createJob(
+						'handle.account-vesting',
+						{ _id },
+						{
+							removeOnComplete: true,
+							removeOnFail: {
+								count: 3,
+							},
+						},
+					);
+				}
+			}
+
 		} catch (error) {
 			this.logger.error(error);
 			throw error;
@@ -115,26 +142,26 @@ export default class HandleAccountVestingService extends Service {
 
 	public async _start() {
 		this.createJob(
-			'handle.account-continuous-vesting',
-			{},
+			'handle.account-vesting',
+			{ _id: null },
 			{
 				removeOnComplete: true,
 				removeOnFail: {
 					count: 3,
 				},
 				repeat: {
-					every: parseInt(Config.MILISECOND_HANDLE_CONTINUOUS_VESTING, 10),
+					every: parseInt(Config.MILISECOND_HANDLE_VESTING, 10),
 				},
 			},
 		);
 
-		this.getQueue('handle.account-continuous-vesting').on('completed', (job: Job) => {
+		this.getQueue('handle.account-vesting').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
-		this.getQueue('handle.account-continuous-vesting').on('failed', (job: Job) => {
+		this.getQueue('handle.account-vesting').on('failed', (job: Job) => {
 			this.logger.error(`Job #${job.id} failed!, error: ${job.failedReason}`);
 		});
-		this.getQueue('handle.account-continuous-vesting').on('progress', (job: Job) => {
+		this.getQueue('handle.account-vesting').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		// eslint-disable-next-line no-underscore-dangle
