@@ -38,6 +38,7 @@ export default class CrawlAccountInfoService extends Service {
 					},
 				},
 			},
+			dependencies: ['v1.feegrantDb'],
 		});
 	}
 
