@@ -86,17 +86,14 @@ export default class CrawlAccountAuthInfoService extends Service {
 					resultCallApi &&
 					resultCallApi.account &&
 					resultCallApi.account['@type'] &&
-					(resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.PERIODIC ||
-						resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED)
+					resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED
 				) {
 					let existsJob;
 					try {
 						existsJob = await this.broker.call('v1.delay-job.findOne', {
 							address,
-							type:
-								resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.PERIODIC
-									? DELAY_JOB_TYPE.PERIODIC_VESTING
-									: DELAY_JOB_TYPE.DELAYED_VESTING,
+							type: DELAY_JOB_TYPE.DELAYED_VESTING,
+							chainId,
 						} as QueryDelayJobParams);
 					} catch (error) {
 						this.logger.error(error);
@@ -105,42 +102,13 @@ export default class CrawlAccountAuthInfoService extends Service {
 					if (!existsJob) {
 						const newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
-						switch (resultCallApi.account['@type']) {
-							case VESTING_ACCOUNT_TYPE.DELAYED:
-								newDelayJob.type = DELAY_JOB_TYPE.DELAYED_VESTING;
-								newDelayJob.expire_time = new Date(
-									parseInt(
-										resultCallApi.account.base_vesting_account.end_time,
-										10,
-									) * 1000,
-								);
-								break;
-							case VESTING_ACCOUNT_TYPE.PERIODIC:
-								newDelayJob.type = DELAY_JOB_TYPE.PERIODIC_VESTING;
-								const start_time =
-									parseInt(resultCallApi.account.start_time, 10) * 1000;
-								const number_of_periods =
-									(new Date().getTime() - start_time) /
-									(parseInt(resultCallApi.account.vesting_periods[0].length, 10) *
-										1000);
-								let expire_time =
-									start_time +
-									number_of_periods *
-									parseInt(
-										resultCallApi.account.vesting_periods[0].length,
-										10,
-									) *
-									1000;
-								if (expire_time < new Date().getTime()) {
-									expire_time +=
-										parseInt(
-											resultCallApi.account.vesting_periods[0].length,
-											10,
-										) * 1000;
-								}
-								newDelayJob.expire_time = new Date(expire_time);
-								break;
-						}
+						newDelayJob.type = DELAY_JOB_TYPE.DELAYED_VESTING;
+						newDelayJob.expire_time = new Date(
+							parseInt(
+								resultCallApi.account.base_vesting_account.end_time,
+								10,
+							) * 1000,
+						);
 						newDelayJob.indexes = `${address}${newDelayJob.type
 							}${newDelayJob?.expire_time?.getTime()}${chainId}`;
 						newDelayJob.custom_info = {
@@ -187,7 +155,7 @@ export default class CrawlAccountAuthInfoService extends Service {
 		try {
 			listUpdateQueries = [];
 			listDelayJobs.map((element) => {
-				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', element));
+				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', { ...element, chainId }));
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {

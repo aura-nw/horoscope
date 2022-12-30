@@ -33,7 +33,7 @@ export default class CrawlInflationService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -41,12 +41,12 @@ export default class CrawlInflationService extends Service {
 			},
 		});
 	}
-	async handleJob(param: any) {
+	async handleJob() {
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		const resultCallApi: IMintInflationResponseFromLCD = await this.callApiFromDomain(
 			url,
-			param.url,
+			Config.GET_INFLATION,
 		);
 
 		this.logger.debug(`result: ${JSON.stringify(resultCallApi)}`);
@@ -70,9 +70,7 @@ export default class CrawlInflationService extends Service {
 	public async _start() {
 		this.createJob(
 			'crawl.inflation',
-			{
-				url: `${Config.GET_INFLATION}`,
-			},
+			{},
 			{
 				removeOnComplete: true,
 				removeOnFail: {

@@ -32,7 +32,7 @@ export default class CrawlPoolService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.url);
+						await this.handleJob();
 						job.progress(100);
 						return true;
 					},
@@ -41,8 +41,8 @@ export default class CrawlPoolService extends Service {
 		});
 	}
 
-	async handleJob(path: string) {
-		const urlToCall = path;
+	async handleJob() {
+		const urlToCall = Config.GET_POOL;
 		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
 
 		const resultCallApi: IPoolResponseFromLCD = await this.callApiFromDomain(url, urlToCall);
@@ -68,9 +68,7 @@ export default class CrawlPoolService extends Service {
 	public async _start() {
 		this.createJob(
 			'crawl.pool',
-			{
-				url: `${Config.GET_POOL}`,
-			},
+			{},
 			{
 				removeOnComplete: true,
 				removeOnFail: {

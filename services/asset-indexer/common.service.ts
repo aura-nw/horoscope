@@ -261,12 +261,12 @@ export class Common {
 					.upload(params)
 					.promise()
 					.then(
-						(response) => ({
+						(response: any) => ({
 							linkS3: response.Location,
 							contentType: type,
 							key: response.Key,
 						}),
-						(err) => {
+						(err: any) => {
 							throw new Error(err);
 						},
 					);

@@ -11,12 +11,7 @@ import RedisMixin from '../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../mixins/dbMixinMongoose';
 import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../entities';
 import { CONST_CHAR, MSG_TYPE } from '../../common/constant';
-import {
-	IRedisStreamData,
-	IRedisStreamResponse,
-	ListTxCreatedParams,
-	TransactionHashParam,
-} from '../../types';
+import { ListTxCreatedParams, TransactionHashParam } from '../../types';
 import { Config } from '../../common';
 import { queueConfig } from '../../config/queue';
 import { Utils } from '../../utils/utils';
@@ -42,7 +37,7 @@ export default class HandleTransactionService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob();
+						await this.handleJob(job.data.tx);
 						job.progress(100);
 						return true;
 					},
@@ -50,106 +45,26 @@ export default class HandleTransactionService extends Service {
 			},
 		});
 	}
-
-	async initEnv() {
-		this.logger.info('initEnv');
-		this.redisClient = await this.getRedisClient();
+	async handleJob(tx: ITransaction) {
 		try {
-			await this.redisClient.xGroupCreate(
-				Config.REDIS_STREAM_TRANSACTION_NAME,
-				Config.REDIS_STREAM_TRANSACTION_GROUP,
-				'0-0',
-				{ MKSTREAM: true },
+			const transaction: TransactionEntity = new JsonConvert().deserializeObject(
+				tx,
+				TransactionEntity,
 			);
-			await this.redisClient.xGroupCreateConsumer(
-				Config.REDIS_STREAM_TRANSACTION_NAME,
-				Config.REDIS_STREAM_TRANSACTION_GROUP,
-				this._consumer,
-			);
+			this.broker.emit('list-tx.upsert', {
+				listTx: [transaction],
+				source: CONST_CHAR.CRAWL,
+				chainId: Config.CHAIN_ID,
+			} as ListTxCreatedParams);
+			await this.handleListTransaction([transaction]);
 		} catch (error) {
+			this.logger.error('Error when handling tx hash: ', tx.tx_response.txhash);
+			if (tx.tx_response.txhash) {
+				this.broker.emit('crawl-transaction-hash.retry', {
+					txHash: tx.tx_response.txhash,
+				} as TransactionHashParam);
+			}
 			this.logger.error(error);
-		}
-	}
-	private _hasRemainingMessage = true;
-	private _lastId = '0-0';
-	async handleJob() {
-		const xAutoClaimResult: IRedisStreamResponse = await this.redisClient.xAutoClaim(
-			Config.REDIS_STREAM_TRANSACTION_NAME,
-			Config.REDIS_STREAM_TRANSACTION_GROUP,
-			this._consumer,
-			Config.REDIS_MIN_IDLE_TIME_HANDLE_TRANSACTION,
-			'0-0',
-			{ COUNT: Config.REDIS_AUTO_CLAIM_COUNT_HANDLE_TRANSACTION },
-		);
-		if (xAutoClaimResult.messages.length === 0) {
-			this._hasRemainingMessage = false;
-		}
-
-		let idXReadGroup = '';
-		if (this._hasRemainingMessage) {
-			idXReadGroup = this._lastId;
-		} else {
-			idXReadGroup = '>';
-		}
-		const result: IRedisStreamResponse[] = await this.redisClient.xReadGroup(
-			Config.REDIS_STREAM_TRANSACTION_GROUP,
-			this._consumer,
-			[{ key: Config.REDIS_STREAM_TRANSACTION_NAME, id: idXReadGroup }],
-		);
-
-		if (result) {
-			result.forEach(async (element: IRedisStreamResponse) => {
-				const listTransactionNeedSaveToDb: ITransaction[] = [];
-				const listMessageNeedAck: string[] = [];
-				try {
-					element.messages.forEach(async (item: IRedisStreamData) => {
-						this.logger.info(
-							`Handling message ID: ${item.id}, txhash: ${item.message.source}`,
-						);
-						try {
-							const transaction: TransactionEntity =
-								new JsonConvert().deserializeObject(
-									JSON.parse(item.message.element.toString()),
-									TransactionEntity,
-								);
-							listTransactionNeedSaveToDb.push(transaction);
-							listMessageNeedAck.push(item.id.toString());
-							this._lastId = item.id.toString();
-						} catch (error) {
-							this.logger.error('Error when handling message id: ', item.id);
-							this.logger.error(JSON.stringify(item));
-							if (item.message.source) {
-								this.broker.emit('crawl-transaction-hash.retry', {
-									txHash: item.message.source,
-								} as TransactionHashParam);
-								listMessageNeedAck.push(item.id.toString());
-							}
-							this.logger.error(error);
-						}
-					});
-
-					this.broker.emit('list-tx.upsert', {
-						listTx: listTransactionNeedSaveToDb,
-						source: CONST_CHAR.CRAWL,
-						chainId: Config.CHAIN_ID,
-					} as ListTxCreatedParams);
-
-					await this.handleListTransaction(listTransactionNeedSaveToDb);
-					if (listMessageNeedAck.length > 0) {
-						this.redisClient.xAck(
-							Config.REDIS_STREAM_TRANSACTION_NAME,
-							Config.REDIS_STREAM_TRANSACTION_GROUP,
-							listMessageNeedAck,
-						);
-						this.redisClient.xDel(
-							Config.REDIS_STREAM_TRANSACTION_NAME,
-							listMessageNeedAck,
-						);
-					}
-				} catch (error) {
-					this.logger.error(error);
-				}
-			});
 		}
 	}
 
@@ -261,20 +176,6 @@ export default class HandleTransactionService extends Service {
 								// ListAddress.push(value);
 								this._addToIndexes(indexes, 'addresses', '', value);
 							}
-
-							const hashValue = this.redisClient
-								.hGet(`att-${type}`, key)
-								.then((valueHashmap: any) => {
-									if (valueHashmap) {
-										this.redisClient.hSet(
-											`att-${type}`,
-											key,
-											Number(valueHashmap) + 1,
-										);
-									} else {
-										this.redisClient.hSet(`att-${type}`, key, 1);
-									}
-								});
 						} catch (error) {
 							this.logger.info(tx._id);
 							this.logger.error(error);
@@ -318,21 +219,6 @@ export default class HandleTransactionService extends Service {
 
 	public async _start() {
 		await this.broker.waitForServices(['v1.handle-transaction-upserted']);
-		this.redisClient = await this.getRedisClient();
-		await this.initEnv();
-		this.createJob(
-			'handle.transaction',
-			{},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 3,
-				},
-				repeat: {
-					every: parseInt(Config.MILISECOND_HANDLE_TRANSACTION, 10),
-				},
-			},
-		);
 		this.getQueue('handle.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});

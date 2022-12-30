@@ -3,6 +3,9 @@ import axios from 'axios';
 import { Config } from '../../common';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const resilient = require('resilient');
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const hash = require('object-hash');
 export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Service> {
 	private _schema: Partial<ServiceSchema> & ThisType<Service>;
 	public constructor() {
@@ -12,37 +15,32 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 				enableLoadBalancer: Config.ENABLE_LOADBALANCER,
 			},
 			methods: {
-				async callApiFromDomain(domain: string[], path: string, retry = Infinity) {
-					let callApiClient = null;
-					if (this.settings.enableLoadBalancer === 'false') {
-						const axiosClient = axios.create({
-							baseURL: domain[0],
-						});
-						callApiClient = axiosClient;
-					} else {
-						const resilientClient = resilient({
-							service: { basePath: '/', retry },
-						});
-						resilientClient.setServers(domain);
-						callApiClient = resilientClient;
-					}
-					try {
-						const result = await callApiClient.get(path);
-						if (result.data) {
-							return result.data;
+				async getCallApiClient(domain: string[], retry = 0) {
+					// Create client
+					if (this.callApiClient === undefined) {
+						if (this.settings.enableLoadBalancer === 'false') {
+							const axiosClient = axios.create({});
+							this.callApiClient = axiosClient;
 						} else {
-							return null;
+							const resilientClient = resilient({
+								service: { basePath: '/' },
+							});
+							this.callApiClient = resilientClient;
 						}
-					} catch (error) {
-						this.logger.error(error);
-						return null;
 					}
-				},
 
-				async callApiWithAxios(domain: string, path: string) {
-					const callApiClient = axios.create({
-						baseURL: domain,
-					});
+					// Set domain
+					if (this.settings.enableLoadBalancer === 'false') {
+						this.callApiClient.defaults.baseURL = domain[0];
+					} else {
+						this.callApiClient.setServers(domain);
+						// This.callApiClient.serviceOptions.retry = retry;
+					}
+
+					return this.callApiClient;
+				},
+				async callApiFromDomain(domain: string[], path: string, retry = 0) {
+					const callApiClient = await this.getCallApiClient(domain, retry);
 					try {
 						const result = await callApiClient.get(path);
 						if (result.data) {

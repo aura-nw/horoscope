@@ -42,11 +42,12 @@ export default class HandleDelayJobService extends Service {
 
 		let currentJobs: any[];
 		try {
-			currentJobs = await this.broker.call('v1.delay-job.findPendingJobs', {});
+			currentJobs = await this.broker.call('v1.delay-job.findPendingJobs', { chainId: Config.CHAIN_ID });
 		} catch (error) {
 			this.logger.error(error);
 			throw error;
 		}
+		this.logger.info(`Current Jobs ${currentJobs}`);
 		for (const job of currentJobs) {
 			try {
 				if (new Date(job.expire_time).getTime() <= new Date().getTime()) {
@@ -69,6 +70,7 @@ export default class HandleDelayJobService extends Service {
 							listUpdateQueries.push(
 								this.broker.call('v1.delay-job.deleteFinishedJob', {
 									_id: job._id,
+									chainId: Config.CHAIN_ID,
 								}),
 							);
 							break;
@@ -116,6 +118,7 @@ export default class HandleDelayJobService extends Service {
 							listUpdateQueries.push(
 								this.broker.call('v1.delay-job.deleteFinishedJob', {
 									_id: job._id,
+									chainId: Config.CHAIN_ID,
 								}),
 							);
 							break;
@@ -137,62 +140,9 @@ export default class HandleDelayJobService extends Service {
 							listUpdateQueries.push(
 								this.broker.call('v1.delay-job.deleteFinishedJob', {
 									_id: job._id,
+									chainId: Config.CHAIN_ID,
 								}),
 							);
-							break;
-						case DELAY_JOB_TYPE.PERIODIC_VESTING:
-							this.createJob(
-								'crawl.account-spendable-balances',
-								{
-									listAddresses: [job.content.address],
-									chainId: Config.CHAIN_ID,
-								},
-								{
-									removeOnComplete: true,
-									removeOnFail: {
-										count: 10,
-									},
-								},
-							);
-
-							const updateInfo = await this.adapter.findOne({
-								address: job.content.address,
-							});
-							const newJobExpireTime = new Date(
-								// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-								(new Date(job.expire_time).getTime() +
-									parseInt(
-										updateInfo.account_auth.account.vesting_periods[0].length,
-										10,
-									)) *
-								1000,
-							);
-							if (
-								newJobExpireTime.getTime() >=
-								new Date(
-									parseInt(
-										updateInfo.account_auth.account.base_vesting_account.end_time,
-										10,
-									) * 1000,
-								).getTime()
-							) {
-								listUpdateQueries.push(
-									this.broker.call('v1.delay-job.deleteFinishedJob', {
-										_id: job._id,
-									}),
-								);
-							} else {
-								listUpdateQueries.push(
-									this.broker.call('v1.delay-job.updateJob', {
-										_id: job._id,
-										update: {
-											$set: {
-												expire_time: newJobExpireTime,
-											},
-										},
-									}),
-								);
-							}
 							break;
 					}
 				}

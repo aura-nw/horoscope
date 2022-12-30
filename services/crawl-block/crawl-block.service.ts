@@ -80,6 +80,7 @@ export default class CrawlBlockService extends Service {
 		const responseGetLatestBlock = await this.callApiFromDomain(
 			url,
 			`${Config.GET_LATEST_BLOCK_API}`,
+			1,
 		);
 		const latestBlockNetwork = parseInt(responseGetLatestBlock.result.block.header.height, 10);
 
@@ -100,7 +101,7 @@ export default class CrawlBlockService extends Service {
 			const listPromise = [];
 			for (let i = startBlock; i <= endBlock; i++) {
 				listPromise.push(
-					this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`),
+					this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`, 2),
 				);
 			}
 			const resultListPromise: ResponseFromRPC[] = await Promise.all(listPromise);
@@ -113,9 +114,6 @@ export default class CrawlBlockService extends Service {
 				},
 			};
 
-			if (data == null) {
-				throw new Error('cannot crawl block');
-			}
 			this.handleListBlock(data);
 			if (this._currentBlock < endBlock) {
 				this._currentBlock = endBlock;
@@ -131,12 +129,23 @@ export default class CrawlBlockService extends Service {
 		const listBlock: BlockResponseFromLCD = data.result;
 		listBlock.blocks.map((block: IBlock) => {
 			// Pust block to redis stream
-			this.logger.info(`xadd block: ${block?.block?.header?.height}`);
+			this.logger.info(`create job handle block: ${block?.block?.header?.height}`);
 
-			this.redisClient.xAdd(Config.REDIS_STREAM_BLOCK_NAME, '*', {
-				source: block.block?.header?.height,
-				element: JSON.stringify(block),
-			});
+			// This.redisClient.xAdd(Config.REDIS_STREAM_BLOCK_NAME, '*', {
+			// 	Source: block.block?.header?.height,
+			// 	Element: JSON.stringify(block),
+			// });
+
+			this.createJob(
+				'handle.block',
+				{
+					source: block.block?.header?.height,
+					block,
+				},
+				{
+					removeOnComplete: true,
+				},
+			);
 		});
 	}
 	getStatistic() {
