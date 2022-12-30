@@ -11,7 +11,7 @@ export class S3Service {
 	private AWS_ACCESS_KEY_ID: string;
 	private AWS_SECRET_ACCESS_KEY: string;
 	private AWS_REGION: string;
-	private S3_CLIENT: AWS.S3;
+	private S3_CLIENT: any;
 	public constructor() {
 		this.AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID;
 		this.AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY;
