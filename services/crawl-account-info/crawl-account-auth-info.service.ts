@@ -82,12 +82,8 @@ export default class CrawlAccountAuthInfoService extends Service {
 					throw error;
 				}
 
-				if (
-					resultCallApi &&
-					resultCallApi.account &&
-					resultCallApi.account['@type'] &&
-					resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED
-				) {
+				if (resultCallApi?.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED
+					&& resultCallApi?.base_vesting_account?.end_time >= new Date().getTime()) {
 					let existsJob;
 					try {
 						existsJob = await this.broker.call('v1.delay-job.findOne', {
@@ -103,12 +99,10 @@ export default class CrawlAccountAuthInfoService extends Service {
 						const newDelayJob = {} as DelayJobEntity;
 						newDelayJob.content = { address };
 						newDelayJob.type = DELAY_JOB_TYPE.DELAYED_VESTING;
-						newDelayJob.expire_time = new Date(
-							parseInt(
-								resultCallApi.account.base_vesting_account.end_time,
-								10,
-							) * 1000,
-						);
+						newDelayJob.expire_time = new Date(parseInt(
+							resultCallApi.account.base_vesting_account.end_time,
+							10,
+						));
 						newDelayJob.indexes = `${address}${newDelayJob.type
 							}${newDelayJob?.expire_time?.getTime()}${chainId}`;
 						newDelayJob.custom_info = {
