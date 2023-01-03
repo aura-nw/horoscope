@@ -3,9 +3,6 @@ import axios from 'axios';
 import { Config } from '../../common';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const resilient = require('resilient');
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const hash = require('object-hash');
 export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Service> {
 	private _schema: Partial<ServiceSchema> & ThisType<Service>;
 	public constructor() {
