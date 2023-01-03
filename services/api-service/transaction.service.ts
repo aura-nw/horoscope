@@ -435,7 +435,7 @@ export default class BlockService extends MoleculerDBService<
 
 		const address = ctx.params.address;
 
-		const sort = '-tx_response.height';
+		const sort = '-indexes.height';
 		const query: QueryOptions = {};
 		/* eslint-disable camelcase, no-underscore-dangle, quote-props */
 		if (ctx.params.nextKey) {
