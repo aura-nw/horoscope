@@ -1,13 +1,10 @@
 'use strict';
 
 process.env.TEST = 'true';
-import util from "util"
 import _ from 'lodash';
 import { ServiceBroker } from 'moleculer';
-import { IFeegrant } from '../../../../entities';
 import FeegrantDb from '../../../../services/feegrant/feegrant-db.service';
 import FeegrantHistoryDb from '../../../../services/feegrant/feegrant-history-db.service';
-import { Any } from "typeorm";
 import { IFeegrantData } from "../../../../services/feegrant/feegrant-tx-handler.service";
 
 describe('Test feegrant-history-db service', () => {

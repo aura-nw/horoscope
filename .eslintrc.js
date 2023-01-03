@@ -118,7 +118,6 @@ module.exports = {
 		// 'arrow-parens': ['error', 'as-needed'],
 		// eslint-disable-next-line quote-props
 		camelcase: 'error',
-		'capitalized-comments': 'error',
 		'comma-dangle': ['error', 'always-multiline'],
 		'constructor-super': 'error',
 		// eslint-disable-next-line quote-props
