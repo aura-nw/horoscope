@@ -44,7 +44,7 @@ describe('Test crawl-account-auth-info service', () => {
             ],
             Config.CHAIN_ID
         );
-        await new Promise(r => setTimeout(r, 5000));
+        await new Promise(r => setTimeout(r, 10000));
 
         let [resultOne, resultTwo] = await Promise.all([
             crawlAccountAuthService.adapter.findOne({
