@@ -82,8 +82,13 @@ export default class CrawlAccountAuthInfoService extends Service {
 					throw error;
 				}
 
-				if (resultCallApi?.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED
-					&& resultCallApi?.base_vesting_account?.end_time >= new Date().getTime()) {
+				if (
+					resultCallApi &&
+					resultCallApi.account &&
+					resultCallApi.account['@type'] &&
+					resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED &&
+					parseInt(resultCallApi.account.base_vesting_account.end_time, 10) >= new Date().getTime()
+				) {
 					let existsJob;
 					try {
 						existsJob = await this.broker.call('v1.delay-job.findOne', {
