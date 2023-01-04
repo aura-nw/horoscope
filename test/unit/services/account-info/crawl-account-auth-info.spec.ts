@@ -53,6 +53,8 @@ describe('Test crawl-account-auth-info service', () => {
                 address: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'
             })
         ]);
+        console.log('Result account auth one', resultOne);
+        console.log('Result account auth two', resultTwo);
 
         expect(resultOne.account_auth.account['@type']).toEqual('/cosmos.auth.v1beta1.BaseAccount');
         expect(resultTwo.account_auth.account['@type']).toEqual('/cosmos.auth.v1beta1.BaseAccount');
