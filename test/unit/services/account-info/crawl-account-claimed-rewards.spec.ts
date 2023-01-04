@@ -27,8 +27,12 @@ describe('Test crawl-account-claimed-rewards service', () => {
         await crawlAccountClaimedRewardsService.adapter.removeMany({});
         await broker.stop();
     });
-    beforeEach(async () => await handleAddressService.handleJob([txSend], CONST_CHAR.CRAWL, Config.CHAIN_ID));
-    afterEach(async () => await crawlAccountClaimedRewardsService.adapter.removeMany({}));
+    beforeEach(async () => {
+        await handleAddressService.handleJob([txSend], CONST_CHAR.CRAWL, Config.CHAIN_ID);
+    });
+    afterEach(async () => {
+        await crawlAccountClaimedRewardsService.adapter.removeMany({});
+    });
 
     it('Should update account_claimed_rewards case delegate', async () => {
         await crawlAccountClaimedRewardsService.handleJob([txDelegate]);

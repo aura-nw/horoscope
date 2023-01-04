@@ -134,12 +134,22 @@ export class ValidatorEntity implements IValidator {
 	@JsonProperty('min_self_delegation', String)
 	public min_self_delegation: String = '';
 
+	@JsonProperty('consensus_hex_address', String)
 	public consensus_hex_address: String = '';
+
+	@JsonProperty('self_delegation_balance', Coin)
 	public self_delegation_balance: Coin = {} as Coin;
+
 	public uptime: Number = 0;
+
 	public val_signing_info: ISigningInfo = {} as ISigningInfo;
+
+	@JsonProperty('account_address', String)
 	public account_address: String = '';
+
+	@JsonProperty('percent_voting_power', Number)
 	public percent_voting_power: Number = 0;
+
 	public number_delegators: Number = 0;
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public getMongoEntity() {

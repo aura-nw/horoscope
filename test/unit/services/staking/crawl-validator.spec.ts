@@ -23,12 +23,12 @@ describe('Test crawl-validator service', () => {
     });
     // Gracefully stop the broker after all tests
     afterAll(async () => {
-        await validatorService.adapter.removeMany({});
+        // await validatorService.adapter.removeMany({});
         await poolService.adapter.removeMany({});
         await broker.stop();
     });
 
-    it('Should insert new pool', async () => {
+    it('Should insert new validator', async () => {
         await poolService.handleJob();
         await validatorService.handleJob();
 
