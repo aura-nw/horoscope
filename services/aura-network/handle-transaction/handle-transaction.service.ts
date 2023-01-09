@@ -9,19 +9,17 @@ import { Job } from 'bull';
 import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { JsonConvert } from 'json2typescript';
 import { fromBase64, fromUtf8, toBase64 } from '@cosmjs/encoding';
-import { defaultRegistryTypes, SigningStargateClient } from '@cosmjs/stargate';
 import {} from '@cosmjs/cosmwasm-stargate';
 import { decodeTxRaw } from '@cosmjs/proto-signing';
-import { Registry } from '@cosmjs/proto-signing';
-import { makeCosmoshubPath, Secp256k1HdWallet } from '@cosmjs/amino';
+import { Secp256k1HdWallet } from '@cosmjs/amino';
 import RedisMixin from '../../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../../mixins/dbMixinMongoose';
 import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../../entities';
 import { CONST_CHAR, MSG_TYPE } from '../../../common/constant';
-import { ListTxCreatedParams, TransactionHashParam } from '../../../types';
-import { Config } from '../../../common';
+import { ListTxCreatedParams } from '../../../types';
 import { queueConfig } from '../../../config/queue';
 import { Utils } from '../../../utils/utils';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
 
@@ -61,17 +59,45 @@ export default class HandleTransactionService extends Service {
 
 			listTx.txs.map((tx: any) => {
 				// decode tx to readable
+
 				const decodedTx = decodeTxRaw(fromBase64(tx.tx));
 
 				tx.tx = decodedTx;
 				tx.tx.signatures = decodedTx.signatures.map((signature: Uint8Array) =>
 					toBase64(signature),
 				);
+
+				// signing.registry.register(
+				// 	'/cosmos.feegrant.v1beta1.MsgGrantAllowance',
+				// 	// @ts-ignore
+				// 	cosmos.feegrant.v1beta1.MsgGrantAllowance,
+				// );
+				const decodedMsgs = decodedTx.body.messages.map((msg) => {
+					const decodedMsg = signing.registry.decode(msg);
+					Object.keys(decodedMsg).map((key) => {
+						try {
+							// check if msg is uint8array
+							if (decodedMsg[key] instanceof Uint8Array) {
+								decodedMsg[key] = JSON.parse(fromUtf8(decodedMsg[key]));
+							}
+							// check if msg has toString function
+							// else if (typeof decodedMsg[key].toString === 'function') {
+							// 	decodedMsg[key] = decodedMsg[key].toString();
+							// } else {
+							// 	// check if msg is json
+							// 	const json = JSON.parse(decodedMsg[key]);
+							// 	decodedMsg[key] = json;
+							// }
+						} catch (error) {
+							// error if key is not json
+							this.logger.warn('decode tx fail');
+						}
+					});
+					return decodedMsg;
+				});
 				tx.tx = {
 					body: {
-						messages: decodedTx.body.messages.map((msg) =>
-							signing.registry.decode(msg),
-						),
+						messages: decodedMsgs,
 					},
 					auth_info: {
 						fee: {
@@ -88,7 +114,7 @@ export default class HandleTransactionService extends Service {
 									mode_info: signerInfo.modeInfo,
 									public_key: {
 										'@type': signerInfo.publicKey?.typeUrl,
-										key: toBase64(pubkey),
+										key: toBase64(pubkey.slice(2)),
 									},
 									sequence: signerInfo.sequence.toString(),
 								};
@@ -111,7 +137,6 @@ export default class HandleTransactionService extends Service {
 					code: tx.tx_result.code,
 					data: tx.tx_result.data,
 					raw_log: tx.tx_result.log,
-					logs: JSON.parse(tx.tx_result.log),
 					info: tx.tx_result.info,
 					gas_wanted: tx.tx_result.gas_wanted,
 					gas_used: tx.tx_result.gas_used,
@@ -121,9 +146,9 @@ export default class HandleTransactionService extends Service {
 				};
 				try {
 					tx.tx_response.logs = JSON.parse(tx.tx_result.log);
-					tx.tx.body.messages.map((msg: any) => {
-						msg.msg = JSON.parse(fromUtf8(msg.msg));
-					});
+					// tx.tx.body.messages.map((msg: any) => {
+					// 	msg.msg = JSON.parse(fromUtf8(msg.msg));
+					// });
 				} catch (error) {
 					this.logger.debug('tx fail');
 				}

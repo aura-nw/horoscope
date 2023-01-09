@@ -2,10 +2,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Context, Service, ServiceBroker } from 'moleculer';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-import { fromBase64, toHex } from '@cosmjs/encoding';
-import { sha256 } from '@cosmjs/crypto';
-import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { Job } from 'bull';
 import { ListTxInBlockParams, TransactionHashParam } from 'types';
 import CallApiMixin from '../../../mixins/callApi/call-api.mixin';
@@ -30,7 +26,7 @@ export default class CrawlTransactionService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(
+						await this.crawlTransactionByBlockHeight(
 							// job.data.listTx,
 							job.data.blockHeight,
 							job.data.chainId,
@@ -45,7 +41,7 @@ export default class CrawlTransactionService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.crawlTransaction(job.data.txhash);
+						await this.crawlTransactionByTxHash(job.data.txhash, job.data.chainId);
 						job.progress(100);
 						return true;
 					},
@@ -101,11 +97,6 @@ export default class CrawlTransactionService extends Service {
 	}
 
 	async handleJob(blockHeight: string, chainId: string, timestamp: string) {
-		// listTx.map((tx: string) => {
-		// 	const txHash = toHex(sha256(fromBase64(tx))).toUpperCase();
-		// 	this.crawlTransaction(txHash);
-		// });
-		// crawl transaction by block height
 		await this.crawlTransactionByBlockHeight(blockHeight, chainId, timestamp);
 	}
 
@@ -126,17 +117,14 @@ export default class CrawlTransactionService extends Service {
 				},
 				{
 					removeOnComplete: true,
-					removeOnFail: {
-						Count: 3,
-					},
 				},
 			);
 			this.logger.debug(`result: ${JSON.stringify(result)}`);
 		}
 	}
-	async crawlTransaction(txHash: string) {
+	async crawlTransactionByTxHash(txHash: string, chainId: string) {
 		this.logger.info(`txhash: ${txHash}`);
-		const url = Utils.getUrlByChainIdAndType(Config.CHAIN_ID, URL_TYPE_CONSTANTS.LCD);
+		const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
 		const result = await this.callApiFromDomain(url, `${Config.GET_TX_API}${txHash}`);
 
 		if (result) {
@@ -148,9 +136,6 @@ export default class CrawlTransactionService extends Service {
 				},
 				{
 					removeOnComplete: true,
-					removeOnFail: {
-						Count: 3,
-					},
 				},
 			);
 			this.logger.debug(`result: ${JSON.stringify(result)}`);
@@ -166,7 +151,6 @@ export default class CrawlTransactionService extends Service {
 		this.getQueue('crawl.transaction').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		// eslint-disable-next-line no-underscore-dangle
 		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
