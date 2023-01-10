@@ -186,6 +186,7 @@ export const transactionMongoModel = (collection: string): unknown => {
 
 	schema.index({ 'indexes.addresses': 1 }, { sparse: true });
 	schema.index({ 'indexes.timestamp': -1 });
+	schema.index({ 'indexes.height': -1 });
 
 	return models[collection] || model(collection, schema);
 };
