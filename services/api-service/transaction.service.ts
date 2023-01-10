@@ -161,7 +161,7 @@ export default class BlockService extends MoleculerDBService<
 		/* eslint-disable camelcase , no-underscore-dangle*/
 		let projection: any = { indexes: 0, custom_info: 0 };
 
-		const sort = ctx.params.reverse ? 'tx_response.height' : '-tx_response.height';
+		const sort = ctx.params.reverse ? 'indexes.height' : '-indexes.height';
 
 		// Const sort = '-indexes.height';
 		const query: QueryOptions = {};
@@ -173,18 +173,18 @@ export default class BlockService extends MoleculerDBService<
 		if (nextKey) {
 			if (ctx.params.reverse) {
 				query._id = { $gt: new ObjectId(nextKey._id) };
-				query['tx_response.height'] = { $gte: nextKey.height };
+				query['indexes.height'] = { $gte: nextKey.height };
 			} else {
 				query._id = { $lt: new ObjectId(nextKey._id) };
-				query['tx_response.height'] = { $lte: nextKey.height };
+				query['indexes.height'] = { $lte: nextKey.height };
 			}
 		}
 		// Query['custom_info.chain_id'] = ctx.params.chainid;
 		if (blockHeight) {
-			query['tx_response.height'] = blockHeight;
+			query['indexes.height'] = blockHeight;
 		}
 		if (fromHeight) {
-			query['tx_response.height'] = { $gte: fromHeight };
+			query['indexes.height'] = { $gte: fromHeight };
 		}
 		if (txHash) {
 			query['tx_response.txhash'] = txHash;

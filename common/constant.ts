@@ -294,7 +294,6 @@ export enum FEEGRANT_ACTION {
 export enum DELAY_JOB_TYPE {
 	REDELEGATE = 'redelegate',
 	UNBOND = 'unbond',
-	PERIODIC_VESTING = 'periodic_vesting',
 	DELAYED_VESTING = 'delayed_vesting',
 }
 
@@ -333,6 +332,7 @@ export const PATH_COSMOS_SDK = {
 	GET_DATA_HASH: 'cosmwasm/wasm/v1/code/',
 	VERIFY_API_GET_HASH: 'api/v1/smart-contract/get-hash/',
 	COSMWASM_CONTRACT_PARAM: 'cosmwasm/wasm/v1/contract/',
+	SEARCH_TX: 'tx_search',
 };
 
 export const TOP_ACCOUNT_STATS_FIELD = {

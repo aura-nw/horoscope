@@ -1,0 +1,109 @@
+[
+	{
+		"chainName":"Aura Devnet",
+		"chainId":"aura-testnet-2",
+		"RPC":[
+		   "https://rpc.dev.aura.network"
+		],
+		"LCD":[
+		   "https://lcd.dev.aura.network"
+		],
+		"prefixAddress":"aura",
+		"databaseName":"test",
+		"redisDbNumber":5
+	},
+	{
+		"chainName":"Aura Serenity",
+		"chainId":"serenity-testnet-001",
+		"RPC":[
+		   "https://rpc.serenity.aura.network"
+		],
+		"LCD":[
+		   "https://lcd.serenity.aura.network"
+		],
+		"prefixAddress":"aura",
+		"databaseName":"test",
+		"redisDbNumber":2
+	},
+	{
+		"chainName":"Theta Testnet",
+		"chainId":"theta-testnet-001",
+		"RPC":[
+			"https://rpc.theta.aura.network"
+		],
+		"LCD":[
+			"https://lcd.theta.aura.network"
+		],
+		"prefixAddress":"cosmos",
+		"databaseName":"test",
+		"redisDbNumber":4
+	},
+	{
+		"chainName":"Osmosis Testnet",
+		"chainId":"osmo-test-4",
+		"RPC":[
+			"https://testnet-rpc.osmosis.zone"
+		],
+		"LCD":[
+			"https://osmosistest-lcd.quickapi.com"
+		],
+		"prefixAddress":"osmo",
+		"databaseName":"test",
+		"redisDbNumber":10
+
+	},
+	{
+		"chainName":"Osmosis Mainnet",
+		"chainId":"osmosis-1",
+		"RPC":[
+			"https://rpc.osmosis.zone"
+		],
+		"LCD":[
+			"https://lcd.osmosis.zone"
+		],
+		"prefixAddress":"osmo",
+		"databaseName":"test",
+		"redisDbNumber":11
+	},
+	{
+		"chainName":"Evmos Testnet",
+		"chainId":"evmos_9000-4",
+		"RPC":[
+			"https://rpc.evmos.aura.network"
+		],
+		"LCD":[
+			"https://lcd.evmos.aura.network"
+		],
+		"prefixAddress":"evmos",
+		"databaseName":"test",
+		"redisDbNumber":6
+	},
+	{
+		"chainName":"Aura Euphoria",
+		"chainId":"euphoria-2",
+		"RPC":[
+		   "https://rpc.euphoria.aura.network"
+		],	
+		"LCD":[
+		   "https://lcd.euphoria.aura.network"
+		],
+		"prefixAddress":"aura",
+		"databaseName":"test",
+		"redisDbNumber":12
+	},
+	{
+		"chainName":"Cosmos Mainnet",
+		"chainId":"cosmoshub-4",
+		"RPC":[
+			"https://rpc.cosmos.network"
+		],
+		"LCD":[
+			"https://cosmos-api.polkachu.com",
+			"https://cosmos-api.cyphercore.io",
+			"https://cosmoshub-api.lavenderfive.com:443"
+		],
+		"prefixAddress":"cosmos",
+		"databaseName":"test",
+		"redisDbNumber":13
+	}
+]

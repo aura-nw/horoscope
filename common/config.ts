@@ -167,7 +167,7 @@ export default class ConfigClass {
 	public GET_VALIDATOR = process.env.GET_VALIDATOR || PATH_COSMOS_SDK.GET_VALIDATOR;
 	public GET_DATA_HASH = process.env.GET_DATA_HASH || PATH_COSMOS_SDK.GET_DATA_HASH;
 	public GET_SUPPLY = process.env.GET_SUPPLY || PATH_COSMOS_SDK.GET_SUPPLY;
-	public PATH_HEAP_DUMP = process.env.PATH_HEAP_DUMP || '/app/heap_';
+	public SEARCH_TX = process.env.SEARCH_TX || PATH_COSMOS_SDK.SEARCH_TX;
 	// Dynamic property key
 	[index: string]: any;
 
@@ -182,7 +182,7 @@ export default class ConfigClass {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			this.NODE_ENV
-			}`;
+		}`;
 		this.DB_USER = genericDbInfo('USER');
 		this.DB_PRODUCT = genericDbInfo('PRODUCT');
 		this.DB_PROPOSAL = genericDbInfo('PROPOSAL');

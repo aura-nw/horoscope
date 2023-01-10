@@ -1,55 +1,13 @@
-FROM node:16-alpine3.15
+FROM node:16-alpine3.15 as build
 
-# Install python
-# RUN apk add --update python3 make g++\
-#    && rm -rf /var/cache/apk/*
-# Working directory
 WORKDIR /app
 
 # Install dependencies npm
 COPY package.json package-lock.json ./
 
-# Install dependencies yarn
-# COPY package.json yarn.lock ./
-
-# Add moleculer
 RUN npm install -g moleculer-cli
-# RUN yarn global add moleculer-cli
 
-# Add all supported transporters except kafka
-RUN npm install -g ioredis 
-	# nats \
-	# node-nats-streaming \
-	# amqp \
-	# mqtt \
-	# amqplib \
-	# rhea-promise
-
-# RUN yarn global add install amqp \
-# 	nats \
-# 	node-nats-streaming \
-# 	ioredis \
-# 	mqtt \
-# 	amqplib \
-# 	rhea-promise
-
-# Add all supported serializers
-# RUN npm install -g avsc \
-# 	msgpack5 \
-# 	notepack.io \
-# 	protobufjs \
-# 	thrift
-
-# RUN yarn global add avsc \
-# 	msgpack5 \
-# 	notepack.io \
-# 	protobufjs \
-# 	thrift
-
-# install project dependencies
-RUN npm ci -production --silent
-# RUN npm i
-# RUN yarn install --frozen-lockfile
+RUN npm ci --omit=dev
 
 # Copy source
 COPY . .
@@ -61,10 +19,21 @@ COPY . .
 RUN npm run graphql:generate
 
 # build
-RUN npm run build \
-	&& npm prune
+RUN npm run build && npm prune
 
-# RUN yarn run build
+# -------------------
+FROM node:16-alpine3.15
 
-# Start server
-CMD ["npm", "run", "start:prod"]
+WORKDIR /app
+
+# Copy built files
+COPY . .
+COPY --from=build /app/dist/ .
+COPY --from=build /app/prisma ./prisma/
+
+RUN echo $(ls -1 /app)
+
+RUN npm ci --omit=dev
+
+# # Start server
+CMD ["node", "./node_modules/moleculer/bin/moleculer-runner.js"]
