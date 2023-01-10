@@ -74,6 +74,7 @@ export default class HandleTransactionService extends Service {
 				// );
 				const decodedMsgs = decodedTx.body.messages.map((msg) => {
 					const decodedMsg = signing.registry.decode(msg);
+
 					Object.keys(decodedMsg).map((key) => {
 						try {
 							// check if msg is uint8array
@@ -93,6 +94,7 @@ export default class HandleTransactionService extends Service {
 							this.logger.warn('decode tx fail');
 						}
 					});
+					decodedMsg['@type'] = msg.typeUrl;
 					return decodedMsg;
 				});
 				tx.tx = {
