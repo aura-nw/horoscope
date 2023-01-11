@@ -1,12 +1,15 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
-import { Service, ServiceBroker } from 'moleculer';
+import { Context, Service, ServiceBroker } from 'moleculer';
 import { Job } from 'bull';
 import { Types } from 'mongoose';
 import { Config } from '../../common';
 import { dbDailyCw20HolderMixin } from '../../mixins/dbMixinMongoose';
 import { queueConfig } from '../../config/queue';
+import { UpdateContractHolderRequest } from '../../types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
 
@@ -23,67 +26,85 @@ export default class CrawlDailyCw20HolderService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob();
+						await this.handleJob(job.data.offset);
 						job.progress(100);
 						return true;
+					},
+				},
+			},
+			actions: {
+				'update-contract-holders': {
+					async handler(ctx: Context<UpdateContractHolderRequest>): Promise<any> {
+						await this.updateContractHolders(ctx.params.address, ctx.params.codeId);
 					},
 				},
 			},
 		});
 	}
 
-	async handleJob() {
-		const listQueries: any[] = [];
-		let resultAsset: any;
-		let resultHolder: any;
-		try {
-			[resultAsset, resultHolder] = await Promise.all([
-				this.broker.call('v1.cw20-holder.act-group-count'),
-				this.adapter.find(),
-			]);
-		} catch (error) {
-			this.logger.error(error);
-			throw error;
-		}
-		this.logger.info('resultAsset', JSON.stringify(resultAsset));
-		this.logger.info('resultHolder', JSON.stringify(resultHolder));
-
-		resultAsset.map((asset: any) => {
-			let holder = resultHolder.find(
-				/* eslint-disable no-underscore-dangle, camelcase */
-				(item: any) => item.contract_address === asset._id.contract_address,
-			);
-			if (holder) {
-				listQueries.push(
-					this.adapter.updateById(holder._id, {
-						$set: {
-							old_holders: holder.new_holders,
-							new_holders: asset.total_holders,
-							change_percent:
-								((asset.total_holders - holder.new_holders) / holder.new_holders) *
-								100,
-						},
-					}),
-				);
-			} else {
-				holder = {
-					_id: new Types.ObjectId(),
-					code_id: asset._id.code_id,
-					contract_address: asset._id.contract_address,
-					old_holders: 0,
-					new_holders: asset.total_holders,
-					change_percent: 0,
-				};
-				listQueries.push(this.adapter.insert(holder));
-			}
-			/* eslint-enable no-underscore-dangle, camelcase */
+	async handleJob(offset: number) {
+		const result = await this.adapter.find({
+			limit: 100,
+			offset,
 		});
 
+		if (result.length > 0) {
+			result.map(async (res: any) => {
+				try {
+					await this.adapter.updateById(res._id, {
+						$set: {
+							old_holders: res.new_holders,
+							change_percent:
+								((res.new_holders - res.old_holders) / res.old_holders) * 100,
+						},
+					});
+				} catch (error) {
+					this.logger.error(error);
+					throw error;
+				}
+			});
+
+			this.createJob(
+				'crawl.daily-cw20-holder',
+				{ offset: ++offset },
+				{
+					removeOnComplete: true,
+					removeOnFail: {
+						count: 3,
+					},
+				},
+			);
+		}
+	}
+
+	async updateContractHolders(contractAddress: string, codeId: number) {
+		const [holders, record] = await Promise.all([
+			this.broker.call('v1.cw20-holder.act-count-by-address', {
+				address: contractAddress,
+			}),
+			this.adapter.findOne({ contract_address: contractAddress }),
+		]);
+
 		try {
-			await Promise.all(listQueries);
+			if (record) {
+				await this.adapter.updateById(record._id, {
+					$set: {
+						new_holders: holders,
+					},
+				});
+			} else {
+				const holder = {
+					_id: new Types.ObjectId(),
+					code_id: codeId,
+					contract_address: contractAddress,
+					old_holders: 0,
+					new_holders: holders,
+					change_percent: 0,
+				};
+				await this.adapter.insert(holder);
+			}
 		} catch (error) {
 			this.logger.error(error);
-			throw error;
 		}
 	}
 
@@ -92,7 +113,7 @@ export default class CrawlDailyCw20HolderService extends Service {
 
 		this.createJob(
 			'crawl.daily-cw20-holder',
-			{},
+			{ offset: 0 },
 			{
 				removeOnComplete: true,
 				removeOnFail: {
@@ -113,7 +134,6 @@ export default class CrawlDailyCw20HolderService extends Service {
 		this.getQueue('crawl.daily-cw20-holder').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

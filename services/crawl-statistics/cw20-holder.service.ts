@@ -3,7 +3,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Service, Action } from '@ourparentcenter/moleculer-decorators-extended';
-import { MoleculerDBService } from '../../types';
+import { Context } from 'moleculer';
+import { AddressParams, MoleculerDBService } from '../../types';
 import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 import { ICW20Asset } from '../../model';
 
@@ -28,28 +29,13 @@ export default class Cw20HolderService extends MoleculerDBService<
 	ICW20Asset
 > {
 	@Action({
-		name: 'act-group-count',
-		cache: {
-			ttl: 10,
-		},
+		name: 'act-count-by-address',
 	})
-	async groupAndCount() {
-		const result = await this.adapter.aggregate([
-			{
-				$match: {
-					balance: { $ne: '0' },
-				},
+	async countByAddress(ctx: Context<AddressParams>) {
+		return await this.adapter.count({
+			query: {
+				contract_address: ctx.params.address,
 			},
-			{
-				$group: {
-					_id: {
-						code_id: '$code_id',
-						contract_address: '$contract_address',
-					},
-					total_holders: { $sum: 1 },
-				},
-			},
-		]);
-		return result;
+		});
 	}
 }
