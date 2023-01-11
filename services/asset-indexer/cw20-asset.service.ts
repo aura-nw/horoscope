@@ -322,6 +322,14 @@ export default class CrawlAssetService extends moleculer.Service {
 				}),
 			);
 		}
+
+		try {
+			await this.broker.call('v1.crawlDailyCw20Holder.update-contract-holders', {
+				address,
+			});
+		} catch (error) {
+			this.logger.error(error);
+		}
 	}
 
 	async _start(): Promise<void> {

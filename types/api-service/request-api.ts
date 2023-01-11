@@ -188,3 +188,13 @@ export interface GetContractsRequest {
 	limit: number;
 	nextKey: string;
 }
+
+export interface UpdateContractHolderRequest {
+	address: string;
+	codeId: number;
+}
+
+export interface PaginationRequest {
+	limit: number;
+	offset: number;
+}
