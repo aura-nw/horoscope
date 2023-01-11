@@ -55,7 +55,9 @@ export default class CrawlDailyCw20HolderService extends Service {
 						$set: {
 							old_holders: res.new_holders,
 							change_percent:
-								((res.new_holders - res.old_holders) / res.old_holders) * 100,
+								res.old_holders !== 0
+									? ((res.new_holders - res.old_holders) / res.old_holders) * 100
+									: 0,
 						},
 					});
 				} catch (error) {
