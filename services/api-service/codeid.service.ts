@@ -115,6 +115,9 @@ export default class CodeIdService extends MoleculerDBService<
 				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
 		},
+		cache: {
+			ttl: 10,
+		},
 	})
 	async checkStatus(ctx: Context<AssetIndexParams, Record<string, unknown>>) {
 		let response: ResponseDto = {} as ResponseDto;
