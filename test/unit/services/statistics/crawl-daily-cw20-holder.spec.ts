@@ -32,7 +32,7 @@ describe('Test crawl-daily-cw20-holder service', () => {
     });
 
     it('Should update record', async () => {
-        await crawlDailyCw20HolderService.handleJob();
+        await crawlDailyCw20HolderService.handleJob(0);
 
         const result = await crawlDailyCw20HolderService.adapter.find({});
 
