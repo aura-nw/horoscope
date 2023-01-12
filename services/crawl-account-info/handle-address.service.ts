@@ -116,25 +116,25 @@ export default class HandleAddressService extends Service {
 				element.tx.body.messages.map((msg: any) => {
 					switch (msg['@type']) {
 						case MSG_TYPE.MSG_DELEGATE:
-							listUpdateInfo.push('account-info.upsert-delegates');
+							listUpdateInfo.push('crawl.account-delegates');
 							break;
 						case MSG_TYPE.MSG_REDELEGATE:
 							listUpdateInfo.push(...[
-								'account-info.upsert-delegates',
-								'account-info.upsert-redelegates',
+								'crawl.account-delegates',
+								'crawl.account-redelegates',
 							]);
 							break;
 						case MSG_TYPE.MSG_UNDELEGATE:
 							listUpdateInfo.push(...[
-								'account-info.upsert-delegates',
-								'account-info.upsert-unbonds',
+								'crawl.account-delegates',
+								'crawl.account-unbonds',
 							]);
 							break;
 						default:
 							listUpdateInfo.push(...[
-								'account-info.upsert-delegates',
-								'account-info.upsert-redelegates',
-								'account-info.upsert-unbonds',
+								'crawl.account-delegates',
+								'crawl.account-redelegates',
+								'crawl.account-unbonds',
 							]);
 							break;
 					}

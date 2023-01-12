@@ -365,3 +365,10 @@ export enum MEDIA_STATUS {
 	ERROR = 'ERROR',
 	HANDLING = 'HANDLING',
 }
+
+export enum ACCOUNT_STAKE {
+	DELEGATIONS = 'Delegations',
+	REDELEGATIONS = 'Redelegations',
+	UNBONDING = 'Unbondings',
+	VESTING = 'Vestings',
+}

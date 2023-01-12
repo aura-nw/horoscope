@@ -3,7 +3,7 @@ import { Context } from 'moleculer';
 import { ValidatorEntity } from 'entities';
 import { callApiMixin } from '../../mixins/callApi/call-api.mixin';
 import { Config } from '../../common';
-import { CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { ACCOUNT_STAKE, CONST_CHAR, LIST_NETWORK, URL_TYPE_CONSTANTS } from '../../common/constant';
 import {
 	AccountInfoRequest,
 	MoleculerDBService,
@@ -742,7 +742,7 @@ export default class AccountInfoService extends MoleculerDBService<
 			},
 		];
 		switch (ctx.params.type) {
-			case 'Delegations':
+			case ACCOUNT_STAKE.DELEGATIONS:
 				projection.push(
 					...[
 						{ $project: { account_delegations: 1 } },
@@ -752,7 +752,7 @@ export default class AccountInfoService extends MoleculerDBService<
 					],
 				);
 				break;
-			case 'Unbondings':
+			case ACCOUNT_STAKE.UNBONDING:
 				projection.push(
 					...[
 						{ $project: { account_unbonding: 1 } },
@@ -762,7 +762,7 @@ export default class AccountInfoService extends MoleculerDBService<
 					],
 				);
 				break;
-			case 'Redelegations':
+			case ACCOUNT_STAKE.REDELEGATIONS:
 				projection.push(
 					...[
 						{ $project: { account_redelegations: 1 } },
@@ -772,7 +772,7 @@ export default class AccountInfoService extends MoleculerDBService<
 					],
 				);
 				break;
-			case 'Vestings':
+			case ACCOUNT_STAKE.VESTING:
 				projection.push(
 					...[{ $project: { account_auth: 1 } }, { $unwind: '$account_auth' }],
 				);
