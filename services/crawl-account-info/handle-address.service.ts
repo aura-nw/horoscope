@@ -100,6 +100,15 @@ export default class HandleAddressService extends Service {
 										.map((x: any) => x.value),
 								)
 								.flat();
+							const eventMessage = log.events
+								.filter((e: any) => e.type === CONST_CHAR.MESSAGE)
+								.map((e: any) => e.attributes)
+								.map((e: any) =>
+									e.filter((x: any) => x.key === CONST_CHAR.SENDER)
+										.map((x: any) => x.value),
+								)
+								.flat();
+							event.push(...eventMessage);
 							event = event.filter((e: string) => fromBech32(e).data.length === 20);
 							if (event) {
 								listAddresses.push(...event);
