@@ -105,7 +105,6 @@ export default class AccountStatisticsService extends MoleculerDBService<
 				top_txn_count_received: dataAmountReceived,
 			},
 		};
-		/* eslint-enable camelcase */
 	}
 
 	/**
