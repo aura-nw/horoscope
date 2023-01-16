@@ -86,8 +86,8 @@ export default class HandleAccountVestingService extends Service {
 				this.logger.info(`Handle address: ${account.address}`);
 
 				if (
-					new Date(parseInt(account.account_auth.account.base_vesting_account.end_time, 10))
-						.getTime() >= (new Date().getTime() - 300)
+					parseInt(account.account_auth.account.base_vesting_account.end_time, 10)
+					>= ((new Date().getTime() / 1000) - 300)
 				) {
 					const listSpendableBalances: Coin[] = [];
 					const param =
