@@ -17,7 +17,7 @@ import { LIST_NETWORK } from '../../common/constant';
 	version: 1,
 	mixins: [dbPoolMixin],
 })
-export default class InflationService extends MoleculerDBService<
+export default class PoolService extends MoleculerDBService<
 	{
 		rest: 'v1/pool';
 	},

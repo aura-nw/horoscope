@@ -2,25 +2,23 @@
 
 import { ServiceBroker } from 'moleculer';
 import { Config } from '../../../../common';
-import AccountInfoService from '../../../../services/api-service/account-info.service';
+import AccountUnbondsService from '../../../../services/api-service/account-unbonds.service';
 import ValidatorService from '../../../../services/api-service/validator.service';
 import { Types } from 'mongoose';
 import _ from 'lodash';
-import { ACCOUNT_STAKE, VESTING_ACCOUNT_TYPE } from '../../../../common/constant';
-import { ErrorMessage } from '../../../../types';
 
 Config.TEST = true;
 
-describe('Test account-info api service', () => {
+describe('Test account-unbonds api service', () => {
     const broker = new ServiceBroker({ logger: false });
-    const accountInfoApiService = broker.createService(AccountInfoService);
+    const accountUnbondsApiService = broker.createService(AccountUnbondsService);
 
     const validatorApiService = broker.createService(ValidatorService);
 
     // Start the broker. It will also init the service
     beforeAll(async () => {
         await broker.start();
-        await accountInfoApiService.adapter.insert({
+        await accountUnbondsApiService.adapter.insert({
             _id: new Types.ObjectId(),
             "address": "aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa",
             "account_balances": [
@@ -190,171 +188,20 @@ describe('Test account-info api service', () => {
     });
     // Gracefully stop the broker after all tests
     afterAll(async () => {
-        await accountInfoApiService.adapter.removeMany({});
+        await accountUnbondsApiService.adapter.removeMany({});
         await validatorApiService.adapter.removeMany({});
         await broker.stop();
     });
 
-    it('Should return account info', async () => {
-        const result = await accountInfoApiService.getAccountInfoByAddress({
+    it('Should return account\'s unbonding info', async () => {
+        const result = await accountUnbondsApiService.getByAddress({
             params: {
                 address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
                 chainId: Config.CHAIN_ID
             }
         });
 
-        expect(result.data.account_auth).toEqual({
-            "account": {
-                "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
-                "base_vesting_account": {
-                    "base_account": {
-                        "address": "aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa",
-                        "pub_key": {
-                            "@type": "/cosmos.crypto.secp256k1.PubKey",
-                            "key": "Aphhp0j+5mL0yNdPQDCoB19q52ZbRK+V2lmiOrnkiFKv"
-                        },
-                        "account_number": "1504093",
-                        "sequence": "1"
-                    },
-                    "original_vesting": [
-                        {
-                            "denom": "uaura",
-                            "amount": "20000000"
-                        }
-                    ],
-                    "delegated_free": [],
-                    "delegated_vesting": [],
-                    "end_time": "1672398000"
-                },
-                "start_time": "1672389247"
-            }
-        });
-        expect(result.data.account_delegate_rewards).not.toBeUndefined();
-    });
-
-    it('Should return message crawl successful when query account info', async () => {
-        const result = await accountInfoApiService.getAccountInfoByAddress({
-            params: {
-                address: 'aura1uh24g2lc8hvvkaaf7awz25lrh5fptthu2dhq0n',
-                chainId: Config.CHAIN_ID
-            }
-        });
-
-        expect(result.message).toEqual(ErrorMessage.CRAWL_SUCCESSFUL);
-    });
-
-    it('Should return account not found message when query account info', async () => {
-        const result = await accountInfoApiService.getAccountInfoByAddress({
-            params: {
-                address: 'aura',
-                chainId: Config.CHAIN_ID
-            }
-        });
-
-        expect(result.message).toEqual(ErrorMessage.ADDRESS_NOT_FOUND);
-    });
-
-    it('Should return account delegation info', async () => {
-        const result = await accountInfoApiService.getAccountDelegationInfoByAddress({
-            params: {
-                address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
-                chainId: Config.CHAIN_ID
-            }
-        });
-
-        expect(_.omit(result.data.account_delegations[0], ['_id'])).toEqual({
-            "delegation": {
-                "delegator_address": "aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa",
-                "validator_address": "auravaloper1edw4lwcz3esnlgzcw60ra8m38k3zygz2xtl2qh",
-                "shares": "71598000000.000000000000000000"
-            },
-            "balance": {
-                "denom": "utaura",
-                "amount": "71598000000"
-            }
-        });
-        expect(result.data.account_delegate_rewards).not.toBeUndefined();
-    });
-
-    it('Should return message crawl successful when query account delegations', async () => {
-        const result = await accountInfoApiService.getAccountDelegationInfoByAddress({
-            params: {
-                address: 'aura1uh24g2lc8hvvkaaf7awz25lrh5fptthu2dhq0n',
-                chainId: Config.CHAIN_ID
-            }
-        });
-
-        expect(result.message).toEqual(ErrorMessage.CRAWL_SUCCESSFUL);
-    });
-
-    it('Should return account not found message when query account delegations', async () => {
-        const result = await accountInfoApiService.getAccountDelegationInfoByAddress({
-            params: {
-                address: 'aura',
-                chainId: Config.CHAIN_ID
-            }
-        });
-
-        expect(result.message).toEqual(ErrorMessage.ADDRESS_NOT_FOUND);
-    });
-
-    it('Should return account stake info case delegations', async () => {
-        const result = await accountInfoApiService.getAccountStake({
-            params: {
-                address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
-                chainId: Config.CHAIN_ID,
-                type: ACCOUNT_STAKE.DELEGATIONS,
-                limit: 10,
-                offset: 0,
-            }
-        });
-
-        expect(_.omit(result.data[0].account_delegations, ['_id'])).toEqual({
-            "delegation": {
-                "delegator_address": "aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa",
-                "validator_address": "auravaloper1edw4lwcz3esnlgzcw60ra8m38k3zygz2xtl2qh",
-                "shares": "71598000000.000000000000000000"
-            },
-            "balance": {
-                "denom": "utaura",
-                "amount": "71598000000"
-            }
-        });
-    });
-
-    it('Should return account stake info case redelegations', async () => {
-        const result = await accountInfoApiService.getAccountStake({
-            params: {
-                address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
-                chainId: Config.CHAIN_ID,
-                type: ACCOUNT_STAKE.REDELEGATIONS,
-                limit: 10,
-                offset: 0,
-            }
-        });
-
-        expect(_.omit(result.data[0].account_redelegations, ['_id', 'entries'])).toEqual({
-            "redelegation": {
-                "delegator_address": "aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa",
-                "validator_src_address": "auravaloper1edw4lwcz3esnlgzcw60ra8m38k3zygz2xtl2qh",
-                "validator_dst_address": "auravaloper1d3n0v5f23sqzkhlcnewhksaj8l3x7jeyu938gx",
-                "entries": null
-            }
-        });
-    });
-
-    it('Should return account stake info case unbonding', async () => {
-        const result = await accountInfoApiService.getAccountStake({
-            params: {
-                address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
-                chainId: Config.CHAIN_ID,
-                type: ACCOUNT_STAKE.UNBONDING,
-                limit: 10,
-                offset: 0,
-            }
-        });
-
-        expect(_.omit(result.data[0].account_unbonding, ['_id', 'entries'])).toEqual({
+        expect(_.omit(result.data.account_unbonding[0], ['_id', 'entries'])).toEqual({
             "delegator_address": "aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa",
             "validator_address": "auravaloper1d3n0v5f23sqzkhlcnewhksaj8l3x7jeyu938gx",
             "validator_description": {
@@ -366,45 +213,6 @@ describe('Test account-info api service', () => {
                     "details": "",
                 },
                 "jailed": false
-            }
-        });
-    });
-
-    it('Should return account stake info case vesting', async () => {
-        const result = await accountInfoApiService.getAccountStake({
-            params: {
-                address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
-                chainId: Config.CHAIN_ID,
-                type: ACCOUNT_STAKE.VESTING,
-                limit: 10,
-                offset: 0,
-            }
-        });
-
-        expect(_.omit(result.data[0].account_auth, ['_id'])).toEqual({
-            "account": {
-                "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
-                "base_vesting_account": {
-                    "base_account": {
-                        "address": "aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa",
-                        "pub_key": {
-                            "@type": "/cosmos.crypto.secp256k1.PubKey",
-                            "key": "Aphhp0j+5mL0yNdPQDCoB19q52ZbRK+V2lmiOrnkiFKv"
-                        },
-                        "account_number": "1504093",
-                        "sequence": "1"
-                    },
-                    "original_vesting": [
-                        {
-                            "denom": "uaura",
-                            "amount": "20000000"
-                        }
-                    ],
-                    "delegated_free": [],
-                    "delegated_vesting": [],
-                    "end_time": "1672398000"
-                },
-                "start_time": "1672389247"
             }
         });
     });

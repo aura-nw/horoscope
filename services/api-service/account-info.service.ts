@@ -708,7 +708,11 @@ export default class AccountInfoService extends MoleculerDBService<
 				optional: false,
 				enum: LIST_NETWORK.map((e) => e.chainId),
 			},
-			type: { type: 'string', required: true },
+			type: {
+				type: 'string',
+				required: true,
+				enum: Object.values(ACCOUNT_STAKE),
+			},
 			limit: {
 				type: 'number',
 				required: true,
