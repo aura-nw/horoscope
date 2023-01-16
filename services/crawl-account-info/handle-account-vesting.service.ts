@@ -85,7 +85,7 @@ export default class HandleAccountVestingService extends Service {
 
 				if (
 					new Date(parseInt(account.account_auth.account.base_vesting_account.end_time, 10))
-						.getTime() >= new Date().getTime()
+						.getTime() >= (new Date().getTime() - 300)
 				) {
 					const listSpendableBalances: Coin[] = [];
 					const param =

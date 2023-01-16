@@ -89,17 +89,23 @@ export default class ProposalService extends MoleculerDBService<
 				query.status = { $ne: PROPOSAL_STATUS.PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT };
 			}
 			if (ctx.params.nextKey) {
-				if (ctx.params.reverse) {
+				if (ctx.params.reverse === undefined) {
 					if (query.proposal_id) {
 						query.proposal_id.push({ $gt: Number(ctx.params.nextKey) });
 					} else {
 						query.proposal_id = { $gt: Number(ctx.params.nextKey) };
 					}
-				} else {
+				} else if (ctx.params.reverse) {
 					if (query.proposal_id) {
 						query.proposal_id.push({ $lt: Number(ctx.params.nextKey) });
 					} else {
 						query.proposal_id = { $lt: Number(ctx.params.nextKey) };
+					}
+				} else {
+					if (query.proposal_id) {
+						query.proposal_id.push({ $gt: Number(ctx.params.nextKey) });
+					} else {
+						query.proposal_id = { $gt: Number(ctx.params.nextKey) };
 					}
 				}
 
