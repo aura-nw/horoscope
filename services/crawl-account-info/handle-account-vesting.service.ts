@@ -47,7 +47,9 @@ export default class HandleAccountVestingService extends Service {
 			let done = false;
 			while (!done) {
 				const query: any = {
-					'account_auth.account.@type': [VESTING_ACCOUNT_TYPE.CONTINUOUS, VESTING_ACCOUNT_TYPE.PERIODIC],
+					'account_auth.account.@type': {
+						$in: [VESTING_ACCOUNT_TYPE.CONTINUOUS, VESTING_ACCOUNT_TYPE.PERIODIC],
+					},
 				};
 				if (_id !== null) { query._id = { $gt: new ObjectId(_id) }; }
 				const accounts = await this.adapter.find({
