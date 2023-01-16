@@ -35,7 +35,6 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
 
 	mapModelByDbName = {};
 	useDb(dbname) {
-		const conn = mongoose.connection.useDb(dbname);
 		if (!this.mapModelByDbName[dbname]) {
 			this.mapModelByDbName[dbname] = {};
 		}
@@ -43,6 +42,7 @@ class CustomMongooseDbAdapter extends MongooseDbAdapter {
 		if (modelInMap[this.model.modelName]) {
 			this.model = modelInMap[this.model.modelName];
 		} else {
+			const conn = mongoose.connection.useDb(dbname, { useCache: true });
 			this.model = conn.model(this.model.modelName, this.model.schema);
 			modelInMap[this.model.modelName] = this.model;
 		}
