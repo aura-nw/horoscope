@@ -81,14 +81,13 @@ export default class CrawlAccountAuthInfoService extends Service {
 					this.logger.error(error);
 					throw error;
 				}
-				console.log('Result LCD', resultCallApi);
 
 				if (
 					resultCallApi &&
 					resultCallApi.account &&
 					resultCallApi.account['@type'] &&
 					resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED &&
-					parseInt(resultCallApi.account.base_vesting_account.end_time, 10) >= new Date().getTime()
+					parseInt(resultCallApi.account.base_vesting_account.end_time, 10) >= (new Date().getTime() / 1000)
 				) {
 					let existsJob;
 					try {
@@ -134,7 +133,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 					}
 				}
 				accountInfo.account_auth = resultCallApi;
-				console.log('Account', accountInfo);
 
 				listAccounts.push(accountInfo);
 			}
@@ -166,6 +164,22 @@ export default class CrawlAccountAuthInfoService extends Service {
 
 	public async _start() {
 		await this.broker.waitForServices(['v1.delay-job']);
+
+		this.createJob(
+			'crawl.account-auth-info',
+			{
+				listAddresses: ['aura1yknsahs4rfyyxa4khf6zwv04ngq7r88dcyzxn2'],
+				chainId: Config.CHAIN_ID,
+			},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: 10,
+				},
+				attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+				backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
+			},
+		);
 
 		this.getQueue('crawl.account-auth-info').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!. Result:`, job.returnvalue);

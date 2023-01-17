@@ -12,6 +12,7 @@ import { fromBase64, fromUtf8, toBase64 } from '@cosmjs/encoding';
 import {} from '@cosmjs/cosmwasm-stargate';
 import { decodeTxRaw } from '@cosmjs/proto-signing';
 import { Secp256k1HdWallet } from '@cosmjs/amino';
+import _ from 'lodash';
 import RedisMixin from '../../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../../mixins/dbMixinMongoose';
 import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../../entities';
@@ -19,13 +20,10 @@ import { CONST_CHAR, MSG_TYPE } from '../../../common/constant';
 import { ListTxCreatedParams } from '../../../types';
 import { queueConfig } from '../../../config/queue';
 import { Utils } from '../../../utils/utils';
-
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
 
 export default class HandleTransactionService extends Service {
-	private _consumer = this.broker.nodeID;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -73,7 +71,7 @@ export default class HandleTransactionService extends Service {
 				// 	cosmos.feegrant.v1beta1.MsgGrantAllowance,
 				// );
 				const decodedMsgs = decodedTx.body.messages.map((msg) => {
-					const decodedMsg = signing.registry.decode(msg);
+					let decodedMsg = signing.registry.decode(msg);
 
 					Object.keys(decodedMsg).map((key) => {
 						try {
@@ -81,19 +79,12 @@ export default class HandleTransactionService extends Service {
 							if (decodedMsg[key] instanceof Uint8Array) {
 								decodedMsg[key] = JSON.parse(fromUtf8(decodedMsg[key]));
 							}
-							// check if msg has toString function
-							// else if (typeof decodedMsg[key].toString === 'function') {
-							// 	decodedMsg[key] = decodedMsg[key].toString();
-							// } else {
-							// 	// check if msg is json
-							// 	const json = JSON.parse(decodedMsg[key]);
-							// 	decodedMsg[key] = json;
-							// }
 						} catch (error) {
 							// error if key is not json
 							this.logger.warn('decode tx fail');
 						}
 					});
+					decodedMsg = this._camelizeKeys(decodedMsg);
 					decodedMsg['@type'] = msg.typeUrl;
 					return decodedMsg;
 				});
@@ -227,6 +218,10 @@ export default class HandleTransactionService extends Service {
 								const msgInput = msg.msg;
 								// eslint-disable-next-line @typescript-eslint/no-this-alias
 								const self = this;
+								// scan all address in msgInput to add index
+								self._scanAllAddressInTxInput(msgInput).map((e) => {
+									self._addToIndexes(indexes, 'addresses', '', e);
+								});
 								Object.keys(msgInput).map((key) => {
 									self._addToIndexes(indexes, 'wasm', 'action', key);
 									['recipient', 'owner', 'token_id'].map((att: string) => {
@@ -310,6 +305,7 @@ export default class HandleTransactionService extends Service {
 		}
 	}
 
+	// add type-key-value to indexes array
 	private _addToIndexes(indexes: any, type: string, key: string, value: string) {
 		let index = `${type}`;
 		if (key) {
@@ -326,7 +322,64 @@ export default class HandleTransactionService extends Service {
 		}
 	}
 
+	// convert camelcase to underscore
+	private _camelizeKeys(obj: any): any {
+		if (Array.isArray(obj)) {
+			return obj.map((v: any) => this._camelizeKeys(v));
+		} else if (obj != null && obj.constructor === Object) {
+			return Object.keys(obj).reduce(
+				(result, key) => ({
+					...result,
+					[_.snakeCase(key)]: this._camelizeKeys(obj[key]),
+				}),
+				{},
+			);
+		}
+		return obj;
+	}
+
+	// scan all address in msg tx
+	private _scanAllAddressInTxInput(msg: any): any[] {
+		const listAddress: any[] = [];
+		if (msg != null && msg.constructor === Object) {
+			Object.values(msg).map((value: any) => {
+				if (value != null && value.constructor === Object) {
+					listAddress.push(...this._scanAllAddressInTxInput(value));
+				} else if (Array.isArray(value)) {
+					listAddress.push(
+						...value.filter((e: any) => {
+							Utils.isValidAddress(e);
+						}),
+					);
+				} else {
+					if (Utils.isValidAddress(value)) {
+						listAddress.push(value);
+					}
+				}
+			});
+		}
+		return listAddress;
+	}
 	public async _start() {
+		this.logger.info(
+			'listAddress is: ',
+			this._scanAllAddressInTxInput({
+				msg: {
+					take: {
+						from: 'aura1uh24g2lc8hvvkaaf7awz25lrh5fptthu2dhq0n',
+						signature: {
+							hrp: 'aura',
+							pub_key: 'A9EkWupSnnFmIIEWG7WtMc0Af/9oEuEeSRTKF/bJrCfh',
+							signature:
+								'38n3IYf9OiMkolI+vPh9H9eFbWEmhjlfO90AYHh95+Q8fWOGw3tfIChraVGHHgpmV5Os9jgrJFPtHHJLaGvk9g==',
+						},
+						uri: 'https://ipfs.io/ipfs/bafkreigq53wuyqr5g6ercfbydrq3phc3k257t2bdlo26iuysyi6xw2kxxa',
+					},
+				},
+				funds: [],
+			}),
+		);
+
 		await this.broker.waitForServices(['v1.handle-transaction-upserted']);
 		this.getQueue('handle.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);

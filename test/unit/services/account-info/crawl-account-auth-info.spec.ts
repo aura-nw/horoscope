@@ -26,6 +26,7 @@ describe('Test crawl-account-auth-info service', () => {
     // Start the broker. It will also init the service
     beforeAll(async () => {
         await broker.start();
+        await crawlAccountAuthService.waitForServices(['v1.delay-job']);
         await crawlAccountAuthService.getQueue('crawl.account-auth-info').empty();
         await handleAddressService.handleJob([txSend], CONST_CHAR.CRAWL, Config.CHAIN_ID);
     });
@@ -44,7 +45,6 @@ describe('Test crawl-account-auth-info service', () => {
             ],
             Config.CHAIN_ID
         );
-        await new Promise(r => setTimeout(r, 10000));
 
         let [resultOne, resultTwo] = await Promise.all([
             crawlAccountAuthService.adapter.findOne({
@@ -54,8 +54,6 @@ describe('Test crawl-account-auth-info service', () => {
                 address: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'
             })
         ]);
-        console.log('Result account auth one', resultOne);
-        console.log('Result account auth two', resultTwo);
 
         expect(resultOne.account_auth.account['@type']).toEqual('/cosmos.auth.v1beta1.BaseAccount');
         expect(resultTwo.account_auth.account['@type']).toEqual('/cosmos.auth.v1beta1.BaseAccount');

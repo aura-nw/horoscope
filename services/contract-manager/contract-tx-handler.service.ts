@@ -67,6 +67,7 @@ export default class CrawlSmartContractsService extends Service {
 		for (const txs of listTx) {
 			this.logger.info(`Get smart contract from TxHash: ${txs.tx_response.txhash}`);
 			for (const msg of txs.tx.body.messages) {
+				const index = txs.tx.body.messages.indexOf(msg);
 				switch (msg['@type']) {
 					case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
 						const instant_contract_name = msg.label;
@@ -76,13 +77,13 @@ export default class CrawlSmartContractsService extends Service {
 						let instant_contract_addresses;
 						let instant_code_ids;
 						try {
-							instant_contract_addresses = txs.tx_response.logs[0].events
+							instant_contract_addresses = txs.tx_response.logs[index].events
 								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
 								// eslint-disable-next-line no-underscore-dangle
 								.attributes.filter(
 									(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
 								);
-							instant_code_ids = txs.tx_response.logs[0].events
+							instant_code_ids = txs.tx_response.logs[index].events
 								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
 								.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
 						} catch (error) {
@@ -133,20 +134,24 @@ export default class CrawlSmartContractsService extends Service {
 						}
 						break;
 					case MSG_TYPE.MSG_EXECUTE_CONTRACT:
+						const contractAddresses = txs.tx_response.logs[index].events
+							.find((x: any) => x.type === CONST_CHAR.EXECUTE)
+							// eslint-disable-next-line no-underscore-dangle
+							.attributes.filter((x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS);
 						// eslint-disable-next-line no-underscore-dangle
-						await this._updateContractOnchainInfo(msg, chainId);
+						await this._updateContractOnchainInfo(contractAddresses, chainId);
 						const tx_hash = txs.tx_response.txhash;
 						const height = txs.tx_response.height;
 						let contract_addresses;
 						let code_ids;
 						try {
-							contract_addresses = txs.tx_response.logs[0].events
+							contract_addresses = txs.tx_response.logs[index].events
 								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
 								// eslint-disable-next-line no-underscore-dangle
 								.attributes.filter(
 									(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
 								);
-							code_ids = txs.tx_response.logs[0].events
+							code_ids = txs.tx_response.logs[index].events
 								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
 								.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
 						} catch (error) {
@@ -161,7 +166,7 @@ export default class CrawlSmartContractsService extends Service {
 									creator: '',
 								};
 								const contract_address = contract_addresses[i].value;
-								const creator_address = txs.tx_response.logs[0].events
+								const creator_address = txs.tx_response.logs[index].events
 									.find((x: any) => x.type === CONST_CHAR.EXECUTE)
 									.attributes.find(
 										// eslint-disable-next-line no-underscore-dangle
@@ -226,55 +231,61 @@ export default class CrawlSmartContractsService extends Service {
 		}
 	}
 
-	private async _updateContractOnchainInfo(msg: any, chainId: string) {
-		const base64RequestNumToken = Buffer.from('{ "num_tokens": {} }').toString('base64');
-		const base64RequestTokenInfo = Buffer.from('{ "token_info": {} }').toString('base64');
-		const base64RequestMarketingInfo = Buffer.from('{ "marketing_info": {} }').toString(
-			'base64',
-		);
-		const base64RequestContractInfo = Buffer.from('{ "contract_info": {} }').toString('base64');
-		const param = Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestNumToken}`;
-		const paramTokenInfo =
-			Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestTokenInfo}`;
-		const paramMarketingInfo =
-			Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestMarketingInfo}`;
-		const paramContractInfo =
-			Config.CONTRACT_URI + `${msg.contract}/smart/${base64RequestContractInfo}`;
-		const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-		const [result, tokenInfo, marketingInfo, contractInfo] = await Promise.all([
-			this.callApiFromDomain(url, param),
-			this.callApiFromDomain(url, paramTokenInfo),
-			this.callApiFromDomain(url, paramMarketingInfo),
-			this.callApiFromDomain(url, paramContractInfo),
-		]);
-		/* eslint-disable camelcase, no-underscore-dangle */
-		const executeContract = await this.adapter.findOne({ contract_address: msg.contract });
-		if (executeContract) {
-			let num_tokens;
-			let token_info;
-			let contract_info;
-			let marketing_info;
-			if (result?.data) {
-				num_tokens = Number(result.data.count);
-			}
-			if (tokenInfo?.data) {
-				token_info = tokenInfo.data;
-			}
-			if (marketingInfo?.data) {
-				marketing_info = marketingInfo.data;
-			}
-			if (contractInfo?.data) {
-				contract_info = contractInfo.data;
-			}
-			await this.adapter.updateById(executeContract._id, {
-				$set: {
-					num_tokens,
-					token_info,
-					contract_info,
-					marketing_info,
-				},
+	private async _updateContractOnchainInfo(contractAddresses: any[], chainId: string) {
+		const addresses = contractAddresses.map((c: any) => c.value).filter(this._onlyUnique);
+		addresses.map(async (contract: string) => {
+			const base64RequestNumToken = Buffer.from('{ "num_tokens": {} }').toString('base64');
+			const base64RequestTokenInfo = Buffer.from('{ "token_info": {} }').toString('base64');
+			const base64RequestMarketingInfo = Buffer.from('{ "marketing_info": {} }').toString(
+				'base64',
+			);
+			const base64RequestContractInfo =
+				Buffer.from('{ "contract_info": {} }').toString('base64');
+			const param = Config.CONTRACT_URI + `${contract}/smart/${base64RequestNumToken}`;
+			const paramTokenInfo =
+				Config.CONTRACT_URI + `${contract}/smart/${base64RequestTokenInfo}`;
+			const paramMarketingInfo =
+				Config.CONTRACT_URI + `${contract}/smart/${base64RequestMarketingInfo}`;
+			const paramContractInfo =
+				Config.CONTRACT_URI + `${contract}/smart/${base64RequestContractInfo}`;
+			const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
+			const [result, tokenInfo, marketingInfo, contractInfo] = await Promise.all([
+				this.callApiFromDomain(url, param),
+				this.callApiFromDomain(url, paramTokenInfo),
+				this.callApiFromDomain(url, paramMarketingInfo),
+				this.callApiFromDomain(url, paramContractInfo),
+			]);
+			/* eslint-disable camelcase, no-underscore-dangle */
+			const executeContract = await this.adapter.findOne({
+				contract_address: contract,
 			});
-		}
+			if (executeContract) {
+				let num_tokens;
+				let token_info;
+				let contract_info;
+				let marketing_info;
+				if (result?.data) {
+					num_tokens = Number(result.data.count);
+				}
+				if (tokenInfo?.data) {
+					token_info = tokenInfo.data;
+				}
+				if (marketingInfo?.data) {
+					marketing_info = marketingInfo.data;
+				}
+				if (contractInfo?.data) {
+					contract_info = contractInfo.data;
+				}
+				await this.adapter.updateById(executeContract._id, {
+					$set: {
+						num_tokens,
+						token_info,
+						contract_info,
+						marketing_info,
+					},
+				});
+			}
+		});
 	}
 
 	public async queryContractInfo(chainId: string, contractAddress: string, codeId: string) {
@@ -304,6 +315,10 @@ export default class CrawlSmartContractsService extends Service {
 			contractInfo.data ? contractInfo.data : {},
 			cosmwasmCodeId ? cosmwasmCodeId : {},
 		];
+	}
+
+	private _onlyUnique(value: any, index: any, self: any) {
+		return self.indexOf(value) === index;
 	}
 
 	public async _start() {
