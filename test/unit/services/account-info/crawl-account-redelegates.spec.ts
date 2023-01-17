@@ -25,6 +25,7 @@ describe('Test crawl-account-redelegates service', () => {
     // Start the broker. It will also init the service
     beforeAll(async () => {
         await broker.start();
+        await crawlAccountRedelegatesService.waitForServices(['v1.delay-job']);
         await crawlAccountRedelegatesService.getQueue('crawl.account-redelegates').empty();
         await handleAddressService.handleJob([txRedelegate], CONST_CHAR.CRAWL, Config.CHAIN_ID);
     });

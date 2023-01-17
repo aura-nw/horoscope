@@ -81,7 +81,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 					this.logger.error(error);
 					throw error;
 				}
-				console.log('Result LCD', resultCallApi);
 
 				if (
 					resultCallApi &&
@@ -134,7 +133,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 					}
 				}
 				accountInfo.account_auth = resultCallApi;
-				console.log('Account', accountInfo);
 
 				listAccounts.push(accountInfo);
 			}

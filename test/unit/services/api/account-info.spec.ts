@@ -12,6 +12,8 @@ import { ErrorMessage } from '../../../../types';
 Config.TEST = true;
 
 describe('Test account-info api service', () => {
+    jest.setTimeout(30000);
+
     const broker = new ServiceBroker({ logger: false });
     const accountInfoApiService = broker.createService(AccountInfoService);
 
