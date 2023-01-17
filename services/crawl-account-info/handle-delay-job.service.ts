@@ -47,7 +47,7 @@ export default class HandleDelayJobService extends Service {
 			this.logger.error(error);
 			throw error;
 		}
-		this.logger.info(`Current Jobs ${currentJobs}`);
+		this.logger.info(`Current Jobs ${JSON.stringify(currentJobs)}`);
 		for (const job of currentJobs) {
 			try {
 				if (new Date(job.expire_time).getTime() <= new Date().getTime()) {
