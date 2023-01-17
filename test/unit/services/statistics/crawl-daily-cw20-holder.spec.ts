@@ -56,8 +56,6 @@ describe('Test crawl-daily-cw20-holder service', () => {
         );
 
         const result = await crawlDailyCw20HolderService.adapter.find({});
-        console.log(result.find((res: any) => res.contract_address === 'aura1auz7cuwpg07w45zh22a8verwnwzz8p39sjaxeqan0v02aahjx63ss43kzw'));
-        console.log(result.find((res: any) => res.contract_address === 'aura1cmp22xhzeja97rpffdcnqw027xceakxllfcz7je33fm2guze4jas47k0rm'));
 
         expect(_.omit(result.find((res: any) =>
             res.contract_address === 'aura1auz7cuwpg07w45zh22a8verwnwzz8p39sjaxeqan0v02aahjx63ss43kzw').toObject(), ['_id']))

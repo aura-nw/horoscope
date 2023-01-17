@@ -25,6 +25,7 @@ describe('Test crawl-account-unbonds service', () => {
     // Start the broker. It will also init the service
     beforeAll(async () => {
         await broker.start();
+        await crawlAccountUnbondsService.waitForServices(['v1.delay-job']);
         await crawlAccountUnbondsService.getQueue('crawl.account-unbonds').empty();
         await handleAddressService.handleJob([txUndelegate], CONST_CHAR.CRAWL, Config.CHAIN_ID);
     });

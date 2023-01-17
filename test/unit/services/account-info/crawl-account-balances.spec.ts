@@ -12,7 +12,7 @@ import _ from 'lodash';
 Config.TEST = true;
 
 describe('Test crawl-account-balances service', () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(10000);
 
     const broker = new ServiceBroker({ logger: false });
     const handleAddressService = broker.createService(HandleAddressService);
@@ -22,6 +22,7 @@ describe('Test crawl-account-balances service', () => {
     // Start the broker. It will also init the service
     beforeAll(async () => {
         await broker.start();
+        await crawlAccountBalancesService.waitForServices(['v1.ibc-denom']);
         await crawlAccountBalancesService.getQueue('crawl.account-balances').empty();
         await handleAddressService.handleJob([txSend], CONST_CHAR.CRAWL, Config.CHAIN_ID);
     });
