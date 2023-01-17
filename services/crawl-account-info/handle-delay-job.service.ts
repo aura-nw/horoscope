@@ -158,20 +158,6 @@ export default class HandleDelayJobService extends Service {
 	public async _start() {
 		await this.broker.waitForServices(['v1.delay-job']);
 
-		this.createJob(
-			'handle.delay-job',
-			{},
-			{
-				removeOnComplete: true,
-				removeOnFail: {
-					count: 3,
-				},
-				repeat: {
-					every: parseInt(Config.MILISECOND_HANDLE_DELAY_JOB, 10),
-				},
-			},
-		);
-
 		this.getQueue('handle.delay-job').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
