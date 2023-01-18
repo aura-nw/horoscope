@@ -437,6 +437,25 @@ export default class CrawlAssetService extends moleculer.Service {
 	}
 
 	async _start(): Promise<void> {
+		this.createJob(
+			'CW4973.enrich-tokenid',
+			{
+				url: ['https://lcd.dev.aura.network'],
+				address: 'aura1kpnlmchxskwaltw976ynmuj38l78wevaw8ng3jv0q58ygflakvmqtcq89q',
+				codeId: '444',
+				typeEnrich: ENRICH_TYPE.UPSERT,
+				chainId: 'aura-testnet-2',
+				tokenId: '8c81ac2d569353d745aa951a86c2b44d99adc3455d7307a88e650ade018dd09b',
+			},
+			{
+				removeOnComplete: true,
+				removeOnFail: {
+					count: parseInt(Config.BULL_JOB_REMOVE_ON_FAIL_COUNT, 10),
+				},
+				attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+				backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
+			},
+		);
 		this.getQueue('CW4973.enrich-tokenid').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
@@ -446,7 +465,6 @@ export default class CrawlAssetService extends moleculer.Service {
 		this.getQueue('CW4973.enrich-tokenid').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		// eslint-disable-next-line no-underscore-dangle
 		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
