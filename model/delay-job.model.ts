@@ -26,5 +26,7 @@ export const delayJobMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection,
 	});
+	// @ts-ignore
+	schema.index({ 'content.address': 1, type: 1, expire_time: 1 });
 	return models[collection] || model(collection, schema);
 };
