@@ -48,7 +48,7 @@ describe('Test daily-cw20-holder api service', () => {
 
         expect(result.data[0]).toEqual({
             contract_address: "aura15v8y2u3e4yvjrnn5zjj69dkx7x9xg5fg507k2q64k8waczxzg0cqkctc69",
-            holders: 0,
+            holders: 26,
             percentage: 100,
         });
     });
