@@ -82,7 +82,6 @@ export default class DelayJobService extends MoleculerDBService<
 		delayJob.type = ctx.params.type;
 		// eslint-disable-next-line camelcase
 		delayJob.expire_time = ctx.params.expire_time;
-		delayJob.indexes = ctx.params.indexes;
 		// eslint-disable-next-line camelcase
 		delayJob.custom_info = ctx.params.custom_info;
 		const item: DelayJobEntity = new JsonConvert().deserializeObject(delayJob, DelayJobEntity);
