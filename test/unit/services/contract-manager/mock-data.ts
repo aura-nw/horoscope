@@ -1320,7 +1320,7 @@ export const createMinterExecuteContractTwo = {
             },
         },
     },
-    num_tokens: 0,
+    num_tokens: 1,
     tx_hash: "FF6E8DD1F2ECC53D227756F4663427AD19B2F325A8669463EB84AC55F04694B8",
     code_id: {
         id: 418,
