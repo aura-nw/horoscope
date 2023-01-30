@@ -361,25 +361,6 @@ export default class HandleTransactionService extends Service {
 		return listAddress;
 	}
 	public async _start() {
-		this.logger.info(
-			'listAddress is: ',
-			this._scanAllAddressInTxInput({
-				msg: {
-					take: {
-						from: 'aura1uh24g2lc8hvvkaaf7awz25lrh5fptthu2dhq0n',
-						signature: {
-							hrp: 'aura',
-							pub_key: 'A9EkWupSnnFmIIEWG7WtMc0Af/9oEuEeSRTKF/bJrCfh',
-							signature:
-								'38n3IYf9OiMkolI+vPh9H9eFbWEmhjlfO90AYHh95+Q8fWOGw3tfIChraVGHHgpmV5Os9jgrJFPtHHJLaGvk9g==',
-						},
-						uri: 'https://ipfs.io/ipfs/bafkreigq53wuyqr5g6ercfbydrq3phc3k257t2bdlo26iuysyi6xw2kxxa',
-					},
-				},
-				funds: [],
-			}),
-		);
-
 		await this.broker.waitForServices(['v1.handle-transaction-upserted']);
 		this.getQueue('handle.transaction').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
