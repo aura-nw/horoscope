@@ -514,71 +514,6 @@ export default class CrawlAssetService extends moleculer.Service {
 		}
 	}
 	public async _start(): Promise<void> {
-		// This.checkIfContractImplementInterface(
-		// 	['https://lcd.euphoria.aura.network'],
-		// 	'euphoria-2',
-		// 	349,
-		// );
-
-		// @ts-ignore
-		// This.createJob(
-		// 	'CW721.migrate-old-data',
-		// 	{
-		// 		Chain_id: 'euphoria-1',
-		// 	},
-		// 	{
-		// 		RemoveOnComplete: true,
-		// 		RemoveOnFail: {
-		// 			Count: 3,
-		// 		},
-		// 		// attempts: 5,
-		// 		// backoff: 5000,
-		// 	},
-		// );
-		// Const URL = Utils.getUrlByChainIdAndType('aura-testnet-2', URL_TYPE_CONSTANTS.LCD);
-		// This.createJob(
-		// 	'CW721.enrich-tokenid',
-		// 	{
-		// 		Url: URL,
-		// 		Address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
-		// 		Code_id: '259',
-		// 		Type_enrich: 'upsert',
-		// 		Chain_id: 'aura-testnet-2',
-		// 		Token_id: 'token 23',
-		// 	},
-		// 	{
-		// 		RemoveOnComplete: true,
-		// 		RemoveOnFail: {
-		// 			Count: 3,
-		// 		},
-		// 	},
-		// );
-		// This.createJob(
-		// 	'CW721.enrich-tokenid',
-		// 	{
-		// 		Url: URL,
-		// 		Address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
-		// 		Code_id: '259',
-		// 		Type_enrich: 'upsert',
-		// 		Chain_id: 'aura-testnet-2',
-		// 		Token_id: 'token 24',
-		// 	},
-		// 	{
-		// 		RemoveOnComplete: true,
-		// 		RemoveOnFail: {
-		// 			Count: 3,
-		// 		},
-		// 	},
-		// );
-		// Let listUri = [
-		// 	'',
-		// ];
-		// ListUri.map(async (uri) => {
-		// 	Let schemaIPFS: Buffer = await Common.downloadAttachment(uri);
-		// 	Let schemaType = await Common.getFileTypeFromBuffer(schemaIPFS);
-		// 	This.logger.info(uri, ' ', schemaType);
-		// });
-
 		this.getQueue('CW721.enrich-tokenid').on('completed', (job: Job) => {
 			this.logger.info(`Job #${job.id} completed!, result: ${job.returnvalue}`);
 		});
@@ -588,8 +523,6 @@ export default class CrawlAssetService extends moleculer.Service {
 		this.getQueue('CW721.enrich-tokenid').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
-		// eslint-disable-next-line no-underscore-dangle
-		// eslint-disable-next-line no-underscore-dangle
 		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}

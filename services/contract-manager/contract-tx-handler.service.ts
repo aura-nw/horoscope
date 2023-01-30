@@ -99,6 +99,7 @@ export default class CrawlSmartContractsService extends Service {
 								};
 								const contract_address = instant_contract_addresses[i].value;
 								const [
+									num_tokens,
 									token_info,
 									marketing_info,
 									contract_info,
@@ -123,7 +124,7 @@ export default class CrawlSmartContractsService extends Service {
 									tx_hash: instant_tx_hash,
 									height: instant_height,
 									code_id,
-									num_tokens: 0,
+									num_tokens,
 									token_info,
 									marketing_info,
 									contract_info,
@@ -177,6 +178,7 @@ export default class CrawlSmartContractsService extends Service {
 									URL_TYPE_CONSTANTS.LCD,
 								);
 								const [
+									num_tokens,
 									token_info,
 									marketing_info,
 									contract_info,
@@ -210,7 +212,7 @@ export default class CrawlSmartContractsService extends Service {
 									tx_hash,
 									height,
 									code_id,
-									num_tokens: 0,
+									num_tokens,
 									token_info,
 									marketing_info,
 									contract_info,
@@ -234,27 +236,8 @@ export default class CrawlSmartContractsService extends Service {
 	private async _updateContractOnchainInfo(contractAddresses: any[], chainId: string) {
 		const addresses = contractAddresses.map((c: any) => c.value).filter(this._onlyUnique);
 		addresses.map(async (contract: string) => {
-			const base64RequestNumToken = Buffer.from('{ "num_tokens": {} }').toString('base64');
-			const base64RequestTokenInfo = Buffer.from('{ "token_info": {} }').toString('base64');
-			const base64RequestMarketingInfo = Buffer.from('{ "marketing_info": {} }').toString(
-				'base64',
-			);
-			const base64RequestContractInfo =
-				Buffer.from('{ "contract_info": {} }').toString('base64');
-			const param = Config.CONTRACT_URI + `${contract}/smart/${base64RequestNumToken}`;
-			const paramTokenInfo =
-				Config.CONTRACT_URI + `${contract}/smart/${base64RequestTokenInfo}`;
-			const paramMarketingInfo =
-				Config.CONTRACT_URI + `${contract}/smart/${base64RequestMarketingInfo}`;
-			const paramContractInfo =
-				Config.CONTRACT_URI + `${contract}/smart/${base64RequestContractInfo}`;
-			const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-			const [result, tokenInfo, marketingInfo, contractInfo] = await Promise.all([
-				this.callApiFromDomain(url, param),
-				this.callApiFromDomain(url, paramTokenInfo),
-				this.callApiFromDomain(url, paramMarketingInfo),
-				this.callApiFromDomain(url, paramContractInfo),
-			]);
+			const [numTokens, tokenInfo, marketingInfo, contractInfo] =
+				await this.queryContractSmart(contract, chainId, undefined);
 			/* eslint-disable camelcase, no-underscore-dangle */
 			const executeContract = await this.adapter.findOne({
 				contract_address: contract,
@@ -264,8 +247,8 @@ export default class CrawlSmartContractsService extends Service {
 				let token_info;
 				let contract_info;
 				let marketing_info;
-				if (result?.data) {
-					num_tokens = Number(result.data.count);
+				if (numTokens?.data) {
+					num_tokens = Number(numTokens.data.count);
 				}
 				if (tokenInfo?.data) {
 					token_info = tokenInfo.data;
@@ -289,32 +272,48 @@ export default class CrawlSmartContractsService extends Service {
 	}
 
 	public async queryContractInfo(chainId: string, contractAddress: string, codeId: string) {
-		const base64RequestTokenInfo = Buffer.from('{ "token_info": {} }').toString('base64');
-		const base64RequestMarketingInfo = Buffer.from('{ "marketing_info": {} }').toString(
-			'base64',
-		);
-		const base64RequestContractInfo = Buffer.from('{ "contract_info": {} }').toString('base64');
-		const paramTokenInfo =
-			Config.CONTRACT_URI + `${contractAddress}/smart/${base64RequestTokenInfo}`;
-		const paramMarketingInfo =
-			Config.CONTRACT_URI + `${contractAddress}/smart/${base64RequestMarketingInfo}`;
-		const paramContractInfo =
-			Config.CONTRACT_URI + `${contractAddress}/smart/${base64RequestContractInfo}`;
-		const paramCosmWasmCodeId = `${Config.GET_DATA_HASH}${codeId}`;
-		const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
-		const [tokenInfo, marketingInfo, contractInfo, cosmwasmCodeId] = await Promise.all([
-			this.callApiFromDomain(url, paramTokenInfo),
-			this.callApiFromDomain(url, paramMarketingInfo),
-			this.callApiFromDomain(url, paramContractInfo),
-			this.callApiFromDomain(url, paramCosmWasmCodeId),
-		]);
+		const [numTokens, tokenInfo, marketingInfo, contractInfo, cosmwasmCodeId] =
+			await this.queryContractSmart(contractAddress, chainId, codeId);
 
 		return [
+			numTokens.data ? Number(numTokens.data.count) : 0,
 			tokenInfo.data ? tokenInfo.data : {},
 			marketingInfo.data ? marketingInfo.data : {},
 			contractInfo.data ? contractInfo.data : {},
 			cosmwasmCodeId ? cosmwasmCodeId : {},
 		];
+	}
+
+	private async queryContractSmart(contract: string, chainId: string, codeId?: string) {
+		const base64RequestNumToken = Buffer.from('{ "num_tokens": {} }').toString('base64');
+		const base64RequestTokenInfo = Buffer.from('{ "token_info": {} }').toString('base64');
+		const base64RequestMarketingInfo = Buffer.from('{ "marketing_info": {} }').toString(
+			'base64',
+		);
+		const base64RequestContractInfo = Buffer.from('{ "contract_info": {} }').toString('base64');
+		const paramNumTokens = Config.CONTRACT_URI + `${contract}/smart/${base64RequestNumToken}`;
+		const paramTokenInfo = Config.CONTRACT_URI + `${contract}/smart/${base64RequestTokenInfo}`;
+		const paramMarketingInfo =
+			Config.CONTRACT_URI + `${contract}/smart/${base64RequestMarketingInfo}`;
+		const paramContractInfo =
+			Config.CONTRACT_URI + `${contract}/smart/${base64RequestContractInfo}`;
+		const url = Utils.getUrlByChainIdAndType(chainId, URL_TYPE_CONSTANTS.LCD);
+		if (codeId) {
+			const paramCosmWasmCodeId = `${Config.GET_DATA_HASH}${codeId}`;
+			return await Promise.all([
+				this.callApiFromDomain(url, paramNumTokens),
+				this.callApiFromDomain(url, paramTokenInfo),
+				this.callApiFromDomain(url, paramMarketingInfo),
+				this.callApiFromDomain(url, paramContractInfo),
+				this.callApiFromDomain(url, paramCosmWasmCodeId),
+			]);
+		}
+		return await Promise.all([
+			this.callApiFromDomain(url, paramNumTokens),
+			this.callApiFromDomain(url, paramTokenInfo),
+			this.callApiFromDomain(url, paramMarketingInfo),
+			this.callApiFromDomain(url, paramContractInfo),
+		]);
 	}
 
 	private _onlyUnique(value: any, index: any, self: any) {
