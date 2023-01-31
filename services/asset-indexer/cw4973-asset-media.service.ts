@@ -55,8 +55,6 @@ const queueService = require('moleculer-bull');
 				const cw4973Id = job.data.cw4973Id;
 				job.progress(10);
 				// @ts-ignore
-				// Await this.getMediaLink(uri, type, fileName, mediaLinkKey, chainId);
-				// @ts-ignore
 				const processingFlag = (await this.broker.cacher?.get(cacheKey)) ? true : false;
 
 				if (!processingFlag) {
@@ -211,6 +209,7 @@ export default class CrawlAssetService extends moleculer.Service {
 								/* eslint-disable camelcase */
 								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
+								file_path: media[0].file_path,
 							};
 							this.broker.call('v1.CW4973-asset-manager.act-update-by-id', {
 								obj: cw4973,
@@ -219,6 +218,7 @@ export default class CrawlAssetService extends moleculer.Service {
 										image: {
 											link_s3: media[0].media_link,
 											content_type: media[0].content_type,
+											file_path: media[0].file_path,
 										},
 									},
 								},
@@ -228,6 +228,7 @@ export default class CrawlAssetService extends moleculer.Service {
 							cw4973.animation = {
 								link_s3: media[0].media_link,
 								content_type: media[0].content_type,
+								file_path: media[0].file_path,
 							};
 
 							this.broker.call('v1.CW4973-asset-manager.act-update-by-id', {
@@ -237,6 +238,7 @@ export default class CrawlAssetService extends moleculer.Service {
 										animation: {
 											link_s3: media[0].media_link,
 											content_type: media[0].content_type,
+											file_path: media[0].file_path,
 										},
 									},
 								},
@@ -328,4 +330,3 @@ export default class CrawlAssetService extends moleculer.Service {
 		return super._start();
 	}
 }
-export class CW721AssetMedia {}

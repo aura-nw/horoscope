@@ -191,6 +191,7 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 					custom_info: {
 						chain_id: chainId,
 					},
+					file_path: result.key,
 				});
 				const query: any = {
 					'custom_info.chain_id': chainId,
