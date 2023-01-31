@@ -86,7 +86,9 @@ export default class VoteHandlerService extends Service {
 				} else if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
 					const listTxExecAuthz = msg.msgs;
 					listTxExecAuthz.map((msgExec: any) => {
-						this.createVoteEntity(tx, msgExec, chainId);
+						if (msgExec['@type'] === MSG_TYPE.MSG_VOTE) {
+							this.createVoteEntity(tx, msgExec, chainId);
+						}
 					});
 				}
 			});
@@ -124,6 +126,7 @@ export default class VoteHandlerService extends Service {
 			custom_info: chainInfo,
 			code,
 		};
+		this.logger.debug('vote: ', JSON.stringify(vote));
 		const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
 		this.logger.info('voteEntity', JSON.stringify(voteEntity));
 		// Call action to save votes
