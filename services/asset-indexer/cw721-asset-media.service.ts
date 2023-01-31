@@ -315,4 +315,3 @@ export default class CrawlAssetService extends moleculer.Service {
 		return super._start();
 	}
 }
-export class CW721AssetMedia {}

@@ -16,10 +16,6 @@ import {
 } from '../../common/constant';
 import { Config } from '../../common';
 
-const MAX_RETRY_REQ = Config.ASSET_INDEXER_MAX_RETRY_REQ;
-const ACTION_TIMEOUT = 0;
-// Const CACHER_INDEXER_TTL = Config.CACHER_INDEXER_TTL;
-const opts: CallingOptions = { timeout: ACTION_TIMEOUT, retries: MAX_RETRY_REQ };
 import { queueConfig } from '../../config/queue';
 import { CW721AssetEntity } from '../../entities/cw721-asset.entity';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -63,14 +59,6 @@ const queueService = require('moleculer-bull');
 				return await this.adapter.insert(ctx.params);
 			},
 		},
-		// 'act-count': {
-		// 	Async handler(ctx: Context): Promise<any> {
-		// 		// @ts-ignore
-		// 		This.logger.debug(`ctx.params CW721-asset-media-manager count ${JSON.stringify(ctx.params)}`);
-		// 		// @ts-ignore
-		// 		Return await this.adapter.count(ctx.params);
-		// 	}
-		// },
 		'act-find': {
 			// Cache: { ttl: 10 },
 			async handler(ctx: Context): Promise<any> {
@@ -89,14 +77,6 @@ const queueService = require('moleculer-bull');
 				return await this.adapter.find(ctx.params);
 			},
 		},
-		// 'act-list': {
-		// 	Async handler(ctx: Context): Promise<any> {
-		// 		// @ts-ignore
-		// 		This.logger.debug(`ctx.params CW721-asset-media-manager list ${JSON.stringify(ctx.params)}`);
-		// 		// @ts-ignore
-		// 		Return await this.adapter.list(ctx.params);
-		// 	}
-		// },
 		'act-upsert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
