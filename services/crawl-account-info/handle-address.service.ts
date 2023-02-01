@@ -104,7 +104,8 @@ export default class HandleAddressService extends Service {
 								.filter((e: any) => e.type === CONST_CHAR.MESSAGE)
 								.map((e: any) => e.attributes)
 								.map((e: any) =>
-									e.filter((x: any) => x.key === CONST_CHAR.SENDER)
+									e
+										.filter((x: any) => x.key === CONST_CHAR.SENDER)
 										.map((x: any) => x.value),
 								)
 								.flat();
@@ -128,23 +129,23 @@ export default class HandleAddressService extends Service {
 							listUpdateInfo.push('crawl.account-delegates');
 							break;
 						case MSG_TYPE.MSG_REDELEGATE:
-							listUpdateInfo.push(...[
-								'crawl.account-delegates',
-								'crawl.account-redelegates',
-							]);
+							listUpdateInfo.push(
+								...['crawl.account-delegates', 'crawl.account-redelegates'],
+							);
 							break;
 						case MSG_TYPE.MSG_UNDELEGATE:
-							listUpdateInfo.push(...[
-								'crawl.account-delegates',
-								'crawl.account-unbonds',
-							]);
+							listUpdateInfo.push(
+								...['crawl.account-delegates', 'crawl.account-unbonds'],
+							);
 							break;
 						default:
-							listUpdateInfo.push(...[
-								'crawl.account-delegates',
-								'crawl.account-redelegates',
-								'crawl.account-unbonds',
-							]);
+							listUpdateInfo.push(
+								...[
+									'crawl.account-delegates',
+									'crawl.account-redelegates',
+									'crawl.account-unbonds',
+								],
+							);
 							break;
 					}
 				});
