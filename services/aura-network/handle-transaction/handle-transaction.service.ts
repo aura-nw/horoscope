@@ -9,10 +9,24 @@ import { Job } from 'bull';
 import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { JsonConvert } from 'json2typescript';
 import { fromBase64, fromUtf8, toBase64 } from '@cosmjs/encoding';
-import {} from '@cosmjs/cosmwasm-stargate';
-import { decodeTxRaw } from '@cosmjs/proto-signing';
+import { decodeTxRaw, Registry } from '@cosmjs/proto-signing';
 import { Secp256k1HdWallet } from '@cosmjs/amino';
 import _ from 'lodash';
+// import {
+// 	defaultRegistryTypes as defaultStargateTypes,
+// 	SigningStargateClient,
+// } from '@cosmjs/stargate';
+
+// import {
+// 	MsgClearAdmin,
+// 	MsgExecuteContract,
+// 	MsgInstantiateContract,
+// 	MsgMigrateContract,
+// 	MsgStoreCode,
+// 	MsgUpdateAdmin,
+// } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
+import { Header } from 'cosmjs-types/ibc/lightclients/tendermint/v1/tendermint';
+import { isLong } from 'long';
 import RedisMixin from '../../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../../mixins/dbMixinMongoose';
 import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../../entities';
@@ -54,6 +68,7 @@ export default class HandleTransactionService extends Service {
 				'mixed adjust adult chimney mesh room develop smoke crazy artwork paper minimum',
 			);
 			const signing = await SigningCosmWasmClient.offline(wallet);
+			signing.registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
 
 			listTx.txs.map((tx: any) => {
 				// decode tx to readable
@@ -65,25 +80,9 @@ export default class HandleTransactionService extends Service {
 					toBase64(signature),
 				);
 
-				// signing.registry.register(
-				// 	'/cosmos.feegrant.v1beta1.MsgGrantAllowance',
-				// 	// @ts-ignore
-				// 	cosmos.feegrant.v1beta1.MsgGrantAllowance,
-				// );
 				const decodedMsgs = decodedTx.body.messages.map((msg) => {
-					let decodedMsg = signing.registry.decode(msg);
-
-					Object.keys(decodedMsg).map((key) => {
-						try {
-							// check if msg is uint8array
-							if (decodedMsg[key] instanceof Uint8Array) {
-								decodedMsg[key] = JSON.parse(fromUtf8(decodedMsg[key]));
-							}
-						} catch (error) {
-							// error if key is not json
-							this.logger.warn('decode tx fail');
-						}
-					});
+					// @ts-ignore
+					let decodedMsg = this._decodedMsg(signing.registry, msg);
 					decodedMsg = this._camelizeKeys(decodedMsg);
 					decodedMsg['@type'] = msg.typeUrl;
 					return decodedMsg;
@@ -336,6 +335,42 @@ export default class HandleTransactionService extends Service {
 			);
 		}
 		return obj;
+	}
+
+	private _decodedMsg(registry: Registry, msg: any): any {
+		let result: any = {};
+		if (!msg) {
+			return;
+		}
+		if (msg.typeUrl) {
+			result['@type'] = msg.typeUrl;
+			const found = registry.lookupType(msg.typeUrl);
+			if (!found) {
+				this.logger.error(msg.typeUrl);
+			} else {
+				const decoded = registry.decode(msg);
+				Object.keys(decoded).map(
+					(key) => (result[key] = this._decodedMsg(registry, decoded[key])),
+				);
+			}
+		} else if (msg.seconds && msg.nanos) {
+			result = new Date(msg.seconds.toNumber() * 1000 + msg.nanos / 1e6);
+		} else {
+			if (Array.isArray(msg)) {
+				result = msg;
+			} else if (msg instanceof Uint8Array) {
+				result = toBase64(msg);
+			} else if (isLong(msg) || typeof msg === 'string') {
+				result = msg.toString();
+			} else if (msg instanceof Object) {
+				Object.keys(msg).map((key) => (result[key] = this._decodedMsg(registry, msg[key])));
+			} else if (typeof msg === 'number') {
+				result = msg;
+			} else {
+				result = this._decodedMsg(registry, msg);
+			}
+		}
+		return result;
 	}
 
 	// scan all address in msg tx
