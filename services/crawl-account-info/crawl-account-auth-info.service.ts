@@ -15,7 +15,6 @@ import {
 	VESTING_ACCOUNT_TYPE,
 } from '../../common/constant';
 import { Utils } from '../../utils/utils';
-import { QueryDelayJobParams } from '../../types';
 import { AccountInfoEntity, DelayJobEntity } from '../../entities';
 import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -86,34 +85,19 @@ export default class CrawlAccountAuthInfoService extends Service {
 					resultCallApi &&
 					resultCallApi.account &&
 					resultCallApi.account['@type'] &&
-					resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED &&
-					parseInt(resultCallApi.account.base_vesting_account.end_time, 10) >= (new Date().getTime() / 1000)
+					resultCallApi.account['@type'] === VESTING_ACCOUNT_TYPE.DELAYED
 				) {
-					// let existsJob;
-					// try {
-					// 	existsJob = await this.broker.call('v1.delay-job.findOne', {
-					// 		address,
-					// 		type: DELAY_JOB_TYPE.DELAYED_VESTING,
-					// 		chainId,
-					// 	} as QueryDelayJobParams);
-					// } catch (error) {
-					// 	this.logger.error(error);
-					// 	throw error;
-					// }
-					// if (!existsJob) {
 					const newDelayJob = {} as DelayJobEntity;
 					newDelayJob.content = { address };
 					newDelayJob.type = DELAY_JOB_TYPE.DELAYED_VESTING;
-					newDelayJob.expire_time = new Date(parseInt(
-						resultCallApi.account.base_vesting_account.end_time,
-						10,
-					) * 1000);
+					newDelayJob.expire_time = new Date(
+						parseInt(resultCallApi.account.base_vesting_account.end_time, 10) * 1000,
+					);
 					newDelayJob.custom_info = {
 						chain_id: chainId,
 						chain_name: network ? network.chainName : '',
 					};
 					listDelayJobs.push(newDelayJob);
-					// }
 				}
 
 				if (
@@ -152,7 +136,9 @@ export default class CrawlAccountAuthInfoService extends Service {
 		try {
 			listUpdateQueries = [];
 			listDelayJobs.map((element) => {
-				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', { ...element, chainId }));
+				listUpdateQueries.push(
+					this.broker.call('v1.delay-job.addNewJob', { ...element, chainId }),
+				);
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {
