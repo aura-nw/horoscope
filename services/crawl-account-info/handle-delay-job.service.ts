@@ -42,7 +42,9 @@ export default class HandleDelayJobService extends Service {
 
 		let currentJobs: any[];
 		try {
-			currentJobs = await this.broker.call('v1.delay-job.findPendingJobs', { chainId: Config.CHAIN_ID });
+			currentJobs = await this.broker.call('v1.delay-job.findPendingJobs', {
+				chainId: Config.CHAIN_ID,
+			});
 		} catch (error) {
 			this.logger.error(error);
 			throw error;
@@ -50,7 +52,7 @@ export default class HandleDelayJobService extends Service {
 		this.logger.info(`Current Jobs ${JSON.stringify(currentJobs)}`);
 		for (const job of currentJobs) {
 			try {
-				if (new Date(job.expire_time).getTime() <= new Date().getTime()) {
+				if (new Date(job.expire_time).getTime() + 7000 < new Date().getTime()) {
 					switch (job.type) {
 						case DELAY_JOB_TYPE.REDELEGATE:
 							this.createJob(
