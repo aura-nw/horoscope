@@ -329,7 +329,7 @@ export default class HandleTransactionService extends Service {
 			return Object.keys(obj).reduce(
 				(result, key) => ({
 					...result,
-					[_.snakeCase(key)]: this._camelizeKeys(obj[key]),
+					[key === '@type' ? '@type' : _.snakeCase(key)]: this._camelizeKeys(obj[key]),
 				}),
 				{},
 			);
@@ -357,15 +357,15 @@ export default class HandleTransactionService extends Service {
 			result = new Date(msg.seconds.toNumber() * 1000 + msg.nanos / 1e6);
 		} else {
 			if (Array.isArray(msg)) {
-				result = msg;
+				result = msg.map((element) => this._decodedMsg(registry, element));
 			} else if (msg instanceof Uint8Array) {
 				result = toBase64(msg);
 			} else if (isLong(msg) || typeof msg === 'string') {
 				result = msg.toString();
-			} else if (msg instanceof Object) {
-				Object.keys(msg).map((key) => (result[key] = this._decodedMsg(registry, msg[key])));
 			} else if (typeof msg === 'number') {
 				result = msg;
+			} else if (msg instanceof Object) {
+				Object.keys(msg).map((key) => (result[key] = this._decodedMsg(registry, msg[key])));
 			} else {
 				result = this._decodedMsg(registry, msg);
 			}
