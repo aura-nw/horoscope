@@ -1,8 +1,8 @@
 # Horoscope
 
-Horoscope is an indexing service for Cosmos-based blockchain. It crawl data from the blockchain and index it into mongoDB. Based on the data, it can provide search functionality instead of querying data from LCD or RPC directly.
+Horoscope is an indexing service for Cosmos-based blockchain. It crawls data from the blockchain and index it into mongoDB. Based on the data, it can provide search functionality instead of querying data from LCD or RPC directly.
 
-Currently, it supports network builded by Cosmos SDK v0.45.1 or later. Supporting network:
+Currently, it supports network built by Cosmos SDK v0.45.1 or later. Supporting network:
 
 -   [Aura Network](https://github.com/aura-nw/aura)
 -   [Osmosis](https://github.com/osmosis-labs/osmosis)
@@ -16,14 +16,14 @@ Horoscope includes 2 main components:
 
 ## Main flow crawl
 
-The crawl system devides the data into 2 parts:
+The crawl system divides the data into 2 parts:
 
 -   **Block data**: the data in the block (block information, transaction, evidence)
 -   **State data**: the data change in each state of the block (distribution, reward, delegation, community pool)
 
 ![image](docs/images/mainflow-crawl.png)
 
-Most of services are small Node application written in Typescript. The Node services are built using [Moleculerjs](https://moleculer.services/) framework.
+Most of the services are small Node applications written in Typescript. The Node services are built using [Moleculerjs](https://moleculer.services/) framework.
 With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to manage the queue of crawling. High scalability is required for crawling, we use [Redis Stream](https://redis.io/docs/manual/data-types/streams/) to implement **Consumer Group** pattern.
 
 ## Architect backend api
@@ -98,4 +98,4 @@ Config file is located at `.env`, all service used [moleculerJS Config](https://
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details how to contribute.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute.
