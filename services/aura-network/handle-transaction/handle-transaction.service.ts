@@ -62,14 +62,27 @@ export default class HandleTransactionService extends Service {
 			},
 		});
 	}
+
+	// registry to decode tx
+	private async _getRegistry(): Promise<Registry> {
+		if (this.registry) {
+			return this.registry;
+		}
+		// random account, no coin inside :)
+		const wallet = await Secp256k1HdWallet.fromMnemonic(
+			'mixed adjust adult chimney mesh room develop smoke crazy artwork paper minimum',
+		);
+		const signing = await SigningCosmWasmClient.offline(wallet);
+		// default protobuf only has some type of tx
+		// add protobuf if needed
+		signing.registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
+		this.registry = signing.registry;
+		return this.registry;
+	}
+
 	async handleJob(listTx: any, chainId: string, timestamp: string) {
 		try {
-			const wallet = await Secp256k1HdWallet.fromMnemonic(
-				'mixed adjust adult chimney mesh room develop smoke crazy artwork paper minimum',
-			);
-			const signing = await SigningCosmWasmClient.offline(wallet);
-			signing.registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
-
+			const registry = await this._getRegistry();
 			listTx.txs.map((tx: any) => {
 				// decode tx to readable
 
@@ -82,7 +95,7 @@ export default class HandleTransactionService extends Service {
 
 				const decodedMsgs = decodedTx.body.messages.map((msg) => {
 					// @ts-ignore
-					let decodedMsg = this._decodedMsg(signing.registry, msg);
+					let decodedMsg = this._decodedMsg(registry, msg);
 					decodedMsg = this._camelizeKeys(decodedMsg);
 					decodedMsg['@type'] = msg.typeUrl;
 					return decodedMsg;
