@@ -359,9 +359,21 @@ export default class HandleTransactionService extends Service {
 			if (Array.isArray(msg)) {
 				result = msg.map((element) => this._decodedMsg(registry, element));
 			} else if (msg instanceof Uint8Array) {
-				result = toBase64(msg);
+				result = this._decodedMsg(registry, toBase64(msg));
 			} else if (isLong(msg) || typeof msg === 'string') {
-				result = msg.toString();
+				if (typeof msg === 'string') {
+					try {
+						const decodedBase64 = JSON.parse(Buffer.from(msg, 'base64').toString());
+						Object.keys(decodedBase64).map(
+							(key) => (result[key] = this._decodedMsg(registry, decodedBase64[key])),
+						);
+					} catch (e) {
+						this.logger.debug('this msg is not base64: ', msg);
+						result = msg.toString();
+					}
+				} else {
+					result = msg.toString();
+				}
 			} else if (typeof msg === 'number') {
 				result = msg;
 			} else if (msg instanceof Object) {
