@@ -447,7 +447,6 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		// eslint-disable-next-line no-underscore-dangle
-		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }

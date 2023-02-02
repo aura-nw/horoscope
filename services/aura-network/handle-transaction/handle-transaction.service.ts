@@ -9,9 +9,24 @@ import { Job } from 'bull';
 import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { JsonConvert } from 'json2typescript';
 import { fromBase64, fromUtf8, toBase64 } from '@cosmjs/encoding';
-import {} from '@cosmjs/cosmwasm-stargate';
-import { decodeTxRaw } from '@cosmjs/proto-signing';
+import { decodeTxRaw, Registry } from '@cosmjs/proto-signing';
 import { Secp256k1HdWallet } from '@cosmjs/amino';
+import _ from 'lodash';
+// import {
+// 	defaultRegistryTypes as defaultStargateTypes,
+// 	SigningStargateClient,
+// } from '@cosmjs/stargate';
+
+// import {
+// 	MsgClearAdmin,
+// 	MsgExecuteContract,
+// 	MsgInstantiateContract,
+// 	MsgMigrateContract,
+// 	MsgStoreCode,
+// 	MsgUpdateAdmin,
+// } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
+import { Header } from 'cosmjs-types/ibc/lightclients/tendermint/v1/tendermint';
+import { isLong } from 'long';
 import RedisMixin from '../../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../../mixins/dbMixinMongoose';
 import { IAttribute, IEvent, ITransaction, TransactionEntity } from '../../../entities';
@@ -19,13 +34,10 @@ import { CONST_CHAR, MSG_TYPE } from '../../../common/constant';
 import { ListTxCreatedParams } from '../../../types';
 import { queueConfig } from '../../../config/queue';
 import { Utils } from '../../../utils/utils';
-
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
 
 export default class HandleTransactionService extends Service {
-	private _consumer = this.broker.nodeID;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -56,6 +68,7 @@ export default class HandleTransactionService extends Service {
 				'mixed adjust adult chimney mesh room develop smoke crazy artwork paper minimum',
 			);
 			const signing = await SigningCosmWasmClient.offline(wallet);
+			signing.registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
 
 			listTx.txs.map((tx: any) => {
 				// decode tx to readable
@@ -67,33 +80,10 @@ export default class HandleTransactionService extends Service {
 					toBase64(signature),
 				);
 
-				// signing.registry.register(
-				// 	'/cosmos.feegrant.v1beta1.MsgGrantAllowance',
-				// 	// @ts-ignore
-				// 	cosmos.feegrant.v1beta1.MsgGrantAllowance,
-				// );
 				const decodedMsgs = decodedTx.body.messages.map((msg) => {
-					const decodedMsg = signing.registry.decode(msg);
-
-					Object.keys(decodedMsg).map((key) => {
-						try {
-							// check if msg is uint8array
-							if (decodedMsg[key] instanceof Uint8Array) {
-								decodedMsg[key] = JSON.parse(fromUtf8(decodedMsg[key]));
-							}
-							// check if msg has toString function
-							// else if (typeof decodedMsg[key].toString === 'function') {
-							// 	decodedMsg[key] = decodedMsg[key].toString();
-							// } else {
-							// 	// check if msg is json
-							// 	const json = JSON.parse(decodedMsg[key]);
-							// 	decodedMsg[key] = json;
-							// }
-						} catch (error) {
-							// error if key is not json
-							this.logger.warn('decode tx fail');
-						}
-					});
+					// @ts-ignore
+					let decodedMsg = this._decodedMsg(signing.registry, msg);
+					decodedMsg = this._camelizeKeys(decodedMsg);
 					decodedMsg['@type'] = msg.typeUrl;
 					return decodedMsg;
 				});
@@ -227,6 +217,10 @@ export default class HandleTransactionService extends Service {
 								const msgInput = msg.msg;
 								// eslint-disable-next-line @typescript-eslint/no-this-alias
 								const self = this;
+								// scan all address in msgInput to add index
+								self._scanAllAddressInTxInput(msgInput).map((e) => {
+									self._addToIndexes(indexes, 'addresses', '', e);
+								});
 								Object.keys(msgInput).map((key) => {
 									self._addToIndexes(indexes, 'wasm', 'action', key);
 									['recipient', 'owner', 'token_id'].map((att: string) => {
@@ -310,6 +304,7 @@ export default class HandleTransactionService extends Service {
 		}
 	}
 
+	// add type-key-value to indexes array
 	private _addToIndexes(indexes: any, type: string, key: string, value: string) {
 		let index = `${type}`;
 		if (key) {
@@ -326,6 +321,80 @@ export default class HandleTransactionService extends Service {
 		}
 	}
 
+	// convert camelcase to underscore
+	private _camelizeKeys(obj: any): any {
+		if (Array.isArray(obj)) {
+			return obj.map((v: any) => this._camelizeKeys(v));
+		} else if (obj != null && obj.constructor === Object) {
+			return Object.keys(obj).reduce(
+				(result, key) => ({
+					...result,
+					[_.snakeCase(key)]: this._camelizeKeys(obj[key]),
+				}),
+				{},
+			);
+		}
+		return obj;
+	}
+
+	private _decodedMsg(registry: Registry, msg: any): any {
+		let result: any = {};
+		if (!msg) {
+			return;
+		}
+		if (msg.typeUrl) {
+			result['@type'] = msg.typeUrl;
+			const found = registry.lookupType(msg.typeUrl);
+			if (!found) {
+				this.logger.error(msg.typeUrl);
+			} else {
+				const decoded = registry.decode(msg);
+				Object.keys(decoded).map(
+					(key) => (result[key] = this._decodedMsg(registry, decoded[key])),
+				);
+			}
+		} else if (msg.seconds && msg.nanos) {
+			result = new Date(msg.seconds.toNumber() * 1000 + msg.nanos / 1e6);
+		} else {
+			if (Array.isArray(msg)) {
+				result = msg;
+			} else if (msg instanceof Uint8Array) {
+				result = toBase64(msg);
+			} else if (isLong(msg) || typeof msg === 'string') {
+				result = msg.toString();
+			} else if (msg instanceof Object) {
+				Object.keys(msg).map((key) => (result[key] = this._decodedMsg(registry, msg[key])));
+			} else if (typeof msg === 'number') {
+				result = msg;
+			} else {
+				result = this._decodedMsg(registry, msg);
+			}
+		}
+		return result;
+	}
+
+	// scan all address in msg tx
+	private _scanAllAddressInTxInput(msg: any): any[] {
+		const listAddress: any[] = [];
+		if (msg != null && msg.constructor === Object) {
+			Object.values(msg).map((value: any) => {
+				if (value != null && value.constructor === Object) {
+					listAddress.push(...this._scanAllAddressInTxInput(value));
+				} else if (Array.isArray(value)) {
+					listAddress.push(
+						...value.filter((e: any) => {
+							Utils.isValidAddress(e);
+						}),
+					);
+				} else {
+					if (Utils.isValidAddress(value)) {
+						listAddress.push(value);
+					}
+				}
+			});
+		}
+		return listAddress;
+	}
 	public async _start() {
 		await this.broker.waitForServices(['v1.handle-transaction-upserted']);
 		this.getQueue('handle.transaction').on('completed', (job: Job) => {

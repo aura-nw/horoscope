@@ -1,14 +1,9 @@
 /* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
+import { ICW4973Media } from '../entities/cw4973-media-link.entity';
 import { MEDIA_STATUS } from '../common/constant';
 import { definitionType, ObjectIdNull } from '../types';
-
-export interface ICW4973Media {
-	_id: ObjectIdNull;
-	key: string;
-	media_link: string;
-	status: string;
-}
+import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<ICW4973Media> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -17,11 +12,19 @@ const definition: definitionType<ICW4973Media> = (collection?: string) => ({
 		unique: true,
 		index: true,
 	},
+	source: {
+		type: String,
+		index: true,
+	},
 	media_link: String,
+	file_path: String,
 	status: {
 		type: String,
 		enum: MEDIA_STATUS,
 	},
+	content_type: String,
+	custom_info: customInfoModel,
+	metadata: Object,
 });
 
 export const cw4973MediaMongoModel = (collection: string): unknown => {

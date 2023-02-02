@@ -80,7 +80,6 @@ export default class CrawlBlockService extends Service {
 		const responseGetLatestBlock = await this.callApiFromDomain(
 			url,
 			`${Config.GET_LATEST_BLOCK_API}`,
-			1,
 		);
 		const latestBlockNetwork = parseInt(responseGetLatestBlock.result.block.header.height, 10);
 
@@ -101,7 +100,7 @@ export default class CrawlBlockService extends Service {
 			const listPromise = [];
 			for (let i = startBlock; i <= endBlock; i++) {
 				listPromise.push(
-					this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`, 2),
+					this.callApiFromDomain(url, `${Config.GET_BLOCK_BY_HEIGHT_API}${i}`),
 				);
 			}
 			const resultListPromise: ResponseFromRPC[] = await Promise.all(listPromise);

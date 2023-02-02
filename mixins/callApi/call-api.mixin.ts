@@ -12,7 +12,7 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 				enableLoadBalancer: Config.ENABLE_LOADBALANCER,
 			},
 			methods: {
-				async getCallApiClient(domain: string[], retry = 0) {
+				async getCallApiClient(domain: string[], retry = Config.RETRY_DEFAULT_CALL_API) {
 					// Create client
 					if (this.callApiClient === undefined) {
 						if (this.settings.enableLoadBalancer === 'false') {
@@ -20,7 +20,7 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 							this.callApiClient = axiosClient;
 						} else {
 							const resilientClient = resilient({
-								service: { basePath: '/' },
+								service: { basePath: '/', retry },
 							});
 							this.callApiClient = resilientClient;
 						}
@@ -36,7 +36,11 @@ export default class CallApiMixin implements Partial<ServiceSchema>, ThisType<Se
 
 					return this.callApiClient;
 				},
-				async callApiFromDomain(domain: string[], path: string, retry = 0) {
+				async callApiFromDomain(
+					domain: string[],
+					path: string,
+					retry = Config.RETRY_DEFAULT_CALL_API,
+				) {
 					const callApiClient = await this.getCallApiClient(domain, retry);
 					try {
 						const result = await callApiClient.get(path);

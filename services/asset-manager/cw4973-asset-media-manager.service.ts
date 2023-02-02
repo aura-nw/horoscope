@@ -79,14 +79,6 @@ const queueService = require('moleculer-bull');
 				return await this.adapter.find(ctx.params);
 			},
 		},
-		// 'act-list': {
-		// 	Async handler(ctx: Context): Promise<any> {
-		// 		// @ts-ignore
-		// 		This.logger.debug(`ctx.params CW4973-asset-media-manager list ${JSON.stringify(ctx.params)}`);
-		// 		// @ts-ignore
-		// 		Return await this.adapter.list(ctx.params);
-		// 	}
-		// },
 		'act-upsert': {
 			async handler(ctx: Context): Promise<any> {
 				// @ts-ignore
@@ -191,6 +183,7 @@ export default class CW4973AssetMediaManagerService extends moleculer.Service {
 					custom_info: {
 						chain_id: chainId,
 					},
+					file_path: result.key,
 				});
 				const query: any = {
 					'custom_info.chain_id': chainId,
