@@ -8,7 +8,7 @@ import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbSmartContractsMixin } from '../../mixins/dbMixinMongoose';
 import { queueConfig } from '../../config/queue';
 import { Config } from '../../common';
-import { CONST_CHAR, MSG_TYPE, PATH_COSMOS_SDK, URL_TYPE_CONSTANTS } from '../../common/constant';
+import { CONST_CHAR, MSG_TYPE, URL_TYPE_CONSTANTS } from '../../common/constant';
 import { ISmartContracts } from '../../model';
 import { Utils } from '../../utils/utils';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -70,7 +70,6 @@ export default class CrawlSmartContractsService extends Service {
 				const index = txs.tx.body.messages.indexOf(msg);
 				switch (msg['@type']) {
 					case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
-						const instant_contract_name = msg.label;
 						const instant_height = txs.tx_response.height;
 						const instant_creator_address = msg.sender;
 						const instant_tx_hash = txs.tx_response.txhash;
@@ -117,7 +116,7 @@ export default class CrawlSmartContractsService extends Service {
 								}
 								const smartContract = {
 									_id: new Types.ObjectId(),
-									contract_name: instant_contract_name,
+									contract_name: token_info.name ?? null,
 									contract_address,
 									contract_hash,
 									creator_address: instant_creator_address,
@@ -188,15 +187,6 @@ export default class CrawlSmartContractsService extends Service {
 									contract_address,
 									code_ids[i].value,
 								);
-								let cosmwasm_contract;
-								try {
-									cosmwasm_contract = await this.callApiFromDomain(
-										url,
-										`${PATH_COSMOS_SDK.COSMWASM_CONTRACT_PARAM}${contract_address}`,
-									);
-								} catch (error) {
-									this.logger.error(error);
-								}
 								let contract_hash;
 								if (cosmwasm_code_id.code_info) {
 									contract_hash =
@@ -205,7 +195,7 @@ export default class CrawlSmartContractsService extends Service {
 								}
 								const smartContract = {
 									_id: new Types.ObjectId(),
-									contract_name: cosmwasm_contract.contract_info.label,
+									contract_name: token_info.name ?? null,
 									contract_address,
 									contract_hash,
 									creator_address,

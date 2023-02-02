@@ -202,12 +202,12 @@ export default class DailyTxStatisticsService extends MoleculerDBService<
 	 *          required: true
 	 *          schema:
 	 *            type: number
-	 *          description: "Start date to query data in timestamp"
+	 *          description: "Start date to query data in timestamp (miliseconds)"
 	 *        - in: query
 	 *          name: endDate
 	 *          schema:
 	 *            type: number
-	 *          description: "End date to query data in timestamp"
+	 *          description: "End date to query data in timestamp (miliseconds)"
 	 *      responses:
 	 *        '200':
 	 *          description: Daily Blockchain Data
