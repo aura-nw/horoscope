@@ -119,36 +119,43 @@ export default class HandleAddressService extends Service {
 							throw error;
 						}
 					});
+
+					element.tx.body.messages.map((msg: any) => {
+						switch (msg['@type']) {
+							case MSG_TYPE.MSG_DELEGATE:
+								listUpdateInfo.push('crawl.account-delegates');
+								break;
+							case MSG_TYPE.MSG_REDELEGATE:
+								listUpdateInfo.push(
+									...['crawl.account-delegates', 'crawl.account-redelegates'],
+								);
+								break;
+							case MSG_TYPE.MSG_UNDELEGATE:
+								listUpdateInfo.push(
+									...['crawl.account-delegates', 'crawl.account-unbonds'],
+								);
+								break;
+							default:
+								listUpdateInfo.push(
+									...[
+										'crawl.account-delegates',
+										'crawl.account-redelegates',
+										'crawl.account-unbonds',
+									],
+								);
+								break;
+						}
+					});
 				} else if (source === CONST_CHAR.API) {
 					listAddresses.push(element.address);
+					listUpdateInfo.push(
+						...[
+							'crawl.account-delegates',
+							'crawl.account-redelegates',
+							'crawl.account-unbonds',
+						],
+					);
 				}
-
-				element.tx.body.messages.map((msg: any) => {
-					switch (msg['@type']) {
-						case MSG_TYPE.MSG_DELEGATE:
-							listUpdateInfo.push('crawl.account-delegates');
-							break;
-						case MSG_TYPE.MSG_REDELEGATE:
-							listUpdateInfo.push(
-								...['crawl.account-delegates', 'crawl.account-redelegates'],
-							);
-							break;
-						case MSG_TYPE.MSG_UNDELEGATE:
-							listUpdateInfo.push(
-								...['crawl.account-delegates', 'crawl.account-unbonds'],
-							);
-							break;
-						default:
-							listUpdateInfo.push(
-								...[
-									'crawl.account-delegates',
-									'crawl.account-redelegates',
-									'crawl.account-unbonds',
-								],
-							);
-							break;
-					}
-				});
 			}
 
 			// Filter any invalid and duplicate addresses
