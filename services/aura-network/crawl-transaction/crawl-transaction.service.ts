@@ -106,7 +106,7 @@ export default class CrawlTransactionService extends Service {
 			url,
 			`${Config.SEARCH_TX}?query="tx.height=${blockHeight}"`,
 		);
-
+		this.logger.info(`Crawl ${result.result.total_count} txs in block ${blockHeight}`);
 		if (result && result.result) {
 			this.createJob(
 				'handle.transaction',

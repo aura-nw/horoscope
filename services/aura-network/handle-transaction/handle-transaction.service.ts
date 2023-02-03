@@ -84,8 +84,8 @@ export default class HandleTransactionService extends Service {
 		try {
 			const registry = await this._getRegistry();
 			listTx.txs.map((tx: any) => {
+				this.logger.info(`Handle txhash ${tx.hash}`);
 				// decode tx to readable
-
 				const decodedTx = decodeTxRaw(fromBase64(tx.tx));
 
 				tx.tx = decodedTx;
