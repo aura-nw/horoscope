@@ -62,14 +62,27 @@ export default class HandleTransactionService extends Service {
 			},
 		});
 	}
+
+	// registry to decode tx
+	private async _getRegistry(): Promise<Registry> {
+		if (this.registry) {
+			return this.registry;
+		}
+		// random account, no coin inside :)
+		const wallet = await Secp256k1HdWallet.fromMnemonic(
+			'mixed adjust adult chimney mesh room develop smoke crazy artwork paper minimum',
+		);
+		const signing = await SigningCosmWasmClient.offline(wallet);
+		// default protobuf only has some type of tx
+		// add protobuf if needed
+		signing.registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
+		this.registry = signing.registry;
+		return this.registry;
+	}
+
 	async handleJob(listTx: any, chainId: string, timestamp: string) {
 		try {
-			const wallet = await Secp256k1HdWallet.fromMnemonic(
-				'mixed adjust adult chimney mesh room develop smoke crazy artwork paper minimum',
-			);
-			const signing = await SigningCosmWasmClient.offline(wallet);
-			signing.registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
-
+			const registry = await this._getRegistry();
 			listTx.txs.map((tx: any) => {
 				// decode tx to readable
 
@@ -82,7 +95,7 @@ export default class HandleTransactionService extends Service {
 
 				const decodedMsgs = decodedTx.body.messages.map((msg) => {
 					// @ts-ignore
-					let decodedMsg = this._decodedMsg(signing.registry, msg);
+					let decodedMsg = this._decodedMsg(registry, msg);
 					decodedMsg = this._camelizeKeys(decodedMsg);
 					decodedMsg['@type'] = msg.typeUrl;
 					return decodedMsg;
@@ -359,9 +372,21 @@ export default class HandleTransactionService extends Service {
 			if (Array.isArray(msg)) {
 				result = msg.map((element) => this._decodedMsg(registry, element));
 			} else if (msg instanceof Uint8Array) {
-				result = toBase64(msg);
+				result = this._decodedMsg(registry, toBase64(msg));
 			} else if (isLong(msg) || typeof msg === 'string') {
-				result = msg.toString();
+				if (typeof msg === 'string') {
+					try {
+						const decodedBase64 = JSON.parse(Buffer.from(msg, 'base64').toString());
+						Object.keys(decodedBase64).map(
+							(key) => (result[key] = this._decodedMsg(registry, decodedBase64[key])),
+						);
+					} catch (e) {
+						this.logger.debug('this msg is not base64: ', msg);
+						result = msg.toString();
+					}
+				} else {
+					result = msg.toString();
+				}
 			} else if (typeof msg === 'number') {
 				result = msg;
 			} else if (msg instanceof Object) {
