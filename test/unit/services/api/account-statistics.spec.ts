@@ -222,7 +222,7 @@ describe('Test account-statistics api service', () => {
 			limit: 1,
 		});
 
-		expect(_.omit(result.data.top_aura_senders[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_txn_count_sent[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_sent_tx: {
@@ -231,7 +231,7 @@ describe('Test account-statistics api service', () => {
 				},
 			},
 		});
-		expect(_.omit(result.data.top_aura_receivers[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_txn_count_received[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_received_tx: {
@@ -240,7 +240,7 @@ describe('Test account-statistics api service', () => {
 				},
 			},
 		});
-		expect(_.omit(result.data.top_txn_count_sent[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_aura_senders[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_sent_amount: {
@@ -249,7 +249,7 @@ describe('Test account-statistics api service', () => {
 				},
 			},
 		});
-		expect(_.omit(result.data.top_txn_count_received[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_aura_receivers[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_received_amount: {
@@ -267,7 +267,7 @@ describe('Test account-statistics api service', () => {
 			limit: 1,
 		});
 
-		expect(_.omit(result.data.top_aura_senders[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_txn_count_sent[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_sent_tx: {
@@ -276,7 +276,7 @@ describe('Test account-statistics api service', () => {
 				},
 			},
 		});
-		expect(_.omit(result.data.top_aura_receivers[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_txn_count_received[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_received_tx: {
@@ -285,7 +285,7 @@ describe('Test account-statistics api service', () => {
 				},
 			},
 		});
-		expect(_.omit(result.data.top_txn_count_sent[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_aura_senders[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_sent_amount: {
@@ -294,7 +294,7 @@ describe('Test account-statistics api service', () => {
 				},
 			},
 		});
-		expect(_.omit(result.data.top_txn_count_received[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_aura_receivers[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_received_amount: {
@@ -312,7 +312,7 @@ describe('Test account-statistics api service', () => {
 			limit: 1,
 		});
 
-		expect(_.omit(result.data.top_aura_senders[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_txn_count_sent[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_sent_tx: {
@@ -321,7 +321,7 @@ describe('Test account-statistics api service', () => {
 				},
 			},
 		});
-		expect(_.omit(result.data.top_aura_receivers[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_txn_count_received[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_received_tx: {
@@ -330,7 +330,7 @@ describe('Test account-statistics api service', () => {
 				},
 			},
 		});
-		expect(_.omit(result.data.top_txn_count_sent[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_aura_senders[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_sent_amount: {
@@ -339,7 +339,7 @@ describe('Test account-statistics api service', () => {
 				},
 			},
 		});
-		expect(_.omit(result.data.top_txn_count_received[0], ['_id'])).toEqual({
+		expect(_.omit(result.data.top_aura_receivers[0], ['_id'])).toEqual({
 			address: 'aura1t0l7tjhqvspw7lnsdr9l5t8fyqpuu3jm57ezqa',
 			result: {
 				total_received_amount: {
