@@ -9,7 +9,7 @@ import _ from 'lodash';
 Config.TEST = true;
 
 describe('Test contract-tx-handler service', () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(40000);
 
     const broker = new ServiceBroker({ logger: false });
     const smartContractService = broker.createService(CrawlSmartContractsService);

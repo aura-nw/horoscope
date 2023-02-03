@@ -99,8 +99,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 						newDelayJob.expire_time = new Date(
 							redelegate.entries[0].redelegation_entry.completion_time!,
 						);
-						newDelayJob.indexes = `${address}${newDelayJob.type
-							}${newDelayJob?.expire_time.getTime()}${chainId}`;
 						newDelayJob.custom_info = {
 							chain_id: chainId,
 							chain_name: network ? network.chainName : '',

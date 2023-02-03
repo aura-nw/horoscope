@@ -202,7 +202,7 @@ export default class BlockService extends MoleculerDBService<
 			// Only show ibc token denom when search IBC tx
 			if (sequenceIBC) {
 				delete projection.indexes;
-				projection = this.setProjectionForIBC(projection);
+				projection = this._setProjectionForIBC(projection);
 			}
 		}
 

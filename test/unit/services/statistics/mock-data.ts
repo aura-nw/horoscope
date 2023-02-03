@@ -2054,7 +2054,7 @@ export const dailyCw20Holder = {
     "code_id": 117,
     "contract_address": "aura1rzzr0n0086aqdhgtavyvptxmcqxhke2nv0eke96tguv8a92zzcjscdy567",
     "old_holders": 1,
-    "new_holders": 1,
+    "new_holders": 2,
     "change_percent": 0,
     "__v": 0
 };

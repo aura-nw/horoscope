@@ -169,8 +169,9 @@ export interface QueryTransactionStatsParams {
 
 export interface BlockchainDataRequest {
 	chainId: string;
-	limit: number;
-	timezone: number;
+	property: string;
+	startDate: number;
+	endDate: number;
 }
 
 export interface TopAccountsRequest {
@@ -187,4 +188,14 @@ export interface GetContractsRequest {
 	contract_addresses: string[];
 	limit: number;
 	nextKey: string;
+}
+
+export interface UpdateContractHolderRequest {
+	address: string;
+	codeId: number;
+}
+
+export interface PaginationRequest {
+	limit: number;
+	offset: number;
 }

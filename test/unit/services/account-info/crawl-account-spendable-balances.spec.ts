@@ -22,6 +22,7 @@ describe('Test crawl-account-spendable-balances service', () => {
     // Start the broker. It will also init the service
     beforeAll(async () => {
         await broker.start();
+        await crawlAccountSpendableBalancesService.waitForServices(['v1.ibc-denom']);
         await crawlAccountSpendableBalancesService.getQueue('crawl.account-spendable-balances').empty();
         await handleAddressService.handleJob([txSend], CONST_CHAR.CRAWL, Config.CHAIN_ID);
     });

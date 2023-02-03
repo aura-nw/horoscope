@@ -143,29 +143,34 @@ export default class DailyCw20HolderService extends MoleculerDBService<
 				contract_address: { $in: ctx.params.addresses },
 			},
 		});
-		const listQueryHolders: any = [];
-		ctx.params.addresses.map((addr: any) =>
-			listQueryHolders.push(
-				this.broker.call('v1.CW20-asset-manager.act-count', {
-					query: {
-						contract_address: addr,
-						balance: { $ne: '0' },
-						'custom_info.chain_id': ctx.params.chainId,
-					},
-				}),
-			),
-		);
-		const holders = await Promise.all(listQueryHolders);
-		const data = holders.map((hold: any, index: any) => {
-			const percent = cw20Holders.find(
-				(d: any) => d.contract_address === ctx.params.addresses[index],
-			);
-			return {
-				contract_address: ctx.params.addresses[index],
-				holders: hold,
-				percentage: percent ? percent.change_percent : 0,
-			};
-		});
+		const data = cw20Holders.map((cw20: any) => ({
+			contract_address: cw20.contract_address,
+			holders: cw20.new_holders,
+			percentage: cw20.change_percent,
+		}));
+		// const listQueryHolders: any = [];
+		// ctx.params.addresses.map((addr: any) =>
+		// 	listQueryHolders.push(
+		// 		this.broker.call('v1.CW20-asset-manager.act-count', {
+		// 			query: {
+		// 				contract_address: addr,
+		// 				balance: { $ne: '0' },
+		// 				'custom_info.chain_id': ctx.params.chainId,
+		// 			},
+		// 		}),
+		// 	),
+		// );
+		// const holders = await Promise.all(listQueryHolders);
+		// const data = holders.map((hold: any, index: any) => {
+		// 	const percent = cw20Holders.find(
+		// 		(d: any) => d.contract_address === ctx.params.addresses[index],
+		// 	);
+		// 	return {
+		// 		contract_address: ctx.params.addresses[index],
+		// 		holders: hold,
+		// 		percentage: percent ? percent.change_percent : 0,
+		// 	};
+		// });
 
 		return {
 			code: ErrorCode.SUCCESSFUL,

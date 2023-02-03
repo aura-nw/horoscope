@@ -9,7 +9,6 @@ import { Types } from 'mongoose';
 import { QueryOptions } from 'moleculer-db';
 import { Job } from 'bull';
 import { ObjectId } from 'bson';
-import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbCW721MediaLinkMixin } from '../../mixins/dbMixinMongoose';
 import { Config } from '../../common';
 import {
@@ -35,11 +34,7 @@ const queueService = require('moleculer-bull');
 @Service({
 	name: 'CW721-media',
 	version: 1,
-	mixins: [
-		new CallApiMixin().start(),
-		dbCW721MediaLinkMixin,
-		queueService(queueConfig.redis, queueConfig.opts),
-	],
+	mixins: [dbCW721MediaLinkMixin, queueService(queueConfig.redis, queueConfig.opts)],
 	queues: {
 		'CW721-media.get-media-link': {
 			concurrency: parseInt(Config.CONCURRENCY_GET_MEDIA_LINK, 10),
@@ -180,7 +175,8 @@ export default class CrawlAssetService extends moleculer.Service {
 				_id: new Types.ObjectId(),
 				key,
 				source: sourceUri,
-				mediaLink: '',
+				// eslint-disable-next-line camelcase
+				media_link: '',
 				status: MEDIA_STATUS.HANDLING,
 				chainId,
 			});
@@ -316,9 +312,6 @@ export default class CrawlAssetService extends moleculer.Service {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		// eslint-disable-next-line no-underscore-dangle
-		// eslint-disable-next-line no-underscore-dangle
-		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}
 }
-export class CW721AssetMedia {}

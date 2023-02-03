@@ -94,6 +94,24 @@ export default class AccountStatisticsService extends MoleculerDBService<
 				limit: params.limit,
 			}),
 		]);
+
+		dataTxSent.map((data: any) => {
+			data.result = data[dayRange];
+			delete data[dayRange];
+		});
+		dataTxReceived.map((data: any) => {
+			data.result = data[dayRange];
+			delete data[dayRange];
+		});
+		dataAmountSent.map((data: any) => {
+			data.result = data[dayRange];
+			delete data[dayRange];
+		});
+		dataAmountReceived.map((data: any) => {
+			data.result = data[dayRange];
+			delete data[dayRange];
+		});
+
 		/* eslint-disable camelcase */
 		return {
 			code: ErrorCode.SUCCESSFUL,
@@ -105,7 +123,6 @@ export default class AccountStatisticsService extends MoleculerDBService<
 				top_txn_count_received: dataAmountReceived,
 			},
 		};
-		/* eslint-enable camelcase */
 	}
 
 	/**

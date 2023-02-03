@@ -50,8 +50,6 @@ export default class CrawlAccountInfoService extends Service {
 
 						// @ts-ignore
 						this.handleJob(url, job.data.listTx, job.data.chainId);
-						// @ts-ignore
-						this.handleTxBurnCw721(job.data.listTx, job.data.chainId);
 						job.progress(100);
 						return true;
 					},
@@ -111,19 +109,6 @@ export default class CrawlAccountInfoService extends Service {
 											!tokenId &&
 											contractAddress
 										) {
-											// Await this.broker.call(
-											// 	`v1.CW20.enrichData`,
-											// 	[
-											// 		{
-											// 			URL,
-											// 			Chain_id: chainId,
-											// 			Code_id: contractInfo.code_id,
-											// 			Address: contractAddress,
-											// 		},
-											// 		ENRICH_TYPE.UPSERT,
-											// 	],
-											// 	Opts,
-											// );
 											this.createJob(
 												'CW20.enrich',
 												{
@@ -173,6 +158,11 @@ export default class CrawlAccountInfoService extends Service {
 													backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
 												},
 											);
+											this.handleTxBurnCw721Interface(
+												listTx,
+												chainId,
+												CONTRACT_TYPE.CW721,
+											);
 										}
 										if (
 											contractInfo.contractType === CONTRACT_TYPE.CW4973 &&
@@ -200,6 +190,11 @@ export default class CrawlAccountInfoService extends Service {
 													attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
 													backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
 												},
+											);
+											this.handleTxBurnCw721Interface(
+												listTx,
+												chainId,
+												CONTRACT_TYPE.CW4973,
 											);
 										}
 										break;
@@ -271,7 +266,7 @@ export default class CrawlAccountInfoService extends Service {
 		return listContractAndTokenID;
 	}
 
-	handleTxBurnCw721(listTx: any[], chainId: string) {
+	handleTxBurnCw721Interface(listTx: any[], chainId: string, contractType: string) {
 		listTx.map((tx) => {
 			const events = tx.tx_response.events;
 			const attributes = events.find((x: IEvent) => x.type === EVENT_TYPE.WASM)?.attributes;
@@ -291,7 +286,7 @@ export default class CrawlAccountInfoService extends Service {
 
 					this.logger.info(`${fromUtf8(fromBase64(contractAddress))}`);
 					this.logger.info(`${fromUtf8(fromBase64(tokenId))}`);
-					this.broker.call('v1.CW721.addBurnedToAsset', {
+					this.broker.call(`v1.${contractType}.addBurnedToAsset`, {
 						chainid: chainId,
 						contractAddress: `${fromUtf8(fromBase64(contractAddress))}`,
 						tokenId: `${fromUtf8(fromBase64(tokenId))}`,
@@ -346,7 +341,6 @@ export default class CrawlAccountInfoService extends Service {
 		this.getQueue('asset.tx-handle').on('progress', (job: Job) => {
 			this.logger.debug(`Job #${job.id} progress is ${job.progress()}%`);
 		});
-		// eslint-disable-next-line no-underscore-dangle
 		// eslint-disable-next-line no-underscore-dangle
 		return super._start();
 	}

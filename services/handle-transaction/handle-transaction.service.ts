@@ -118,6 +118,10 @@ export default class HandleTransactionService extends Service {
 								const msgInput = msg.msg;
 								// eslint-disable-next-line @typescript-eslint/no-this-alias
 								const self = this;
+								// scan all address in msgInput to add index
+								self._scanAllAddressInTxInput(msgInput).map((e) => {
+									self._addToIndexes(indexes, 'addresses', '', e);
+								});
 								Object.keys(msgInput).map((key) => {
 									self._addToIndexes(indexes, 'wasm', 'action', key);
 									['recipient', 'owner', 'token_id'].map((att: string) => {
@@ -200,7 +204,7 @@ export default class HandleTransactionService extends Service {
 			throw error;
 		}
 	}
-
+	// add type-key-value to indexes array
 	private _addToIndexes(indexes: any, type: string, key: string, value: string) {
 		let index = `${type}`;
 		if (key) {
@@ -217,6 +221,28 @@ export default class HandleTransactionService extends Service {
 		}
 	}
 
+	// scan all address in msg tx
+	private _scanAllAddressInTxInput(msg: any): any[] {
+		const listAddress: any[] = [];
+		if (msg != null && msg.constructor === Object) {
+			Object.values(msg).map((value: any) => {
+				if (value != null && value.constructor === Object) {
+					listAddress.push(...this._scanAllAddressInTxInput(value));
+				} else if (Array.isArray(value)) {
+					listAddress.push(
+						...value.filter((e: any) => {
+							Utils.isValidAddress(e);
+						}),
+					);
+				} else {
+					if (Utils.isValidAddress(value)) {
+						listAddress.push(value);
+					}
+				}
+			});
+		}
+		return listAddress;
+	}
 	public async _start() {
 		await this.broker.waitForServices(['v1.handle-transaction-upserted']);
 		this.getQueue('handle.transaction').on('completed', (job: Job) => {

@@ -31,23 +31,37 @@ describe('Test crawl-daily-cw20-holder service', () => {
         await broker.stop();
     });
 
-    it('Should insert new record', async () => {
-        await crawlDailyCw20HolderService.handleJob();
+    it('Should update record', async () => {
+        await crawlDailyCw20HolderService.handleJob(0);
 
         const result = await crawlDailyCw20HolderService.adapter.find({});
 
-        expect(result.length).toEqual(3);
+        expect(result.length).toEqual(1);
+        expect(result.find((res: any) =>
+            res.contract_address === 'aura1rzzr0n0086aqdhgtavyvptxmcqxhke2nv0eke96tguv8a92zzcjscdy567').old_holders)
+            .toEqual(2);
+        expect(result.find((res: any) =>
+            res.contract_address === 'aura1rzzr0n0086aqdhgtavyvptxmcqxhke2nv0eke96tguv8a92zzcjscdy567').change_percent)
+            .toEqual(100);
+    });
+
+    it('Should insert new record', async () => {
+        await crawlDailyCw20HolderService.updateContractHolders(
+            'aura1auz7cuwpg07w45zh22a8verwnwzz8p39sjaxeqan0v02aahjx63ss43kzw',
+            87
+        );
+        await crawlDailyCw20HolderService.updateContractHolders(
+            'aura1cmp22xhzeja97rpffdcnqw027xceakxllfcz7je33fm2guze4jas47k0rm',
+            117
+        );
+
+        const result = await crawlDailyCw20HolderService.adapter.find({});
+
         expect(_.omit(result.find((res: any) =>
             res.contract_address === 'aura1auz7cuwpg07w45zh22a8verwnwzz8p39sjaxeqan0v02aahjx63ss43kzw').toObject(), ['_id']))
             .toEqual(dailyCw20HolderOne);
         expect(_.omit(result.find((res: any) =>
             res.contract_address === 'aura1cmp22xhzeja97rpffdcnqw027xceakxllfcz7je33fm2guze4jas47k0rm').toObject(), ['_id']))
             .toEqual(dailyCw20HolderTwo);
-        expect(result.find((res: any) =>
-            res.contract_address === 'aura1rzzr0n0086aqdhgtavyvptxmcqxhke2nv0eke96tguv8a92zzcjscdy567').new_holders)
-            .toEqual(2);
-        expect(result.find((res: any) =>
-            res.contract_address === 'aura1rzzr0n0086aqdhgtavyvptxmcqxhke2nv0eke96tguv8a92zzcjscdy567').change_percent)
-            .toEqual(100);
-    });
+    })
 });

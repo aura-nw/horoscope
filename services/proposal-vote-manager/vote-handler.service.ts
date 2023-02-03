@@ -86,7 +86,9 @@ export default class VoteHandlerService extends Service {
 				} else if (msg['@type'] === MSG_TYPE.MSG_EXEC) {
 					const listTxExecAuthz = msg.msgs;
 					listTxExecAuthz.map((msgExec: any) => {
-						this.createVoteEntity(tx, msgExec, chainId);
+						if (msgExec['@type'] === MSG_TYPE.MSG_VOTE) {
+							this.createVoteEntity(tx, msgExec, chainId);
+						}
 					});
 				}
 			});
@@ -101,7 +103,7 @@ export default class VoteHandlerService extends Service {
 
 		// Create vote entity
 		const proposal_id = Number(msg.proposal_id);
-		const answer = msg.option;
+		const answer = this.getVoteMessageByConstant(msg.option);
 		const voter_address = msg.voter;
 		const txhash = tx.tx_response.txhash;
 		const timestamp = tx.tx_response.timestamp;
@@ -124,12 +126,35 @@ export default class VoteHandlerService extends Service {
 			custom_info: chainInfo,
 			code,
 		};
+		this.logger.debug('vote: ', JSON.stringify(vote));
 		const voteEntity: VoteEntity = new JsonConvert().deserializeObject(vote, VoteEntity);
 		this.logger.info('voteEntity', JSON.stringify(voteEntity));
 		// Call action to save votes
 		this.broker.call(VOTE_MANAGER_ACTION.INSERT_ON_DUPLICATE_UPDATE, voteEntity);
 	}
 
+	private getVoteMessageByConstant(option: any) {
+		if (typeof option === 'string') {
+			return option;
+		}
+		switch (option) {
+			case 1:
+				return 'VOTE_OPTION_YES';
+				break;
+			case 2:
+				return 'VOTE_OPTION_ABSTAIN';
+				break;
+			case 3:
+				return 'VOTE_OPTION_NO';
+				break;
+			case 4:
+				return 'VOTE_OPTION_NO_WITH_VETO';
+				break;
+			default:
+				return 'VOTE_OPTION_EMPTY';
+				break;
+		}
+	}
 	public async _start() {
 		await this.waitForServices('v1.proposal-vote-manager');
 		this.getQueue('proposal.vote').on('completed', (job: Job) => {

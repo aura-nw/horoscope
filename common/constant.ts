@@ -365,3 +365,16 @@ export enum MEDIA_STATUS {
 	ERROR = 'ERROR',
 	HANDLING = 'HANDLING',
 }
+
+export enum ACCOUNT_STAKE {
+	DELEGATIONS = 'Delegations',
+	REDELEGATIONS = 'Redelegations',
+	UNBONDING = 'Unbondings',
+	VESTING = 'Vestings',
+}
+
+export enum BLOCKCHAIN_DATA {
+	DAILY_TXS = 'daily_txs',
+	DAILY_ACTIVE_ADDRESSES = 'daily_active_addresses',
+	UNIQUE_ADDRESSES = 'unique_addresses',
+}

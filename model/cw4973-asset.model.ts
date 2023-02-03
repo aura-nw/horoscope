@@ -1,21 +1,9 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
+import { ICW4973Asset } from '../entities/cw4973-asset.entity';
 import { definitionType, ObjectIdNull } from '../types';
 import { customInfoModel } from './custom-info.model';
-
-export interface ICW4973Asset {
-	_id: ObjectIdNull;
-	asset_id: string;
-	code_id: string;
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	asset_info: Object;
-	contract_address: string;
-	token_id: string;
-	owner: string;
-	media_link: string;
-	history: string[];
-	is_burned: boolean;
-}
 
 const definition: definitionType<ICW4973Asset> = (collection?: string) => ({
 	_id: Types.ObjectId,
@@ -49,6 +37,23 @@ const definition: definitionType<ICW4973Asset> = (collection?: string) => ({
 	media_link: String,
 	custom_info: customInfoModel,
 	is_burned: Boolean,
+	metadata: Object,
+	image: {
+		link_s3: {
+			type: String,
+			index: true,
+		},
+		content_type: String,
+		file_path: String,
+	},
+	animation: {
+		link_s3: {
+			type: String,
+			index: true,
+		},
+		content_type: String,
+		file_path: String,
+	},
 });
 
 export const cw4973AssetMongoModel = (collection: string): unknown => {

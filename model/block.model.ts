@@ -78,6 +78,7 @@ export const blockMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection,
 	});
+	schema.index({ 'block.header.height': -1 });
 	// Schema.index({ 'block.header.height': -1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

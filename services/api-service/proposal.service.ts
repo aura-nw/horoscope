@@ -88,7 +88,7 @@ export default class ProposalService extends MoleculerDBService<
 			} else {
 				query.status = { $ne: PROPOSAL_STATUS.PROPOSAL_STATUS_NOT_ENOUGH_DEPOSIT };
 			}
-			if (ctx.params.nextKey) {
+			if (needNextKey && ctx.params.nextKey) {
 				if (ctx.params.reverse) {
 					if (query.proposal_id) {
 						query.proposal_id.push({ $gt: Number(ctx.params.nextKey) });
@@ -113,7 +113,7 @@ export default class ProposalService extends MoleculerDBService<
 			const [result, count]: [any[], number] = await Promise.all([
 				this.adapter.lean({
 					query,
-					limit: ctx.params.pageLimit,
+					limit: ctx.params.pageLimit + 1,
 					offset: ctx.params.pageOffset,
 					// @ts-ignore
 					sort,
@@ -122,6 +122,16 @@ export default class ProposalService extends MoleculerDBService<
 					query,
 				}),
 			]);
+
+			// Check if there is a next page
+			const newNextKey =
+				result.length < 1 || result.length <= ctx.params.pageLimit
+					? null
+					: result[result.length - 2].proposal_id;
+			// Remove the last item if there is a next page
+			if (newNextKey) {
+				result.pop();
+			}
 
 			// Count votes
 			if (proposalId && result.length > 0) {
@@ -138,15 +148,14 @@ export default class ProposalService extends MoleculerDBService<
 				data.total_vote = countVoteResponse;
 				result[0] = data;
 			}
-			/* eslint-enable camelcase, no-underscore-dangle*/
+
 			response = {
 				code: ErrorCode.SUCCESSFUL,
 				message: ErrorMessage.SUCCESSFUL,
 				data: {
 					proposals: result,
 					count,
-					nextKey:
-						needNextKey && result.length ? result[result.length - 1].proposal_id : null,
+					nextKey: needNextKey && result.length ? newNextKey : null,
 				},
 			};
 		} catch (error) {
