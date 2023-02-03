@@ -359,6 +359,7 @@ export default class HandleTransactionService extends Service {
 			result['@type'] = msg.typeUrl;
 			const found = registry.lookupType(msg.typeUrl);
 			if (!found) {
+				this.logger.error('This typeUrl is not supported');
 				this.logger.error(msg.typeUrl);
 			} else {
 				const decoded = registry.decode(msg);
