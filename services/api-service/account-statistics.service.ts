@@ -117,10 +117,10 @@ export default class AccountStatisticsService extends MoleculerDBService<
 			code: ErrorCode.SUCCESSFUL,
 			message: ErrorMessage.SUCCESSFUL,
 			data: {
-				top_aura_senders: dataTxSent,
-				top_aura_receivers: dataTxReceived,
-				top_txn_count_sent: dataAmountSent,
-				top_txn_count_received: dataAmountReceived,
+				top_aura_senders: dataAmountSent,
+				top_aura_receivers: dataAmountReceived,
+				top_txn_count_sent: dataTxSent,
+				top_txn_count_received: dataTxReceived,
 			},
 		};
 	}
