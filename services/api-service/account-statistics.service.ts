@@ -60,6 +60,11 @@ export default class AccountStatisticsService extends MoleculerDBService<
 				break;
 		}
 
+		const totalSentTx = `-${dayRange}.total_sent_tx.percentage`;
+		const totalReceivedTx = `-${dayRange}.total_received_tx.percentage`;
+		const totalSentAmount = `-${dayRange}.total_sent_amount.percentage`;
+		const totalReceivedAmount = `-${dayRange}.total_received_amount.percentage`;
+
 		const projectionTxSent: any = {};
 		const projectionTxReceived: any = {};
 		const projectionAmountSent: any = {};
@@ -75,22 +80,22 @@ export default class AccountStatisticsService extends MoleculerDBService<
 		const [dataTxSent, dataTxReceived, dataAmountSent, dataAmountReceived] = await Promise.all([
 			this.adapter.lean({
 				projection: projectionTxSent,
-				sort: `-${dayRange}.total_sent_tx.percentage -${dayRange}.total_sent_amount.percentage`,
+				sort: `${totalSentTx} ${totalSentAmount} ${totalReceivedTx} ${totalReceivedAmount} _id`,
 				limit: params.limit,
 			}),
 			this.adapter.lean({
 				projection: projectionTxReceived,
-				sort: `-${dayRange}.total_received_tx.percentage -${dayRange}.total_received_amount.percentage`,
+				sort: `${totalReceivedTx} ${totalReceivedAmount} ${totalSentTx} ${totalSentAmount} _id`,
 				limit: params.limit,
 			}),
 			this.adapter.lean({
 				projection: projectionAmountSent,
-				sort: `-${dayRange}.total_sent_amount.percentage -${dayRange}.total_sent_tx.percentage`,
+				sort: `${totalSentAmount} ${totalSentTx} ${totalReceivedAmount} ${totalReceivedTx} _id`,
 				limit: params.limit,
 			}),
 			this.adapter.lean({
 				projection: projectionAmountReceived,
-				sort: `-${dayRange}.total_received_amount.percentage -${dayRange}.total_received_tx.percentage`,
+				sort: `${totalReceivedAmount} ${totalReceivedTx} ${totalSentAmount} ${totalSentTx} _id`,
 				limit: params.limit,
 			}),
 		]);

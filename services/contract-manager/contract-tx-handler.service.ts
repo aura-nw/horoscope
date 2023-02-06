@@ -172,10 +172,6 @@ export default class CrawlSmartContractsService extends Service {
 										// eslint-disable-next-line no-underscore-dangle
 										(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
 									).value;
-								const url = Utils.getUrlByChainIdAndType(
-									chainId,
-									URL_TYPE_CONSTANTS.LCD,
-								);
 								const [
 									num_tokens,
 									token_info,
