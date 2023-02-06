@@ -114,9 +114,15 @@ export default class CrawlSmartContractsService extends Service {
 										cosmwasm_code_id.code_info.data_hash.toLowerCase();
 									code_id.creator = cosmwasm_code_id.code_info.creator;
 								}
+								let contract_name = null;
+								if (token_info.name) {
+									contract_name = token_info.name;
+								} else if (contract_info.name) {
+									contract_name = contract_info.name;
+								}
 								const smartContract = {
 									_id: new Types.ObjectId(),
-									contract_name: token_info.name ?? null,
+									contract_name,
 									contract_address,
 									contract_hash,
 									creator_address: instant_creator_address,
@@ -189,9 +195,15 @@ export default class CrawlSmartContractsService extends Service {
 										cosmwasm_code_id.code_info.data_hash.toLowerCase();
 									code_id.creator = cosmwasm_code_id.code_info.creator;
 								}
+								let contract_name = null;
+								if (token_info.name) {
+									contract_name = token_info.name;
+								} else if (contract_info.name) {
+									contract_name = contract_info.name;
+								}
 								const smartContract = {
 									_id: new Types.ObjectId(),
-									contract_name: token_info.name ?? null,
+									contract_name,
 									contract_address,
 									contract_hash,
 									creator_address,
