@@ -38,7 +38,6 @@ export default class CrawlAccountStatsService extends Service {
 	}
 
 	async handleJob(id: any, listData: any[]) {
-		const listAddresses: any[] = [];
 		const listUpdateQueries: any[] = [];
 
 		const syncDate = new Date();
@@ -79,7 +78,6 @@ export default class CrawlAccountStatsService extends Service {
 					for (const message of txs.tx.body.messages) {
 						switch (message['@type']) {
 							case MSG_TYPE.MSG_SEND:
-								listAddresses.push(message.from_address, message.to_address);
 								if (
 									listData.find(
 										(item: any) => item.address === message.from_address,
@@ -122,7 +120,6 @@ export default class CrawlAccountStatsService extends Service {
 								}
 								break;
 							case MSG_TYPE.MSG_MULTI_SEND:
-								listAddresses.push(message.inputs[0].address);
 								if (
 									listData.find(
 										(item: any) => item.address === message.inputs[0].address,
@@ -149,16 +146,18 @@ export default class CrawlAccountStatsService extends Service {
 										received_amount: 0,
 									});
 								}
+								const addrs: any[] = [];
 								message.outputs.map((output: any) => {
-									listAddresses.push(output.address);
 									if (
 										listData.find(
 											(item: any) => item.address === output.address,
 										)
 									) {
-										listData.find(
-											(item: any) => item.address === output.address,
-										).received_txs += 1;
+										if (!addrs.includes(output.address)) {
+											listData.find(
+												(item: any) => item.address === output.address,
+											).received_txs += 1;
+										}
 										listData.find(
 											(item: any) => item.address === output.address,
 										).received_amount += parseInt(output.coins[0].amount, 10);
@@ -171,6 +170,7 @@ export default class CrawlAccountStatsService extends Service {
 											received_amount: parseInt(output.coins[0].amount, 10),
 										});
 									}
+									addrs.push(output.address); // Add address to list to check if duplicate in message.outputs
 								});
 								break;
 						}
@@ -196,6 +196,7 @@ export default class CrawlAccountStatsService extends Service {
 				},
 			);
 		} else {
+			// ERROR: Fix if there are too many accounts
 			const listAccountStats: AccountStatistics[] = await this.adapter.find({
 				query: {
 					'custom_info.chain_id': Config.CHAIN_ID,
