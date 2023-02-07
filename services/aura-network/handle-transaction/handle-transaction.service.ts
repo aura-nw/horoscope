@@ -26,6 +26,8 @@ import _ from 'lodash';
 // 	MsgUpdateAdmin,
 // } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
 import { Header } from 'cosmjs-types/ibc/lightclients/tendermint/v1/tendermint';
+import { BasicAllowance, PeriodicAllowance } from 'cosmjs-types/cosmos/feegrant/v1beta1/feegrant';
+import { aura } from '@duck59uet/aurajs';
 import { isLong } from 'long';
 import RedisMixin from '../../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../../mixins/dbMixinMongoose';
@@ -68,6 +70,7 @@ export default class HandleTransactionService extends Service {
 		if (this.registry) {
 			return this.registry;
 		}
+
 		// random account, no coin inside :)
 		const wallet = await Secp256k1HdWallet.fromMnemonic(
 			'mixed adjust adult chimney mesh room develop smoke crazy artwork paper minimum',
@@ -76,6 +79,13 @@ export default class HandleTransactionService extends Service {
 		// default protobuf only has some type of tx
 		// add protobuf if needed
 		signing.registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
+		signing.registry.register(
+			'/cosmos.feegrant.v1beta1.AllowedContractAllowance',
+			// @ts-ignore
+			aura.feegrant.v1beta1.AllowedContractAllowance,
+		);
+		signing.registry.register('/cosmos.feegrant.v1beta1.BasicAllowance', BasicAllowance);
+		signing.registry.register('/cosmos.feegrant.v1beta1.PeriodicAllowance', PeriodicAllowance);
 		this.registry = signing.registry;
 		return this.registry;
 	}
@@ -359,6 +369,9 @@ export default class HandleTransactionService extends Service {
 			result['@type'] = msg.typeUrl;
 			const found = registry.lookupType(msg.typeUrl);
 			if (!found) {
+				const decodedBase64 = toBase64(msg.value);
+				this.logger.info(decodedBase64);
+				result.value = decodedBase64;
 				this.logger.error('This typeUrl is not supported');
 				this.logger.error(msg.typeUrl);
 			} else {
