@@ -26,7 +26,7 @@ import _ from 'lodash';
 // 	MsgUpdateAdmin,
 // } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
 import { Header } from 'cosmjs-types/ibc/lightclients/tendermint/v1/tendermint';
-import { BasicAllowance } from 'cosmjs-types/cosmos/feegrant/v1beta1/feegrant';
+import { BasicAllowance, PeriodicAllowance } from 'cosmjs-types/cosmos/feegrant/v1beta1/feegrant';
 import { aura } from '@duck59uet/aurajs';
 import { isLong } from 'long';
 import RedisMixin from '../../../mixins/redis/redis.mixin';
@@ -85,6 +85,7 @@ export default class HandleTransactionService extends Service {
 			aura.feegrant.v1beta1.AllowedContractAllowance,
 		);
 		signing.registry.register('/cosmos.feegrant.v1beta1.BasicAllowance', BasicAllowance);
+		signing.registry.register('/cosmos.feegrant.v1beta1.PeriodicAllowance', PeriodicAllowance);
 		this.registry = signing.registry;
 		return this.registry;
 	}
