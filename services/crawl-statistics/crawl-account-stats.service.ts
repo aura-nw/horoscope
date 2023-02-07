@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
@@ -38,7 +39,6 @@ export default class CrawlAccountStatsService extends Service {
 	}
 
 	async handleJob(id: any, listData: any[]) {
-		const listAddresses: any[] = [];
 		const listUpdateQueries: any[] = [];
 
 		const syncDate = new Date();
@@ -57,7 +57,6 @@ export default class CrawlAccountStatsService extends Service {
 			},
 		};
 		if (id) {
-			// eslint-disable-next-line no-underscore-dangle
 			query._id = { $gt: new ObjectId(id) };
 		}
 		this.logger.info(`Query ${JSON.stringify(query)}`);
@@ -79,7 +78,6 @@ export default class CrawlAccountStatsService extends Service {
 					for (const message of txs.tx.body.messages) {
 						switch (message['@type']) {
 							case MSG_TYPE.MSG_SEND:
-								listAddresses.push(message.from_address, message.to_address);
 								if (
 									listData.find(
 										(item: any) => item.address === message.from_address,
@@ -122,7 +120,6 @@ export default class CrawlAccountStatsService extends Service {
 								}
 								break;
 							case MSG_TYPE.MSG_MULTI_SEND:
-								listAddresses.push(message.inputs[0].address);
 								if (
 									listData.find(
 										(item: any) => item.address === message.inputs[0].address,
@@ -149,16 +146,18 @@ export default class CrawlAccountStatsService extends Service {
 										received_amount: 0,
 									});
 								}
+								const addrs: any[] = [];
 								message.outputs.map((output: any) => {
-									listAddresses.push(output.address);
 									if (
 										listData.find(
 											(item: any) => item.address === output.address,
 										)
 									) {
-										listData.find(
-											(item: any) => item.address === output.address,
-										).received_txs += 1;
+										if (!addrs.includes(output.address)) {
+											listData.find(
+												(item: any) => item.address === output.address,
+											).received_txs += 1;
+										}
 										listData.find(
 											(item: any) => item.address === output.address,
 										).received_amount += parseInt(output.coins[0].amount, 10);
@@ -171,6 +170,8 @@ export default class CrawlAccountStatsService extends Service {
 											received_amount: parseInt(output.coins[0].amount, 10),
 										});
 									}
+									// Add address to list to check if duplicate in message.outputs
+									addrs.push(output.address);
 								});
 								break;
 						}
@@ -180,7 +181,6 @@ export default class CrawlAccountStatsService extends Service {
 				this.logger.error(error);
 			}
 
-			// eslint-disable-next-line no-underscore-dangle
 			const newId = dailyTxs[dailyTxs.length - 1]._id;
 			this.createJob(
 				'crawl.account-stats',
@@ -196,11 +196,26 @@ export default class CrawlAccountStatsService extends Service {
 				},
 			);
 		} else {
-			const listAccountStats: AccountStatistics[] = await this.adapter.find({
-				query: {
-					'custom_info.chain_id': Config.CHAIN_ID,
-				},
-			});
+			const listAccountStats: AccountStatistics[] = [];
+			let check = true;
+			let accountStatsId: any;
+			while (check) {
+				const queryAccountStats: any = {};
+				if (accountStatsId) {
+					queryAccountStats._id = { $gt: new ObjectId(accountStatsId) };
+				}
+				const result: AccountStatistics[] = await this.adapter.find({
+					query: queryAccountStats,
+					limit: 100,
+				});
+				if (result.length > 0) {
+					listAccountStats.push(...result);
+					accountStatsId = result[result.length - 1]._id;
+				} else {
+					check = false;
+				}
+			}
+
 			listData.map((item: any) => {
 				const account = listAccountStats.find(
 					(accountInList: AccountStatistics) => item.address === accountInList.address,
@@ -272,7 +287,7 @@ export default class CrawlAccountStatsService extends Service {
 						},
 						total_received_amount: {
 							amount: lastThreeDays.reduce(
-								(a: any, b: any) => a + b.total_sent_amount.amount,
+								(a: any, b: any) => a + b.total_received_amount.amount,
 								0,
 							),
 							percentage: 0,
@@ -302,12 +317,11 @@ export default class CrawlAccountStatsService extends Service {
 						},
 						total_received_amount: {
 							amount: account.per_day.reduce(
-								(a: any, b: any) => a + b.total_sent_amount.amount,
+								(a: any, b: any) => a + b.total_received_amount.amount,
 								0,
 							),
 							percentage: 0,
 						},
-						/* eslint-enable @typescript-eslint/restrict-plus-operands */
 					};
 				} else {
 					const accountStatistics: AccountStatistics = {} as AccountStatistics;
