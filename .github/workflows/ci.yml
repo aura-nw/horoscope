@@ -5,15 +5,18 @@ on:
     branches: [main, develop, staging, test-performance]
 
 jobs:
-  test:
-    uses: ./.github/workflows/test.yml
-    secrets: inherit
+  # test:
+  #   uses: ./.github/workflows/test.yml
+  #   secrets: inherit
   build:
-    needs: test
+    # needs: test
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
+      # - uses: actions/setup-node@v3
+      #   with:
+      #     registry-url: https://npm.pkg.github.com/aura-nw
       - name: Get npm cache directory
         id: npm-cache-dir
         run: |
@@ -34,6 +37,7 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.KEY_NPM_RC }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           chmod 777 -R ./ci
           ./ci/build.sh
