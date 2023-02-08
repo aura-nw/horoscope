@@ -8,10 +8,8 @@ COPY package.json package-lock.json ./
 RUN npm install -g moleculer-cli
 
 ARG NPM_TOKEN
-RUN echo "@aura-nw:registry=https://npm.pkg.github.com"  >> .npmrc
-RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" >> .npmrc
-RUN npm install
-RUN rm .npmrc
+RUN echo "@aura-nw:registry=https://npm.pkg.github.com"  >> .npmrc && echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" >> .npmrc
+RUN npm ci --omit=dev && rm .npmrc
 # Copy source
 COPY . .
 
