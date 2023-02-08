@@ -9,7 +9,7 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets: inherit
   build:
-    # needs: test
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
