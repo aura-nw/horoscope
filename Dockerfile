@@ -7,6 +7,7 @@ COPY package.json package-lock.json ./
 
 RUN npm install -g moleculer-cli
 
+ARG NPM_TOKEN
 RUN npm ci --omit=dev
 
 # Copy source

@@ -25,11 +25,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - uses: ferluisxd/create-npmrc@3
-        with:
-          org_name: aura-nw
-        env:
-          AUTH_TOKEN: ${{ secrets.KEY_NPM_RC }}
       - name: Set environment variable
         run: |
           SHORT_SHA_COMMIT=$(git rev-parse --short HEAD)
@@ -38,6 +33,7 @@ jobs:
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.KEY_NPM_RC }}
         run: |
           chmod 777 -R ./ci
           ./ci/build.sh
