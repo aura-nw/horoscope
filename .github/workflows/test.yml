@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          registry-url: https://npm.pkg.github.com/aura-nw   
       - name: Get npm cache directory
         id: npm-cache-dir
         run: |
@@ -37,9 +38,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - uses: actions/setup-node@v3
-        with:
-          registry-url: https://npm.pkg.github.com/aura-nw   
       - name: Install dependencies
         run: npm install
         env:           
