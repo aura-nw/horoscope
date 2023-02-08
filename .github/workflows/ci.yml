@@ -17,10 +17,7 @@ jobs:
       - name: Get npm cache directory
         id: npm-cache-dir
         run: |
-          echo "dir=$(npm config get cache)"  >> $GITHUB_OUTPUT
-      - uses: actions/setup-node@v3
-        with:
-          registry-url: https://npm.pkg.github.com/aura-nw   
+          echo "dir=$(npm config get cache)"  >> $GITHUB_OUTPUT  
       - uses: actions/cache@v3
         id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
         with:
@@ -32,7 +29,7 @@ jobs:
         with:
           org_name: aura-nw
         env:
-          AUTH_TOKEN: ${{ secrets.github_auth_token }}
+          AUTH_TOKEN: ${{ secrets.KEY_NPM_RC }}
       - name: Set environment variable
         run: |
           SHORT_SHA_COMMIT=$(git rev-parse --short HEAD)
