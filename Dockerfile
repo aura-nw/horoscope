@@ -33,7 +33,7 @@ COPY --from=build /app/prisma ./prisma/
 
 RUN echo $(ls -1 /app)
 
-RUN npm ci --omit=dev
+COPY --from=build /app/node_modules ./node_modules
 
 # # Start server
 CMD ["node", "./node_modules/moleculer/bin/moleculer-runner.js"]
