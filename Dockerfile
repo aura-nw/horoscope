@@ -9,7 +9,7 @@ RUN npm install -g moleculer-cli
 
 ARG NPM_TOKEN
 RUN echo "@aura-nw:registry=https://npm.pkg.github.com/aura-nw"  >> .npmrc
-RUN echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+RUN echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
 RUN npm install
 RUN rm .npmrc
 # Copy source
