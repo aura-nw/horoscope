@@ -37,8 +37,13 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+      - uses: actions/setup-node@v3
+        with:
+          registry-url: https://npm.pkg.github.com/aura-nw   
       - name: Install dependencies
         run: npm install
+        env:           
+          NODE_AUTH_TOKEN: ${{ secrets.KEY_NPM_RC }}
       - name: Setup env
         run: cp ci/.env.ci .env
       - name: Setup network.json
