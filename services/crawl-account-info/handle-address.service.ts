@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable no-underscore-dangle, camelcase */
 /* eslint-disable prettier/prettier */
 import { Context, Service, ServiceBroker } from 'moleculer';
@@ -5,6 +6,7 @@ import { Job } from 'bull';
 import { ListTxCreatedParams } from 'types';
 import { JsonConvert } from 'json2typescript';
 import { fromBech32 } from '@cosmjs/encoding';
+import { Utils } from '../../utils/utils';
 import { CONST_CHAR, LIST_NETWORK, MSG_TYPE } from '../../common/constant';
 import { AccountInfoEntity } from '../../entities';
 import { dbAccountInfoMixin } from '../../mixins/dbMixinMongoose';
@@ -110,7 +112,7 @@ export default class HandleAddressService extends Service {
 								)
 								.flat();
 							event.push(...eventMessage);
-							event = event.filter((e: string) => fromBech32(e).data.length === 20);
+							event = event.filter((e: string) => Utils.isValidAddress(e, 20));
 							if (event) {
 								listAddresses.push(...event);
 							}
@@ -161,7 +163,7 @@ export default class HandleAddressService extends Service {
 			// Filter any invalid and duplicate addresses
 			const listUniqueAddresses = listAddresses
 				.filter(this._onlyUnique)
-				.filter((addr: string) => fromBech32(addr).data.length === 20);
+				.filter((addr: string) => Utils.isValidAddress(addr, 20));
 			// Filter list jobs to remove duplicates (if any)
 			listUpdateInfo = listUpdateInfo.filter(this._onlyUnique);
 			if (listUniqueAddresses.length > 0) {
