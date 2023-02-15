@@ -23,8 +23,9 @@ export const voteMongoModel = (collection: string): unknown => {
 		autoIndex: true,
 		collection,
 	});
-	schema.index({ 'custom_info.chain_id': 1, proposal_id: -1, answer: 1 });
-	schema.index({ 'custom_info.chain_id': 1, proposal_id: -1 });
-	schema.index({ 'custom_info.chain_id': 1, proposal_id: -1, timestamp: -1 });
+	schema.index({ proposal_id: -1, answer: 1 });
+	schema.index({ proposal_id: -1 });
+	schema.index({ proposal_id: -1, timestamp: -1 });
+	schema.index({ proposal_id: -1, voter_address: -1 });
 	return models[collection] || model(collection, schema);
 };
