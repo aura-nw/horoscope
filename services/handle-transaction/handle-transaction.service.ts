@@ -19,8 +19,6 @@ import { Utils } from '../../utils/utils';
 const queueService = require('moleculer-bull');
 
 export default class HandleTransactionService extends Service {
-	private _consumer = this.broker.nodeID;
-
 	public constructor(public broker: ServiceBroker) {
 		super(broker);
 		this.parseServiceSchema({
@@ -37,7 +35,7 @@ export default class HandleTransactionService extends Service {
 					async process(job: Job) {
 						job.progress(10);
 						// @ts-ignore
-						await this.handleJob(job.data.tx);
+						await this.handleJob(job.data.tx, job.data.source);
 						job.progress(100);
 						return true;
 					},
@@ -45,7 +43,7 @@ export default class HandleTransactionService extends Service {
 			},
 		});
 	}
-	async handleJob(tx: ITransaction) {
+	async handleJob(tx: ITransaction, source: string) {
 		try {
 			const transaction: TransactionEntity = new JsonConvert().deserializeObject(
 				tx,
@@ -58,11 +56,17 @@ export default class HandleTransactionService extends Service {
 			} as ListTxCreatedParams);
 			await this.handleListTransaction([transaction]);
 		} catch (error) {
-			this.logger.error('Error when handling tx hash: ', tx.tx_response.txhash);
-			if (tx.tx_response.txhash) {
-				this.broker.emit('crawl-transaction-hash.retry', {
-					txHash: tx.tx_response.txhash,
-				} as TransactionHashParam);
+			if (source) {
+				this.logger.error('Error when handling tx hash: ', source);
+				this.createJob(
+					'crawl.transaction-hash',
+					{
+						txhash: source,
+					},
+					{
+						removeOnComplete: true,
+					},
+				);
 			}
 			this.logger.error(error);
 		}
