@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { Job } from 'bull';
 import { Service, ServiceBroker } from 'moleculer';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
@@ -86,8 +87,9 @@ export default class CrawlAccountDelegatesService extends Service {
 						)}`;
 					}
 				}
-
-				// eslint-disable-next-line camelcase
+				if (!accountInfo.account_delegations) {
+					accountInfo.account_delegations = [];
+				}
 				accountInfo.account_delegations = listDelegates;
 
 				listAccounts.push(accountInfo);
