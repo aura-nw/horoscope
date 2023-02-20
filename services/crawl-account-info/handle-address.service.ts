@@ -166,20 +166,32 @@ export default class HandleAddressService extends Service {
 				.filter((addr: string) => Utils.isValidAddress(addr, 20));
 			// Filter list jobs to remove duplicates (if any)
 			listUpdateInfo = listUpdateInfo.filter(this._onlyUnique);
+			const existedAccounts: AccountInfoEntity[] = (
+				await this.adapter.find({
+					query: {
+						address: {
+							$in: listUniqueAddresses,
+						},
+					},
+				})
+			).map((account: AccountInfoEntity) => account.address);
+
 			if (listUniqueAddresses.length > 0) {
 				try {
 					listUniqueAddresses.map((address) => {
-						const account: AccountInfoEntity = {} as AccountInfoEntity;
-						account.address = address;
-						const item: AccountInfoEntity = new JsonConvert().deserializeObject(
-							account,
-							AccountInfoEntity,
-						);
-						item.custom_info = {
-							chain_id: chainId,
-							chain_name: chain ? chain.chainName : '',
-						};
-						listInsert.push({ insertOne: { document: item } });
+						if (!existedAccounts.includes(address)) {
+							const account: AccountInfoEntity = {} as AccountInfoEntity;
+							account.address = address;
+							const item: AccountInfoEntity = new JsonConvert().deserializeObject(
+								account,
+								AccountInfoEntity,
+							);
+							item.custom_info = {
+								chain_id: chainId,
+								chain_name: chain ? chain.chainName : '',
+							};
+							listInsert.push({ insertOne: { document: item } });
+						}
 					});
 					if (chain && chain.databaseName) {
 						this.adapter.useDb(chain.databaseName);
@@ -187,7 +199,7 @@ export default class HandleAddressService extends Service {
 					const result = await this.adapter.bulkWrite(listInsert);
 					this.logger.info(`${JSON.stringify(result)}`);
 				} catch (error) {
-					this.logger.warn('Account(s) already exists');
+					this.logger.error(error);
 				}
 				listUpdateInfo.map((item) => {
 					this.createJob(
