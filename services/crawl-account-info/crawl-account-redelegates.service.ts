@@ -106,9 +106,6 @@ export default class CrawlAccountRedelegatesService extends Service {
 						listDelayJobs.push(newDelayJob);
 					});
 				}
-				if (!accountInfo.account_redelegations) {
-					accountInfo.account_redelegations = [];
-				}
 				accountInfo.account_redelegations = listRedelegates;
 
 				listAccounts.push(accountInfo);
@@ -130,9 +127,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 		try {
 			listUpdateQueries = [];
 			listDelayJobs.map((element) => {
-				listUpdateQueries.push(
-					this.broker.call('v1.delay-job.addNewJob', { ...element, chainId }),
-				);
+				listUpdateQueries.push(this.broker.call('v1.delay-job.addNewJob', { ...element, chainId }));
 			});
 			await Promise.all(listUpdateQueries);
 		} catch (error) {

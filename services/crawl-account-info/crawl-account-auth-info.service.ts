@@ -15,7 +15,7 @@ import {
 	VESTING_ACCOUNT_TYPE,
 } from '../../common/constant';
 import { Utils } from '../../utils/utils';
-import { Account, AccountInfoEntity, DelayJobEntity } from '../../entities';
+import { AccountInfoEntity, DelayJobEntity } from '../../entities';
 import { queueConfig } from '../../config/queue';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const queueService = require('moleculer-bull');
@@ -113,9 +113,6 @@ export default class CrawlAccountAuthInfoService extends Service {
 						resultCallApi.account.sequence =
 							resultCallApi.account.base_account.sequence;
 					}
-				}
-				if (!accountInfo.account_auth) {
-					accountInfo.account_auth = {} as Account;
 				}
 				accountInfo.account_auth = resultCallApi;
 
