@@ -151,7 +151,6 @@ export default class VoteService extends MoleculerDBService<{ rest: 'v1/votes' }
 				votes.length < 1 || votes.length <= ctx.params.pageLimit
 					? null
 					: { _id: votes[votes.length - 2]._id, height: votes[votes.length - 2].height };
-
 			// Remove the last item if there is a next page
 			if (newNextKey) {
 				votes.pop();
