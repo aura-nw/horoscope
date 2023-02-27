@@ -102,6 +102,15 @@ export default class FeegrantTxHandler extends Service {
 		}
 		return '';
 	}
+	private _convertToDate(dateObject: any) {
+		if (dateObject?.seconds) {
+			const utcSeconds = dateObject.seconds;
+			const dateReturn = new Date(0);
+			dateReturn.setUTCSeconds(utcSeconds);
+			return dateReturn.toString();
+		}
+		return dateObject;
+	}
 	async getBlocksForProcessing(): Promise<[number, number]> {
 		// Latest block in transaction DB
 		const latestBlockTx = (await this.adapter.lean({
@@ -205,7 +214,7 @@ export default class FeegrantTxHandler extends Service {
 								timestamp: tx.tx_response.timestamp,
 								amount: tx.tx.auth_info.fee.amount[0],
 								tx_hash: tx.tx_response.txhash.toString(),
-								expiration: basic_allowance.expiration,
+								expiration: this._convertToDate(basic_allowance.expiration),
 								type,
 								spend_limit,
 								custom_info: tx.custom_info,
@@ -341,7 +350,7 @@ export default class FeegrantTxHandler extends Service {
 							amount: tx.tx.auth_info.fee.amount[0] as Coin,
 							payer,
 							tx_hash: tx.tx_response.txhash.toString(),
-							expiration: basic_allowance.expiration,
+							expiration: this._convertToDate(basic_allowance.expiration),
 							type,
 							spend_limit,
 							custom_info: tx.custom_info,

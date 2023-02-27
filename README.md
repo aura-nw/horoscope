@@ -58,12 +58,18 @@ With Crawler, we use [Bull](https://github.com/OptimalBits/bull/tree/master) to 
     -   [_crawl-account-redelegations_](./docs/sequence-diagram/CrawlAccountRedelegations.png): get redelegation information
     -   [_crawl-account-unbonds_](./docs/sequence-diagram/CrawlAccountUnbonds.png): get unbond information
     -   [_crawl-account-spendable-balances_](./docs/sequence-diagram/CrawlAccountSpendableBalances.png): get spendable balance of all coins
-- [**graphql-service**](): provide GraphQL service.Read [more](docs/graphql.md).
+-   [**graphql-service**](): provide GraphQL service.Read [more](docs/graphql.md).
 
 ## Install requirements
 
 -   **Redis**: `docker run --name redis -p 6379:6379 -d redis`
 -   **MongoDB**: `docker run --name mongo -p 27017:27017 -d -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=xxx mongo`
+-   **NPM**: Horoscope currently use private packet [aurajs](https://github.com/aura-nw/aurajs) to decode tx from Aura Network. To install aurajs, you must create a Personal Access Token has read package, put it to (xxx_xxx) on .npmrc file in root source code
+
+```
+@aura-nw:registry=https://npm.pkg.github.com/aura-nw
+//npm.pkg.github.com/:_authToken=xxx_xxx
+```
 
 ## How to run
 

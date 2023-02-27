@@ -7,8 +7,9 @@ COPY package.json package-lock.json ./
 
 RUN npm install -g moleculer-cli
 
-RUN npm ci --omit=dev
-
+ARG NPM_TOKEN
+RUN echo "@aura-nw:registry=https://npm.pkg.github.com"  >> .npmrc && echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" >> .npmrc
+RUN npm ci --omit=dev && rm .npmrc
 # Copy source
 COPY . .
 
@@ -33,7 +34,7 @@ COPY --from=build /app/prisma ./prisma/
 
 RUN echo $(ls -1 /app)
 
-RUN npm ci --omit=dev
+COPY --from=build /app/node_modules ./node_modules
 
 # # Start server
 CMD ["node", "./node_modules/moleculer/bin/moleculer-runner.js"]

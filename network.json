@@ -34,13 +34,35 @@
 			"https://rpc-cosmoshub-ia.cosmosia.notional.ventures",
 			"https://rpc.cosmos.network"
 		],
-		"LCD":[
+		"LCD": [
 			"https://cosmos-api.polkachu.com",
 			"https://cosmos-api.cyphercore.io",
 			"https://cosmoshub-api.lavenderfive.com:443"
 		],
-		"prefixAddress":"cosmos",
-		"databaseName":"horoscope_prod_cosmoshub4",
-		"redisDbNumber":3
+		"prefixAddress": "cosmos",
+		"databaseName": "local_cosmoshub4",
+		"redisDbNumber": 13
+	},
+	{
+		"chainName": "canto",
+		"chainId": "canto_7700-1",
+		"RPC": [
+			"http://chainripper-2.althea.net:20878",
+			"https://canto-rpc.polkachu.com",
+			"https://canto.gravitychain.io:26657",
+			"https://rpc.canto.nodestake.top",
+			"https://rpc.canto.silentvalidator.com",
+			"https://canto-rpc.lgns.net"
+		],
+		"LCD": [
+			"http://chainripper-2.althea.net:1317",
+			"https://canto-api.polkachu.com",
+			"https://api.canto.nodestake.top",
+			"https://api.canto.silentvalidator.com",
+			"https://canto-rest.lgns.net"
+		],
+		"prefixAddress": "canto",
+		"databaseName": "horoscope_dev_canto",
+		"redisDbNumber": 14
 	}
 ]
