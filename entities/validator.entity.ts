@@ -137,7 +137,7 @@ export class ValidatorEntity implements IValidator {
 	@JsonProperty('consensus_hex_address', String)
 	public consensus_hex_address: String = '';
 
-	@JsonProperty('self_delegation_balance', Coin)
+	@JsonProperty('self_delegation_balance', Coin, true)
 	public self_delegation_balance: Coin = {} as Coin;
 
 	public uptime: Number = 0;

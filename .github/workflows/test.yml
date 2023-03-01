@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          registry-url: https://npm.pkg.github.com/aura-nw   
       - name: Get npm cache directory
         id: npm-cache-dir
         run: |
@@ -39,6 +40,8 @@ jobs:
             ${{ runner.os }}-node-
       - name: Install dependencies
         run: npm install
+        env:           
+          NODE_AUTH_TOKEN: ${{ secrets.KEY_NPM_RC }}
       - name: Setup env
         run: cp ci/.env.ci .env
       - name: Setup network.json

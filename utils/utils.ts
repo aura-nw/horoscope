@@ -27,7 +27,8 @@ export class Utils {
 		}
 		const queryObject: any[] = [];
 		queryArray.forEach((element) => {
-			const keyValueList = element.split('=');
+			const [first, ...rest] = element.split('=');
+			const keyValueList = [first, rest.join('=')];
 			if (keyValueList.length === 2) {
 				const value = keyValueList[1];
 				const typeKeyList = keyValueList[0].split('.');

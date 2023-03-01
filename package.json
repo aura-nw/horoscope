@@ -29,6 +29,7 @@
   "author": "",
   "license": "MIT License",
   "dependencies": {
+    "@aura-nw/aurajs": "0.1.0-alpha",
     "@bull-board/api": "^4.3.1",
     "@bull-board/express": "^4.3.1",
     "@cosmjs/amino": "^0.28.9",
@@ -62,6 +63,7 @@
     "class-validator": "^0.13.2",
     "cookie-parser": "^1.4.6",
     "core-js": "^3.22.4",
+    "cosmjs-types": "^0.6.1",
     "cross-env": "^7.0.3",
     "cross-fetch": "^3.1.5",
     "csv-parse": "^4.16.0",

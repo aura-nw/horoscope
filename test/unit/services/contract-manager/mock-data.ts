@@ -351,6 +351,332 @@ export const txInstantiateContract = {
 	},
 };
 
+export const txInstantiateCw721Contract = {
+	tx: {
+		body: {
+			messages: [
+				{
+					'@type': '/cosmwasm.wasm.v1.MsgInstantiateContract',
+					sender: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
+					admin: '',
+					code_id: '259',
+					label: 't-nft',
+					msg: {
+						name: 't-nft',
+						symbol: 'T',
+						minter: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
+					},
+					funds: [],
+				},
+			],
+			extension_options: [],
+			non_critical_extension_options: [],
+			memo: '',
+			timeout_height: '0',
+		},
+		auth_info: {
+			fee: {
+				amount: [
+					{
+						denom: 'utaura',
+						amount: '5040',
+					},
+				],
+				gas_limit: '201589',
+				payer: '',
+				granter: '',
+			},
+			signer_infos: [
+				{
+					mode_info: {
+						single: {
+							mode: 'SIGN_MODE_DIRECT',
+						},
+					},
+					public_key: {
+						'@type': '/cosmos.crypto.secp256k1.PubKey',
+						key: 'AwGiaDuo6ICUpXpZy7Ii/P4QnZWrC2+fvBvF6f+3r4f8',
+					},
+					sequence: '156',
+				},
+			],
+		},
+		signatures: [
+			'hnCzYEI+H6dwCymELX4jNYlZIPfQuZKRwQ8XkbTA8dgn7lggn2Kp3mTOPUZKpVgKJ2OoHDAB6xf6lMt4Z5g6HQ==',
+		],
+	},
+	tx_response: {
+		height: 2513076,
+		txhash: '70D06263E5F3DE871B78F1F612EED38A49B08175ADFAF63282612AA0814935B5',
+		codespace: '',
+		code: '0',
+		data: '0A6D0A282F636F736D7761736D2E7761736D2E76312E4D7367496E7374616E7469617465436F6E747261637412410A3F61757261317437737632306B7735766D38676B707A72616B3471666D7878736B74646339796B646A6179356B72356C7238667274736B777771646E64367265',
+		raw_log:
+			'[{"events":[{"type":"instantiate","attributes":[{"key":"_contract_address","value":"aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re"},{"key":"code_id","value":"259"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmwasm.wasm.v1.MsgInstantiateContract"},{"key":"module","value":"wasm"},{"key":"sender","value":"aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5"}]}]}]',
+		logs: [
+			{
+				msg_index: 0,
+				log: '',
+				events: [
+					{
+						type: 'instantiate',
+						attributes: [
+							{
+								key: '_contract_address',
+								value: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
+							},
+							{
+								key: 'code_id',
+								value: '259',
+							},
+						],
+					},
+					{
+						type: 'message',
+						attributes: [
+							{
+								key: 'action',
+								value: '/cosmwasm.wasm.v1.MsgInstantiateContract',
+							},
+							{
+								key: 'module',
+								value: 'wasm',
+							},
+							{
+								key: 'sender',
+								value: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
+							},
+						],
+					},
+				],
+			},
+		],
+		info: '',
+		gas_wanted: '201589',
+		gas_used: '169406',
+		tx: {
+			'@type': '/cosmos.tx.v1beta1.Tx',
+			body: {
+				messages: [
+					{
+						'@type': '/cosmwasm.wasm.v1.MsgInstantiateContract',
+						sender: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
+						admin: '',
+						code_id: '259',
+						label: 't-nft',
+						msg: {
+							name: 't-nft',
+							symbol: 'T',
+							minter: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
+						},
+						funds: [],
+					},
+				],
+				memo: '',
+				timeout_height: '0',
+				extension_options: [],
+				non_critical_extension_options: [],
+			},
+			auth_info: {
+				signer_infos: [
+					{
+						public_key: {
+							'@type': '/cosmos.crypto.secp256k1.PubKey',
+							key: 'AwGiaDuo6ICUpXpZy7Ii/P4QnZWrC2+fvBvF6f+3r4f8',
+						},
+						mode_info: {
+							single: {
+								mode: 'SIGN_MODE_DIRECT',
+							},
+						},
+						sequence: '156',
+					},
+				],
+				fee: {
+					amount: [
+						{
+							denom: 'utaura',
+							amount: '5040',
+						},
+					],
+					gas_limit: '201589',
+					payer: '',
+					granter: '',
+				},
+			},
+			signatures: [
+				'hnCzYEI+H6dwCymELX4jNYlZIPfQuZKRwQ8XkbTA8dgn7lggn2Kp3mTOPUZKpVgKJ2OoHDAB6xf6lMt4Z5g6HQ==',
+			],
+		},
+		timestamp: {
+			$date: {
+				$numberLong: '1667548862000',
+			},
+		},
+		events: [
+			{
+				type: 'coin_spent',
+				attributes: [
+					{
+						key: 'c3BlbmRlcg==',
+						value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
+						index: true,
+					},
+					{
+						key: 'YW1vdW50',
+						value: 'NTA0MHV0YXVyYQ==',
+						index: true,
+					},
+				],
+			},
+			{
+				type: 'coin_received',
+				attributes: [
+					{
+						key: 'cmVjZWl2ZXI=',
+						value: 'YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==',
+						index: true,
+					},
+					{
+						key: 'YW1vdW50',
+						value: 'NTA0MHV0YXVyYQ==',
+						index: true,
+					},
+				],
+			},
+			{
+				type: 'transfer',
+				attributes: [
+					{
+						key: 'cmVjaXBpZW50',
+						value: 'YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==',
+						index: true,
+					},
+					{
+						key: 'c2VuZGVy',
+						value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
+						index: true,
+					},
+					{
+						key: 'YW1vdW50',
+						value: 'NTA0MHV0YXVyYQ==',
+						index: true,
+					},
+				],
+			},
+			{
+				type: 'message',
+				attributes: [
+					{
+						key: 'c2VuZGVy',
+						value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
+						index: true,
+					},
+				],
+			},
+			{
+				type: 'tx',
+				attributes: [
+					{
+						key: 'ZmVl',
+						value: 'NTA0MHV0YXVyYQ==',
+						index: true,
+					},
+					{
+						key: 'ZmVlX3BheWVy',
+						value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
+						index: true,
+					},
+				],
+			},
+			{
+				type: 'tx',
+				attributes: [
+					{
+						key: 'YWNjX3NlcQ==',
+						value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNS8xNTY=',
+						index: true,
+					},
+				],
+			},
+			{
+				type: 'tx',
+				attributes: [
+					{
+						key: 'c2lnbmF0dXJl',
+						value: 'aG5DellFSStINmR3Q3ltRUxYNGpOWWxaSVBmUXVaS1J3UThYa2JUQThkZ243bGdnbjJLcDNtVE9QVVpLcFZnS0oyT29IREFCNnhmNmxNdDRaNWc2SFE9PQ==',
+						index: true,
+					},
+				],
+			},
+			{
+				type: 'message',
+				attributes: [
+					{
+						key: 'YWN0aW9u',
+						value: 'L2Nvc213YXNtLndhc20udjEuTXNnSW5zdGFudGlhdGVDb250cmFjdA==',
+						index: true,
+					},
+				],
+			},
+			{
+				type: 'message',
+				attributes: [
+					{
+						key: 'bW9kdWxl',
+						value: 'd2FzbQ==',
+						index: true,
+					},
+					{
+						key: 'c2VuZGVy',
+						value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
+						index: true,
+					},
+				],
+			},
+			{
+				type: 'instantiate',
+				attributes: [
+					{
+						key: 'X2NvbnRyYWN0X2FkZHJlc3M=',
+						value: 'YXVyYTF0N3N2MjBrdzV2bThna3B6cmFrNHFmbXh4c2t0ZGM5eWtkamF5NWtyNWxyOGZydHNrd3dxZG5kNnJl',
+						index: true,
+					},
+					{
+						key: 'Y29kZV9pZA==',
+						value: 'MjU5',
+						index: true,
+					},
+				],
+			},
+		],
+	},
+	indexes: {
+		timestamp: new Date(),
+		height: 2513076,
+		coin_spent_spender: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'],
+		coin_spent_amount: ['5040utaura'],
+		coin_received_receiver: ['aura17xpfvakm2amg962yls6f84z3kell8c5lt05zfy'],
+		coin_received_amount: ['5040utaura'],
+		transfer_recipient: ['aura17xpfvakm2amg962yls6f84z3kell8c5lt05zfy'],
+		transfer_sender: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'],
+		transfer_amount: ['5040utaura'],
+		message_sender: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'],
+		tx_fee: ['5040utaura'],
+		tx_fee_payer: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'],
+		tx_acc_seq: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5/156'],
+		tx_signature: [
+			'hnCzYEI+H6dwCymELX4jNYlZIPfQuZKRwQ8XkbTA8dgn7lggn2Kp3mTOPUZKpVgKJ2OoHDAB6xf6lMt4Z5g6HQ==',
+		],
+		message_action: ['/cosmwasm.wasm.v1.MsgInstantiateContract'],
+		message_module: ['wasm'],
+		instantiate__contract_address: [
+			'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
+		],
+		instantiate_code_id: ['259'],
+	},
+};
+
 export const txExecuteContractCreateMinter = {
 	tx: {
 		body: {
@@ -1299,6 +1625,33 @@ export const instantiatedContract = {
 	},
 };
 
+export const instantiatedCw721Contract = {
+	custom_info: {
+		chain_id: Config.CHAIN_ID,
+		chain_name: 'Aura Devnet',
+	},
+	contract_name: 't-nft',
+	contract_address: 'aura1t7sv20kw5vm8gkpzrak4qfmxxsktdc9ykdjay5kr5lr8frtskwwqdnd6re',
+	contract_hash: '97338ce6ecb1552e814d14fca3bded44a4fdf536422da44f8cda4c9d22090b42',
+	creator_address: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
+	tx_hash: '70D06263E5F3DE871B78F1F612EED38A49B08175ADFAF63282612AA0814935B5',
+	height: 2513076,
+	code_id: {
+		id: 259,
+		creator: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
+	},
+	num_tokens: 40,
+	contract_info: {
+		name: 't-nft',
+		symbol: 'T',
+	},
+	msg: {
+		minter: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
+		name: 't-nft',
+		symbol: 'T',
+	},
+};
+
 export const createMinterExecuteContractOne = {
 	custom_info: {
 		chain_id: Config.CHAIN_ID,
@@ -1339,7 +1692,7 @@ export const createMinterExecuteContractTwo = {
 		chain_id: Config.CHAIN_ID,
 		chain_name: 'Aura Devnet',
 	},
-	contract_name: null,
+	contract_name: 'Test linking',
 	contract_address: 'aura1xl4vsq82heafg99mgatcaeg6eete2umdzvnfq56fh2zlkk7wud6qlstsr4',
 	contract_hash: 'e0f6e57d2a8dea657066aed431f0f2c1763a44567fc634bc7803f9f2f2096c09',
 	creator_address: 'aura1kw4qenae0773r3r7zprq8le6786f3p3f9yzlv5ryjk8paqhy5yqsaw3w58',

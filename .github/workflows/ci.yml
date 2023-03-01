@@ -9,7 +9,6 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets: inherit
   build:
-    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -17,7 +16,7 @@ jobs:
       - name: Get npm cache directory
         id: npm-cache-dir
         run: |
-          echo "dir=$(npm config get cache)"  >> $GITHUB_OUTPUT
+          echo "dir=$(npm config get cache)"  >> $GITHUB_OUTPUT  
       - uses: actions/cache@v3
         id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
         with:
@@ -33,11 +32,12 @@ jobs:
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.KEY_NPM_RC }}
         run: |
           chmod 777 -R ./ci
           ./ci/build.sh
   updateManifest:
-    needs: build
+    needs: [test, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
