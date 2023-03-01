@@ -46,6 +46,7 @@ export default class CrawlProposalService extends Service {
 								id: ctx.params.id,
 							},
 							{
+								jobId: ctx.params.id,
 								removeOnComplete: true,
 								removeOnFail: {
 									count: 10,
