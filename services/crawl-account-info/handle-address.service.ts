@@ -195,6 +195,9 @@ export default class HandleAddressService extends Service {
 				.filter((addr: string) => Utils.isValidAddress(addr, 20));
 			// Filter list jobs to remove duplicates (if any)
 			listUpdateInfo = listUpdateInfo.filter(this._onlyUnique);
+			if (chain && chain.databaseName) {
+				this.adapter.useDb(chain.databaseName);
+			}
 			const existedAccounts: AccountInfoEntity[] = (
 				await this.adapter.find({
 					query: {
