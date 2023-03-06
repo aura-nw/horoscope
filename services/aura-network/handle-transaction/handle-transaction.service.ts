@@ -27,7 +27,7 @@ import { wasmTypes } from '@cosmjs/cosmwasm-stargate/build/modules';
 // } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
 import { Header } from 'cosmjs-types/ibc/lightclients/tendermint/v1/tendermint';
 import { BasicAllowance, PeriodicAllowance } from 'cosmjs-types/cosmos/feegrant/v1beta1/feegrant';
-import { aura } from '@aura-nw/aurajs';
+import { aura, cosmos } from '@aura-nw/aurajs';
 import { isLong } from 'long';
 import RedisMixin from '../../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../../mixins/dbMixinMongoose';
@@ -70,20 +70,6 @@ export default class HandleTransactionService extends Service {
 		if (this.registry) {
 			return this.registry;
 		}
-
-		// // random account, no coin inside :)
-		// const wallet = await Secp256k1HdWallet.fromMnemonic(
-		// 	'mixed adjust adult chimney mesh room develop smoke crazy artwork paper minimum',
-		// );
-		// const signing = await SigningCosmWasmClient.offline(wallet);
-		// default protobuf only has some type of tx
-		// add protobuf if needed
-		// signing.registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
-		// signing.registry.register(
-		// 	'/cosmos.feegrant.v1beta1.AllowedContractAllowance',
-		// 	// @ts-ignore
-		// 	aura.feegrant.v1beta1.AllowedContractAllowance,
-		// );
 		const registry = new Registry([...defaultStargateTypes, ...wasmTypes]);
 		registry.register('/cosmos.feegrant.v1beta1.BasicAllowance', BasicAllowance);
 		registry.register('/cosmos.feegrant.v1beta1.PeriodicAllowance', PeriodicAllowance);
@@ -92,6 +78,17 @@ export default class HandleTransactionService extends Service {
 			'/cosmos.feegrant.v1beta1.AllowedContractAllowance',
 			// @ts-ignore
 			aura.feegrant.v1beta1.AllowedContractAllowance,
+		);
+		registry.register(
+			'/cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount',
+			// @ts-ignore
+			cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount,
+		);
+
+		registry.register(
+			'/cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount',
+			// @ts-ignore
+			cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount,
 		);
 		this.registry = registry;
 		return this.registry;
