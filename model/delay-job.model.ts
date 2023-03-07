@@ -8,11 +8,6 @@ const definition: definitionType<IDelayJob> = (collection?: string) => ({
 	content: Object,
 	type: { type: String },
 	expire_time: Date,
-	indexes: {
-		type: String,
-		index: true,
-		unique: true,
-	},
 	custom_info: {
 		chain_id: String,
 		chain_name: String,
