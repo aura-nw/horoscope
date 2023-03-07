@@ -4,30 +4,18 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 'use strict';
 import { Service, ServiceBroker } from 'moleculer';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { Job } from 'bull';
-// import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { JsonConvert } from 'json2typescript';
 import { fromBase64, fromUtf8, toBase64 } from '@cosmjs/encoding';
-import { decodeTxRaw, Registry } from '@cosmjs/proto-signing';
-// import { Secp256k1HdWallet } from '@cosmjs/amino';
+import { decodeTxRaw, Registry, GeneratedType } from '@cosmjs/proto-signing';
 import _ from 'lodash';
 
 import { defaultRegistryTypes as defaultStargateTypes } from '@cosmjs/stargate';
 
 import { wasmTypes } from '@cosmjs/cosmwasm-stargate/build/modules';
-
-// import {
-// 	MsgClearAdmin,
-// 	MsgExecuteContract,
-// 	MsgInstantiateContract,
-// 	MsgMigrateContract,
-// 	MsgStoreCode,
-// 	MsgUpdateAdmin,
-// } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
 import { Header } from 'cosmjs-types/ibc/lightclients/tendermint/v1/tendermint';
 import { BasicAllowance, PeriodicAllowance } from 'cosmjs-types/cosmos/feegrant/v1beta1/feegrant';
-import { aura } from '@aura-nw/aurajs';
+import { aura, cosmos } from '@aura-nw/aurajs';
 import { isLong } from 'long';
 import RedisMixin from '../../../mixins/redis/redis.mixin';
 import { dbTransactionMixin } from '../../../mixins/dbMixinMongoose';
@@ -70,28 +58,22 @@ export default class HandleTransactionService extends Service {
 		if (this.registry) {
 			return this.registry;
 		}
-
-		// // random account, no coin inside :)
-		// const wallet = await Secp256k1HdWallet.fromMnemonic(
-		// 	'mixed adjust adult chimney mesh room develop smoke crazy artwork paper minimum',
-		// );
-		// const signing = await SigningCosmWasmClient.offline(wallet);
-		// default protobuf only has some type of tx
-		// add protobuf if needed
-		// signing.registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
-		// signing.registry.register(
-		// 	'/cosmos.feegrant.v1beta1.AllowedContractAllowance',
-		// 	// @ts-ignore
-		// 	aura.feegrant.v1beta1.AllowedContractAllowance,
-		// );
 		const registry = new Registry([...defaultStargateTypes, ...wasmTypes]);
 		registry.register('/cosmos.feegrant.v1beta1.BasicAllowance', BasicAllowance);
 		registry.register('/cosmos.feegrant.v1beta1.PeriodicAllowance', PeriodicAllowance);
 		registry.register('/ibc.lightclients.tendermint.v1.Header', Header);
 		registry.register(
 			'/cosmos.feegrant.v1beta1.AllowedContractAllowance',
-			// @ts-ignore
-			aura.feegrant.v1beta1.AllowedContractAllowance,
+			aura.feegrant.v1beta1.AllowedContractAllowance as GeneratedType,
+		);
+		registry.register(
+			'/cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount',
+			cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount as GeneratedType,
+		);
+
+		registry.register(
+			'/cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount',
+			cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount as GeneratedType,
 		);
 		this.registry = registry;
 		return this.registry;
@@ -194,6 +176,7 @@ export default class HandleTransactionService extends Service {
 			// 	} as TransactionHashParam);
 			// }
 			this.logger.error(error);
+			throw error;
 		}
 	}
 
@@ -408,7 +391,7 @@ export default class HandleTransactionService extends Service {
 				} else {
 					result = msg.toString();
 				}
-			} else if (typeof msg === 'number') {
+			} else if (typeof msg === 'number' || typeof msg === 'boolean') {
 				result = msg;
 			} else if (msg instanceof Object) {
 				Object.keys(msg).map((key) => (result[key] = this._decodedMsg(registry, msg[key])));
