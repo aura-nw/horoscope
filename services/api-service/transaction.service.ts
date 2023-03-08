@@ -458,16 +458,19 @@ export default class BlockService extends MoleculerDBService<
 
 		if (address) {
 			listQueryAnd.push(
-				{ 'indexes.addresses': { $exists: true, $eq: address } },
 				{
-					'indexes.message_action': {
-						$in: [
-							MSG_TYPE.MSG_DELEGATE,
-							MSG_TYPE.MSG_REDELEGATE,
-							MSG_TYPE.MSG_UNDELEGATE,
-						],
-					},
+					'indexes.message_module': 'staking',
 				},
+				{ 'indexes.addresses': address },
+				// {
+				// 	'indexes.message_action': {
+				// 		$in: [
+				// 			MSG_TYPE.MSG_DELEGATE,
+				// 			MSG_TYPE.MSG_REDELEGATE,
+				// 			MSG_TYPE.MSG_UNDELEGATE,
+				// 		],
+				// 	},
+				// },
 			);
 		}
 

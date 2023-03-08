@@ -259,6 +259,20 @@ export default class CrawlAccountInfoService extends Service {
 							contractAddress: contractFromEvent,
 							tokenId: tokenIdFromEvent,
 						});
+					} else if (type === EVENT_TYPE.INSTANTIATE) {
+						let contractFromEvent: any = null;
+						attributes.map((attribute: IAttribute) => {
+							const key = attribute.key.toString();
+							// eslint-disable-next-line no-underscore-dangle
+							if (key === BASE_64_ENCODE._CONTRACT_ADDRESS) {
+								const value = fromUtf8(fromBase64(attribute.value.toString()));
+								contractFromEvent = value;
+							}
+						});
+						listContractAndTokenID.push({
+							contractAddress: contractFromEvent,
+							tokenId: null,
+						});
 					}
 				});
 			});

@@ -157,14 +157,19 @@ export default class CrawlAssetService extends moleculer.Service {
 				case null: {
 					this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
 						condition,
-						update: { status: CodeIDStatus.TBD },
+						// eslint-disable-next-line camelcase
+						update: { contract_type: CONTRACT_TYPE.CW4973, status: CodeIDStatus.TBD },
 					});
 					break;
 				}
 				case true: {
 					this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
 						condition,
-						update: { status: CodeIDStatus.COMPLETED },
+						update: {
+							// eslint-disable-next-line camelcase
+							contract_type: CONTRACT_TYPE.CW4973,
+							status: CodeIDStatus.COMPLETED,
+						},
 					});
 					this.broker.emit('CW4973.handle', { url, chainId, codeId });
 					break;
@@ -172,7 +177,11 @@ export default class CrawlAssetService extends moleculer.Service {
 				case false: {
 					this.broker.call(CODEID_MANAGER_ACTION.UPDATE_MANY, {
 						condition,
-						update: { status: CodeIDStatus.REJECTED },
+						update: {
+							// eslint-disable-next-line camelcase
+							contract_type: CONTRACT_TYPE.CW4973,
+							status: CodeIDStatus.REJECTED,
+						},
 					});
 					break;
 				}

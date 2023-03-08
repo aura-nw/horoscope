@@ -1,8 +1,7 @@
 /* eslint-disable camelcase */
 import { model, models, Schema, Types } from 'mongoose';
 import { IBlock } from '../entities';
-import { definitionType, ObjectIdNull } from '../types';
-import { NumericConverter } from '../entities/converters/numeric.converter';
+import { definitionType } from '../types';
 import { customInfoModel } from './custom-info.model';
 
 const definition: definitionType<IBlock> = (collection?: string) => ({
@@ -20,7 +19,7 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 				block: Number,
 			},
 			chain_id: String,
-			height: { type: Number, index: true },
+			height: { type: Number, index: -1 },
 			time: Date,
 			last_block_id: {
 				hash: String,
@@ -71,14 +70,9 @@ const definition: definitionType<IBlock> = (collection?: string) => ({
 });
 
 export const blockMongoModel = (collection: string): unknown => {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
-	// Const schema = new Schema({}, { autoIndex: true, strict: false, collection: collection });
 	const schema = new Schema(definition(collection), {
 		autoIndex: true,
 		collection,
 	});
-	schema.index({ 'block.header.height': -1 });
-	// Schema.index({ 'block.header.height': -1, 'custom_info.chain_id': 1 });
 	return models[collection] || model(collection, schema);
 };

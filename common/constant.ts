@@ -86,6 +86,7 @@ export const LIST_VOTE_ANSWER: string[] = [
 export const EVENT_TYPE = {
 	WASM: 'wasm',
 	EXECUTE: 'execute',
+	INSTANTIATE: 'instantiate',
 };
 
 export const EVENT_KEY = {

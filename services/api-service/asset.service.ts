@@ -60,10 +60,14 @@ export default class AssetService extends MoleculerDBService<
 		const chainId = ctx.params.chainId;
 		const contractType = ctx.params.contractType;
 		return await this.broker
-			.call(CODEID_MANAGER_ACTION.FIND, {
-				// eslint-disable-next-line camelcase
-				query: { code_id: codeId, 'custom_info.chain_id': chainId },
-			})
+			.call(
+				CODEID_MANAGER_ACTION.FIND,
+				{
+					// eslint-disable-next-line camelcase
+					query: { code_id: codeId, 'custom_info.chain_id': chainId },
+				},
+				{ meta: { $cache: false } },
+			)
 			.then(async (res: any) => {
 				/* eslint-disable camelcase */
 				this.logger.info('codeid-manager.find res', res);
