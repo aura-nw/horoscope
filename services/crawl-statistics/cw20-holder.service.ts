@@ -4,7 +4,7 @@
 'use strict';
 import { Service, Action } from '@ourparentcenter/moleculer-decorators-extended';
 import { Context } from 'moleculer';
-import { AddressParams, MoleculerDBService } from '../../types';
+import { CountCw20HolderParams, MoleculerDBService } from '../../types';
 import { dbCW20AssetMixin } from '../../mixins/dbMixinMongoose';
 import { ICW20Asset } from '../../model';
 
@@ -31,10 +31,13 @@ export default class Cw20HolderService extends MoleculerDBService<
 	@Action({
 		name: 'act-count-by-address',
 	})
-	async countByAddress(ctx: Context<AddressParams>) {
+	async countByAddress(ctx: Context<CountCw20HolderParams>) {
 		return await this.adapter.count({
 			query: {
 				contract_address: ctx.params.address,
+				balances: {
+					$ne: ctx.params.balance,
+				},
 			},
 		});
 	}

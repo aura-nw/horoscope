@@ -83,6 +83,7 @@ export default class CrawlDailyCw20HolderService extends Service {
 		const [holders, record] = await Promise.all([
 			this.broker.call('v1.cw20-holder.act-count-by-address', {
 				address: contractAddress,
+				balance: '0',
 			}),
 			this.adapter.findOne({ contract_address: contractAddress }),
 		]);
