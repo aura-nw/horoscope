@@ -35,7 +35,7 @@ export default class Cw20HolderService extends MoleculerDBService<
 		return await this.adapter.count({
 			query: {
 				contract_address: ctx.params.address,
-				balances: {
+				balance: {
 					$ne: ctx.params.balance,
 				},
 			},
