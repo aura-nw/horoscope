@@ -45,30 +45,34 @@ export default class CrawlDailyCw20HolderService extends Service {
 	async handleJob(offset: number) {
 		const result = await this.adapter.find({
 			limit: 100,
-			offset,
+			offset: offset * 100,
 		});
 
 		if (result.length > 0) {
-			result.map(async (res: any) => {
-				try {
-					await this.adapter.updateById(res._id, {
-						$set: {
-							old_holders: res.new_holders,
-							change_percent:
-								res.old_holders !== 0
-									? ((res.new_holders - res.old_holders) / res.old_holders) * 100
-									: 0,
-						},
-					});
-				} catch (error) {
-					this.logger.error(error);
-					throw error;
-				}
-			});
+			await Promise.all(
+				result.map(async (res: any) => {
+					try {
+						await this.adapter.updateById(res._id, {
+							$set: {
+								old_holders: res.new_holders,
+								change_percent:
+									res.old_holders !== 0
+										? ((res.new_holders - res.old_holders) / res.old_holders) *
+										  100
+										: 0,
+							},
+						});
+					} catch (error) {
+						this.logger.error(error);
+						throw error;
+					}
+				}),
+			);
 
+			offset += 1;
 			this.createJob(
 				'crawl.daily-cw20-holder',
-				{ offset: ++offset },
+				{ offset },
 				{
 					removeOnComplete: true,
 					removeOnFail: {
