@@ -45,7 +45,7 @@ export default class CrawlDailyCw20HolderService extends Service {
 	async handleJob(offset: number) {
 		const result = await this.adapter.find({
 			limit: 100,
-			offset,
+			offset: offset * 100,
 		});
 
 		if (result.length > 0) {
@@ -69,9 +69,10 @@ export default class CrawlDailyCw20HolderService extends Service {
 				}),
 			);
 
+			offset += 1;
 			this.createJob(
 				'crawl.daily-cw20-holder',
-				{ offset: ++offset },
+				{ offset },
 				{
 					removeOnComplete: true,
 					removeOnFail: {
