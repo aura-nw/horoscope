@@ -338,6 +338,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		try {
 			await this.broker.call('v1.crawlDailyCw20Holder.update-contract-holders', {
 				address,
+				codeId: Number.parseInt(codeId, 10),
 			});
 		} catch (error) {
 			this.logger.error(error);
