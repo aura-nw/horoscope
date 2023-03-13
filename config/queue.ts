@@ -36,6 +36,7 @@ export const queues = [
 	'crawl.staking.validator',
 	'crawl.daily-tx',
 	'crawl.daily-cw20-holder',
+	'update.contract-holders',
 	'crawl.account-stats',
 	'crawl.transaction',
 	'crawl.transaction-hash',
