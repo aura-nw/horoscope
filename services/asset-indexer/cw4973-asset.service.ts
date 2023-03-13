@@ -7,6 +7,7 @@ import { Action, Event, Service } from '@ourparentcenter/moleculer-decorators-ex
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
 import { AddBurnedToAsset } from 'types';
 import { Job } from 'bull';
+import { Types } from 'mongoose';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbCW4973AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CodeIDStatus } from '../../model/codeid.model';
@@ -84,7 +85,7 @@ export default class CrawlAssetService extends moleculer.Service {
 		const codeId = ctx.params.codeId;
 		const chainId = ctx.params.chainId;
 		const url = ctx.params.url;
-		this.logger.info('ctx.params', codeId, chainId, CONTRACT_TYPE.CW721);
+		this.logger.info('ctx.params', codeId, chainId, CONTRACT_TYPE.CW4973);
 		await this.checkIfContractImplementInterface(url, chainId, codeId);
 	}
 
@@ -286,7 +287,8 @@ export default class CrawlAssetService extends moleculer.Service {
 				asset,
 			);
 			this.logger.debug('insert new asset: ', JSON.stringify(resultInsert));
-			// Const assetId = resultInsert._id.toString();
+			// eslint-disable-next-line no-underscore-dangle
+			const cw4973Id = resultInsert._id ?? resultInsert;
 			try {
 				if (animationLink) {
 					[uri, type, fileName, mediaLinkKey] = Common.getKeyFromUri(animationLink);
@@ -298,7 +300,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						mediaLinkKey,
 						chainId,
 						field: CW721_FIELD.ANIMATION,
-						cw4973Id: resultInsert,
+						cw4973Id,
 					};
 					this.logger.debug('param emit get-media-link: ', JSON.stringify(paramEmit));
 					this.broker.emit('CW4973-media.get-media-link', paramEmit);
@@ -313,7 +315,7 @@ export default class CrawlAssetService extends moleculer.Service {
 						mediaLinkKey,
 						chainId,
 						field: CW721_FIELD.IMAGE,
-						cw4973Id: resultInsert,
+						cw4973Id,
 					};
 					this.logger.debug('param emit get-media-link: ', JSON.stringify(paramEmit));
 					this.broker.emit('CW4973-media.get-media-link', paramEmit);

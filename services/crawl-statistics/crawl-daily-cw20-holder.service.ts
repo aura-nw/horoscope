@@ -31,11 +31,30 @@ export default class CrawlDailyCw20HolderService extends Service {
 						return true;
 					},
 				},
+				'update.contract-holders': {
+					concurrency: parseInt(Config.CONCURRENCY_DAILY_CW20_HOLDER, 10),
+					async process(job: Job) {
+						job.progress(10);
+						// @ts-ignore
+						await this.updateContractHolders(job.data.address, job.data.codeId);
+						job.progress(100);
+						return true;
+					},
+				},
 			},
 			actions: {
 				'update-contract-holders': {
 					async handler(ctx: Context<UpdateContractHolderRequest>): Promise<any> {
-						await this.updateContractHolders(ctx.params.address, ctx.params.codeId);
+						this.createJob(
+							'update.contract-holders',
+							{ address: ctx.params.address, codeId: ctx.params.codeId },
+							{
+								removeOnComplete: true,
+								removeOnFail: {
+									count: 3,
+								},
+							},
+						);
 					},
 				},
 			},
@@ -45,30 +64,34 @@ export default class CrawlDailyCw20HolderService extends Service {
 	async handleJob(offset: number) {
 		const result = await this.adapter.find({
 			limit: 100,
-			offset,
+			offset: offset * 100,
 		});
 
 		if (result.length > 0) {
-			result.map(async (res: any) => {
-				try {
-					await this.adapter.updateById(res._id, {
-						$set: {
-							old_holders: res.new_holders,
-							change_percent:
-								res.old_holders !== 0
-									? ((res.new_holders - res.old_holders) / res.old_holders) * 100
-									: 0,
-						},
-					});
-				} catch (error) {
-					this.logger.error(error);
-					throw error;
-				}
-			});
+			await Promise.all(
+				result.map(async (res: any) => {
+					try {
+						await this.adapter.updateById(res._id, {
+							$set: {
+								old_holders: res.new_holders,
+								change_percent:
+									res.old_holders !== 0
+										? ((res.new_holders - res.old_holders) / res.old_holders) *
+										  100
+										: 0,
+							},
+						});
+					} catch (error) {
+						this.logger.error(error);
+						throw error;
+					}
+				}),
+			);
 
+			offset += 1;
 			this.createJob(
 				'crawl.daily-cw20-holder',
-				{ offset: ++offset },
+				{ offset },
 				{
 					removeOnComplete: true,
 					removeOnFail: {
@@ -80,9 +103,11 @@ export default class CrawlDailyCw20HolderService extends Service {
 	}
 
 	async updateContractHolders(contractAddress: string, codeId: number) {
+		this.logger.info(`Handle enrich data event of contract ${contractAddress}`);
 		const [holders, record] = await Promise.all([
 			this.broker.call('v1.cw20-holder.act-count-by-address', {
 				address: contractAddress,
+				balance: '0',
 			}),
 			this.adapter.findOne({ contract_address: contractAddress }),
 		]);
@@ -134,6 +159,15 @@ export default class CrawlDailyCw20HolderService extends Service {
 			this.logger.error(`Job #${job.id} failed! error: ${job.failedReason}`);
 		});
 		this.getQueue('crawl.daily-cw20-holder').on('progress', (job: Job) => {
+			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
+		});
+		this.getQueue('update.contract-holders').on('completed', (job: Job) => {
+			this.logger.info(`Job #${job.id} completed! result: ${job.returnvalue}`);
+		});
+		this.getQueue('update.contract-holders').on('failed', (job: Job) => {
+			this.logger.error(`Job #${job.id} failed! error: ${job.failedReason}`);
+		});
+		this.getQueue('update.contract-holders').on('progress', (job: Job) => {
 			this.logger.info(`Job #${job.id} progress: ${job.progress()}%`);
 		});
 		return super._start();
