@@ -1,4 +1,5 @@
 import { fromBech32 } from '@cosmjs/encoding';
+import { Config } from '../common';
 import { LIST_NETWORK, URL_TYPE_CONSTANTS } from '../common/constant';
 export class Utils {
 	public static getUrlByChainIdAndType(chainId: string, typeUrl: string) {
@@ -53,6 +54,24 @@ export class Utils {
 				return true;
 			}
 			if (decodeResult.data.length === length) {
+				return true;
+			}
+		} catch (error) {
+			return false;
+		}
+		return false;
+	}
+
+	public static isValidAccountAddress(address: string, length = -1) {
+		try {
+			const decodeResult = fromBech32(address);
+			if (length === -1) {
+				return true;
+			}
+			if (
+				decodeResult.data.length === length &&
+				decodeResult.prefix === Config.NETWORK_PREFIX_ADDRESS
+			) {
 				return true;
 			}
 		} catch (error) {
