@@ -45,6 +45,9 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 			this.adapter.useDb(network.databaseName);
 		}
 
+		listAddresses = listAddresses.filter((addr: string) =>
+			Utils.isValidAccountAddress(addr, 20),
+		);
 		if (listAddresses.length > 0) {
 			for (const address of listAddresses) {
 				this.logger.info(`Handle address: ${address}`);

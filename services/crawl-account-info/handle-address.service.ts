@@ -80,7 +80,7 @@ export default class HandleAddressService extends Service {
 										.map((x: any) => x.value),
 								)
 								.flat();
-							event = event.filter((e: string) => Utils.isValidAddress(e, 20));
+							event = event.filter((e: string) => Utils.isValidAccountAddress(e, 20));
 							if (event) {
 								listAddresses.push(...event);
 							}
@@ -109,7 +109,9 @@ export default class HandleAddressService extends Service {
 									.map((x: any) => atob(x.value)),
 							)
 							.flat();
-						blockEvent = blockEvent.filter((e: string) => Utils.isValidAddress(e, 20));
+						blockEvent = blockEvent.filter((e: string) =>
+							Utils.isValidAccountAddress(e, 20),
+						);
 						if (blockEvent) {
 							listAddresses.push(...blockEvent);
 						}
@@ -159,7 +161,7 @@ export default class HandleAddressService extends Service {
 			// Filter any invalid and duplicate addresses
 			const listUniqueAddresses = listAddresses
 				.filter(this._onlyUnique)
-				.filter((addr: string) => Utils.isValidAddress(addr, 20));
+				.filter((addr: string) => Utils.isValidAccountAddress(addr, 20));
 			// Filter list jobs to remove duplicates (if any)
 			listUpdateInfo = listUpdateInfo.filter(this._onlyUnique);
 			if (chain && chain.databaseName) {
