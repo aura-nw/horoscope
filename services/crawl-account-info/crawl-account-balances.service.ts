@@ -45,6 +45,9 @@ export default class CrawlAccountBalancesService extends Service {
 			this.adapter.useDb(network.databaseName);
 		}
 
+		listAddresses = listAddresses.filter((addr: string) =>
+			Utils.isValidAccountAddress(addr, 20),
+		);
 		/* eslint-disable camelcase, no-underscore-dangle */
 		if (listAddresses.length > 0) {
 			for (const address of listAddresses) {
