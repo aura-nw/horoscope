@@ -1,0 +1,61 @@
+name: Continuous integration
+
+on:
+  workflow_dispatch:
+    permissions:
+      users:
+        - fibonacci998
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        run: |
+          echo "dir=$(npm config get cache)"  >> $GITHUB_OUTPUT  
+      - uses: actions/cache@v3
+        id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Set environment variable
+        run: |
+          RELEASE_VERSION=${GITHUB_REF#refs/*/}"
+          echo CONTAINER_RELEASE_IMAGE=ghcr.io/aura-nw/aura-indexer-crawl:${RELEASE_VERSION}>> $GITHUB_ENV
+      - name: Build the Docker image and push it to the registry
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.KEY_NPM_RC }}
+        run: |
+          chmod 777 -R ./ci
+          ./ci/build.sh
+  updateManifest:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: imranismail/setup-kustomize@v2
+      - name: Set environment variable
+        run: |
+          RELEASE_VERSION=${GITHUB_REF#refs/*/}"
+          echo CONTAINER_RELEASE_IMAGE=ghcr.io/aura-nw/aura-indexer-crawl:${RELEASE_VERSION}>> $GITHUB_ENV
+          echo REPO_MANIFEST_NAME=gitops >> $GITHUB_ENV
+          echo REPO_MANIFEST_URL=github.com/aura-nw/gitops-prod.git >> $GITHUB_ENV
+          echo REPO_MANIFEST_BRANCH=main >> $GITHUB_ENV
+          echo REPO_MANIFEST_ENV_MAIN=./clusters/k8s-xstaxy/horoscope/horoscope-crawl-xstaxy >> $GITHUB_ENV
+          echo REPO_MANIFEST_TAG_IMAGE=image_aura_indexer_crawl >> $GITHUB_ENV
+      - name: Update manifest
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          chmod 777 -R ./ci
+          ./ci/updateManifest.sh
