@@ -54,7 +54,7 @@ jobs:
       - name: Set environment variable
         run: |
           echo CONTAINER_RELEASE_IMAGE=ghcr.io/aura-nw/aura-indexer-crawl:${{ inputs.version }}>> $GITHUB_ENV
-          echo REPO_MANIFEST_NAME=gitops >> $GITHUB_ENV
+          echo REPO_MANIFEST_NAME=gitops-prod >> $GITHUB_ENV
           echo REPO_MANIFEST_URL=github.com/aura-nw/gitops-prod.git >> $GITHUB_ENV
           echo REPO_MANIFEST_BRANCH=main >> $GITHUB_ENV
           echo REPO_MANIFEST_ENV_MAIN=./clusters/k8s-xstaxy/horoscope/horoscope-crawl-xstaxy >> $GITHUB_ENV
