@@ -49,7 +49,7 @@ export default class CrawlAccountRedelegatesService extends Service {
 		}
 
 		listAddresses = listAddresses.filter((addr: string) =>
-			Utils.isValidAccountAddress(addr, 20),
+			Utils.isValidAccountAddress(addr, Config.NETWORK_PREFIX_ADDRESS, 20),
 		);
 		if (listAddresses.length > 0) {
 			for (const address of listAddresses) {
