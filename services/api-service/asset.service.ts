@@ -154,6 +154,7 @@ export default class AssetService extends MoleculerDBService<
 			isBurned: {
 				type: 'boolean',
 				optional: true,
+				default: false,
 				convert: true,
 			},
 			countTotal: {
