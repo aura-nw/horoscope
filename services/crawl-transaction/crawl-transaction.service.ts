@@ -116,7 +116,7 @@ export default class CrawlTransactionService extends Service {
 				{
 					removeOnComplete: true,
 					removeOnFail: {
-						Count: 3,
+						count: 3,
 					},
 				},
 			);

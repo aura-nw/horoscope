@@ -7,7 +7,6 @@ import { Action, Event, Service } from '@ourparentcenter/moleculer-decorators-ex
 import { toBase64, toUtf8 } from '@cosmjs/encoding';
 import { AddBurnedToAsset } from 'types';
 import { Job } from 'bull';
-import { Types } from 'mongoose';
 import CallApiMixin from '../../mixins/callApi/call-api.mixin';
 import { dbCW4973AssetMixin } from '../../mixins/dbMixinMongoose';
 import { CodeIDStatus } from '../../model/codeid.model';
