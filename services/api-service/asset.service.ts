@@ -203,6 +203,7 @@ export default class AssetService extends MoleculerDBService<
 			});
 		}
 		try {
+			const contractType = ctx.params.contractType;
 			const query: QueryOptions = {};
 			/* eslint-disable camelcase */
 			if (ctx.params.owner) {
@@ -217,8 +218,10 @@ export default class AssetService extends MoleculerDBService<
 			if (ctx.params.contractAddress) {
 				query.contract_address = ctx.params.contractAddress;
 			}
-			if (ctx.params.isBurned != null) {
-				query.is_burned = ctx.params.isBurned;
+			if (ctx.params.isBurned) {
+				if (contractType !== CONTRACT_TYPE.CW20) {
+					query.is_burned = ctx.params.isBurned;
+				}
 			}
 			if (ctx.params.tokenName) {
 				query.$or = [
@@ -235,7 +238,6 @@ export default class AssetService extends MoleculerDBService<
 				ctx.params.countTotal = false;
 			}
 			this.logger.debug('query', query);
-			const contractType = ctx.params.contractType;
 			let asset: any[];
 			if (contractType === CONTRACT_TYPE.CW721 || contractType === CONTRACT_TYPE.CW4973) {
 				asset = await this.broker.call(`v1.${contractType}-asset-manager.act-find`, {
