@@ -102,6 +102,10 @@ export default class HandleTransactionService extends Service {
 				tx.tx = {
 					body: {
 						messages: decodedMsgs,
+						memo: decodedTx.body?.memo,
+						timeout_height: decodedTx.body?.timeoutHeight,
+						extension_options: decodedTx.body?.extensionOptions,
+						non_critical_extension_options: decodedTx.body?.nonCriticalExtensionOptions,
 					},
 					auth_info: {
 						fee: {
