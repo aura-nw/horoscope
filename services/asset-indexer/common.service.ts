@@ -121,13 +121,17 @@ export class Common {
 		if (parsed.protocol === IPFS_PREFIX) {
 			type = 'IPFS';
 			const cid = parsed.host;
-			const cidBase32 = new CID(cid).toV1().toString('base32');
-			uriHandled = `${IPFS_GATEWAY}${cidBase32}`;
-			if (!cid.startsWith('Qm') && parsed.path) {
-				uriHandled += `${parsed.path}`;
-			}
+			// const cidBase32 = new CID(cid).toV1().toString('base32');
+			// uriHandled = `${IPFS_GATEWAY}${cidBase32}`;
+			uriHandled = `${IPFS_GATEWAY}${cid}`;
 			fileName = cid;
 			mediaLinkKey = cid;
+
+			if (parsed.path) {
+				uriHandled += `${parsed.path}`;
+				fileName = `${cid}${parsed.path}`;
+				mediaLinkKey = `${cid}${parsed.path}`;
+			}
 		} else {
 			type = 'HTTP';
 			uriHandled = uri;

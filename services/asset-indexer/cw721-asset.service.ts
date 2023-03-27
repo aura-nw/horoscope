@@ -252,7 +252,7 @@ export default class CrawlAssetService extends moleculer.Service {
 					// Let schemaType = await Common.getFileTypeFromBuffer(schemaIPFS);
 
 					if (schemaIPFS) {
-						metadata = JSON.parse(schemaIPFS.toString());
+						metadata = { ...metadata, ...JSON.parse(schemaIPFS.toString()) };
 					}
 					if (!imageLink && metadata.image) {
 						imageLink = metadata.image;
