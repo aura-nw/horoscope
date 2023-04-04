@@ -218,10 +218,8 @@ export default class AssetService extends MoleculerDBService<
 			if (ctx.params.contractAddress) {
 				query.contract_address = ctx.params.contractAddress;
 			}
-			if (ctx.params.isBurned) {
-				if (contractType !== CONTRACT_TYPE.CW20) {
-					query.is_burned = ctx.params.isBurned;
-				}
+			if (contractType !== CONTRACT_TYPE.CW20) {
+				query.is_burned = ctx.params.isBurned;
 			}
 			if (ctx.params.tokenName) {
 				query.$or = [
