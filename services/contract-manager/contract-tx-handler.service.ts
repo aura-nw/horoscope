@@ -38,26 +38,6 @@ export default class CrawlSmartContractsService extends Service {
 					},
 				},
 			},
-			// Events: {
-			// 	'list-tx.upsert': {
-			// 		Handler: (ctx: any) => {
-			// 			This.createJob(
-			// 				'contract.tx-handle',
-			// 				{
-			// 					ListTx: ctx.params.listTx,
-			// 					ChainId: ctx.params.chainId,
-			// 				},
-			// 				{
-			// 					RemoveOnComplete: true,
-			// 					RemoveOnFail: {
-			// 						Count: 10,
-			// 					},
-			// 				},
-			// 			);
-			// 			Return;
-			// 		},
-			// 	},
-			// },
 		});
 	}
 
@@ -68,158 +48,84 @@ export default class CrawlSmartContractsService extends Service {
 			this.logger.info(`Get smart contract from TxHash: ${txs.tx_response.txhash}`);
 			for (const msg of txs.tx.body.messages) {
 				const index = txs.tx.body.messages.indexOf(msg);
-				switch (msg['@type']) {
-					case MSG_TYPE.MSG_INSTANTIATE_CONTRACT:
-						const instant_height = txs.tx_response.height;
-						const instant_creator_address = msg.sender;
-						const instant_tx_hash = txs.tx_response.txhash;
-						let instant_contract_addresses;
-						let instant_code_ids;
-						try {
-							instant_contract_addresses = txs.tx_response.logs[index].events
-								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
-								// eslint-disable-next-line no-underscore-dangle
-								.attributes.filter(
-									(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
-								);
-							instant_code_ids = txs.tx_response.logs[index].events
-								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
-								.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
-						} catch (error) {
-							this.logger.error(`Error get attributes at TxHash ${instant_tx_hash}`);
-							this.logger.error(error);
-						}
-						if (instant_code_ids && instant_contract_addresses) {
-							const mess = msg.msg;
-							for (let i = 0; i < instant_contract_addresses.length; i++) {
-								const code_id = {
-									id: instant_code_ids[i].value,
-									creator: '',
-								};
-								const contract_address = instant_contract_addresses[i].value;
-								const [
-									num_tokens,
-									token_info,
-									marketing_info,
-									contract_info,
-									cosmwasm_code_id,
-								] = await this.queryContractInfo(
-									chainId,
-									instant_contract_addresses[i].value,
-									instant_code_ids[i].value,
-								);
-								let contract_hash;
-								if (cosmwasm_code_id.code_info) {
-									contract_hash =
-										cosmwasm_code_id.code_info.data_hash.toLowerCase();
-									code_id.creator = cosmwasm_code_id.code_info.creator;
-								}
-								let contract_name = null;
-								if (token_info.name) {
-									contract_name = token_info.name;
-								} else if (contract_info.name) {
-									contract_name = contract_info.name;
-								}
-								const smartContract = {
-									_id: new Types.ObjectId(),
-									contract_name,
-									contract_address,
-									contract_hash,
-									creator_address: instant_creator_address,
-									tx_hash: instant_tx_hash,
-									height: instant_height,
-									code_id,
-									num_tokens,
-									token_info,
-									marketing_info,
-									contract_info,
-									msg: mess,
-								} as ISmartContracts;
-								smartContracts.push(smartContract);
-							}
-						}
-						break;
-					case MSG_TYPE.MSG_EXECUTE_CONTRACT:
-						const contractAddresses = txs.tx_response.logs[index].events
+				if (
+					txs.tx_response.logs[index].events.find(
+						(x: any) => x.type === CONST_CHAR.INSTANTIATE,
+					)
+				) {
+					const height = txs.tx_response.height;
+					const tx_hash = txs.tx_response.txhash;
+					let creator_address = msg.sender;
+					if (msg['@type'] === MSG_TYPE.MSG_EXECUTE_CONTRACT) {
+						creator_address = txs.tx_response.logs[index].events
 							.find((x: any) => x.type === CONST_CHAR.EXECUTE)
+							.attributes.find(
+								(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
+							).value;
+					}
+
+					let contract_addresses;
+					let code_ids;
+					try {
+						contract_addresses = txs.tx_response.logs[index].events
+							.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
 							// eslint-disable-next-line no-underscore-dangle
 							.attributes.filter((x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS);
-						// eslint-disable-next-line no-underscore-dangle
-						await this._updateContractOnchainInfo(contractAddresses, chainId);
-						const tx_hash = txs.tx_response.txhash;
-						const height = txs.tx_response.height;
-						let contract_addresses;
-						let code_ids;
-						try {
-							contract_addresses = txs.tx_response.logs[index].events
-								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
-								// eslint-disable-next-line no-underscore-dangle
-								.attributes.filter(
-									(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
-								);
-							code_ids = txs.tx_response.logs[index].events
-								.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
-								.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
-						} catch (error) {
-							this.logger.error(`Error get attributes at TxHash ${tx_hash}`);
-							this.logger.error(error);
-						}
-						if (code_ids && contract_addresses) {
-							const executeMess = msg.msg;
-							for (let i = 0; i < contract_addresses.length; i++) {
-								const code_id = {
-									id: code_ids[i].value,
-									creator: '',
-								};
-								const contract_address = contract_addresses[i].value;
-								const creator_address = txs.tx_response.logs[index].events
-									.find((x: any) => x.type === CONST_CHAR.EXECUTE)
-									.attributes.find(
-										// eslint-disable-next-line no-underscore-dangle
-										(x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS,
-									).value;
-								const [
-									num_tokens,
-									token_info,
-									marketing_info,
-									contract_info,
-									cosmwasm_code_id,
-								] = await this.queryContractInfo(
-									chainId,
-									contract_address,
-									code_ids[i].value,
-								);
-								let contract_hash;
-								if (cosmwasm_code_id.code_info) {
-									contract_hash =
-										cosmwasm_code_id.code_info.data_hash.toLowerCase();
-									code_id.creator = cosmwasm_code_id.code_info.creator;
-								}
-								let contract_name = null;
-								if (token_info.name) {
-									contract_name = token_info.name;
-								} else if (contract_info.name) {
-									contract_name = contract_info.name;
-								}
-								const smartContract = {
-									_id: new Types.ObjectId(),
-									contract_name,
-									contract_address,
-									contract_hash,
-									creator_address,
-									tx_hash,
-									height,
-									code_id,
-									num_tokens,
-									token_info,
-									marketing_info,
-									contract_info,
-									msg: executeMess,
-								} as ISmartContracts;
-								smartContracts.push(smartContract);
+						code_ids = txs.tx_response.logs[index].events
+							.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
+							.attributes.filter((x: any) => x.key === CONST_CHAR.CODE_ID);
+					} catch (error) {
+						this.logger.error(`Error get attributes at TxHash ${tx_hash}`);
+						this.logger.error(error);
+					}
+					if (code_ids && contract_addresses) {
+						const mess = msg.msg;
+						for (let i = 0; i < contract_addresses.length; i++) {
+							const code_id = {
+								id: code_ids[i].value,
+								creator: '',
+							};
+							const contract_address = contract_addresses[i].value;
+							const [
+								num_tokens,
+								token_info,
+								marketing_info,
+								contract_info,
+								cosmwasm_code_id,
+							] = await this.queryContractInfo(
+								chainId,
+								contract_addresses[i].value,
+								code_ids[i].value,
+							);
+							let contract_hash;
+							if (cosmwasm_code_id.code_info) {
+								contract_hash = cosmwasm_code_id.code_info.data_hash.toLowerCase();
+								code_id.creator = cosmwasm_code_id.code_info.creator;
 							}
+							let contract_name = null;
+							if (token_info.name) {
+								contract_name = token_info.name;
+							} else if (contract_info.name) {
+								contract_name = contract_info.name;
+							}
+							const smartContract = {
+								_id: new Types.ObjectId(),
+								contract_name,
+								contract_address,
+								contract_hash,
+								creator_address,
+								tx_hash,
+								height,
+								code_id,
+								num_tokens,
+								token_info,
+								marketing_info,
+								contract_info,
+								msg: mess,
+							} as ISmartContracts;
+							smartContracts.push(smartContract);
 						}
-						break;
+					}
 				}
 			}
 		}
