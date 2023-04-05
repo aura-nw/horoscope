@@ -88,11 +88,11 @@ export default class CrawlAccountInfoService extends Service {
 						const contractAddress = item.contractAddress;
 						const tokenId = item.tokenId;
 						const processingFlag = await this.broker.cacher?.get(
-							`contract_${chainId}_${contractAddress}`,
+							`contract_${chainId}_${contractAddress}_${tokenId}`,
 						);
 						if (!processingFlag) {
 							await this.broker.cacher?.set(
-								`contract_${chainId}_${contractAddress}`,
+								`contract_${chainId}_${contractAddress}_${tokenId}`,
 								true,
 								CACHER_INDEXER_TTL,
 							);
@@ -221,7 +221,9 @@ export default class CrawlAccountInfoService extends Service {
 								}
 							}
 							// This.logger.debug(`Contract's type does not verify!`, address);
-							await this.broker.cacher?.del(`contract_${chainId}_${contractAddress}`);
+							await this.broker.cacher?.del(
+								`contract_${chainId}_${contractAddress}_${tokenId}`,
+							);
 						}
 					}),
 				);
