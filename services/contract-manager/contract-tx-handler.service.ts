@@ -69,7 +69,6 @@ export default class CrawlSmartContractsService extends Service {
 					try {
 						contract_addresses = txs.tx_response.logs[index].events
 							.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
-							// eslint-disable-next-line no-underscore-dangle
 							.attributes.filter((x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS);
 						code_ids = txs.tx_response.logs[index].events
 							.find((x: any) => x.type === CONST_CHAR.INSTANTIATE)
@@ -126,6 +125,16 @@ export default class CrawlSmartContractsService extends Service {
 							smartContracts.push(smartContract);
 						}
 					}
+				}
+				if (
+					txs.tx_response.logs[index].events.find(
+						(x: any) => x.type === CONST_CHAR.EXECUTE,
+					)
+				) {
+					const contractAddresses = txs.tx_response.logs[index].events
+						.find((x: any) => x.type === CONST_CHAR.EXECUTE)
+						.attributes.filter((x: any) => x.key === CONST_CHAR._CONTRACT_ADDRESS);
+					await this._updateContractOnchainInfo(contractAddresses, chainId);
 				}
 			}
 		}
