@@ -59,8 +59,8 @@ export default class HandleAddressService extends Service {
 
 			for (const element of listTx) {
 				if (source === CONST_CHAR.CRAWL) {
-					element.tx_response.logs.map((log: any) => {
-						try {
+					try {
+						element.tx_response.logs.map((log: any) => {
 							let event = log.events
 								.filter(
 									(e: any) =>
@@ -86,11 +86,10 @@ export default class HandleAddressService extends Service {
 							if (event) {
 								listAddresses.push(...event);
 							}
-						} catch (error) {
-							this.logger.error(error);
-							throw error;
-						}
-					});
+						});
+					} catch (error) {
+						this.logger.error(error);
+					}
 					try {
 						let blockEvent = element.tx_response.events
 							.filter(
@@ -244,563 +243,535 @@ export default class HandleAddressService extends Service {
 			{
 				listTx: [
 					{
+						_id: null,
 						tx: {
 							body: {
 								messages: [
 									{
-										'@type': '/cosmos.bank.v1beta1.MsgSend',
-										from_address: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-										to_address: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-										amount: [
-											{
-												denom: 'utaura',
-												amount: '1000000',
-											},
-										],
+										'@type': '/cosmos.staking.v1beta1.MsgDelegate',
+										delegator_address:
+											'aura1gypt2w7xg5t9yr76hx6zemwd4xv72jckk03r6t',
+										validator_address:
+											'auravaloper1k8fyh05zffsa2ejwusd0nlftsrx0u04wgkg53z',
+										amount: { denom: 'uaura', amount: '100000' },
 									},
 								],
+								memo: '',
+								timeout_height: { low: 0, high: 0, unsigned: true },
 								extension_options: [],
 								non_critical_extension_options: [],
 							},
 							auth_info: {
 								fee: {
-									amount: [
+									amount: [{ denom: 'uaura', amount: '200' }],
+									gas_limit: { low: 200000, high: 0, unsigned: true },
+									granter: '',
+									payer: '',
+								},
+								signer_infos: [
+									{
+										mode_info: { single: { mode: 1 } },
+										public_key: {
+											'@type': '/cosmos.crypto.secp256k1.PubKey',
+											key: 'A6kj12RZLoswpVSIMo76XoKPjZGCkc8HrOwNHmD5P0Sg',
+										},
+										sequence: '213238',
+									},
+								],
+							},
+							signatures: [
+								'snLZldILc5z5FbkIT/zQP+kSUkGPXv5nLtnJ+mjr8VBrpX6WCbeFNjQPFqEHDjPVVzHxW2uHQuMFNQTx1lylJg==',
+							],
+						},
+						tx_response: {
+							height: '13237802',
+							txhash: '3D94FEB24EF5A2EB660D705E10DE400CF9557E30E4713EC6ADDC77DA537C7C4A',
+							codespace: '',
+							code: 0,
+							data: 'CiUKIy9jb3Ntb3Muc3Rha2luZy52MWJldGExLk1zZ0RlbGVnYXRl',
+							raw_log:
+								'[{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"aura1tygms3xhhs3yv487phx3dw4a95jn7t7l6dzud6"},{"key":"amount","value":"100000uaura"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"aura1gypt2w7xg5t9yr76hx6zemwd4xv72jckk03r6t"},{"key":"amount","value":"100000uaura"}]},{"type":"delegate","attributes":[{"key":"validator","value":"auravaloper1k8fyh05zffsa2ejwusd0nlftsrx0u04wgkg53z"},{"key":"amount","value":"100000uaura"},{"key":"new_shares","value":"100913.242009132420091320"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.staking.v1beta1.MsgDelegate"},{"key":"module","value":"staking"},{"key":"sender","value":"aura1gypt2w7xg5t9yr76hx6zemwd4xv72jckk03r6t"}]},{"type":"withdraw_rewards","attributes":[{"key":"amount","value":"0uaura"},{"key":"validator","value":"auravaloper1k8fyh05zffsa2ejwusd0nlftsrx0u04wgkg53z"}]}]}]',
+							info: '',
+							gas_wanted: '200000',
+							gas_used: '144359',
+							tx: {
+								body: {
+									messages: [
 										{
-											_id: {
-												$oid: '64102c7ca3f3933b23bb8110',
-											},
-											denom: 'utaura',
-											amount: '2171',
+											'@type': '/cosmos.staking.v1beta1.MsgDelegate',
+											delegator_address:
+												'aura1gypt2w7xg5t9yr76hx6zemwd4xv72jckk03r6t',
+											validator_address:
+												'auravaloper1k8fyh05zffsa2ejwusd0nlftsrx0u04wgkg53z',
+											amount: { denom: 'uaura', amount: '100000' },
 										},
 									],
-									gas_limit: '86810',
+									memo: '',
+									timeout_height: { low: 0, high: 0, unsigned: true },
+									extension_options: [],
+									non_critical_extension_options: [],
+								},
+								auth_info: {
+									fee: {
+										amount: [{ denom: 'uaura', amount: '200' }],
+										gas_limit: { low: 200000, high: 0, unsigned: true },
+										granter: '',
+										payer: '',
+									},
+									signer_infos: [
+										{
+											mode_info: { single: { mode: 1 } },
+											public_key: {
+												'@type': '/cosmos.crypto.secp256k1.PubKey',
+												key: 'A6kj12RZLoswpVSIMo76XoKPjZGCkc8HrOwNHmD5P0Sg',
+											},
+											sequence: '213238',
+										},
+									],
+								},
+								signatures: [
+									'snLZldILc5z5FbkIT/zQP+kSUkGPXv5nLtnJ+mjr8VBrpX6WCbeFNjQPFqEHDjPVVzHxW2uHQuMFNQTx1lylJg==',
+								],
+							},
+							events: [
+								{
+									type: 'coin_spent',
+									attributes: [
+										{
+											key: 'c3BlbmRlcg==',
+											value: 'YXVyYTFneXB0Mnc3eGc1dDl5cjc2aHg2emVtd2Q0eHY3Mmpja2swM3I2dA==',
+											index: true,
+										},
+										{ key: 'YW1vdW50', value: 'MjAwdWF1cmE=', index: true },
+									],
+								},
+								{
+									type: 'coin_received',
+									attributes: [
+										{
+											key: 'cmVjZWl2ZXI=',
+											value: 'YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==',
+											index: true,
+										},
+										{ key: 'YW1vdW50', value: 'MjAwdWF1cmE=', index: true },
+									],
+								},
+								{
+									type: 'transfer',
+									attributes: [
+										{
+											key: 'cmVjaXBpZW50',
+											value: 'YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==',
+											index: true,
+										},
+										{
+											key: 'c2VuZGVy',
+											value: 'YXVyYTFneXB0Mnc3eGc1dDl5cjc2aHg2emVtd2Q0eHY3Mmpja2swM3I2dA==',
+											index: true,
+										},
+										{ key: 'YW1vdW50', value: 'MjAwdWF1cmE=', index: true },
+									],
+								},
+								{
+									type: 'message',
+									attributes: [
+										{
+											key: 'c2VuZGVy',
+											value: 'YXVyYTFneXB0Mnc3eGc1dDl5cjc2aHg2emVtd2Q0eHY3Mmpja2swM3I2dA==',
+											index: true,
+										},
+									],
+								},
+								{
+									type: 'tx',
+									attributes: [
+										{ key: 'ZmVl', value: 'MjAwdWF1cmE=', index: true },
+										{
+											key: 'ZmVlX3BheWVy',
+											value: 'YXVyYTFneXB0Mnc3eGc1dDl5cjc2aHg2emVtd2Q0eHY3Mmpja2swM3I2dA==',
+											index: true,
+										},
+									],
+								},
+								{
+									type: 'tx',
+									attributes: [
+										{
+											key: 'YWNjX3NlcQ==',
+											value: 'YXVyYTFneXB0Mnc3eGc1dDl5cjc2aHg2emVtd2Q0eHY3Mmpja2swM3I2dC8yMTMyMzg=',
+											index: true,
+										},
+									],
+								},
+								{
+									type: 'tx',
+									attributes: [
+										{
+											key: 'c2lnbmF0dXJl',
+											value: 'c25MWmxkSUxjNXo1RmJrSVQvelFQK2tTVWtHUFh2NW5MdG5KK21qcjhWQnJwWDZXQ2JlRk5qUVBGcUVIRGpQVlZ6SHhXMnVIUXVNRk5RVHgxbHlsSmc9PQ==',
+											index: true,
+										},
+									],
+								},
+								{
+									type: 'message',
+									attributes: [
+										{
+											key: 'YWN0aW9u',
+											value: 'L2Nvc21vcy5zdGFraW5nLnYxYmV0YTEuTXNnRGVsZWdhdGU=',
+											index: true,
+										},
+									],
+								},
+								{
+									type: 'withdraw_rewards',
+									attributes: [
+										{ key: 'YW1vdW50', value: 'MHVhdXJh', index: true },
+										{
+											key: 'dmFsaWRhdG9y',
+											value: 'YXVyYXZhbG9wZXIxazhmeWgwNXpmZnNhMmVqd3VzZDBubGZ0c3J4MHUwNHdna2c1M3o=',
+											index: true,
+										},
+									],
+								},
+								{
+									type: 'coin_spent',
+									attributes: [
+										{
+											key: 'c3BlbmRlcg==',
+											value: 'YXVyYTFneXB0Mnc3eGc1dDl5cjc2aHg2emVtd2Q0eHY3Mmpja2swM3I2dA==',
+											index: true,
+										},
+										{ key: 'YW1vdW50', value: 'MTAwMDAwdWF1cmE=', index: true },
+									],
+								},
+								{
+									type: 'coin_received',
+									attributes: [
+										{
+											key: 'cmVjZWl2ZXI=',
+											value: 'YXVyYTF0eWdtczN4aGhzM3l2NDg3cGh4M2R3NGE5NWpuN3Q3bDZkenVkNg==',
+											index: true,
+										},
+										{ key: 'YW1vdW50', value: 'MTAwMDAwdWF1cmE=', index: true },
+									],
+								},
+								{
+									type: 'delegate',
+									attributes: [
+										{
+											key: 'dmFsaWRhdG9y',
+											value: 'YXVyYXZhbG9wZXIxazhmeWgwNXpmZnNhMmVqd3VzZDBubGZ0c3J4MHUwNHdna2c1M3o=',
+											index: true,
+										},
+										{ key: 'YW1vdW50', value: 'MTAwMDAwdWF1cmE=', index: true },
+										{
+											key: 'bmV3X3NoYXJlcw==',
+											value: 'MTAwOTEzLjI0MjAwOTEzMjQyMDA5MTMyMA==',
+											index: true,
+										},
+									],
+								},
+								{
+									type: 'message',
+									attributes: [
+										{ key: 'bW9kdWxl', value: 'c3Rha2luZw==', index: true },
+										{
+											key: 'c2VuZGVy',
+											value: 'YXVyYTFneXB0Mnc3eGc1dDl5cjc2aHg2emVtd2Q0eHY3Mmpja2swM3I2dA==',
+											index: true,
+										},
+									],
+								},
+							],
+							timestamp: '2023-04-19T09:49:18.166Z',
+							logs: [
+								{
+									events: [
+										{
+											type: 'coin_received',
+											attributes: [
+												{
+													key: 'receiver',
+													value: 'aura1tygms3xhhs3yv487phx3dw4a95jn7t7l6dzud6',
+												},
+												{ key: 'amount', value: '100000uaura' },
+											],
+										},
+										{
+											type: 'coin_spent',
+											attributes: [
+												{
+													key: 'spender',
+													value: 'aura1gypt2w7xg5t9yr76hx6zemwd4xv72jckk03r6t',
+												},
+												{ key: 'amount', value: '100000uaura' },
+											],
+										},
+										{
+											type: 'delegate',
+											attributes: [
+												{
+													key: 'validator',
+													value: 'auravaloper1k8fyh05zffsa2ejwusd0nlftsrx0u04wgkg53z',
+												},
+												{ key: 'amount', value: '100000uaura' },
+												{
+													key: 'new_shares',
+													value: '100913.242009132420091320',
+												},
+											],
+										},
+										{
+											type: 'message',
+											attributes: [
+												{
+													key: 'action',
+													value: '/cosmos.staking.v1beta1.MsgDelegate',
+												},
+												{ key: 'module', value: 'staking' },
+												{
+													key: 'sender',
+													value: 'aura1gypt2w7xg5t9yr76hx6zemwd4xv72jckk03r6t',
+												},
+											],
+										},
+										{
+											type: 'withdraw_rewards',
+											attributes: [
+												{ key: 'amount', value: '0uaura' },
+												{
+													key: 'validator',
+													value: 'auravaloper1k8fyh05zffsa2ejwusd0nlftsrx0u04wgkg53z',
+												},
+											],
+										},
+									],
+								},
+							],
+						},
+						custom_info: {},
+						indexes: {},
+					},
+					{
+						_id: null,
+						tx: {
+							body: {
+								messages: [
+									{
+										'@type': '/cosmwasm.wasm.v1.MsgExecuteContract',
+										sender: 'aura1lmh9hcprnyp0shrppk3szuh8r8pludc83z3y49',
+										contract:
+											'aura1fvy3rzv5fhe6xf2z2d0j2p0xcf0c75ry2ktwxreg6wa3zlup0p7qqwzj3a',
+										msg: { mint: { amount: '1', phase_id: '1' } },
+										funds: [],
+									},
+								],
+								memo: '',
+								timeout_height: { low: 0, high: 0, unsigned: true },
+								extension_options: [],
+								non_critical_extension_options: [],
+							},
+							auth_info: {
+								fee: {
+									amount: [{ denom: 'uaura', amount: '625' }],
+									gas_limit: { low: 250000, high: 0, unsigned: true },
 									granter: '',
 									payer: '',
 								},
 								signer_infos: [
 									{
 										mode_info: {
-											single: {
-												mode: '127',
+											multi: {
+												bitarray: {
+													extraBitsStored: 2,
+													elems: { '0': 192 },
+												},
+												modeInfos: [
+													{ single: { mode: 127 } },
+													{ single: { mode: 127 } },
+												],
 											},
 										},
-										_id: {
-											$oid: '64102c7ca3f393cf0abb8111',
-										},
 										public_key: {
-											'@type': '/cosmos.crypto.secp256k1.PubKey',
-											key: 'AwGiaDuo6ICUpXpZy7Ii/P4QnZWrC2+fvBvF6f+3r4f8',
+											'@type': '/cosmos.crypto.multisig.LegacyAminoPubKey',
+											key: 'EkYKHy9jb3Ntb3MuY3J5cHRvLnNlY3AyNTZrMS5QdWJLZXkSIwohA7ev5RYnXU0vxxXTiGKzolaoup3W3tDOCpvOBDSzpRUiEkYKHy9jb3Ntb3MuY3J5cHRvLnNlY3AyNTZrMS5QdWJLZXkSIwohAxGbrjvk+U1IjKeXYeO4Vp42pSYSM8JQFkabbjhVtiec',
 										},
-										sequence: '316',
+										sequence: '3',
 									},
 								],
 							},
 							signatures: [
-								'U1as3s644+dfNDOa+oTBTxykIfWnGkGP4FsoeRB6mqdS18khb0DEimeF3TUIZ8BunPKlogZPW0Rv41xjHDZgtg==',
+								'CkAEHyApDOhnXdc4k4SFRnxkaLMIl+kQ14ZUqEZgZmsynWaCMrQwkvMQGIUSau78vAxjzbMq2WdxCgK2XUdFjXFLCkDT/yzLhQvkY8zEccJASvR2bUiHbbHnJciJgDG3hZLyAmY0pxjaTb2A5wpfz0Pv+3ouP6IUb5FJEHpylwMxyhk0',
 							],
 						},
-						custom_info: {
-							chain_id: 'aura-testnet-2',
-							chain_name: 'Aura devnet',
-						},
 						tx_response: {
-							height: 5272005,
-							txhash: '70F74804A0E0DE9C30628E3F764936F5F717AE3F8CE5E89EA51F8415EFB16A58',
-							codespace: '',
-							code: '0',
-							data: 'Ch4KHC9jb3Ntb3MuYmFuay52MWJldGExLk1zZ1NlbmQ=',
+							height: '13237802',
+							txhash: '571605291BF07E71A42B9762E2164E5040C7093837F202381321F5E675A6F5D7',
+							codespace: 'wasm',
+							code: 5,
+							data: null,
 							raw_log:
-								'[{"events":[{"type":"coin_received","attributes":[{"key":"receiver","value":"aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5"},{"key":"amount","value":"1000000utaura"}]},{"type":"coin_spent","attributes":[{"key":"spender","value":"aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5"},{"key":"amount","value":"1000000utaura"}]},{"type":"message","attributes":[{"key":"action","value":"/cosmos.bank.v1beta1.MsgSend"},{"key":"sender","value":"aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5"},{"key":"sender","value":"aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5"},{"key":"amount","value":"1000000utaura"}]}]}]',
+								'failed to execute message; message index: 0: Error parsing into type nft_launchpad::msg::ExecuteMsg: Invalid type: execute wasm contract failed',
 							info: '',
-							gas_wanted: '86810',
-							gas_used: '70966',
+							gas_wanted: '250000',
+							gas_used: '130185',
 							tx: {
 								body: {
 									messages: [
 										{
-											'@type': '/cosmos.bank.v1beta1.MsgSend',
-											from_address:
-												'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-											to_address:
-												'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-											amount: [
-												{
-													denom: 'utaura',
-													amount: '1000000',
-												},
-											],
+											'@type': '/cosmwasm.wasm.v1.MsgExecuteContract',
+											sender: 'aura1lmh9hcprnyp0shrppk3szuh8r8pludc83z3y49',
+											contract:
+												'aura1fvy3rzv5fhe6xf2z2d0j2p0xcf0c75ry2ktwxreg6wa3zlup0p7qqwzj3a',
+											msg: { mint: { amount: '1', phase_id: '1' } },
+											funds: [],
 										},
 									],
+									memo: '',
+									timeout_height: { low: 0, high: 0, unsigned: true },
+									extension_options: [],
+									non_critical_extension_options: [],
 								},
 								auth_info: {
 									fee: {
-										amount: [
-											{
-												denom: 'utaura',
-												amount: '2171',
-											},
-										],
-										gas_limit: {
-											low: 86810,
-											high: 0,
-											unsigned: true,
-										},
+										amount: [{ denom: 'uaura', amount: '625' }],
+										gas_limit: { low: 250000, high: 0, unsigned: true },
 										granter: '',
 										payer: '',
 									},
 									signer_infos: [
 										{
 											mode_info: {
-												single: {
-													mode: 127,
+												multi: {
+													bitarray: {
+														extraBitsStored: 2,
+														elems: { '0': 192 },
+													},
+													modeInfos: [
+														{ single: { mode: 127 } },
+														{ single: { mode: 127 } },
+													],
 												},
 											},
 											public_key: {
-												'@type': '/cosmos.crypto.secp256k1.PubKey',
-												key: 'AwGiaDuo6ICUpXpZy7Ii/P4QnZWrC2+fvBvF6f+3r4f8',
+												'@type':
+													'/cosmos.crypto.multisig.LegacyAminoPubKey',
+												key: 'EkYKHy9jb3Ntb3MuY3J5cHRvLnNlY3AyNTZrMS5QdWJLZXkSIwohA7ev5RYnXU0vxxXTiGKzolaoup3W3tDOCpvOBDSzpRUiEkYKHy9jb3Ntb3MuY3J5cHRvLnNlY3AyNTZrMS5QdWJLZXkSIwohAxGbrjvk+U1IjKeXYeO4Vp42pSYSM8JQFkabbjhVtiec',
 											},
-											sequence: '316',
+											sequence: '3',
 										},
 									],
 								},
 								signatures: [
-									'U1as3s644+dfNDOa+oTBTxykIfWnGkGP4FsoeRB6mqdS18khb0DEimeF3TUIZ8BunPKlogZPW0Rv41xjHDZgtg==',
+									'CkAEHyApDOhnXdc4k4SFRnxkaLMIl+kQ14ZUqEZgZmsynWaCMrQwkvMQGIUSau78vAxjzbMq2WdxCgK2XUdFjXFLCkDT/yzLhQvkY8zEccJASvR2bUiHbbHnJciJgDG3hZLyAmY0pxjaTb2A5wpfz0Pv+3ouP6IUb5FJEHpylwMxyhk0',
 								],
 							},
 							events: [
 								{
-									_id: {
-										$oid: '64102c7ca3f3937cf5bb8112',
-									},
 									type: 'coin_spent',
 									attributes: [
 										{
-											_id: {
-												$oid: '64102c7ca3f39360c6bb8113',
-											},
 											key: 'c3BlbmRlcg==',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
+											value: 'YXVyYTFsbWg5aGNwcm55cDBzaHJwcGszc3p1aDhyOHBsdWRjODN6M3k0OQ==',
 											index: true,
 										},
-										{
-											_id: {
-												$oid: '64102c7ca3f393daa5bb8114',
-											},
-											key: 'YW1vdW50',
-											value: 'MjE3MXV0YXVyYQ==',
-											index: true,
-										},
+										{ key: 'YW1vdW50', value: 'NjI1dWF1cmE=', index: true },
 									],
 								},
 								{
-									_id: {
-										$oid: '64102c7ca3f393c808bb8115',
-									},
 									type: 'coin_received',
 									attributes: [
 										{
-											_id: {
-												$oid: '64102c7ca3f3930ea1bb8116',
-											},
 											key: 'cmVjZWl2ZXI=',
 											value: 'YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==',
 											index: true,
 										},
-										{
-											_id: {
-												$oid: '64102c7ca3f3937ae1bb8117',
-											},
-											key: 'YW1vdW50',
-											value: 'MjE3MXV0YXVyYQ==',
-											index: true,
-										},
+										{ key: 'YW1vdW50', value: 'NjI1dWF1cmE=', index: true },
 									],
 								},
 								{
-									_id: {
-										$oid: '64102c7ca3f3938591bb8118',
-									},
 									type: 'transfer',
 									attributes: [
 										{
-											_id: {
-												$oid: '64102c7ca3f3936804bb8119',
-											},
 											key: 'cmVjaXBpZW50',
 											value: 'YXVyYTE3eHBmdmFrbTJhbWc5NjJ5bHM2Zjg0ejNrZWxsOGM1bHQwNXpmeQ==',
 											index: true,
 										},
 										{
-											_id: {
-												$oid: '64102c7ca3f3932512bb811a',
-											},
 											key: 'c2VuZGVy',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
+											value: 'YXVyYTFsbWg5aGNwcm55cDBzaHJwcGszc3p1aDhyOHBsdWRjODN6M3k0OQ==',
 											index: true,
 										},
-										{
-											_id: {
-												$oid: '64102c7ca3f39323b0bb811b',
-											},
-											key: 'YW1vdW50',
-											value: 'MjE3MXV0YXVyYQ==',
-											index: true,
-										},
+										{ key: 'YW1vdW50', value: 'NjI1dWF1cmE=', index: true },
 									],
 								},
 								{
-									_id: {
-										$oid: '64102c7ca3f3930bc1bb811c',
-									},
 									type: 'message',
 									attributes: [
 										{
-											_id: {
-												$oid: '64102c7ca3f3933591bb811d',
-											},
 											key: 'c2VuZGVy',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
+											value: 'YXVyYTFsbWg5aGNwcm55cDBzaHJwcGszc3p1aDhyOHBsdWRjODN6M3k0OQ==',
 											index: true,
 										},
 									],
 								},
 								{
-									_id: {
-										$oid: '64102c7ca3f3934f8fbb811e',
-									},
 									type: 'tx',
 									attributes: [
+										{ key: 'ZmVl', value: 'NjI1dWF1cmE=', index: true },
 										{
-											_id: {
-												$oid: '64102c7ca3f393a543bb811f',
-											},
-											key: 'ZmVl',
-											value: 'MjE3MXV0YXVyYQ==',
-											index: true,
-										},
-										{
-											_id: {
-												$oid: '64102c7ca3f3937bd1bb8120',
-											},
 											key: 'ZmVlX3BheWVy',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
+											value: 'YXVyYTFsbWg5aGNwcm55cDBzaHJwcGszc3p1aDhyOHBsdWRjODN6M3k0OQ==',
 											index: true,
 										},
 									],
 								},
 								{
-									_id: {
-										$oid: '64102c7ca3f3937ea4bb8121',
-									},
 									type: 'tx',
 									attributes: [
 										{
-											_id: {
-												$oid: '64102c7ca3f393036fbb8122',
-											},
 											key: 'YWNjX3NlcQ==',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNS8zMTY=',
+											value: 'YXVyYTFsbWg5aGNwcm55cDBzaHJwcGszc3p1aDhyOHBsdWRjODN6M3k0OS8z',
 											index: true,
 										},
 									],
 								},
 								{
-									_id: {
-										$oid: '64102c7ca3f393858ebb8123',
-									},
 									type: 'tx',
 									attributes: [
 										{
-											_id: {
-												$oid: '64102c7ca3f3934b26bb8124',
-											},
 											key: 'c2lnbmF0dXJl',
-											value: 'VTFhczNzNjQ0K2RmTkRPYStvVEJUeHlrSWZXbkdrR1A0RnNvZVJCNm1xZFMxOGtoYjBERWltZUYzVFVJWjhCdW5QS2xvZ1pQVzBSdjQxeGpIRFpndGc9PQ==',
+											value: 'QkI4Z0tRem9aMTNYT0pPRWhVWjhaR2l6Q0pmcEVOZUdWS2hHWUdack1wMW1nakswTUpMekVCaUZFbXJ1L0x3TVk4MnpLdGxuY1FvQ3RsMUhSWTF4U3c9PQ==',
 											index: true,
 										},
 									],
 								},
 								{
-									_id: {
-										$oid: '64102c7ca3f3931ae5bb8125',
-									},
-									type: 'message',
+									type: 'tx',
 									attributes: [
 										{
-											_id: {
-												$oid: '64102c7ca3f393c233bb8126',
-											},
-											key: 'YWN0aW9u',
-											value: 'L2Nvc21vcy5iYW5rLnYxYmV0YTEuTXNnU2VuZA==',
+											key: 'c2lnbmF0dXJl',
+											value: 'MC84c3k0VUw1R1BNeEhIQ1FFcjBkbTFJaDIyeDV5WElpWUF4dDRXUzhnSm1OS2NZMmsyOWdPY0tYODlENy90NkxqK2lGRytSU1JCNmNwY0RNY29aTkE9PQ==',
 											index: true,
 										},
 									],
 								},
 								{
-									_id: {
-										$oid: '64102c7ca3f39300eebb8127',
-									},
-									type: 'coin_spent',
+									type: 'tx',
 									attributes: [
 										{
-											_id: {
-												$oid: '64102c7ca3f3934936bb8128',
-											},
-											key: 'c3BlbmRlcg==',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
-											index: true,
-										},
-										{
-											_id: {
-												$oid: '64102c7ca3f393d50abb8129',
-											},
-											key: 'YW1vdW50',
-											value: 'MTAwMDAwMHV0YXVyYQ==',
-											index: true,
-										},
-									],
-								},
-								{
-									_id: {
-										$oid: '64102c7ca3f393d176bb812a',
-									},
-									type: 'coin_received',
-									attributes: [
-										{
-											_id: {
-												$oid: '64102c7ca3f393c0d6bb812b',
-											},
-											key: 'cmVjZWl2ZXI=',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
-											index: true,
-										},
-										{
-											_id: {
-												$oid: '64102c7ca3f3936227bb812c',
-											},
-											key: 'YW1vdW50',
-											value: 'MTAwMDAwMHV0YXVyYQ==',
-											index: true,
-										},
-									],
-								},
-								{
-									_id: {
-										$oid: '64102c7ca3f3931117bb812d',
-									},
-									type: 'transfer',
-									attributes: [
-										{
-											_id: {
-												$oid: '64102c7ca3f3930051bb812e',
-											},
-											key: 'cmVjaXBpZW50',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
-											index: true,
-										},
-										{
-											_id: {
-												$oid: '64102c7ca3f3934f16bb812f',
-											},
-											key: 'c2VuZGVy',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
-											index: true,
-										},
-										{
-											_id: {
-												$oid: '64102c7ca3f393e38ebb8130',
-											},
-											key: 'YW1vdW50',
-											value: 'MTAwMDAwMHV0YXVyYQ==',
-											index: true,
-										},
-									],
-								},
-								{
-									_id: {
-										$oid: '64102c7ca3f393229bbb8131',
-									},
-									type: 'message',
-									attributes: [
-										{
-											_id: {
-												$oid: '64102c7ca3f393215ebb8132',
-											},
-											key: 'c2VuZGVy',
-											value: 'YXVyYTE1ZjZ3bjNueW1kbmhuaDVkZGxxbGV0dXB0amFnMDl0cnlydHBxNQ==',
-											index: true,
-										},
-									],
-								},
-								{
-									_id: {
-										$oid: '64102c7ca3f39354cbbb8133',
-									},
-									type: 'message',
-									attributes: [
-										{
-											_id: {
-												$oid: '64102c7ca3f3937ec2bb8134',
-											},
-											key: 'bW9kdWxl',
-											value: 'YmFuaw==',
+											key: 'c2lnbmF0dXJl',
+											value: 'Q2tBRUh5QXBET2huWGRjNGs0U0ZSbnhrYUxNSWwra1ExNFpVcUVaZ1ptc3luV2FDTXJRd2t2TVFHSVVTYXU3OHZBeGp6Yk1xMldkeENnSzJYVWRGalhGTENrRFQveXpMaFF2a1k4ekVjY0pBU3ZSMmJVaUhiYkhuSmNpSmdERzNoWkx5QW1ZMHB4amFUYjJBNXdwZnowUHYrM291UDZJVWI1RkpFSHB5bHdNeHloazA=',
 											index: true,
 										},
 									],
 								},
 							],
-							timestamp: {
-								$date: {
-									$numberLong: '1678781559036',
-								},
-							},
-							logs: [
-								{
-									_id: {
-										$oid: '64102c7ca3f3931e91bb8135',
-									},
-									events: [
-										{
-											_id: {
-												$oid: '64102c7ca3f393dcfcbb8136',
-											},
-											type: 'coin_received',
-											attributes: [
-												{
-													_id: {
-														$oid: '64102c7ca3f393438fbb8137',
-													},
-													key: 'receiver',
-													value: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-												},
-												{
-													_id: {
-														$oid: '64102c7ca3f3936881bb8138',
-													},
-													key: 'amount',
-													value: '1000000utaura',
-												},
-											],
-										},
-										{
-											_id: {
-												$oid: '64102c7ca3f393719fbb8139',
-											},
-											type: 'coin_spent',
-											attributes: [
-												{
-													_id: {
-														$oid: '64102c7ca3f393bc8fbb813a',
-													},
-													key: 'spender',
-													value: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-												},
-												{
-													_id: {
-														$oid: '64102c7ca3f393f40cbb813b',
-													},
-													key: 'amount',
-													value: '1000000utaura',
-												},
-											],
-										},
-										{
-											_id: {
-												$oid: '64102c7ca3f39335c0bb813c',
-											},
-											type: 'message',
-											attributes: [
-												{
-													_id: {
-														$oid: '64102c7ca3f3933c7bbb813d',
-													},
-													key: 'action',
-													value: '/cosmos.bank.v1beta1.MsgSend',
-												},
-												{
-													_id: {
-														$oid: '64102c7ca3f393385ebb813e',
-													},
-													key: 'sender',
-													value: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-												},
-												{
-													_id: {
-														$oid: '64102c7ca3f393e4babb813f',
-													},
-													key: 'module',
-													value: 'bank',
-												},
-											],
-										},
-										{
-											_id: {
-												$oid: '64102c7ca3f393ae1cbb8140',
-											},
-											type: 'transfer',
-											attributes: [
-												{
-													_id: {
-														$oid: '64102c7ca3f393a7bdbb8141',
-													},
-													key: 'recipient',
-													value: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-												},
-												{
-													_id: {
-														$oid: '64102c7ca3f3935ed5bb8142',
-													},
-													key: 'sender',
-													value: 'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-												},
-												{
-													_id: {
-														$oid: '64102c7ca3f39342c8bb8143',
-													},
-													key: 'amount',
-													value: '1000000utaura',
-												},
-											],
-										},
-									],
-								},
-							],
+							timestamp: '2023-04-19T09:49:18.166Z',
 						},
-						indexes: {
-							timestamp: {
-								$date: {
-									$numberLong: '1678781559036',
-								},
-							},
-							height: 5272005,
-							coin_spent_spender: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'],
-							addresses: [
-								'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-								'aura17xpfvakm2amg962yls6f84z3kell8c5lt05zfy',
-							],
-							coin_spent_amount: ['2171utaura', '1000000utaura'],
-							coin_received_receiver: [
-								'aura17xpfvakm2amg962yls6f84z3kell8c5lt05zfy',
-								'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-							],
-							coin_received_amount: ['2171utaura', '1000000utaura'],
-							transfer_recipient: [
-								'aura17xpfvakm2amg962yls6f84z3kell8c5lt05zfy',
-								'aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5',
-							],
-							transfer_sender: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'],
-							transfer_amount: ['2171utaura', '1000000utaura'],
-							message_sender: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'],
-							tx_fee: ['2171utaura'],
-							tx_fee_payer: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5'],
-							tx_acc_seq: ['aura15f6wn3nymdnhnh5ddlqletuptjag09tryrtpq5/316'],
-							tx_signature: [
-								'U1as3s644+dfNDOa+oTBTxykIfWnGkGP4FsoeRB6mqdS18khb0DEimeF3TUIZ8BunPKlogZPW0Rv41xjHDZgtg==',
-							],
-							message_action: ['/cosmos.bank.v1beta1.MsgSend'],
-							message_module: ['bank'],
-						},
-						__v: 0,
+						custom_info: {},
+						indexes: {},
 					},
 				],
 				chainId: Config.CHAIN_ID,
