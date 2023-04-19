@@ -161,7 +161,7 @@ export default class BlockService extends MoleculerDBService<
 		/* eslint-disable camelcase , no-underscore-dangle*/
 		let projection: any = { indexes: 0, custom_info: 0 };
 
-		const sort = ctx.params.reverse ? 'indexes.height _id' : '-indexes.height -_id';
+		const sort = ctx.params.reverse ? 'indexes.height' : '-indexes.height';
 
 		// Const sort = '-indexes.height';
 		const query: QueryOptions = {};
