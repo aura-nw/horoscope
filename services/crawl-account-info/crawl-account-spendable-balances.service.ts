@@ -90,6 +90,12 @@ export default class CrawlAccountSpendableBalancesService extends Service {
 						)}`;
 					}
 				}
+				this.logger.info(
+					`Result crawl spendable balances for account ${address}: ${JSON.stringify(
+						listSpendableBalances,
+					)}`,
+				);
+
 				/* eslint-disable camelcase, no-underscore-dangle */
 				if (listSpendableBalances.length > 1) {
 					await Promise.all(

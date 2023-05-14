@@ -83,6 +83,9 @@ export default class CrawlAccountAuthInfoService extends Service {
 					this.logger.error(error);
 					throw error;
 				}
+				this.logger.info(
+					`Result crawl auth for account ${address}: ${JSON.stringify(resultCallApi)}`,
+				);
 
 				if (
 					resultCallApi &&

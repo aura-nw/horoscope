@@ -215,6 +215,7 @@ export default class HandleAddressService extends Service {
 								count: 10,
 							},
 							attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+							backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
 						},
 					);
 				});
@@ -229,6 +230,7 @@ export default class HandleAddressService extends Service {
 							count: 10,
 						},
 						attempts: parseInt(Config.BULL_JOB_ATTEMPT, 10),
+						backoff: parseInt(Config.BULL_JOB_BACKOFF, 10),
 					},
 				);
 			}
