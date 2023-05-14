@@ -59,8 +59,8 @@ export default class HandleAddressService extends Service {
 
 			for (const element of listTx) {
 				if (source === CONST_CHAR.CRAWL) {
-					element.tx_response.logs.map((log: any) => {
-						try {
+					try {
+						element.tx_response.logs.map((log: any) => {
 							let event = log.events
 								.filter(
 									(e: any) =>
@@ -86,11 +86,10 @@ export default class HandleAddressService extends Service {
 							if (event) {
 								listAddresses.push(...event);
 							}
-						} catch (error) {
-							this.logger.error(error);
-							throw error;
-						}
-					});
+						});
+					} catch (error) {
+						this.logger.error(error);
+					}
 					try {
 						let blockEvent = element.tx_response.events
 							.filter(
