@@ -90,6 +90,11 @@ export default class CrawlAccountDelegatesService extends Service {
 						)}`;
 					}
 				}
+				this.logger.info(
+					`Result crawl delegations for account ${address}: ${JSON.stringify(
+						listDelegates,
+					)}`,
+				);
 				if (!accountInfo.account_delegations) {
 					accountInfo.account_delegations = [];
 				}
