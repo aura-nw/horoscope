@@ -93,6 +93,11 @@ export default class CrawlAccountRedelegatesService extends Service {
 						)}`;
 					}
 				}
+				this.logger.info(
+					`Result crawl redelegations for account ${address}: ${JSON.stringify(
+						listRedelegates,
+					)}`,
+				);
 				/* eslint-disable camelcase, no-underscore-dangle */
 				if (listRedelegates.length > 0) {
 					listRedelegates.map((redelegate: RedelegationResponse) => {
