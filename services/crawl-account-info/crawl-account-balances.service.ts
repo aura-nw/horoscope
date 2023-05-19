@@ -89,6 +89,9 @@ export default class CrawlAccountBalancesService extends Service {
 						)}`;
 					}
 				}
+				this.logger.info(
+					`Result crawl balances for account ${address}: ${JSON.stringify(listBalances)}`,
+				);
 
 				if (listBalances.length > 1) {
 					await Promise.all(

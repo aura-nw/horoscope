@@ -96,6 +96,9 @@ export default class CrawlAccountUnbondsService extends Service {
 						)}`;
 					}
 				}
+				this.logger.info(
+					`Result crawl unbonds for account ${address}: ${JSON.stringify(listUnbonds)}`,
+				);
 
 				if (listUnbonds.length > 0) {
 					listUnbonds.map((unbond: UnbondingResponse) => {
